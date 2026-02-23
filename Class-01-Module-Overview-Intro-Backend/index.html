@@ -604,6 +604,54 @@
             font-style: italic;
         }
 
+        /* Interview Questions */
+        .interview-q {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .interview-q:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .interview-question {
+            padding: 16px 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .interview-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            font-weight: 300;
+        }
+
+        .interview-q.revealed .interview-question::after {
+            content: '−';
+        }
+
+        .interview-answer {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0 20px;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            transition: all 0.3s ease;
+            line-height: 1.8;
+        }
+
+        .interview-q.revealed .interview-answer {
+            max-height: 500px;
+            padding: 16px 20px;
+        }
+
         /* Restaurant Flow */
         .restaurant-flow {
             display: flex;
@@ -1883,24 +1931,73 @@
 
             <div class="highlight-box warning" style="margin-top: 50px;">
                 <h3 style="margin-bottom: 20px;">🎯 Interview Questions You Can Now Answer</h3>
-                <div style="text-align: left; font-size: 1rem; line-height: 2;">
-                    <p><strong>1. What is the difference between frontend and backend?</strong><br>
-                    <span style="color: var(--text-muted);">Frontend is what users see (UI), backend is the server logic, database, and processing.</span></p>
+                <p class="interact-hint" style="margin-bottom: 20px;">👆 Click each question to reveal the answer</p>
+                <div style="text-align: left; font-size: 1rem;">
 
-                    <p style="margin-top: 12px;"><strong>2. Explain client-server architecture.</strong><br>
-                    <span style="color: var(--text-muted);">Client (browser/app) sends requests, server processes and responds. They communicate over a network.</span></p>
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">1. What is the difference between frontend and backend?</div>
+                        <div class="interview-answer">Frontend is what users see (UI), backend is the server logic, database, and processing.</div>
+                    </div>
 
-                    <p style="margin-top: 12px;"><strong>3. What are the main HTTP methods and when do you use each?</strong><br>
-                    <span style="color: var(--text-muted);">GET (read), POST (create), PUT (update), DELETE (remove). GET must be safe with no side effects.</span></p>
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">2. Explain client-server architecture.</div>
+                        <div class="interview-answer">Client (browser/app) sends requests, server processes and responds. They communicate over a network.</div>
+                    </div>
 
-                    <p style="margin-top: 12px;"><strong>4. What is an API?</strong><br>
-                    <span style="color: var(--text-muted);">A defined contract for how software components communicate — like a restaurant menu listing available options.</span></p>
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">3. What are the main HTTP methods and when do you use each?</div>
+                        <div class="interview-answer">GET (read), POST (create), PUT (update), DELETE (remove). GET must be safe with no side effects.</div>
+                    </div>
 
-                    <p style="margin-top: 12px;"><strong>5. Why can't browsers execute SQL directly against databases?</strong><br>
-                    <span style="color: var(--text-muted);">Security. The server acts as a gatekeeper — validates, authenticates, and controls what data is accessible.</span></p>
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">4. What is an API?</div>
+                        <div class="interview-answer">A defined contract for how software components communicate — like a restaurant menu listing available options.</div>
+                    </div>
 
-                    <p style="margin-top: 12px;"><strong>6. What is JSON and why is it used?</strong><br>
-                    <span style="color: var(--text-muted);">A lightweight, human-readable data format for transferring data between client and server. Language-agnostic.</span></p>
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">5. Why can't browsers execute SQL directly against databases?</div>
+                        <div class="interview-answer">Security. The server acts as a gatekeeper — validates, authenticates, and controls what data is accessible.</div>
+                    </div>
+
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">6. What is JSON and why is it used?</div>
+                        <div class="interview-answer">A lightweight, human-readable data format for transferring data between client and server. Language-agnostic.</div>
+                    </div>
+
+                    <div class="interview-q" onclick="toggleAnswer(this)">
+                        <div class="interview-question">7. Who or what can be a "client" in client-server architecture?</div>
+                        <div class="interview-answer">
+                            <strong>Anything that makes requests to a server:</strong><br><br>
+                            <table style="width: 100%; font-size: 0.9rem; border-collapse: collapse;">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 8px 0;"><strong>Browser</strong></td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Chrome requesting instagram.com</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 8px 0;"><strong>Mobile App</strong></td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Swiggy app fetching restaurants</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 8px 0;"><strong>Another Server</strong></td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Your backend calling Razorpay API</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 8px 0;"><strong>CLI Tool</strong></td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">curl or Postman testing an endpoint</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 8px 0;"><strong>IoT Device</strong></td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Smart fridge sending temperature data</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0;"><strong>Cron Job</strong></td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Scheduled script hitting your API daily</td>
+                                </tr>
+                            </table>
+                            <br><em>Key insight: A server can also be a client when it calls another service!</em>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -1979,6 +2076,11 @@
         // HTTP reveal
         function revealHTTP(element) {
             element.classList.add('revealed');
+        }
+
+        // Interview question toggle
+        function toggleAnswer(element) {
+            element.classList.toggle('revealed');
         }
 
         // Quiz functionality
