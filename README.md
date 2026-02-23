@@ -122,24 +122,6 @@ Compare framework performance: [TechEmpower Benchmarks](https://www.techempower.
 
 ---
 
-## How to Use
-
-1. Open the class folder (e.g., `Class-01-Module-Overview-Intro-Backend/`)
-2. Open `index.html` in a browser
-3. Scroll through sections
-4. Interactive elements: click to reveal technical equivalents
-5. Answer embedded quiz questions
-
-### Features
-
-- Light/Dark theme toggle
-- Progress bar
-- Click-to-reveal interactions
-- Embedded quizzes with explanations
-- Restaurant analogies throughout
-
----
-
 ## Prerequisites
 
 - **Python**: Variables, loops, functions, classes
@@ -195,7 +177,7 @@ start index.html  # Windows
 - [Postman](https://www.postman.com/downloads/) — API testing
 - [Git](https://git-scm.com/downloads) — Version control
 - [Python 3.x](https://www.python.org/downloads/) — Programming language
-- [VS Code](https://code.visualstudio.com/) — Code editor (recommended)
+- [PyCharm](https://www.jetbrains.com/pycharm/) — Python IDE (recommended)
 
 ---
 
