@@ -129,7 +129,10 @@ Compare framework performance: [TechEmpower Benchmarks](https://www.techempower.
 - **OOP**: Inheritance, encapsulation basics
 - **Terminal**: Basic commands (`cd`, `mkdir`, `ls`)
 
-[Terminal basics refresher](https://ubuntu.com/tutorials/command-line-for-beginners)
+**Terminal Practice:**
+- [Terminal Tutor](https://www.terminaltutor.com/) — Interactive in-browser terminal
+- [Linux Survival](https://linuxsurvival.com/) — Gamified Linux basics
+- [CMD Challenge](https://cmdchallenge.com/) — Practice with challenges
 
 ---
 
