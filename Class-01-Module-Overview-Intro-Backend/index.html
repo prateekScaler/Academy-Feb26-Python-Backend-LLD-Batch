@@ -1540,7 +1540,7 @@
                 <div class="flow-step" onclick="revealStep(0)" id="step-0">
                     <div class="flow-step-icon">🧑‍💼</div>
                     <div class="flow-step-restaurant">Customer</div>
-                    <div class="flow-step-tech">= Browser / Mobile App</div>
+                    <div class="flow-step-tech">= Client</div>
                     <div class="flow-step-desc">Hungry, wants food (data)</div>
                 </div>
                 <div class="flow-arrow">→</div>
@@ -1552,16 +1552,23 @@
                 </div>
                 <div class="flow-arrow">→</div>
                 <div class="flow-step" onclick="revealStep(2)" id="step-2">
-                    <div class="flow-step-icon">🧑‍🍳</div>
+                    <div class="flow-step-icon">🤵</div>
                     <div class="flow-step-restaurant">Waiter</div>
-                    <div class="flow-step-tech">= Server / Controller</div>
+                    <div class="flow-step-tech">= Controller</div>
                     <div class="flow-step-desc">Takes order, validates, routes</div>
                 </div>
                 <div class="flow-arrow">→</div>
                 <div class="flow-step" onclick="revealStep(3)" id="step-3">
+                    <div class="flow-step-icon">👨‍🍳</div>
+                    <div class="flow-step-restaurant">Chef</div>
+                    <div class="flow-step-tech">= Service (Business Logic)</div>
+                    <div class="flow-step-desc">Prepares the dish, knows recipes</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" onclick="revealStep(4)" id="step-4">
                     <div class="flow-step-icon">🏪</div>
-                    <div class="flow-step-restaurant">Kitchen/Pantry</div>
-                    <div class="flow-step-tech">= Database</div>
+                    <div class="flow-step-restaurant">Pantry</div>
+                    <div class="flow-step-tech">= Database (Model)</div>
                     <div class="flow-step-desc">Stores all ingredients (data)</div>
                 </div>
             </div>
@@ -1606,11 +1613,47 @@
                 </div>
             </div>
 
+            <h3 style="margin-top: 60px; margin-bottom: 20px;">MVC Architecture</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">Most backend frameworks follow the <strong>Model-View-Controller</strong> pattern. Here's how it maps to our restaurant:</p>
+
+            <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card">
+                    <div class="card-icon">🎮</div>
+                    <div class="card-title">Controller</div>
+                    <div class="card-desc">
+                        <strong>Waiter</strong> — Receives requests, validates input, decides what to do, returns response.<br><br>
+                        <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">views.py</code> in Django
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚙️</div>
+                    <div class="card-title">Service</div>
+                    <div class="card-desc">
+                        <strong>Chef</strong> — Contains business logic. Knows how to "cook" — process data, apply rules, make decisions.<br><br>
+                        <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">services.py</code> (custom)
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💾</div>
+                    <div class="card-title">Model</div>
+                    <div class="card-desc">
+                        <strong>Pantry</strong> — Data structure and database interaction. Stores and retrieves ingredients.<br><br>
+                        <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">models.py</code> in Django
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 30px;">
+                <p style="color: var(--text-primary); font-size: 1.1rem;">
+                    <strong>The Flow:</strong> Client → Controller (validates) → Service (processes) → Model (data) → back up the chain
+                </p>
+            </div>
+
             <h3 style="margin-top: 60px; margin-bottom: 20px;">Key Definitions</h3>
             <div class="two-col">
                 <div class="card">
                     <h4 style="color: var(--accent-primary); margin-bottom: 10px;">Client-Server Architecture</h4>
-                    <p style="color: var(--text-secondary);">A system where the <strong>Client</strong> (browser/app) makes requests, and the <strong>Server</strong> responds. They're separate programs communicating over a network.</p>
+                    <p style="color: var(--text-secondary);">A system where the <strong>Client</strong> (browser, app, another server, AI agent) makes requests, and the <strong>Server</strong> responds. They're separate programs communicating over a network.</p>
                 </div>
                 <div class="card">
                     <h4 style="color: var(--accent-primary); margin-bottom: 10px;">API (Application Programming Interface)</h4>
