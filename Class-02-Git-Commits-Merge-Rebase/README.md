@@ -82,6 +82,18 @@ git diff --staged            # Staged changes
 
 ## Merge vs Rebase
 
+### Starting Point (Both Examples)
+
+```
+          C1 ← C2 ← C3  (feature)
+         /
+A ← B ← D ← E  (main)
+```
+
+You created `feature` from `main` at commit `B`. Both branches have new commits since then.
+
+---
+
 ### Merge
 Creates a **new commit** with two parents. Preserves history.
 
@@ -89,6 +101,24 @@ Creates a **new commit** with two parents. Preserves history.
 git checkout main
 git merge feature
 ```
+
+**Before Merge:**
+```
+          C1 ← C2 ← C3  (feature)
+         /
+A ← B ← D ← E  (main) ← HEAD
+```
+
+**After Merge:**
+```
+          C1 ← C2 ← C3
+         /            \
+A ← B ← D ← E ←――――――― M  (main) ← HEAD
+```
+
+- `M` is a **merge commit** with two parents: `E` and `C3`
+- History shows parallel work happened
+- Easy to see when feature was integrated
 
 **Use when:**
 - Combining feature into main
@@ -103,14 +133,139 @@ git checkout feature
 git rebase main
 ```
 
+**Before Rebase:**
+```
+          C1 ← C2 ← C3  (feature) ← HEAD
+         /
+A ← B ← D ← E  (main)
+```
+
+**After Rebase:**
+```
+A ← B ← D ← E  (main)
+              \
+               C1' ← C2' ← C3'  (feature) ← HEAD
+```
+
+- Original `C1, C2, C3` are **replayed** as new commits `C1', C2', C3'`
+- The `'` indicates these are **new commits** (different hashes!)
+- History looks linear – as if you started from `E`
+- Old commits `C1, C2, C3` become orphaned (eventually garbage collected)
+
 **Use when:**
 - Updating local feature branch with latest main
 - Cleaning up before pushing
 - Commits are NOT yet shared
 
+---
+
+### ⚠️ Rebase Direction: Which Branch Do I Rebase?
+
+This is the **#1 source of confusion** with rebase. Let's compare both scenarios:
+
+**Starting Point (same for both):**
+```
+          C1 ← C2 ← C3  (feature)
+         /
+A ← B ← D ← E  (main)
+```
+
+---
+
+#### Scenario 1: Rebase Feature onto Main ✅ (CORRECT - Do this!)
+
+```bash
+git checkout feature      # Go to YOUR branch
+git rebase main           # Replay YOUR commits on top of main
+```
+
+**Result:**
+```
+A ← B ← D ← E  (main)
+              \
+               C1' ← C2' ← C3'  (feature) ← HEAD
+```
+
+- ✅ **main stays untouched** (safe for everyone)
+- ✅ Only YOUR feature branch is rewritten
+- ✅ Feature now has latest main changes
+- ✅ Ready for a clean merge/PR later
+
+---
+
+#### Scenario 2: Rebase Main onto Feature ❌ (WRONG - Don't do this!)
+
+```bash
+git checkout main         # Go to SHARED branch
+git rebase feature        # Replay main's commits on top of feature
+```
+
+**Result:**
+```
+A ← B ← C1 ← C2 ← C3  (feature)
+                    \
+                     D' ← E'  (main) ← HEAD
+```
+
+- ❌ **main is rewritten!** (D and E become D' and E')
+- ❌ Everyone else's main is now incompatible
+- ❌ Causes "diverged branches" errors for teammates
+- ❌ May require `--force` push (destroys shared history)
+
+---
+
+### 🧠 How to Remember: "I Sit on the Throne"
+
+Think of rebase as: **"I want to sit on top of the throne"**
+
+```
+git checkout <branch-I-want-to-move>   # I get up
+git rebase <branch-I-want-to-sit-on>   # I sit on the throne
+```
+
+**Memory trick:**
+
+| Command | Meaning |
+|---------|---------|
+| `git checkout feature` | "I am feature" |
+| `git rebase main` | "I want to sit on top of main" |
+
+So: **"Feature sits on main"** = Feature's commits move on top of main.
+
+---
+
+### 🎯 Quick Decision Guide
+
+| I want to... | Command |
+|--------------|---------|
+| Update my feature with latest main | `git checkout feature && git rebase main` |
+| Prepare feature for PR/merge | `git checkout feature && git rebase main` |
+| ~~Make main have my feature commits~~ | ❌ Don't rebase! Use `git merge` instead |
+
+**Rule of thumb:** Always rebase **your private branch** onto **the shared branch**. Never the other way around.
+
 ### Golden Rule
 
 > **Never rebase commits that have been pushed to a shared repository.**
+
+### Side-by-Side Comparison
+
+| Aspect | Merge | Rebase |
+|--------|-------|--------|
+| **Result** | Diamond shape with merge commit | Linear chain |
+| **History** | Shows parallel development | Looks like sequential work |
+| **Commits** | Preserves original commits | Creates new commits (different hashes) |
+| **Safe for shared branches?** | ✅ Yes | ❌ No (rewrites history) |
+
+**Visual Summary:**
+
+```
+MERGE:                          REBASE:
+      C1─C2─C3
+     /        \                 A─B─D─E─C1'─C2'─C3'
+A─B─D────E─────M                      (linear)
+    (diamond)
+```
 
 ---
 
@@ -141,85 +296,6 @@ git commit -m "refactor: Extract validation to separate module"
 **Format:** `[type]: [what changed]`
 
 Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-
----
-
-## Demo Commands (For Instructor)
-
-### Setup Demo Repo
-```bash
-mkdir git-demo && cd git-demo
-git init
-echo "# My Project" > README.md
-git add README.md
-git commit -m "Initial commit"
-```
-
-### Demonstrate Branching
-```bash
-# Create and switch to feature branch
-git checkout -b feature/login
-
-# Make changes
-echo "def login(): pass" > auth.py
-git add auth.py
-git commit -m "feat: Add login function skeleton"
-
-echo "def logout(): pass" >> auth.py
-git add auth.py
-git commit -m "feat: Add logout function"
-
-# Show branches
-git log --oneline --graph --all
-```
-
-### Demonstrate Merge
-```bash
-git checkout main
-git merge feature/login
-git log --oneline --graph
-```
-
-### Demonstrate Merge Conflict
-```bash
-# Setup conflict
-git checkout main
-echo "Main branch content" > conflict.txt
-git add conflict.txt
-git commit -m "Add conflict file on main"
-
-git checkout -b feature/conflict
-echo "Feature branch content" > conflict.txt
-git add conflict.txt
-git commit -m "Add conflict file on feature"
-
-git checkout main
-echo "Different main content" > conflict.txt
-git add conflict.txt
-git commit -m "Modify conflict file on main"
-
-# Now merge - will conflict!
-git merge feature/conflict
-
-# Show conflict markers, resolve, commit
-```
-
-### Demonstrate Rebase
-```bash
-git checkout -b feature/rebase-demo
-echo "Feature work" > feature.txt
-git add feature.txt
-git commit -m "Add feature work"
-
-git checkout main
-echo "Main work" > main.txt
-git add main.txt
-git commit -m "Add main work"
-
-git checkout feature/rebase-demo
-git rebase main
-git log --oneline --graph
-```
 
 ---
 
