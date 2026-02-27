@@ -24,6 +24,7 @@ This file lists all students who have completed the **Class 3 Assignment** — t
 |---|------|-----------------|----------|
 Rahul
 Prateek
+Ayush
 <!-- Add your row above this line -->
 
 ---
