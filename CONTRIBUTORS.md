@@ -22,8 +22,7 @@ This file lists all students who have completed the **Class 3 Assignment** — t
 
 | # | Name | GitHub Username | Fun Fact |
 |---|------|-----------------|----------|
-Rahul
-Prateek
+| 0 | Prateek (Instructor) | [@prateekScaler](https://github.com/prateekScaler) | Loves teaching Git! |
 <!-- Add your row above this line -->
 
 ---
