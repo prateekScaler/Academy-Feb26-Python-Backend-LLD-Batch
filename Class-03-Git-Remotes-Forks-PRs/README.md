@@ -69,8 +69,53 @@ git fetch origin
 | Command | What it does |
 |---------|--------------|
 | `git push` | Upload your commits to remote |
-| `git pull` | Download AND merge remote changes |
+| `git pull` | Download AND merge remote changes (fetch + merge) |
 | `git fetch` | Download changes without merging |
+
+### Remote Tracking Branches (Read-Only vs Local)
+
+When you clone, Git creates **two types of branches**:
+
+| Type | Example | Can Commit? | Purpose |
+|------|---------|-------------|---------|
+| **Local branches** | `main`, `feature/login` | ✅ Yes | Your working copies |
+| **Remote tracking** | `origin/main`, `origin/feature` | ❌ No | Bookmarks showing where remote was |
+
+```bash
+# See all branches (local + remote tracking)
+git branch -a
+```
+
+### Fetch vs Pull: The Real Difference
+
+**`git fetch`:**
+1. Downloads new commits from remote
+2. Updates `origin/main` (tracking branch)
+3. Does NOT touch your local `main`
+4. Safe — you can review before merging
+
+**`git pull`:**
+1. Runs `git fetch` first
+2. Then runs `git merge origin/main`
+3. Modifies your local `main`
+4. May cause merge conflicts
+
+**When to use:**
+- Use `fetch` when you want to see changes first: `git diff main origin/main`
+- Use `pull` when you trust remote and want to quickly sync
+
+### git push -u (Set Upstream Tracking)
+
+```bash
+# First push of a new branch - sets up tracking
+git push -u origin feature/my-branch
+
+# After -u is set, these work without specifying remote:
+git push    # knows to push to origin/feature/my-branch
+git pull    # knows to pull from origin/feature/my-branch
+```
+
+**What `-u` does:** Creates a link between local branch and remote branch so Git remembers where to push/pull.
 
 ### "origin" vs "upstream"
 
@@ -280,21 +325,143 @@ venv/
 *.log
 ```
 
-### git reset vs git revert
+### git reset — Understanding the Command
+
+**Breaking down `git reset --hard HEAD~1`:**
+- `git reset` — Move HEAD to a different commit
+- `--hard` — Reset mode (how much to undo)
+- `HEAD~1` — Where to go (1 commit back)
+
+**The Three Modes:**
+
+| Mode | Repository | Staging | Working Dir | Use Case |
+|------|------------|---------|-------------|----------|
+| `--soft` | ✅ Reset | ❌ Keep | ❌ Keep | Undo commit, keep changes staged |
+| `--mixed` (default) | ✅ Reset | ✅ Reset | ❌ Keep | Undo commit, unstage, keep files |
+| `--hard` ⚠️ | ✅ Reset | ✅ Reset | ✅ Reset | Nuclear - discard everything |
+
+**Different ways to specify target:**
+
+```bash
+# Relative to HEAD
+git reset --hard HEAD~1     # 1 commit back
+git reset --hard HEAD~3     # 3 commits back
+
+# Specific commit SHA
+git reset --hard a1b2c3d    # Reset to this commit
+
+# Branch name
+git reset --hard origin/main  # Match remote exactly
+
+# Using ^ (parent)
+git reset --hard HEAD^      # Same as HEAD~1
+```
+
+**Common use cases:**
+
+```bash
+# "Oops, committed too early"
+git reset --soft HEAD~1     # Undo commit, keep staged
+
+# "Reorganize my commits"
+git reset HEAD~3            # Undo 3 commits, keep files
+
+# "Throw away all local changes"
+git reset --hard origin/main  # Match remote exactly
+
+# "Unstage a file"
+git reset HEAD file.txt     # Unstage specific file
+```
+
+### git revert — Safe undo for pushed commits
+
+```bash
+git revert abc1234          # Creates new commit that undoes abc1234
+git revert --no-commit abc  # Revert without auto-commit
+```
 
 | Command | Effect | Safe for pushed? |
 |---------|--------|------------------|
-| `git reset --hard HEAD~1` | Removes commit, rewrites history | ❌ No |
-| `git revert abc123` | New commit that undoes changes | ✅ Yes |
+| `git reset` | Removes commits, rewrites history | ❌ No |
+| `git revert` | New commit that undoes changes | ✅ Yes |
 
 **Rule:** Use `revert` for pushed commits, `reset` only for local unpushed work.
 
-### git reflog — Recover "Lost" Commits
+### HEAD~1 vs HEAD@{1} — Common Confusion!
+
+These look similar but are **completely different**:
+
+| Syntax | Meaning | Navigates |
+|--------|---------|-----------|
+| `HEAD~1` | Parent commit (1 back in history) | **Commit graph** (ancestry) |
+| `HEAD@{1}` | Where HEAD was 1 operation ago | **Reflog** (time/actions) |
+
+**Example:**
+```
+You're on commit D, then run: git checkout feature
+Now HEAD points to commit X (tip of feature)
+
+HEAD~1  = parent of X (commit on feature branch)
+HEAD@{1} = commit D (where you WERE before checkout)
+```
+
+Quick reference:
+- `HEAD~n` — Go back n commits in the tree
+- `HEAD^n` — Select nth parent (for merge commits: ^1 = main, ^2 = merged branch)
+- `HEAD@{n}` — Where HEAD was n operations ago (reflog)
+
+### git commit --amend — Fix the last commit
 
 ```bash
-git reflog                    # See where HEAD has been
-git reset --hard abc1234      # Recover to that point
+# Fix commit message only
+git commit --amend -m "New corrected message"
+
+# Add forgotten files, keep same message
+git add forgotten-file.txt
+git commit --amend --no-edit
+
+# Add files AND change message
+git add extra-file.txt
+git commit --amend -m "feat: Complete feature"
+
+# Open editor to modify message
+git commit --amend
 ```
+
+⚠️ **Warning:** `--amend` rewrites history. Don't amend pushed commits unless you're the only one on the branch!
+
+### git reflog — Your Git Time Machine
+
+**What is reflog?** `reflog` = **ref**erence **log** — a diary of everywhere HEAD has pointed.
+
+Every time you `commit`, `checkout`, `reset`, `merge`, or `rebase`, Git records the move.
+
+```bash
+$ git reflog
+a1b2c3d HEAD@{0}: commit: Add payment feature
+e4f5g6h HEAD@{1}: checkout: moving from main to feature
+i7j8k9l HEAD@{2}: reset: moving to HEAD~3      # <- Oops!
+m0n1o2p HEAD@{3}: commit: Fix critical bug     # <- This is "lost"
+```
+
+**Reading the output:**
+- `a1b2c3d` — Commit SHA (first 7 chars)
+- `HEAD@{0}` — Position (0 = current, 1 = previous, etc.)
+- `commit: ...` — What action happened
+
+**Recovery scenarios:**
+
+```bash
+# "I ran git reset --hard and lost commits!"
+git reflog                     # Find the SHA before the reset
+git reset --hard m0n1o2p       # Go back to it
+
+# "I deleted a branch with unmerged work!"
+git reflog | grep "feature"    # Find last commit on that branch
+git checkout -b feature/recovered abc1234  # Recreate it
+```
+
+**Why does this work?** Git doesn't delete commits immediately. They become "unreachable" but exist for ~30 days until garbage collection.
 
 ### git cherry-pick — Copy One Commit
 
