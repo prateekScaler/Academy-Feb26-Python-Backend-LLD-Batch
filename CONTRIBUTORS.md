@@ -23,6 +23,7 @@ This file lists all students who have completed the **Class 3 Assignment** — t
 | # | Name | GitHub Username | Fun Fact |
 |---|------|-----------------|----------|
 Rahul
+Prateek
 <!-- Add your row above this line -->
 
 ---
