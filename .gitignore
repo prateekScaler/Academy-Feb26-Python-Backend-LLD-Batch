@@ -35,3 +35,15 @@ ENV/
 
 # Logs
 *.log
+
+# Instructor files (private, not for students)
+INSTRUCTOR.md
+INSTRUCTOR-GUIDE.md
+**/INSTRUCTOR.md
+**/INSTRUCTOR-GUIDE.md
+
+# Django
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/

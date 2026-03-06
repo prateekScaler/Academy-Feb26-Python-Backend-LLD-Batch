@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 4: Python Setup, Django, Apps, Views & URLs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-django: #092e20;
+            --accent-django-light: #44b78b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-django-light); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.django { background: linear-gradient(135deg, #092e20, #44b78b); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(68, 183, 139, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #44b78b 0%, #6366f1 50%, #8b5cf6 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+        .hero-tagline strong { color: var(--accent-django-light); }
+        .scroll-indicator {
+            position: absolute; bottom: 40px; display: flex; flex-direction: column;
+            align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+
+        .os-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .os-tab {
+            padding: 10px 20px; background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s; color: var(--text-secondary);
+        }
+        .os-tab:hover { border-color: var(--accent-primary); }
+        .os-tab.active { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); color: var(--text-primary); }
+        .os-content { display: none; }
+        .os-content.active { display: block; }
+
+        .flow-diagram {
+            background: var(--bg-secondary); border-radius: 16px; padding: 40px;
+            margin: 40px 0; border: 1px solid var(--border-color);
+        }
+        .flow-row { display: flex; justify-content: center; align-items: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
+        .flow-box {
+            background: var(--bg-tertiary); padding: 20px 30px; border-radius: 12px;
+            text-align: center; min-width: 150px; border: 2px solid var(--border-color); transition: all 0.3s;
+        }
+        .flow-box:hover { border-color: var(--accent-primary); transform: scale(1.05); }
+        .flow-box.highlight { border-color: var(--accent-django-light); background: rgba(68, 183, 139, 0.1); }
+        .flow-box-icon { font-size: 2rem; margin-bottom: 10px; }
+        .flow-box-title { font-weight: 700; margin-bottom: 5px; }
+        .flow-box-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-primary); }
+
+        .file-tree {
+            background: #1e1e2e; border-radius: 12px; padding: 30px;
+            font-family: 'Fira Code', monospace; font-size: 0.9rem;
+            border: 1px solid var(--border-color); margin: 20px 0;
+        }
+        .file-tree-item { padding: 8px 0; display: flex; align-items: center; gap: 10px; color: #e2e8f0; }
+        .file-tree-item.folder { color: #ffbd2e; }
+        .file-tree-item.file { color: #82aaff; }
+        .file-tree-item.python { color: #c3e88d; }
+        .file-tree-item .desc { color: #6b7280; font-size: 0.85rem; margin-left: auto; }
+        .indent-1 { padding-left: 20px; }
+        .indent-2 { padding-left: 40px; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 30px 0; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .comparison-table th, .comparison-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 700; color: var(--accent-primary); }
+        .comparison-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+
+        .question-block { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 20px; padding: 40px; margin: 40px 0; }
+        .question-label { display: flex; align-items: center; gap: 10px; color: var(--warning); font-weight: 600; margin-bottom: 15px; font-size: 0.95rem; }
+        .question-text { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 25px; line-height: 1.5; }
+        .question-options { display: flex; flex-direction: column; gap: 12px; }
+        .question-option {
+            padding: 18px 24px; background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: 12px; cursor: pointer; font-size: 1rem; color: var(--text-primary);
+            transition: all 0.3s; display: flex; align-items: center; gap: 15px;
+        }
+        .question-option:hover { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+        .option-marker { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+        .question-btn { margin-top: 25px; padding: 14px 35px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .question-btn:hover { transform: scale(1.03); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); }
+        .question-result { margin-top: 20px; padding: 20px; border-radius: 12px; font-weight: 600; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .question-explanation { margin-top: 20px; padding: 20px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--accent-primary); display: none; }
+        .question-explanation.show { display: block; }
+        .question-explanation h4 { color: var(--accent-primary); margin-bottom: 10px; }
+
+        .terminal { background: #0d1117; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid #30363d; }
+        .terminal-header { background: #161b22; padding: 10px 15px; display: flex; align-items: center; gap: 8px; }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .terminal-title { margin-left: 10px; color: #8b949e; font-size: 0.85rem; }
+        .terminal-body { padding: 20px; font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #c9d1d9; }
+        .terminal-line { display: flex; margin-bottom: 8px; }
+        .terminal-prompt { color: #7ee787; margin-right: 10px; }
+        .terminal-command { color: #c9d1d9; }
+        .terminal-output { color: #8b949e; padding-left: 20px; }
+
+        .info-box { background: var(--bg-tertiary); border-radius: 12px; padding: 25px; margin: 20px 0; border-left: 4px solid var(--accent-primary); }
+        .info-box.warning { border-left-color: var(--warning); }
+        .info-box.success { border-left-color: var(--success); }
+        .info-box h4 { color: var(--accent-primary); margin-bottom: 10px; }
+        .info-box.warning h4 { color: var(--warning); }
+
+        .interview-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; margin: 20px 0; overflow: hidden; }
+        .interview-question { padding: 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; }
+        .interview-question:hover { background: rgba(99, 102, 241, 0.05); }
+        .interview-q-text { font-weight: 600; font-size: 1.1rem; }
+        .interview-toggle { font-size: 1.5rem; color: var(--accent-primary); transition: transform 0.3s; }
+        .interview-card.open .interview-toggle { transform: rotate(45deg); }
+        .interview-answer { padding: 0 25px; max-height: 0; overflow: hidden; transition: all 0.3s; }
+        .interview-card.open .interview-answer { padding: 0 25px 25px; max-height: 500px; }
+        .interview-answer-content { padding: 20px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--accent-django-light); }
+
+        .checklist { background: var(--bg-secondary); border-radius: 16px; padding: 30px; margin: 30px 0; border: 1px solid var(--border-color); }
+        .checklist-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s; }
+        .checklist-item:last-child { border-bottom: none; }
+        .checklist-item:hover { background: rgba(99, 102, 241, 0.05); margin: 0 -15px; padding-left: 15px; padding-right: 15px; }
+        .checklist-checkbox { width: 24px; height: 24px; border: 2px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0; }
+        .checklist-item.checked .checklist-checkbox { background: var(--success); border-color: var(--success); }
+        .checklist-text { flex: 1; }
+        .checklist-item.checked .checklist-text { text-decoration: line-through; color: var(--text-muted); }
+
+        .progress-container { position: fixed; top: 60px; left: 0; right: 0; height: 4px; background: var(--bg-tertiary); z-index: 999; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-django-light), var(--accent-primary)); width: 0%; transition: width 0.1s; }
+
+        .url-flow-detailed { display: flex; flex-direction: column; gap: 20px; }
+        .url-flow-step { display: flex; align-items: flex-start; gap: 20px; }
+        .url-flow-step-num { background: var(--accent-primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .url-flow-step-content { flex: 1; }
+        .url-flow-step-title { font-weight: 700; margin-bottom: 5px; }
+        .url-flow-step-desc { color: var(--text-secondary); font-size: 0.95rem; }
+        .url-flow-connector { width: 2px; height: 30px; background: var(--border-color); margin-left: 19px; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .flow-row { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+            .comparison-table { font-size: 0.85rem; }
+            .comparison-table th, .comparison-table td { padding: 10px; }
+        }
+
+        .highlight-green { color: var(--success); }
+        .highlight-yellow { color: var(--warning); }
+        .highlight-red { color: var(--danger); }
+        .highlight-purple { color: var(--accent-primary); }
+        .highlight-django { color: var(--accent-django-light); }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+        .mt-20 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 4: Django Foundations</div>
+        <ul class="nav-links">
+            <li><a href="#python">Python Setup</a></li>
+            <li><a href="#venv">Virtual Env</a></li>
+            <li><a href="#pip">pip & Packages</a></li>
+            <li><a href="#django">Django</a></li>
+            <li><a href="#project">Project</a></li>
+            <li><a href="#apps">Apps</a></li>
+            <li><a href="#views">Views & URLs</a></li>
+            <li><a href="#quiz">Quiz</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#127769;</span>
+            <span id="themeText">Dark</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-icon">&#127869;</div>
+        <h1>Django: Apps, Views & URLs</h1>
+        <div class="hero-meta">Class 4 | Backend Project Module</div>
+        <p class="hero-tagline">
+            Time to <strong>build your restaurant</strong>! Set up your kitchen (Python),
+            design your workspace (Virtual Environment), and hire your first staff &mdash;
+            the host who greets customers and directs them to tables.
+        </p>
+        <div class="scroll-indicator">
+            <span>Scroll to begin</span>
+            <span>&#8595;</span>
+        </div>
+    </section>
+
+    <!-- Python Setup Section -->
+    <section id="python">
+        <div class="section-container">
+            <span class="section-label">Part 1</span>
+            <h2 class="section-title">Python Installation</h2>
+            <p class="section-subtitle">
+                Before we build our restaurant, we need to set up our kitchen &mdash; Python!
+            </p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128214;</div>
+                    <h3 class="card-title">Readable</h3>
+                    <p class="card-desc">Code reads like English &mdash; easier to learn, review, and maintain</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128230;</div>
+                    <h3 class="card-title">Batteries Included</h3>
+                    <p class="card-desc">Rich standard library + huge ecosystem (Django, FastAPI, Flask)</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127760;</div>
+                    <h3 class="card-title">Versatile</h3>
+                    <p class="card-desc">Web, ML, scripting, automation &mdash; one language, many domains</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128101;</div>
+                    <h3 class="card-title">Community</h3>
+                    <p class="card-desc">Massive community = lots of tutorials, answers, and packages</p>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Python Version Timeline</h3>
+            <div class="flow-diagram">
+                <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">
+                    <strong>Python 3.0 was released on December 3, 2008</strong> &mdash; a major redesign that broke backwards compatibility with Python 2.
+                </p>
+                <div class="flow-row">
+                    <div class="flow-box" style="border-color: var(--danger);">
+                        <div class="flow-box-icon">&#9760;</div>
+                        <div class="flow-box-title">Python 2.x</div>
+                        <div class="flow-box-desc">EOL: Jan 1, 2020<br><small>Legacy only!</small></div>
+                    </div>
+                    <span class="flow-arrow">&#10132;</span>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128293;</div>
+                        <div class="flow-box-title">Python 3.8-3.9</div>
+                        <div class="flow-box-desc">Stable<br><small>Many production apps</small></div>
+                    </div>
+                    <span class="flow-arrow">&#10132;</span>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#11088;</div>
+                        <div class="flow-box-title">Python 3.10-3.11</div>
+                        <div class="flow-box-desc">Recommended!<br><small>Best for new projects</small></div>
+                    </div>
+                    <span class="flow-arrow">&#10132;</span>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128640;</div>
+                        <div class="flow-box-title">Python 3.12-3.13</div>
+                        <div class="flow-box-desc">Latest<br><small>Cutting edge features</small></div>
+                    </div>
+                </div>
+
+                <div class="info-box mt-40">
+                    <h4>&#128161; What do modern projects use?</h4>
+                    <p class="mt-20">Most modern production applications run on <strong>Python 3.10 or 3.11</strong>. Here's why:</p>
+                    <ul style="margin-top: 10px; padding-left: 20px; color: var(--text-secondary);">
+                        <li><strong>3.10+</strong> introduced structural pattern matching (match/case) &mdash; like switch statements</li>
+                        <li><strong>3.11</strong> is up to 25% faster than 3.10 with better error messages</li>
+                        <li>Major frameworks (Django, FastAPI) fully support these versions</li>
+                        <li>All popular packages are compatible</li>
+                    </ul>
+                    <p class="mt-20"><strong>Rule of thumb:</strong> For this course, use <span class="highlight-django">Python 3.10 or 3.11</span>.</p>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Installation Commands</h3>
+            <div class="os-tabs">
+                <button class="os-tab active" onclick="switchOS('macos')">&#127822; macOS</button>
+                <button class="os-tab" onclick="switchOS('windows')">&#128187; Windows</button>
+                <button class="os-tab" onclick="switchOS('linux')">&#128039; Linux</button>
+            </div>
+
+            <div class="os-content active" id="macos-content">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f56;"></div>
+                        <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                        <div class="terminal-dot" style="background: #27ca40;"></div>
+                        <span class="terminal-title">Terminal &mdash; macOS</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command"># Option 1: Download from python.org (Recommended for beginners)</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command"># Option 2: Using Homebrew (if you have it)</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">brew install python@3.11</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">python3 --version</span>
+                        </div>
+                        <div class="terminal-output">Python 3.11.x</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="os-content" id="windows-content">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f56;"></div>
+                        <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                        <div class="terminal-dot" style="background: #27ca40;"></div>
+                        <span class="terminal-title">PowerShell &mdash; Windows</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">></span>
+                            <span class="terminal-command"># Download from python.org</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">></span>
+                            <span class="terminal-command"># IMPORTANT: Check "Add Python to PATH" during install!</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">></span>
+                            <span class="terminal-command">python --version</span>
+                        </div>
+                        <div class="terminal-output">Python 3.11.x</div>
+                    </div>
+                </div>
+
+                <div class="info-box warning mt-20">
+                    <h4>&#9888; What does "Add Python to PATH" mean?</h4>
+                    <p class="mt-20">
+                        <strong>PATH</strong> is an environment variable that tells your computer <em>where to find programs</em> when you type commands.
+                    </p>
+                    <p class="mt-20">When you type <code>python</code> in the terminal, your computer looks through all folders listed in PATH to find the Python executable.</p>
+                    <ul style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary);">
+                        <li><strong>Without PATH:</strong> You'd have to type the full path every time: <code>C:\Users\You\AppData\Local\Programs\Python\Python311\python.exe</code></li>
+                        <li><strong>With PATH:</strong> Just type <code>python</code> &mdash; the system knows where to find it!</li>
+                    </ul>
+                    <p class="mt-20" style="color: var(--danger);"><strong>If you forgot to check the box:</strong> Reinstall Python and check it this time, or manually add it to PATH in System Environment Variables.</p>
+                </div>
+            </div>
+
+            <div class="os-content" id="linux-content">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f56;"></div>
+                        <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                        <div class="terminal-dot" style="background: #27ca40;"></div>
+                        <span class="terminal-title">Terminal &mdash; Ubuntu/Debian</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">sudo apt update</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">sudo apt install python3.11 python3.11-venv python3-pip</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">python3 --version</span>
+                        </div>
+                        <div class="terminal-output">Python 3.11.x</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Virtual Environment Section -->
+    <section id="venv">
+        <div class="section-container">
+            <span class="section-label">Part 2</span>
+            <h2 class="section-title">Virtual Environments</h2>
+            <p class="section-subtitle">
+                Your project needs its own isolated workspace &mdash; separate from other projects!
+            </p>
+
+            <h3 class="mb-20">Why Do We Need Virtual Environments?</h3>
+
+            <div class="info-box">
+                <h4>&#129300; The Real Problem: Conflicting Dependencies</h4>
+                <p class="mt-20">
+                    Imagine you're working on <strong>two different projects</strong> on the same computer:
+                </p>
+                <ul style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Project A</strong> (an old client project) needs <code>requests==2.20.0</code> (from 2018)</li>
+                    <li><strong>Project B</strong> (your new project) needs <code>requests==2.31.0</code> (latest)</li>
+                </ul>
+                <p class="mt-20">
+                    Without virtual environments, you can only have <strong>one version</strong> installed at a time. Installing 2.31.0 might break Project A!
+                </p>
+            </div>
+
+            <div class="flow-diagram mt-40">
+                <h3 style="margin-bottom: 30px; text-align: center;">The Problem: Dependency Conflicts &#128293;</h3>
+                <div class="flow-row">
+                    <div class="flow-box" style="border-color: var(--danger);">
+                        <div class="flow-box-title">Project A</div>
+                        <div class="flow-box-desc">requests 2.20<br>numpy 1.19</div>
+                    </div>
+                    <div class="flow-box" style="font-size: 2rem;">&#9889;</div>
+                    <div class="flow-box" style="border-color: var(--danger);">
+                        <div class="flow-box-title">Project B</div>
+                        <div class="flow-box-desc">requests 2.31<br>numpy 1.24</div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: var(--danger); margin-top: 20px; font-weight: 600;">
+                    Both installed globally &rarr; CONFLICT! Only one version can exist.
+                </p>
+            </div>
+
+            <div class="flow-diagram" style="border-color: var(--success);">
+                <h3 style="margin-bottom: 30px; text-align: center; color: var(--success);">The Solution: Virtual Environments &#10003;</h3>
+                <div class="flow-row">
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128230;</div>
+                        <div class="flow-box-title">Project A (venv)</div>
+                        <div class="flow-box-desc">requests 2.20 &#10003;<br>numpy 1.19 &#10003;</div>
+                    </div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128230;</div>
+                        <div class="flow-box-title">Project B (venv)</div>
+                        <div class="flow-box-desc">requests 2.31 &#10003;<br>numpy 1.24 &#10003;</div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: var(--success); margin-top: 20px; font-weight: 600;">
+                    Each project has its own isolated packages &mdash; no conflicts!
+                </p>
+            </div>
+
+            <div class="info-box success mt-40">
+                <h4>&#127919; Think of it like separate toolboxes</h4>
+                <p class="mt-20">
+                    A virtual environment is like giving each project its own <strong>toolbox</strong>:
+                </p>
+                <ul style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary);">
+                    <li>Each toolbox has exactly the tools (packages) that project needs</li>
+                    <li>Adding a tool to one toolbox doesn't affect others</li>
+                    <li>You can delete a toolbox without affecting your main system</li>
+                    <li>Different projects can use different versions of the same tool</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">Creating a Virtual Environment</h3>
+            <div class="os-tabs">
+                <button class="os-tab active" onclick="switchVenvOS('venv-macos')">&#127822; macOS / Linux</button>
+                <button class="os-tab" onclick="switchVenvOS('venv-windows')">&#128187; Windows</button>
+            </div>
+
+            <div class="os-content active" id="venv-macos-content">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f56;"></div>
+                        <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                        <div class="terminal-dot" style="background: #27ca40;"></div>
+                        <span class="terminal-title">Terminal</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">cd ~/projects/my_restaurant</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">python3 -m venv venv</span>
+                        </div>
+                        <div class="terminal-output"># Creates a folder called "venv" with isolated Python</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">source venv/bin/activate</span>
+                        </div>
+                        <div class="terminal-output">(venv) $ &larr; Notice the (venv) prefix! You're now "inside" the venv.</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">deactivate</span>
+                        </div>
+                        <div class="terminal-output">$ &larr; Back to normal (no prefix)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="os-content" id="venv-windows-content">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f56;"></div>
+                        <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                        <div class="terminal-dot" style="background: #27ca40;"></div>
+                        <span class="terminal-title">Command Prompt / PowerShell</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">></span>
+                            <span class="terminal-command">cd C:\projects\my_restaurant</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">></span>
+                            <span class="terminal-command">python -m venv venv</span>
+                        </div>
+                        <div class="terminal-output"># Creates a folder called "venv" with isolated Python</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">></span>
+                            <span class="terminal-command">venv\Scripts\activate</span>
+                        </div>
+                        <div class="terminal-output">(venv) > &larr; Notice the (venv) prefix! You're now "inside" the venv.</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) ></span>
+                            <span class="terminal-command">deactivate</span>
+                        </div>
+                        <div class="terminal-output">> &larr; Back to normal (no prefix)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box mt-40">
+                <h4>&#128161; Can I name my virtual environment something other than "venv"?</h4>
+                <p class="mt-20"><strong>Yes!</strong> The name "venv" is just a convention. You can use any name:</p>
+                <div class="terminal" style="margin-top: 15px;">
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">python3 -m venv myenv</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">python3 -m venv .venv</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">python3 -m venv restaurant_env</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-20"><strong>Best Practice:</strong> Use <code>venv</code> or <code>.venv</code> (with dot, makes it hidden on Unix systems). This is what most projects use, so other developers will immediately recognize it.</p>
+            </div>
+
+            <div class="card mt-40" style="border-color: var(--warning);">
+                <h3>&#128161; Best Practice: Never Commit venv to Git!</h3>
+                <p class="mt-20">Add these to your <code>.gitignore</code>:</p>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>venv/
+.venv/
+env/
+__pycache__/</pre>
+                    </div>
+                </div>
+                <p class="mt-20"><strong>Why?</strong> Virtual environments are:</p>
+                <ul style="padding-left: 20px; color: var(--text-secondary); margin-top: 10px;">
+                    <li>Large (can be 50-100+ MB)</li>
+                    <li>System-specific (won't work on different OS)</li>
+                    <li>Easily recreatable from requirements.txt</li>
+                </ul>
+                <p class="mt-20">Instead, share dependencies via <code>requirements.txt</code>:</p>
+                <div class="terminal">
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">pip freeze > requirements.txt</span>
+                        </div>
+                        <div class="terminal-output"># Creates a file listing all installed packages</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">pip install -r requirements.txt</span>
+                        </div>
+                        <div class="terminal-output"># Another developer runs this to get the same packages</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- pip Section -->
+    <section id="pip">
+        <div class="section-container">
+            <span class="section-label">Part 3</span>
+            <h2 class="section-title">pip: Python Package Manager</h2>
+            <p class="section-subtitle">
+                pip installs Python packages from the Python Package Index (PyPI) &mdash; a repository of 400,000+ packages.
+            </p>
+
+            <!-- What is a package manager? -->
+            <div class="card">
+                <h3 class="card-title">&#128230; What Is a Package Manager?</h3>
+                <p class="card-desc mt-10">
+                    At its core, a package manager is just a tool that answers one question:
+                </p>
+                <blockquote style="margin: 20px 0; padding: 15px 20px; border-left: 4px solid var(--accent-primary); background: var(--bg-primary); font-style: italic; color: var(--text-secondary);">
+                    "I need software X &mdash; go find it, download it, and set it up for me."
+                </blockquote>
+
+                <h4 class="mt-20" style="color: var(--text-secondary);">Before package managers existed, you'd manually:</h4>
+                <ol style="margin-top: 15px; padding-left: 25px; color: var(--text-secondary); line-height: 2;">
+                    <li>Google the library</li>
+                    <li>Find the right version</li>
+                    <li>Download a zip file</li>
+                    <li>Figure out where to put it</li>
+                    <li>Manually handle anything <em>it</em> depends on</li>
+                </ol>
+                <p class="mt-20" style="color: var(--success); font-weight: 600;">
+                    A package manager automates all of that. &#9989;
+                </p>
+            </div>
+
+            <!-- Real-world analogy -->
+            <div class="info-box mt-30">
+                <h4>&#127979; The Real-World Analogy</h4>
+                <p class="mt-10" style="color: var(--text-secondary);">
+                    Think of it like an <strong>app store</strong>, but for code libraries:
+                </p>
+                <table class="comparison-table mt-20">
+                    <tr><th>Concept</th><th>Equivalent</th></tr>
+                    <tr><td>The store</td><td><strong>PyPI</strong> (pypi.org) &mdash; has 400,000+ packages</td></tr>
+                    <tr><td>The checkout counter</td><td><strong>pip</strong> &mdash; the tool you use</td></tr>
+                    <tr><td><code>pip install django</code></td><td>You saying <em>"get me Django from the store and install it"</em></td></tr>
+                </table>
+            </div>
+
+            <!-- Where does pip come from -->
+            <div class="info-box mt-30">
+                <h4>&#129300; Where does pip come from?</h4>
+                <p class="mt-20">
+                    <strong>pip comes bundled with Python!</strong> When you install Python 3.4+, pip is automatically included.
+                </p>
+                <ul style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>pip</strong> = "Pip Installs Packages" (recursive acronym!)</li>
+                    <li>It downloads packages from <a href="https://pypi.org" target="_blank" style="color: var(--accent-primary);">pypi.org</a> (Python Package Index)</li>
+                </ul>
+            </div>
+
+            <!-- Breaking down pip install django -->
+            <h3 class="mt-40 mb-20">Breaking Down <code>pip install django</code></h3>
+            <div class="code-block">
+                <div class="code-header"><div class="code-title">Command anatomy</div></div>
+                <div class="code-content">
+                    <pre>pip install django
+│    │       │
+│    │       └── Package name (looked up on PyPI)
+│    └── The action
+└── Python's package manager</pre>
+                </div>
+            </div>
+
+            <div class="card mt-20">
+                <h4 style="color: var(--accent-django-light);">&#9881; Behind the scenes, pip:</h4>
+                <ol style="margin-top: 15px; padding-left: 25px; color: var(--text-secondary); line-height: 2;">
+                    <li>Goes to PyPI and finds the latest stable Django</li>
+                    <li>Downloads it</li>
+                    <li>Resolves Django's own dependencies (and installs those too)</li>
+                    <li>Places everything in your <strong>active environment's</strong> <code>site-packages</code> folder</li>
+                </ol>
+            </div>
+
+            <!-- Why venv matters here -->
+            <h3 class="mt-40 mb-20">Why the Virtual Environment Part Matters Here</h3>
+            <p style="color: var(--text-secondary);">This is the payoff of activating <code>.venv</code> first:</p>
+
+            <div class="terminal mt-20">
+                <div class="terminal-header">
+                    <div class="terminal-dot" style="background: #ff5f56;"></div>
+                    <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                    <div class="terminal-dot" style="background: #27ca40;"></div>
+                    <span class="terminal-title">The correct workflow</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-command">source .venv/bin/activate</span>
+                    </div>
+                    <div class="terminal-output"># Step 1: Activate venv</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip install django</span>
+                    </div>
+                    <div class="terminal-output"># Step 2: Install Django (goes into .venv/)</div>
+                </div>
+            </div>
+
+            <table class="comparison-table mt-20">
+                <tr><th>Scenario</th><th>Where Django Goes</th><th>Good or Bad?</th></tr>
+                <tr>
+                    <td><strong>Without</strong> activation</td>
+                    <td>Global Python</td>
+                    <td style="color: var(--danger);">&#10060; Bad &mdash; affects all projects</td>
+                </tr>
+                <tr>
+                    <td><strong>With</strong> activation</td>
+                    <td>Just this project's <code>.venv</code></td>
+                    <td style="color: var(--success);">&#9989; Good &mdash; isolated</td>
+                </tr>
+            </table>
+
+            <div class="terminal mt-20">
+                <div class="terminal-header">
+                    <div class="terminal-dot" style="background: #ff5f56;"></div>
+                    <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                    <div class="terminal-dot" style="background: #27ca40;"></div>
+                    <span class="terminal-title">Verify installation location</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip show django</span>
+                    </div>
+                    <div class="terminal-output">Name: Django</div>
+                    <div class="terminal-output">Version: 5.0.x</div>
+                    <div class="terminal-output" style="color: var(--success);">Location: .../.venv/lib/python3.x/site-packages &#9989;</div>
+                </div>
+            </div>
+
+            <!-- Common pip commands -->
+            <h3 class="mt-40 mb-20">Common pip Commands</h3>
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dot" style="background: #ff5f56;"></div>
+                    <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                    <div class="terminal-dot" style="background: #27ca40;"></div>
+                    <span class="terminal-title">pip basics</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip install django</span>
+                    </div>
+                    <div class="terminal-output"># Downloads Django from PyPI and installs it</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip install django==4.2</span>
+                    </div>
+                    <div class="terminal-output"># Install a specific version</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip list</span>
+                    </div>
+                    <div class="terminal-output"># Show all installed packages</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip show django</span>
+                    </div>
+                    <div class="terminal-output"># Show package details (including location!)</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip freeze > requirements.txt</span>
+                    </div>
+                    <div class="terminal-output"># Save all installed packages to a file</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip install -r requirements.txt</span>
+                    </div>
+                    <div class="terminal-output"># Install from requirements file</div>
+                </div>
+            </div>
+
+            <div class="info-box warning mt-40">
+                <h4>&#9888; Always activate your venv before using pip!</h4>
+                <p class="mt-20">
+                    If you run <code>pip install</code> without activating venv, packages install <strong>globally</strong> (system-wide) &mdash; exactly what we want to avoid!
+                </p>
+                <p class="mt-20">Look for the <code>(venv)</code> prefix in your terminal before running pip commands.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Django Section -->
+    <section id="django">
+        <div class="section-container">
+            <span class="section-label django">Part 4</span>
+            <h2 class="section-title">What Is Django?</h2>
+            <p class="section-subtitle">
+                A high-level Python web framework that encourages rapid development and clean, pragmatic design.
+            </p>
+
+            <div class="info-box">
+                <h4>&#127928; Where does the name "Django" come from?</h4>
+                <p class="mt-20">
+                    Django is named after <strong>Django Reinhardt</strong> (1910-1953), a legendary Belgian-born Romani-French jazz guitarist. The framework's creators, Adrian Holovaty and Simon Willison, were jazz enthusiasts.
+                </p>
+                <p class="mt-20" style="color: var(--text-muted);">
+                    <em>"Django makes it easier to build better web apps more quickly and with less code."</em>
+                </p>
+            </div>
+
+            <div class="info-box mt-40">
+                <h4>&#128267; What does "batteries-included" mean?</h4>
+                <p class="mt-20">
+                    Like how a toy that comes with batteries is ready to play immediately, Django comes with <strong>everything you need</strong> to build web applications out of the box:
+                </p>
+                <ul style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Admin Panel</strong> &mdash; Auto-generated interface to manage your data</li>
+                    <li><strong>ORM (Object-Relational Mapping)</strong> &mdash; Talk to databases using Python, not SQL</li>
+                    <li><strong>Authentication</strong> &mdash; User login, logout, permissions built-in</li>
+                    <li><strong>Form handling</strong> &mdash; Validation and rendering</li>
+                    <li><strong>Security</strong> &mdash; Protection against common attacks (XSS, CSRF, SQL injection)</li>
+                </ul>
+                <p class="mt-20">
+                    <strong>Compare to Flask:</strong> Flask is a "micro-framework" &mdash; it gives you the minimum and you add batteries (extensions) yourself.
+                </p>
+            </div>
+
+            <h3 class="mt-40 mb-20">Django's Built-in Features</h3>
+            <div class="card-grid">
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">&#128451;</div>
+                    <div class="card-title">ORM</div>
+                    <div class="card-desc">Database abstraction &mdash; write Python, not SQL</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">&#128736;</div>
+                    <div class="card-title">Admin Panel</div>
+                    <div class="card-desc">Auto-generated CRUD interface for your models</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">Authentication</div>
+                    <div class="card-desc">Users, sessions, permissions, groups</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">&#128220;</div>
+                    <div class="card-title">Forms</div>
+                    <div class="card-desc">Validation & rendering with security</div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Django's Philosophy: "The Django Way"</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Principle</th>
+                    <th>Meaning</th>
+                    <th>Restaurant Analogy</th>
+                </tr>
+                <tr>
+                    <td><strong class="highlight-django">DRY</strong></td>
+                    <td>Don't Repeat Yourself</td>
+                    <td>One master recipe, not 10 copies</td>
+                </tr>
+                <tr>
+                    <td><strong class="highlight-django">Convention over Config</strong></td>
+                    <td>Sensible defaults, override when needed</td>
+                    <td>Standard kitchen layout works for most</td>
+                </tr>
+                <tr>
+                    <td><strong class="highlight-django">Explicit > Implicit</strong></td>
+                    <td>No magic &mdash; code should be clear</td>
+                    <td>"2 cups flour", not "some flour"</td>
+                </tr>
+                <tr>
+                    <td><strong class="highlight-django">MTV Architecture</strong></td>
+                    <td>Model-Template-View separation</td>
+                    <td>Pantry, Plating, Waiter</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- Project Creation Section -->
+    <section id="project">
+        <div class="section-container">
+            <span class="section-label django">Part 5</span>
+            <h2 class="section-title">Creating a Django Project</h2>
+            <p class="section-subtitle">
+                Let's build the restaurant from scratch! First, we need to understand each command.
+            </p>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dot" style="background: #ff5f56;"></div>
+                    <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                    <div class="terminal-dot" style="background: #27ca40;"></div>
+                    <span class="terminal-title">Creating Your First Django Project</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">pip install django</span>
+                    </div>
+                    <div class="terminal-output"># Downloads Django from PyPI into your virtual environment</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">django-admin startproject restaurant_project</span>
+                    </div>
+                    <div class="terminal-output"># Creates a new folder with Django project skeleton</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">cd restaurant_project</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">python manage.py runserver</span>
+                    </div>
+                    <div class="terminal-output">Starting development server at http://127.0.0.1:8000/</div>
+                </div>
+            </div>
+
+            <div class="info-box mt-40">
+                <h4>&#128269; Breaking down: <code>django-admin startproject restaurant_project</code></h4>
+                <table class="comparison-table" style="margin-top: 15px;">
+                    <tr>
+                        <td><code>django-admin</code></td>
+                        <td>Django's command-line tool (installed with Django)</td>
+                    </tr>
+                    <tr>
+                        <td><code>startproject</code></td>
+                        <td>Command to create a new project skeleton</td>
+                    </tr>
+                    <tr>
+                        <td><code>restaurant_project</code></td>
+                        <td>Your project name (use lowercase, underscores, no spaces)</td>
+                    </tr>
+                </table>
+                <p class="mt-20" style="color: var(--text-secondary);">
+                    This creates a folder with all the files Django needs to run. You only do this <strong>once per project</strong>.
+                </p>
+            </div>
+
+            <h3 class="mt-40 mb-20">Project Structure Explained</h3>
+            <div class="file-tree">
+                <div class="file-tree-item folder">
+                    &#128193; restaurant_project/
+                    <span class="desc">Outer folder (can rename this)</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; manage.py
+                    <span class="desc">Command-line utility</span>
+                </div>
+                <div class="file-tree-item folder indent-1">
+                    &#128193; restaurant_project/
+                    <span class="desc">Inner folder (Python package)</span>
+                </div>
+                <div class="file-tree-item python indent-2">
+                    &#128221; __init__.py
+                    <span class="desc">Makes this a Python package</span>
+                </div>
+                <div class="file-tree-item python indent-2">
+                    &#128221; settings.py
+                    <span class="desc">All project settings</span>
+                </div>
+                <div class="file-tree-item python indent-2">
+                    &#128221; urls.py
+                    <span class="desc">URL routing (main)</span>
+                </div>
+                <div class="file-tree-item python indent-2">
+                    &#128221; wsgi.py
+                    <span class="desc">Production server interface</span>
+                </div>
+                <div class="file-tree-item python indent-2">
+                    &#128221; asgi.py
+                    <span class="desc">Async server interface</span>
+                </div>
+            </div>
+
+            <!-- Detailed File Explanations -->
+            <h3 class="mt-40 mb-20">Understanding Each File in Detail</h3>
+
+            <!-- __init__.py -->
+            <div class="card mt-20">
+                <h3 class="card-title">&#128221; __init__.py &mdash; The Package Marker</h3>
+                <p class="card-desc mt-20">
+                    <strong>Why does this file exist?</strong> In Python, a folder is just a folder. But a folder with <code>__init__.py</code> becomes a <strong>Python package</strong> that can be imported.
+                </p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">restaurant_project/__init__.py</div>
+                    </div>
+                    <div class="code-content">
+                        <pre><span class="comment"># This file is empty by default!</span>
+<span class="comment"># Its mere existence tells Python: "This folder is a package"</span>
+
+<span class="comment"># Without this file:</span>
+<span class="comment"># from restaurant_project import settings  # Would FAIL!</span>
+
+<span class="comment"># With this file:</span>
+<span class="comment"># from restaurant_project import settings  # Works!</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- settings.py -->
+            <div class="card mt-20">
+                <h3 class="card-title">&#9881; settings.py &mdash; The Complete Configuration Hub</h3>
+                <p class="card-desc mt-20">
+                    This file contains <strong>ALL</strong> configuration for your Django project. Let's understand <strong>every</strong> default setting!
+                </p>
+
+                <!-- BASE_DIR -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">1. BASE_DIR &mdash; The Project Root</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">What does this do?</div></div>
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+
+<span class="comment"># Build paths inside the project like this: BASE_DIR / 'subdir'</span>
+<span class="variable">BASE_DIR</span> = Path(__file__).resolve().parent.parent
+
+<span class="comment"># Breaking it down:</span>
+<span class="comment"># Path(__file__)      → Path to this settings.py file</span>
+<span class="comment"># .resolve()          → Convert to absolute path (no .. or .)</span>
+<span class="comment"># .parent             → Go up one directory (to restaurant_project/)</span>
+<span class="comment"># .parent             → Go up again (to project root with manage.py)</span></pre>
+                    </div>
+                </div>
+                <p class="mt-10" style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Why?</strong> All other paths (database, templates, static files) are relative to this. Using <code>Path</code> makes paths work on Windows, macOS, and Linux.
+                </p>
+
+                <!-- Security Settings -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">2. Security Settings</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">Critical security configuration</div></div>
+                    <div class="code-content">
+                        <pre><span class="comment"># SECURITY WARNING: keep the secret key used in production secret!</span>
+<span class="variable">SECRET_KEY</span> = <span class="string">'django-insecure-^gotz33w8690mo+=mm...'</span>
+
+<span class="comment"># SECURITY WARNING: don't run with debug turned on in production!</span>
+<span class="variable">DEBUG</span> = <span class="keyword">True</span>
+
+<span class="variable">ALLOWED_HOSTS</span> = []</pre>
+                    </div>
+                </div>
+                <table class="comparison-table mt-20">
+                    <thead><tr><th>Setting</th><th>Development</th><th>Production</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>SECRET_KEY</code></td><td>Auto-generated (OK to commit)</td><td><strong>Must be secret!</strong> Use env var</td></tr>
+                        <tr><td><code>DEBUG</code></td><td><code>True</code> (detailed errors)</td><td><strong>Must be <code>False</code>!</strong> Exposes code</td></tr>
+                        <tr><td><code>ALLOWED_HOSTS</code></td><td><code>[]</code> (localhost only)</td><td><code>['yourdomain.com']</code></td></tr>
+                    </tbody>
+                </table>
+
+                <!-- INSTALLED_APPS -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">3. INSTALLED_APPS &mdash; Registered Applications</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">Django's built-in apps + your apps</div></div>
+                    <div class="code-content">
+                        <pre><span class="variable">INSTALLED_APPS</span> = [
+    <span class="string">'django.contrib.admin'</span>,        <span class="comment"># Auto-generated admin interface</span>
+    <span class="string">'django.contrib.auth'</span>,         <span class="comment"># User authentication system</span>
+    <span class="string">'django.contrib.contenttypes'</span>, <span class="comment"># Framework for content types</span>
+    <span class="string">'django.contrib.sessions'</span>,     <span class="comment"># Session framework (user state)</span>
+    <span class="string">'django.contrib.messages'</span>,     <span class="comment"># Flash messaging ("Item added!")</span>
+    <span class="string">'django.contrib.staticfiles'</span>,  <span class="comment"># Static file handling (CSS, JS)</span>
+
+    <span class="comment"># Your apps go here:</span>
+    <span class="comment"># 'menu',</span>
+    <span class="comment"># 'orders',</span>
+]</pre>
+                    </div>
+                </div>
+
+                <!-- MIDDLEWARE -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">4. MIDDLEWARE &mdash; Request/Response Pipeline</h4>
+                <p class="mt-10" style="color: var(--text-secondary);">
+                    Middleware are like <strong>security checkpoints</strong> that every request passes through:
+                </p>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">The middleware stack</div></div>
+                    <div class="code-content">
+                        <pre><span class="variable">MIDDLEWARE</span> = [
+    <span class="string">'django.middleware.security.SecurityMiddleware'</span>,
+    <span class="comment"># ↑ Adds security headers (HTTPS redirect, HSTS)</span>
+
+    <span class="string">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
+    <span class="comment"># ↑ Enables request.session</span>
+
+    <span class="string">'django.middleware.common.CommonMiddleware'</span>,
+    <span class="comment"># ↑ URL normalization (adds trailing slashes)</span>
+
+    <span class="string">'django.middleware.csrf.CsrfViewMiddleware'</span>,
+    <span class="comment"># ↑ Protects against Cross-Site Request Forgery</span>
+
+    <span class="string">'django.contrib.auth.middleware.AuthenticationMiddleware'</span>,
+    <span class="comment"># ↑ Attaches request.user to every request</span>
+
+    <span class="string">'django.contrib.messages.middleware.MessageMiddleware'</span>,
+    <span class="comment"># ↑ Enables flash messages</span>
+
+    <span class="string">'django.middleware.clickjacking.XFrameOptionsMiddleware'</span>,
+    <span class="comment"># ↑ Prevents clickjacking (blocks iframe embedding)</span>
+]</pre>
+                    </div>
+                </div>
+                <p class="mt-10" style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Order matters!</strong> SessionMiddleware must come before AuthenticationMiddleware (auth needs sessions).
+                </p>
+
+                <!-- ROOT_URLCONF & TEMPLATES -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">5. ROOT_URLCONF & TEMPLATES</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">URL and template configuration</div></div>
+                    <div class="code-content">
+                        <pre><span class="variable">ROOT_URLCONF</span> = <span class="string">'restaurant_project.urls'</span>
+<span class="comment"># ↑ Start URL matching from this file</span>
+
+<span class="variable">TEMPLATES</span> = [
+    {
+        <span class="string">'BACKEND'</span>: <span class="string">'django.template.backends.django.DjangoTemplates'</span>,
+        <span class="string">'DIRS'</span>: [],  <span class="comment"># Additional template directories</span>
+        <span class="string">'APP_DIRS'</span>: <span class="keyword">True</span>,  <span class="comment"># Look in each app's templates/ folder</span>
+        <span class="string">'OPTIONS'</span>: {
+            <span class="string">'context_processors'</span>: [
+                <span class="string">'django.template.context_processors.request'</span>,
+                <span class="comment"># ↑ Adds 'request' object to all templates</span>
+                <span class="string">'django.contrib.auth.context_processors.auth'</span>,
+                <span class="comment"># ↑ Adds 'user' and 'perms' to templates</span>
+                <span class="string">'django.contrib.messages.context_processors.messages'</span>,
+                <span class="comment"># ↑ Adds flash messages to templates</span>
+            ],
+        },
+    },
+]
+
+<span class="variable">WSGI_APPLICATION</span> = <span class="string">'restaurant_project.wsgi.application'</span>
+<span class="comment"># ↑ Entry point for production servers (Gunicorn, uWSGI)</span></pre>
+                    </div>
+                </div>
+
+                <!-- DATABASES -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">6. DATABASES</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">Database configuration</div></div>
+                    <div class="code-content">
+                        <pre><span class="variable">DATABASES</span> = {
+    <span class="string">'default'</span>: {
+        <span class="string">'ENGINE'</span>: <span class="string">'django.db.backends.sqlite3'</span>,
+        <span class="comment"># ↑ sqlite3, postgresql, mysql, oracle</span>
+        <span class="string">'NAME'</span>: BASE_DIR / <span class="string">'db.sqlite3'</span>,
+        <span class="comment"># ↑ For SQLite: file path. For others: database name</span>
+    }
+}
+
+<span class="comment"># Production PostgreSQL example:</span>
+<span class="comment"># DATABASES = {</span>
+<span class="comment">#     'default': {</span>
+<span class="comment">#         'ENGINE': 'django.db.backends.postgresql',</span>
+<span class="comment">#         'NAME': 'restaurant_db',</span>
+<span class="comment">#         'USER': 'restaurant_user',</span>
+<span class="comment">#         'PASSWORD': os.environ.get('DB_PASSWORD'),</span>
+<span class="comment">#         'HOST': 'localhost',</span>
+<span class="comment">#         'PORT': '5432',</span>
+<span class="comment">#     }</span>
+<span class="comment"># }</span></pre>
+                    </div>
+                </div>
+
+                <!-- AUTH_PASSWORD_VALIDATORS -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">7. AUTH_PASSWORD_VALIDATORS</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">Password security rules</div></div>
+                    <div class="code-content">
+                        <pre><span class="variable">AUTH_PASSWORD_VALIDATORS</span> = [
+    {<span class="string">'NAME'</span>: <span class="string">'...UserAttributeSimilarityValidator'</span>},
+    <span class="comment"># ↑ Password can't be similar to username/email</span>
+
+    {<span class="string">'NAME'</span>: <span class="string">'...MinimumLengthValidator'</span>},
+    <span class="comment"># ↑ Minimum 8 characters by default</span>
+
+    {<span class="string">'NAME'</span>: <span class="string">'...CommonPasswordValidator'</span>},
+    <span class="comment"># ↑ Rejects 20,000 common passwords ("password123")</span>
+
+    {<span class="string">'NAME'</span>: <span class="string">'...NumericPasswordValidator'</span>},
+    <span class="comment"># ↑ Password can't be all numbers</span>
+]</pre>
+                    </div>
+                </div>
+
+                <!-- i18n and Static -->
+                <h4 class="mt-30" style="color: var(--accent-django-light);">8. Internationalization & Static Files</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">Language, timezone, and static file settings</div></div>
+                    <div class="code-content">
+                        <pre><span class="comment"># Internationalization</span>
+<span class="variable">LANGUAGE_CODE</span> = <span class="string">'en-us'</span>       <span class="comment"># Default language</span>
+<span class="variable">TIME_ZONE</span> = <span class="string">'UTC'</span>             <span class="comment"># Use 'Asia/Kolkata' for IST</span>
+<span class="variable">USE_I18N</span> = <span class="keyword">True</span>               <span class="comment"># Enable Django translations</span>
+<span class="variable">USE_TZ</span> = <span class="keyword">True</span>                 <span class="comment"># Store times in UTC (recommended!)</span>
+
+<span class="comment"># Static files (CSS, JavaScript, Images)</span>
+<span class="variable">STATIC_URL</span> = <span class="string">'static/'</span>        <span class="comment"># URL prefix: /static/css/style.css</span>
+
+<span class="comment"># Default primary key type (Django 3.2+)</span>
+<span class="variable">DEFAULT_AUTO_FIELD</span> = <span class="string">'django.db.models.BigAutoField'</span>
+<span class="comment"># ↑ BigAutoField supports larger IDs than AutoField</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- urls.py -->
+            <div class="card mt-20">
+                <h3 class="card-title">&#128678; urls.py &mdash; The URL Router</h3>
+                <p class="card-desc mt-20">
+                    This file maps URLs to views. Think of it as the <strong>host/receptionist</strong> at a restaurant &mdash; directing each customer to the right table.
+                </p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">restaurant_project/urls.py (default)</div>
+                    </div>
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> django.contrib <span class="keyword">import</span> admin
+<span class="keyword">from</span> django.urls <span class="keyword">import</span> path
+
+<span class="variable">urlpatterns</span> = [
+    path(<span class="string">'admin/'</span>, admin.site.urls),
+    <span class="comment"># When someone visits /admin/, Django's admin handles it</span>
+]
+
+<span class="comment"># You'll add your own routes here:</span>
+<span class="comment"># path('menu/', include('menu.urls')),</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- wsgi.py -->
+            <div class="card mt-20">
+                <h3 class="card-title">&#128640; wsgi.py &mdash; Production Server Interface</h3>
+                <p class="card-desc mt-20">
+                    <strong>WSGI</strong> = Web Server Gateway Interface. This file connects Django to production servers like Gunicorn or uWSGI.
+                </p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">restaurant_project/wsgi.py</div>
+                    </div>
+                    <div class="code-content">
+                        <pre><span class="keyword">import</span> os
+<span class="keyword">from</span> django.core.wsgi <span class="keyword">import</span> get_wsgi_application
+
+os.environ.setdefault(<span class="string">'DJANGO_SETTINGS_MODULE'</span>, <span class="string">'restaurant_project.settings'</span>)
+<span class="comment"># Tells Django where to find settings</span>
+
+<span class="variable">application</span> = get_wsgi_application()
+<span class="comment"># The 'application' object is what servers like Gunicorn use</span>
+
+<span class="comment"># You rarely edit this file!</span></pre>
+                    </div>
+                </div>
+                <p class="mt-20" style="color: var(--text-secondary);">
+                    <strong>Note:</strong> <code>asgi.py</code> is similar but for async servers (Daphne, Uvicorn) that support WebSockets and HTTP/2.
+                </p>
+            </div>
+
+            <!-- manage.py -->
+            <div class="card mt-20">
+                <h3 class="card-title">&#128736; manage.py &mdash; Your Swiss Army Knife</h3>
+                <p class="card-desc mt-20">
+                    This script lets you run Django commands. You'll use it constantly!
+                </p>
+                <div class="terminal">
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">python manage.py runserver</span>
+                        </div>
+                        <div class="terminal-output"># Start development server</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">python manage.py migrate</span>
+                        </div>
+                        <div class="terminal-output"># Apply database changes</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">python manage.py startapp menu</span>
+                        </div>
+                        <div class="terminal-output"># Create a new app</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">python manage.py createsuperuser</span>
+                        </div>
+                        <div class="terminal-output"># Create admin user</div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">(venv) $</span>
+                            <span class="terminal-command">python manage.py shell</span>
+                        </div>
+                        <div class="terminal-output"># Interactive Python shell with Django loaded</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question about Templates -->
+            <div class="question-block mt-40" id="q-templates">
+                <div class="question-label">&#129300; Think About This</div>
+                <div class="question-text">
+                    In the old days, Django used <strong>Templates</strong> to generate HTML pages server-side. But we discussed in Class 1 that modern APIs return <strong>JSON</strong>.<br><br>
+                    <em>If we're not using templates, what should Django send as a response to API requests?</em>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        HTML pages with embedded data
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        JSON data that frontends can consume
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Raw database records
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        XML documents
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-templates')">Check Answer</button>
+                <div class="question-result" id="q-templates-result"></div>
+                <div class="question-explanation" id="q-templates-explanation">
+                    <h4>&#128218; Templates vs JSON APIs</h4>
+                    <p><strong>Templates (old approach):</strong> Server generates complete HTML pages. Used when browsers couldn't run JavaScript well.</p>
+                    <p class="mt-20"><strong>JSON APIs (modern approach):</strong> Server sends data as JSON. Frontend (React, Vue, mobile apps) renders the UI. This is what we'll build!</p>
+                    <p class="mt-20">Django REST Framework (DRF) makes this easy &mdash; we'll cover it in Class 6.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Apps Section -->
+    <section id="apps">
+        <div class="section-container">
+            <span class="section-label django">Part 6</span>
+            <h2 class="section-title">Django Apps</h2>
+            <p class="section-subtitle">
+                Apps are modular building blocks &mdash; each one handles a specific feature.
+            </p>
+
+            <div class="info-box">
+                <h4>&#129300; Why can't we just put everything in the project folder?</h4>
+                <p class="mt-20">
+                    You <em>could</em>, but it would quickly become a mess! Here's why Django uses apps:
+                </p>
+                <ul style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Separation of concerns:</strong> Menu logic stays in <code>menu/</code>, orders in <code>orders/</code></li>
+                    <li><strong>Reusability:</strong> You can copy an app (e.g., <code>users/</code>) to another project</li>
+                    <li><strong>Team collaboration:</strong> Different developers can work on different apps without conflicts</li>
+                    <li><strong>Testing:</strong> Test each app independently</li>
+                    <li><strong>Maintainability:</strong> A 1000-line models.py is harder to manage than 10 files of 100 lines each</li>
+                </ul>
+            </div>
+
+            <div class="flow-diagram mt-40">
+                <h3 style="text-align: center; margin-bottom: 30px;">Project vs Apps</h3>
+                <div class="flow-row">
+                    <div class="flow-box" style="min-width: 200px;">
+                        <div class="flow-box-icon">&#127970;</div>
+                        <div class="flow-box-title">Project</div>
+                        <div class="flow-box-desc">Restaurant Chain<br>(Domino's HQ)</div>
+                    </div>
+                    <span class="flow-arrow">contains</span>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="flow-box highlight">
+                            <div class="flow-box-title">&#127860; menu/</div>
+                            <div class="flow-box-desc">Menu Department</div>
+                        </div>
+                        <div class="flow-box highlight">
+                            <div class="flow-box-title">&#128230; orders/</div>
+                            <div class="flow-box-desc">Orders Department</div>
+                        </div>
+                        <div class="flow-box highlight">
+                            <div class="flow-box-title">&#128100; staff/</div>
+                            <div class="flow-box-desc">HR Department</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal mt-40">
+                <div class="terminal-header">
+                    <div class="terminal-dot" style="background: #ff5f56;"></div>
+                    <div class="terminal-dot" style="background: #ffbd2e;"></div>
+                    <div class="terminal-dot" style="background: #27ca40;"></div>
+                    <span class="terminal-title">Creating Your First App</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">(venv) $</span>
+                        <span class="terminal-command">python manage.py startapp menu</span>
+                    </div>
+                    <div class="terminal-output"># Creates a new folder 'menu/' with app skeleton</div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">App Structure</h3>
+            <div class="file-tree">
+                <div class="file-tree-item folder">
+                    &#128193; menu/
+                    <span class="desc">Your new app</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; __init__.py
+                    <span class="desc">Package marker (empty)</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; admin.py
+                    <span class="desc">Register models for admin panel</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; apps.py
+                    <span class="desc">App configuration</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; models.py
+                    <span class="desc">Database models (tables)</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; tests.py
+                    <span class="desc">Unit tests for this app</span>
+                </div>
+                <div class="file-tree-item python indent-1">
+                    &#128221; views.py
+                    <span class="desc">View functions (request handlers)</span>
+                </div>
+                <div class="file-tree-item folder indent-1">
+                    &#128193; migrations/
+                    <span class="desc">Database migration files</span>
+                </div>
+            </div>
+
+            <!-- Apps vs Microservices -->
+            <div class="card mt-40">
+                <h3 class="card-title">&#129300; Django Apps vs Microservices: A Common Confusion</h3>
+                <p class="card-desc mt-10">
+                    Many developers ask: <em>"Are Django apps like microservices?"</em><br>
+                    <strong>Short answer: No, but they share the same motivation.</strong>
+                </p>
+
+                <h4 class="mt-30" style="color: var(--success);">&#9989; The Similarities</h4>
+                <p class="mt-10" style="color: var(--text-secondary);">Both Django apps and microservices aim for:</p>
+                <ul style="margin-top: 10px; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Modularity:</strong> Separate code for separate features</li>
+                    <li><strong>Separation of concerns:</strong> <code>menu/</code> handles menus, <code>orders/</code> handles orders</li>
+                    <li><strong>Team ownership:</strong> Teams can work on different parts</li>
+                    <li><strong>Focused scope:</strong> One component = one domain</li>
+                </ul>
+
+                <h4 class="mt-30" style="color: var(--danger);">&#10060; The Critical Differences</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h5 style="color: var(--accent-django-light); margin-bottom: 10px;">Django Apps (Monolith)</h5>
+                        <pre style="font-size: 0.75rem; margin: 0;">
+┌─────────────────────────────┐
+│    ONE PROCESS / SERVER     │
+│  ┌───────┐ ┌───────┐       │
+│  │ menu/ │◄►│orders/│       │
+│  └───────┘ └───────┘       │
+│       │         │           │
+│       └────┬────┘           │
+│            ▼                │
+│    ┌────────────────┐       │
+│    │ SHARED DATABASE│       │
+│    └────────────────┘       │
+└─────────────────────────────┘</pre>
+                    </div>
+                    <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h5 style="color: var(--accent-primary); margin-bottom: 10px;">Microservices</h5>
+                        <pre style="font-size: 0.75rem; margin: 0;">
+┌──────────┐    ┌──────────┐
+│Menu Svc  │───►│Order Svc │
+│ :8001    │ API│ :8002    │
+├──────────┤    ├──────────┤
+│ Menu DB  │    │ Order DB │
+└──────────┘    └──────────┘
+  Network calls (HTTP/gRPC)</pre>
+                    </div>
+                </div>
+
+                <table class="comparison-table mt-20">
+                    <tr><th>Aspect</th><th>Django Apps</th><th>Microservices</th></tr>
+                    <tr>
+                        <td><strong>Communication</strong></td>
+                        <td>Direct imports: <code>from orders.models import Order</code></td>
+                        <td>Network calls (HTTP, gRPC)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database</strong></td>
+                        <td>Shared database</td>
+                        <td>Separate DB per service</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deployment</strong></td>
+                        <td>Deploy entire project together</td>
+                        <td>Deploy each service independently</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scaling</strong></td>
+                        <td>Scale the whole app</td>
+                        <td>Scale individual services</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Latency</strong></td>
+                        <td>Microseconds (function calls)</td>
+                        <td>Milliseconds (network calls)</td>
+                    </tr>
+                </table>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">&#128218; Historical Context</h4>
+                <ul style="margin-top: 10px; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Django (2005)</strong> predates microservices trend (~2011-2014 by Netflix, Amazon)</li>
+                    <li>Django apps are inspired by <strong>Unix philosophy:</strong> "Do one thing well"</li>
+                    <li>More accurately called a <strong>"Modular Monolith"</strong></li>
+                    <li>Instagram, Pinterest, Disqus scaled Django monoliths to millions of users</li>
+                </ul>
+
+                <div class="info-box mt-30">
+                    <h4>&#128161; Which Should You Use?</h4>
+                    <p class="mt-10" style="color: var(--text-secondary);">
+                        <strong>Start with Django apps (monolith)</strong> &rarr; Graduate to microservices only if needed.
+                    </p>
+                    <p class="mt-10" style="color: var(--text-secondary);">
+                        <strong>Why?</strong> Simpler to develop, test, deploy. No network latency. Shared transactions. Easier debugging.
+                    </p>
+                    <p class="mt-15" style="font-style: italic; color: var(--text-muted);">
+                        "Don't start with microservices. Start with a modular monolith, and extract services only when you have a proven need." &mdash; Martin Fowler
+                    </p>
+                </div>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">&#127869; Restaurant Analogy</h4>
+                <table class="comparison-table mt-10">
+                    <tr><th>Architecture</th><th>Restaurant Equivalent</th></tr>
+                    <tr>
+                        <td><strong>Django Apps</strong></td>
+                        <td>Departments in ONE restaurant: kitchen, waitstaff, billing &mdash; all work together in the same building</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Microservices</strong></td>
+                        <td>Separate companies: one does food prep, another does delivery, another does payments &mdash; they communicate via phone calls and contracts</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card mt-40" style="border-color: var(--warning);">
+                <h3>&#9888; Don't Forget to Register Your App!</h3>
+                <p class="mt-20">After creating an app, you MUST add it to <code>INSTALLED_APPS</code> in settings.py:</p>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="variable">INSTALLED_APPS</span> = [
+    <span class="string">'django.contrib.admin'</span>,
+    <span class="string">'django.contrib.auth'</span>,
+    <span class="comment"># ... other built-ins</span>
+
+    <span class="comment"># Your apps (add below the built-ins)</span>
+    <span class="string">'menu'</span>,  <span class="comment"># Add this line!</span>
+]</pre>
+                    </div>
+                </div>
+                <p class="mt-20" style="color: var(--danger);">
+                    <strong>Common mistake:</strong> Forgetting this step causes "App not found" errors!
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Views & URLs Section -->
+    <section id="views">
+        <div class="section-container">
+            <span class="section-label django">Part 7</span>
+            <h2 class="section-title">Views & URLs</h2>
+            <p class="section-subtitle">
+                Views are your waiters &mdash; they receive requests and return responses. URLs route customers to the right waiter.
+            </p>
+
+            <h3 class="mb-20">How URL Routing Works (Detailed)</h3>
+            <div class="flow-diagram">
+                <h4 style="text-align: center; margin-bottom: 30px;">Request: <code>GET /menu/items/5/</code></h4>
+
+                <div class="url-flow-detailed">
+                    <div class="url-flow-step">
+                        <div class="url-flow-step-num">1</div>
+                        <div class="url-flow-step-content">
+                            <div class="url-flow-step-title">Browser sends request to Django</div>
+                            <div class="url-flow-step-desc">User visits <code>http://localhost:8000/menu/items/5/</code></div>
+                        </div>
+                    </div>
+                    <div class="url-flow-connector"></div>
+                    <div class="url-flow-step">
+                        <div class="url-flow-step-num">2</div>
+                        <div class="url-flow-step-content">
+                            <div class="url-flow-step-title">Project urls.py checks the URL</div>
+                            <div class="url-flow-step-desc">
+                                Sees <code>path('menu/', include('menu.urls'))</code><br>
+                                &rarr; "URL starts with 'menu/', let me delegate to the menu app!"
+                            </div>
+                        </div>
+                    </div>
+                    <div class="url-flow-connector"></div>
+                    <div class="url-flow-step">
+                        <div class="url-flow-step-num">3</div>
+                        <div class="url-flow-step-content">
+                            <div class="url-flow-step-title">menu/urls.py takes over</div>
+                            <div class="url-flow-step-desc">
+                                Receives remaining URL: <code>items/5/</code><br>
+                                Matches <code>path('items/&lt;int:item_id&gt;/', views.item_detail)</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="url-flow-connector"></div>
+                    <div class="url-flow-step">
+                        <div class="url-flow-step-num">4</div>
+                        <div class="url-flow-step-content">
+                            <div class="url-flow-step-title">View function is called</div>
+                            <div class="url-flow-step-desc">
+                                <code>views.item_detail(request, item_id=5)</code><br>
+                                The <code>5</code> from URL becomes <code>item_id</code> parameter!
+                            </div>
+                        </div>
+                    </div>
+                    <div class="url-flow-connector"></div>
+                    <div class="url-flow-step">
+                        <div class="url-flow-step-num">5</div>
+                        <div class="url-flow-step-content">
+                            <div class="url-flow-step-title">View returns response</div>
+                            <div class="url-flow-step-desc">
+                                View processes the request and returns <code>HttpResponse</code> or <code>JsonResponse</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Visual Diagram: URL Delegation</h3>
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128187;</div>
+                        <div class="flow-box-title">Browser</div>
+                        <div class="flow-box-desc">/menu/items/5/</div>
+                    </div>
+                    <span class="flow-arrow">&#10132;</span>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128678;</div>
+                        <div class="flow-box-title">Project urls.py</div>
+                        <div class="flow-box-desc">"menu/" &rarr; menu app</div>
+                    </div>
+                    <span class="flow-arrow">&#10132;</span>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128678;</div>
+                        <div class="flow-box-title">menu/urls.py</div>
+                        <div class="flow-box-desc">"items/5/" &rarr; view</div>
+                    </div>
+                    <span class="flow-arrow">&#10132;</span>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128100;</div>
+                        <div class="flow-box-title">views.py</div>
+                        <div class="flow-box-desc">item_detail()</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Step 1: Create a View</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        menu/views.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.http <span class="keyword">import</span> HttpResponse, JsonResponse
+
+<span class="keyword">def</span> <span class="function">home</span>(request):
+    <span class="string">"""The simplest possible view."""</span>
+    <span class="keyword">return</span> HttpResponse(<span class="string">"Welcome to our restaurant!"</span>)
+
+<span class="keyword">def</span> <span class="function">menu_list</span>(request):
+    <span class="string">"""Return menu as JSON (modern API style)."""</span>
+    menu = [
+        {<span class="string">'name'</span>: <span class="string">'Pasta'</span>, <span class="string">'price'</span>: <span class="variable">15</span>},
+        {<span class="string">'name'</span>: <span class="string">'Pizza'</span>, <span class="string">'price'</span>: <span class="variable">12</span>},
+    ]
+    <span class="keyword">return</span> JsonResponse({<span class="string">'items'</span>: menu})
+
+<span class="keyword">def</span> <span class="function">item_detail</span>(request, item_id):
+    <span class="string">"""View that receives item_id from URL."""</span>
+    <span class="keyword">return</span> HttpResponse(<span class="keyword">f</span><span class="string">"Showing item #{item_id}"</span>)</pre>
+                </div>
+            </div>
+
+            <!-- Different Ways to Write Views -->
+            <div class="card mt-40">
+                <h3 class="card-title">&#128218; Different Ways to Write Views in Django</h3>
+                <p class="card-desc mt-10">
+                    Django offers multiple approaches. Understanding these helps you choose the right tool.
+                    <br><br>
+                    <strong>Official Docs:</strong> <a href="https://docs.djangoproject.com/en/5.0/topics/http/views/" target="_blank" style="color: var(--accent-django-light);">docs.djangoproject.com/en/5.0/topics/http/views/</a>
+                </p>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">1. Function-Based Views (FBVs)</h4>
+                <p style="color: var(--text-secondary);">The core idea &mdash; <strong>one function, branch on <code>request.method</code></strong>:</p>
+                <div class="code-block mt-10">
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render
+<span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse
+
+<span class="keyword">def</span> <span class="function">my_view</span>(request):
+
+    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
+        <span class="keyword">return</span> render(request, <span class="string">'home.html'</span>)
+
+    <span class="keyword">elif</span> request.method == <span class="string">'POST'</span>:
+        data = request.POST.get(<span class="string">'username'</span>)
+        <span class="keyword">return</span> render(request, <span class="string">'home.html'</span>, {<span class="string">'user'</span>: data})
+
+    <span class="keyword">elif</span> request.method == <span class="string">'DELETE'</span>:
+        <span class="keyword">return</span> JsonResponse({<span class="string">'message'</span>: <span class="string">'deleted'</span>})</pre>
+                    </div>
+                </div>
+
+                <p class="mt-15" style="color: var(--text-secondary);">Wire it in <code>urls.py</code> &mdash; same URL, different behavior based on HTTP method:</p>
+                <div class="code-block mt-10">
+                    <div class="code-content">
+                        <pre><span class="comment"># urls.py</span>
+<span class="keyword">from</span> django.urls <span class="keyword">import</span> path
+<span class="keyword">from</span> . <span class="keyword">import</span> views
+
+urlpatterns = [
+    path(<span class="string">'home/'</span>, views.my_view),
+]</pre>
+                    </div>
+                </div>
+
+                <table class="comparison-table mt-15">
+                    <tr><th>Method</th><th>Typical Use</th></tr>
+                    <tr><td><code>GET</code></td><td>Fetch/display data</td></tr>
+                    <tr><td><code>POST</code></td><td>Submit a form, create something</td></tr>
+                    <tr><td><code>PUT/PATCH</code></td><td>Update something</td></tr>
+                    <tr><td><code>DELETE</code></td><td>Delete something</td></tr>
+                </table>
+
+                <p class="mt-20" style="color: var(--text-secondary);">For APIs, Django REST Framework's <code>@api_view</code> decorator is cleaner:</p>
+                <div class="code-block mt-10">
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> rest_framework.decorators <span class="keyword">import</span> api_view
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+
+<span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'POST'</span>])
+<span class="keyword">def</span> <span class="function">my_view</span>(request):
+    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
+        <span class="keyword">return</span> Response({<span class="string">'message'</span>: <span class="string">'hello'</span>})
+    <span class="keyword">elif</span> request.method == <span class="string">'POST'</span>:
+        <span class="keyword">return</span> Response({<span class="string">'received'</span>: request.data})</pre>
+                    </div>
+                </div>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">2. Class-Based Views (CBVs)</h4>
+                <p style="color: var(--text-secondary);">Object-oriented approach &mdash; inherit from Django's view classes:</p>
+                <div class="code-block mt-10">
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> django.views <span class="keyword">import</span> View
+<span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse
+
+<span class="keyword">class</span> <span class="function">MenuListView</span>(View):
+    <span class="string">"""Class-based view for menu items."""</span>
+
+    <span class="keyword">def</span> <span class="function">get</span>(self, request):
+        <span class="string">"""Handle GET requests."""</span>
+        items = MenuItem.objects.all()
+        <span class="keyword">return</span> JsonResponse({<span class="string">'items'</span>: list(items.values())})
+
+    <span class="keyword">def</span> <span class="function">post</span>(self, request):
+        <span class="string">"""Handle POST requests."""</span>
+        <span class="keyword">pass</span>
+
+<span class="comment"># In urls.py: path('', MenuListView.as_view(), name='menu_list')</span></pre>
+                    </div>
+                </div>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">3. Generic Class-Based Views (GCBVs)</h4>
+                <p style="color: var(--text-secondary);">Pre-built views for common CRUD patterns:</p>
+                <div class="code-block mt-10">
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> django.views.generic <span class="keyword">import</span> ListView, DetailView, CreateView
+
+<span class="keyword">class</span> <span class="function">MenuListView</span>(ListView):
+    model = MenuItem
+    template_name = <span class="string">'menu/list.html'</span>
+    context_object_name = <span class="string">'items'</span>
+
+<span class="keyword">class</span> <span class="function">MenuDetailView</span>(DetailView):
+    model = MenuItem
+    template_name = <span class="string">'menu/detail.html'</span>
+
+<span class="keyword">class</span> <span class="function">MenuCreateView</span>(CreateView):
+    model = MenuItem
+    fields = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'description'</span>]
+    success_url = <span class="string">'/menu/'</span></pre>
+                    </div>
+                </div>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">Which Should You Use?</h4>
+                <table class="comparison-table mt-15">
+                    <tr><th>Scenario</th><th>Recommended Approach</th></tr>
+                    <tr><td>Simple, one-off views</td><td>Function-Based Views</td></tr>
+                    <tr><td>Standard CRUD operations</td><td>Generic Class-Based Views</td></tr>
+                    <tr><td>Complex logic with multiple methods</td><td>Class-Based Views</td></tr>
+                    <tr><td>API endpoints (with DRF)</td><td>DRF's APIView or ViewSets</td></tr>
+                </table>
+                <p class="mt-15" style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Industry Practice:</strong> Most production apps use a mix &mdash; GCBVs for standard CRUD, FBVs for custom endpoints, DRF ViewSets for APIs.
+                </p>
+            </div>
+
+            <!-- Service Layer Pattern -->
+            <div class="card mt-40" style="border-color: var(--warning);">
+                <h3 class="card-title">&#9888; Should All Logic Live in Views? The Service Layer</h3>
+                <p class="card-desc mt-10">
+                    <strong>Short answer: No!</strong> Views should be thin. They should handle HTTP concerns only.
+                </p>
+
+                <h4 class="mt-30" style="color: var(--danger);">&#10060; The Problem: Fat Views</h4>
+                <div class="code-block mt-10">
+                    <div class="code-header"><div class="code-title">DON'T do this!</div></div>
+                    <div class="code-content">
+                        <pre><span class="comment"># &#10060; BAD: Too much logic in the view</span>
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    data = json.loads(request.body)
+
+    <span class="comment"># Validation, business logic, database queries ALL mixed together</span>
+    total = <span class="variable">0</span>
+    <span class="keyword">for</span> item <span class="keyword">in</span> data[<span class="string">'items'</span>]:
+        menu_item = MenuItem.objects.get(id=item[<span class="string">'id'</span>])
+        total += menu_item.price * item[<span class="string">'quantity'</span>]
+        <span class="keyword">if</span> menu_item.stock &lt; item[<span class="string">'quantity'</span>]:
+            <span class="keyword">return</span> JsonResponse({<span class="string">'error'</span>: <span class="string">'Out of stock'</span>}, status=<span class="variable">400</span>)
+
+    <span class="comment"># Apply discount</span>
+    <span class="keyword">if</span> total &gt; <span class="variable">100</span>:
+        total *= <span class="variable">0.9</span>
+
+    <span class="comment"># ... more and more logic ...</span></pre>
+                    </div>
+                </div>
+                <p class="mt-15" style="color: var(--text-secondary);">
+                    <strong>Problems:</strong> Hard to test, hard to reuse, hard to read!
+                </p>
+
+                <h4 class="mt-30" style="color: var(--success);">&#9989; The Solution: Service Layer</h4>
+                <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; margin-top: 15px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">
+                    <pre style="margin: 0;">
+Views Layer      (HTTP handling only)
+      │
+      ▼
+Services Layer   (Business logic) ← <span style="color: var(--success);">NEW!</span>
+      │
+      ▼
+Models Layer     (Database operations)</pre>
+                </div>
+
+                <h4 class="mt-30" style="color: var(--accent-django-light);">Where to Put Services?</h4>
+                <div class="file-tree mt-15">
+                    <div class="file-tree-item folder">&#128193; menu/</div>
+                    <div class="file-tree-item python indent-1">&#128221; models.py <span class="desc">Data models</span></div>
+                    <div class="file-tree-item python indent-1">&#128221; views.py <span class="desc">HTTP handlers (thin!)</span></div>
+                    <div class="file-tree-item python indent-1" style="color: var(--success);">&#128221; services.py <span class="desc">Business logic &#11088; NEW!</span></div>
+                    <div class="file-tree-item python indent-1">&#128221; selectors.py <span class="desc">Complex queries (optional)</span></div>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header"><div class="code-title">services.py</div></div>
+                    <div class="code-content">
+                        <pre><span class="comment"># menu/services.py</span>
+<span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="string">"""Handles all order-related business logic."""</span>
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(items_data):
+        <span class="comment"># Business logic here...</span>
+        <span class="keyword">pass</span>
+
+    <span class="keyword">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">create_order</span>(cls, user, items_data):
+        <span class="string">"""Can be called from views, CLI, Celery tasks..."""</span>
+        cls.check_inventory(items_data)
+        total = cls.calculate_total(items_data)
+        <span class="keyword">return</span> Order.objects.create(user=user, total=total)</pre>
+                    </div>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header"><div class="code-title">views.py (now thin!)</div></div>
+                    <div class="code-content">
+                        <pre><span class="comment"># menu/views.py</span>
+<span class="keyword">from</span> .services <span class="keyword">import</span> OrderService
+
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    <span class="string">"""Handle HTTP request only."""</span>
+    data = json.loads(request.body)
+
+    <span class="comment"># Delegate to service layer</span>
+    order = OrderService.create_order(
+        user=request.user,
+        items_data=data[<span class="string">'items'</span>]
+    )
+
+    <span class="keyword">return</span> JsonResponse({<span class="string">'order_id'</span>: order.id})</pre>
+                    </div>
+                </div>
+
+                <div class="mt-20" style="padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid var(--success);">
+                    <strong style="color: var(--success);">Benefits:</strong>
+                    <ul style="margin-top: 10px; padding-left: 20px; color: var(--text-secondary);">
+                        <li><strong>Testable:</strong> Test business logic without HTTP overhead</li>
+                        <li><strong>Reusable:</strong> Call from views, CLI commands, Celery tasks</li>
+                        <li><strong>Readable:</strong> Views are thin, services are focused</li>
+                    </ul>
+                </div>
+
+                <p class="mt-20" style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Further Reading:</strong>
+                    <a href="https://github.com/HackSoftware/Django-Styleguide" target="_blank" style="color: var(--accent-django-light);">Django Styleguide by HackSoftware</a> &mdash; excellent production patterns
+                </p>
+            </div>
+
+            <h3 class="mt-40 mb-20">Step 2: Create App URLs</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        menu/urls.py (CREATE this file!)
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.urls <span class="keyword">import</span> path
+<span class="keyword">from</span> . <span class="keyword">import</span> views  <span class="comment"># Relative import: "." = current folder</span>
+
+urlpatterns = [
+    path(<span class="string">''</span>, views.home, name=<span class="string">'home'</span>),
+    path(<span class="string">'list/'</span>, views.menu_list, name=<span class="string">'menu_list'</span>),
+    path(<span class="string">'item/&lt;int:item_id&gt;/'</span>, views.item_detail, name=<span class="string">'item_detail'</span>),
+]</pre>
+                </div>
+            </div>
+
+            <div class="warning-box mt-20">
+                <strong>&#128161; Why <code>from . import views</code>?</strong>
+                <p style="margin-top: 8px;">The dot (<code>.</code>) means "current package" — like <code>./</code> in terminal. This <strong>relative import</strong> keeps your app portable. Never write <code>from myproject.menu import views</code> — that hardcodes the project name and breaks if you rename or reuse the app.</p>
+            </div>
+
+            <!-- Detailed breakdown of each path() -->
+            <div class="info-box mt-30">
+                <h4>&#128269; Breaking Down Each <code>path()</code> Call &mdash; Parameter by Parameter</h4>
+                <p class="mt-10" style="color: var(--text-secondary);">The <code>path()</code> function signature:</p>
+                <code style="display: block; padding: 10px; background: var(--bg-primary); border-radius: 5px; margin-top: 10px;">path(route, view, kwargs=None, name=None)</code>
+            </div>
+
+            <!-- Pattern 1 breakdown -->
+            <div class="card mt-20">
+                <h4 style="color: var(--accent-django-light);">Pattern 1: <code>path('', views.home, name='home')</code></h4>
+                <table class="comparison-table mt-15">
+                    <tr><th>Parameter</th><th>Value</th><th>Explanation</th></tr>
+                    <tr>
+                        <td><code>route</code></td>
+                        <td><code>''</code></td>
+                        <td>Empty string = matches base URL. If included at <code>/menu/</code>, this matches <code>/menu/</code> exactly</td>
+                    </tr>
+                    <tr>
+                        <td><code>view</code></td>
+                        <td><code>views.home</code></td>
+                        <td>The function <code>home</code> from <code>views.py</code> that handles this request</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td><code>'home'</code></td>
+                        <td>Unique identifier. Used in templates: <code>{% url 'home' %}</code></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Pattern 2 breakdown -->
+            <div class="card mt-20">
+                <h4 style="color: var(--accent-django-light);">Pattern 2: <code>path('list/', views.menu_list, name='menu_list')</code></h4>
+                <table class="comparison-table mt-15">
+                    <tr><th>Parameter</th><th>Value</th><th>Explanation</th></tr>
+                    <tr>
+                        <td><code>route</code></td>
+                        <td><code>'list/'</code></td>
+                        <td>Matches path <code>list/</code>. Combined with <code>/menu/</code> prefix = <code>/menu/list/</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>view</code></td>
+                        <td><code>views.menu_list</code></td>
+                        <td>The function <code>menu_list</code> handles this request</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td><code>'menu_list'</code></td>
+                        <td>Unique name for reverse URL lookup</td>
+                    </tr>
+                </table>
+                <p class="mt-10" style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Trailing slash:</strong> Django convention is to always include trailing slashes. <code>CommonMiddleware</code> redirects <code>/menu/list</code> to <code>/menu/list/</code>.
+                </p>
+            </div>
+
+            <!-- Pattern 3 breakdown -->
+            <div class="card mt-20">
+                <h4 style="color: var(--accent-django-light);">Pattern 3: <code>path('item/&lt;int:item_id&gt;/', views.item_detail, name='item_detail')</code></h4>
+                <table class="comparison-table mt-15">
+                    <tr><th>Parameter</th><th>Value</th><th>Explanation</th></tr>
+                    <tr>
+                        <td><code>route</code></td>
+                        <td><code>'item/&lt;int:item_id&gt;/'</code></td>
+                        <td>Matches <code>item/</code> followed by an integer. <code>&lt;int:item_id&gt;</code> is a <strong>path converter</strong></td>
+                    </tr>
+                    <tr>
+                        <td><code>view</code></td>
+                        <td><code>views.item_detail</code></td>
+                        <td>The function receives the captured value as an argument</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td><code>'item_detail'</code></td>
+                        <td>Used as <code>{% url 'item_detail' item_id=5 %}</code></td>
+                    </tr>
+                </table>
+
+                <div class="mt-20" style="background: var(--bg-primary); padding: 15px; border-radius: 8px; font-family: 'Fira Code', monospace;">
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">Breaking down <code>&lt;int:item_id&gt;</code>:</p>
+                    <pre style="margin: 0;">&lt;int:item_id&gt;
+  │     │
+  │     └── Variable name passed to view function
+  └── Converter type (int = only matches integers)</pre>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header"><div class="code-title">What happens at runtime</div></div>
+                    <div class="code-content">
+                        <pre><span class="comment"># URL: /menu/item/42/</span>
+
+<span class="keyword">def</span> <span class="function">item_detail</span>(request, item_id):  <span class="comment"># item_id passed automatically!</span>
+    <span class="comment"># item_id = 42 (as an integer, not string!)</span>
+    <span class="keyword">return</span> HttpResponse(<span class="keyword">f</span><span class="string">"Showing item #{item_id}"</span>)</pre>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Step 3: Include App URLs in Project</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        restaurant_project/urls.py (MODIFY existing file)
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.contrib <span class="keyword">import</span> admin
+<span class="keyword">from</span> django.urls <span class="keyword">import</span> path, include  <span class="comment"># Add 'include'!</span>
+
+urlpatterns = [
+    path(<span class="string">'admin/'</span>, admin.site.urls),
+    path(<span class="string">'menu/'</span>, include(<span class="string">'menu.urls'</span>)),  <span class="comment"># Delegate to menu app</span>
+]</pre>
+                </div>
+            </div>
+
+            <!-- Breaking down project URLs -->
+            <div class="card mt-20">
+                <h4 style="color: var(--accent-django-light);">Breaking Down <code>include()</code></h4>
+                <table class="comparison-table mt-15">
+                    <tr><th>Parameter</th><th>Value</th><th>Explanation</th></tr>
+                    <tr>
+                        <td><code>route</code></td>
+                        <td><code>'menu/'</code></td>
+                        <td>URL prefix &mdash; all menu URLs start with <code>/menu/</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>include(...)</code></td>
+                        <td><code>include('menu.urls')</code></td>
+                        <td>Delegate to <code>menu/urls.py</code> for further matching</td>
+                    </tr>
+                </table>
+
+                <div class="info-box mt-20">
+                    <h4>&#9888; How <code>include()</code> Works &mdash; Step by Step</h4>
+                    <ol style="margin-top: 15px; padding-left: 20px; color: var(--text-secondary); line-height: 2;">
+                        <li>User visits <code>/menu/item/42/</code></li>
+                        <li>Django checks <code>restaurant_project/urls.py</code></li>
+                        <li>Does path start with <code>admin/</code>? No</li>
+                        <li>Does path start with <code>menu/</code>? <strong>Yes!</strong></li>
+                        <li><strong>Strip prefix:</strong> remaining path is <code>item/42/</code></li>
+                        <li>Django now checks <code>menu/urls.py</code> with <code>item/42/</code></li>
+                        <li>Match found: <code>item/&lt;int:item_id&gt;/</code> &rarr; captures <code>item_id=42</code></li>
+                        <li>Call <code>views.item_detail(request, item_id=42)</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">URL Path Converters</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Converter</th>
+                    <th>Matches</th>
+                    <th>Example URL</th>
+                </tr>
+                <tr>
+                    <td><code>&lt;str:name&gt;</code></td>
+                    <td>Any non-empty string (no /)</td>
+                    <td>/category/<strong>desserts</strong>/</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;int:id&gt;</code></td>
+                    <td>Zero or positive integers</td>
+                    <td>/item/<strong>42</strong>/</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;slug:title&gt;</code></td>
+                    <td>Letters, numbers, hyphens, underscores</td>
+                    <td>/dish/<strong>pasta-carbonara</strong>/</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;uuid:pk&gt;</code></td>
+                    <td>UUID format</td>
+                    <td>/order/<strong>550e8400-e29b-...</strong>/</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- Framework Comparison (moved to end) -->
+    <section id="comparison">
+        <div class="section-container">
+            <span class="section-label">Part 8</span>
+            <h2 class="section-title">Django vs Other Frameworks</h2>
+            <p class="section-subtitle">
+                Now that you understand Django basics, let's see how other Python frameworks compare.
+            </p>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Aspect</th>
+                    <th>Django</th>
+                    <th>Flask</th>
+                    <th>FastAPI</th>
+                </tr>
+                <tr>
+                    <td><strong>Type</strong></td>
+                    <td>Full-stack, batteries-included</td>
+                    <td>Micro-framework, minimal</td>
+                    <td>Modern, async-first</td>
+                </tr>
+                <tr>
+                    <td><strong>Best For</strong></td>
+                    <td>Large apps, admin panels, rapid MVP</td>
+                    <td>Small APIs, learning, flexibility</td>
+                    <td>High-perf APIs, microservices</td>
+                </tr>
+                <tr>
+                    <td><strong>Admin Panel</strong></td>
+                    <td class="highlight-green">Built-in!</td>
+                    <td>Flask-Admin (extension)</td>
+                    <td>None built-in</td>
+                </tr>
+                <tr>
+                    <td><strong>ORM</strong></td>
+                    <td class="highlight-green">Built-in Django ORM</td>
+                    <td>SQLAlchemy (separate)</td>
+                    <td>SQLAlchemy/Tortoise (separate)</td>
+                </tr>
+                <tr>
+                    <td><strong>Async Support</strong></td>
+                    <td>Limited (improving in 4.x+)</td>
+                    <td>Limited</td>
+                    <td class="highlight-green">Excellent, native</td>
+                </tr>
+                <tr>
+                    <td><strong>Auto API Docs</strong></td>
+                    <td>No (use DRF + drf-spectacular)</td>
+                    <td>No (use extensions)</td>
+                    <td class="highlight-green">Yes! Swagger/OpenAPI</td>
+                </tr>
+                <tr>
+                    <td><strong>Analogy</strong></td>
+                    <td>Full restaurant with everything</td>
+                    <td>Food truck &mdash; build what you need</td>
+                    <td>High-speed takeout kitchen</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Same Endpoint in Each Framework</h3>
+
+            <div class="code-block">
+                <div class="code-header"><div class="code-title">Django</div></div>
+                <div class="code-content">
+                    <pre><span class="comment"># urls.py</span>
+path(<span class="string">'hello/&lt;str:name&gt;/'</span>, views.hello)
+
+<span class="comment"># views.py</span>
+<span class="keyword">def</span> <span class="function">hello</span>(request, name):
+    <span class="keyword">return</span> JsonResponse({<span class="string">'message'</span>: <span class="keyword">f</span><span class="string">'Hello, {name}!'</span>})</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header"><div class="code-title">Flask</div></div>
+                <div class="code-content">
+                    <pre><span class="keyword">@app</span>.route(<span class="string">'/hello/&lt;name&gt;'</span>)
+<span class="keyword">def</span> <span class="function">hello</span>(name):
+    <span class="keyword">return</span> {<span class="string">'message'</span>: <span class="keyword">f</span><span class="string">'Hello, {name}!'</span>}</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header"><div class="code-title">FastAPI</div></div>
+                <div class="code-content">
+                    <pre><span class="keyword">@app</span>.get(<span class="string">'/hello/{name}'</span>)
+<span class="keyword">async def</span> <span class="function">hello</span>(name: str):
+    <span class="keyword">return</span> {<span class="string">'message'</span>: <span class="keyword">f</span><span class="string">'Hello, {name}!'</span>}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Section -->
+    <section id="quiz">
+        <div class="section-container">
+            <span class="section-label">Test Yourself</span>
+            <h2 class="section-title">Knowledge Check</h2>
+
+            <div class="question-block" id="q1">
+                <div class="question-label">&#128161; Question 1</div>
+                <div class="question-text">What does a virtual environment do?</div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Makes Python run faster
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Isolates project dependencies from other projects
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Automatically deploys your code to the cloud
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Creates virtual machines for testing
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>&#128218; Explanation</h4>
+                    <p>A virtual environment creates an isolated Python environment for each project. This means Project A can use requests 2.20 while Project B uses requests 2.31 &mdash; no conflicts!</p>
+                </div>
+            </div>
+
+            <div class="question-block" id="q2">
+                <div class="question-label">&#128161; Question 2</div>
+                <div class="question-text">What does "batteries-included" mean for Django?</div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        It uses battery power instead of electricity
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        It comes with everything you need (ORM, admin, auth) built-in
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        It's very lightweight and minimal
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        It requires external plugins for all features
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>&#128218; Explanation</h4>
+                    <p>Like a toy that comes with batteries ready to play, Django includes everything you need: admin panel, ORM, authentication, forms, security &mdash; all built-in!</p>
+                </div>
+            </div>
+
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 3</div>
+                <div class="question-text">What is the purpose of the <code>include()</code> function in URL configuration?</div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Imports Python modules
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Delegates URL patterns to an app's urls.py
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Includes static files in templates
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Adds middleware to the request
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>&#128218; Explanation</h4>
+                    <p><code>include()</code> allows you to delegate URL routing to app-specific urls.py files. For example, <code>path('menu/', include('menu.urls'))</code> routes all /menu/* URLs to the menu app's URL configuration.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interview Questions -->
+    <section id="interview">
+        <div class="section-container">
+            <span class="section-label">Career Prep</span>
+            <h2 class="section-title">Interview Questions</h2>
+
+            <div class="interview-card" onclick="toggleInterview(this)">
+                <div class="interview-question">
+                    <span class="interview-q-text">What is a virtual environment and why use one?</span>
+                    <span class="interview-toggle">+</span>
+                </div>
+                <div class="interview-answer">
+                    <div class="interview-answer-content">
+                        <p>A virtual environment is an isolated Python environment for project-specific dependencies. It prevents conflicts between projects that need different package versions. For example, Project A can use Django 3.2 while Project B uses Django 4.2.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="interview-card" onclick="toggleInterview(this)">
+                <div class="interview-question">
+                    <span class="interview-q-text">What's the difference between a Django project and an app?</span>
+                    <span class="interview-toggle">+</span>
+                </div>
+                <div class="interview-answer">
+                    <div class="interview-answer-content">
+                        <p><strong>Project:</strong> The entire website configuration (settings, root URLs). One per site.<br>
+                        <strong>App:</strong> A module handling one feature (menu, orders, users). Multiple per project.<br><br>
+                        Apps are reusable &mdash; you can copy an app to another project!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="interview-card" onclick="toggleInterview(this)">
+                <div class="interview-question">
+                    <span class="interview-q-text">How does URL routing work in Django?</span>
+                    <span class="interview-toggle">+</span>
+                </div>
+                <div class="interview-answer">
+                    <div class="interview-answer-content">
+                        <p>When a request comes in, Django matches the URL against patterns in <code>urls.py</code>. When matched, it calls the associated view function. The <code>include()</code> function delegates to app-specific URL configurations, enabling modular URL design.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="interview-card" onclick="toggleInterview(this)">
+                <div class="interview-question">
+                    <span class="interview-q-text">What does DEBUG = True do and why is it dangerous in production?</span>
+                    <span class="interview-toggle">+</span>
+                </div>
+                <div class="interview-answer">
+                    <div class="interview-answer-content">
+                        <p>DEBUG mode shows detailed error pages with code snippets, stack traces, and variable values. This is helpful for development but <strong>dangerous in production</strong> as it exposes sensitive information like database queries, file paths, and secret keys.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Checklist -->
+    <section id="checklist">
+        <div class="section-container">
+            <span class="section-label">Practice</span>
+            <h2 class="section-title">Setup Checklist</h2>
+
+            <div class="checklist">
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Verify Python 3.10+ is installed (<code>python3 --version</code>)</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Create a new project folder</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Create and activate a virtual environment</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Install Django (<code>pip install django</code>)</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Create a Django project</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Run migrations (<code>python manage.py migrate</code>)</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Start development server and view welcome page</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Create an app and register it in INSTALLED_APPS</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Create a view and URL route</div>
+                </div>
+                <div class="checklist-item" onclick="toggleChecklist(this)">
+                    <div class="checklist-checkbox">&#10003;</div>
+                    <div class="checklist-text">Test your custom view in the browser</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="padding: 40px; text-align: center; color: var(--text-muted); border-top: 1px solid var(--border-color);">
+        <p>Class 4: Python Setup, Django, Apps, Views & URLs</p>
+        <p style="margin-top: 10px;">Python Backend LLD Module | Scaler Academy</p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.innerHTML = '&#127769;'; text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.innerHTML = '&#9728;'; text.textContent = 'Light';
+            }
+        }
+
+        function switchOS(os) {
+            document.querySelectorAll('#python .os-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('#python .os-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(os + '-content').classList.add('active');
+        }
+
+        function switchVenvOS(os) {
+            document.querySelectorAll('#venv .os-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('#venv .os-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(os + '-content').classList.add('active');
+        }
+
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const selected = block.querySelector('.question-option.selected');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            if (!selected) {
+                result.textContent = 'Please select an answer!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const options = block.querySelectorAll('.question-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct');
+                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
+            });
+
+            if (selected.getAttribute('data-correct') === 'true') {
+                result.innerHTML = '&#10003; Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.innerHTML = '&#10007; Incorrect. See explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+            explanation.classList.add('show');
+        }
+
+        function toggleInterview(card) { card.classList.toggle('open'); }
+        function toggleChecklist(item) { item.classList.toggle('checked'); }
+
+        function copyCode(button) {
+            const codeContent = button.closest('.code-block').querySelector('.code-content pre').textContent;
+            navigator.clipboard.writeText(codeContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+    </script>
+</body>
+</html>
