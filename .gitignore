@@ -26,12 +26,15 @@ node_modules/
 
 # Python
 __pycache__/
+*__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 venv/
+**/venv/
 ENV/
+.env
 
 # Logs
 *.log
@@ -45,5 +48,13 @@ INSTRUCTOR-GUIDE.md
 # Django
 *.sqlite3
 db.sqlite3
+**/db.sqlite3
 staticfiles/
 media/
+
+# Claude Code
+.claude/
+
+# Migrations (optional - some teams commit these, some don't)
+# **/migrations/*.py
+# !**/migrations/__init__.py

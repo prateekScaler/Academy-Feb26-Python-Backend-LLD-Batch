@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 5: Django Models & Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-django: #092e20;
+            --accent-django-light: #44b78b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-django-light), var(--accent-primary)); z-index: 1001; transition: width 0.1s; }
+
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-django-light); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.django { background: linear-gradient(135deg, #092e20, #44b78b); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(68, 183, 139, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #44b78b 0%, #6366f1 50%, #8b5cf6 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+        .hero-tagline strong { color: var(--accent-django-light); }
+        .scroll-indicator {
+            position: absolute; bottom: 40px; display: flex; flex-direction: column;
+            align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+        .code-content .decorator { color: #ffa657; }
+        .code-content .class-name { color: #ffcb6b; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 30px 0; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .comparison-table th, .comparison-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 700; color: var(--accent-primary); }
+        .comparison-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .comparison-table code { background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+
+        .question-block { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 20px; padding: 40px; margin: 40px 0; }
+        .question-label { display: flex; align-items: center; gap: 10px; color: var(--warning); font-weight: 600; margin-bottom: 15px; font-size: 0.95rem; }
+        .question-text { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 25px; line-height: 1.5; }
+        .question-options { display: flex; flex-direction: column; gap: 12px; }
+        .question-option {
+            padding: 18px 24px; background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: 12px; cursor: pointer; font-size: 1rem; color: var(--text-primary);
+            transition: all 0.3s; display: flex; align-items: center; gap: 15px;
+        }
+        .question-option:hover { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+        .option-marker { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+        .question-btn { margin-top: 25px; padding: 14px 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s; }
+        .question-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); }
+        .question-result { margin-top: 20px; padding: 15px 20px; border-radius: 10px; font-weight: 600; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .question-explanation { margin-top: 20px; padding: 25px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--accent-django-light); display: none; }
+        .question-explanation.show { display: block; }
+        .question-explanation h4 { color: var(--accent-django-light); margin-bottom: 10px; }
+
+        .flow-diagram { background: var(--bg-secondary); border-radius: 16px; padding: 40px; margin: 40px 0; border: 1px solid var(--border-color); }
+        .flow-row { display: flex; justify-content: center; align-items: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
+        .flow-box { background: var(--bg-tertiary); padding: 20px 30px; border-radius: 12px; text-align: center; min-width: 150px; border: 2px solid var(--border-color); transition: all 0.3s; }
+        .flow-box:hover { border-color: var(--accent-primary); transform: scale(1.05); }
+        .flow-box.highlight { border-color: var(--accent-django-light); background: rgba(68, 183, 139, 0.1); }
+        .flow-box-icon { font-size: 2rem; margin-bottom: 10px; }
+        .flow-box-title { font-weight: 700; margin-bottom: 5px; }
+        .flow-box-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-primary); }
+
+        .diagram-box { background: #1e1e2e; border-radius: 12px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 0.85rem; border: 1px solid var(--border-color); margin: 20px 0; overflow-x: auto; color: #e2e8f0; }
+
+        .info-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--accent-primary); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .success-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .flow-row { gap: 15px; }
+            .flow-box { min-width: 120px; padding: 15px 20px; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Scaler Academy</div>
+        <ul class="nav-links">
+            <li><a href="../Class-04-Django-Apps-Views-URLs/index.html">&larr; Class 4</a></li>
+            <li><a href="#quiz">Quiz</a></li>
+            <li><a href="#models">Models</a></li>
+            <li><a href="#migrations">Migrations</a></li>
+            <li><a href="#admin">Admin</a></li>
+            <li><a href="#querysets">QuerySets</a></li>
+            <li><a href="#diagrams">Diagrams</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-icon">&#128451;</div>
+        <h1>Django Models & Admin</h1>
+        <div class="hero-meta">Class 5 | Python Backend LLD</div>
+        <p class="hero-tagline">
+            Learn how to define <strong>database tables with Python classes</strong>,
+            manage data with <strong>Django Admin</strong>, and query with <strong>QuerySets</strong>.
+        </p>
+        <div class="scroll-indicator">
+            <span>Scroll to begin</span>
+            <span>&#8595;</span>
+        </div>
+    </section>
+
+    <!-- Pre-Class Quiz Section -->
+    <section id="quiz">
+        <div class="section-container">
+            <span class="section-label">Pre-Class Quiz</span>
+            <h2 class="section-title">Test Your Class 4 Knowledge</h2>
+            <p class="section-subtitle">Before diving into Models, let's review Views and URLs.</p>
+
+            <!-- Question 1 -->
+            <div class="question-block" id="q1">
+                <div class="question-label">&#128161; Question 1</div>
+                <div class="question-text">
+                    Given these URL patterns in this order, what happens when you visit <code>/products/featured/</code>?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>urlpatterns = [
+    path(<span class="string">'products/&lt;str:name&gt;/'</span>, views.product_by_name),
+    path(<span class="string">'products/featured/'</span>, views.featured_products),
+]</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <code>featured_products</code> view is called
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <code>product_by_name</code> view is called with <code>name="featured"</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Django raises an error due to ambiguous URLs
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Both views are called in sequence
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>Explanation</h4>
+                    <p>Django checks URL patterns <strong>in order</strong>. The first pattern <code>&lt;str:name&gt;</code> matches "featured" as a string, so it stops there. The second pattern is never checked.</p>
+                    <p class="mt-10"><strong>Fix:</strong> Put specific patterns before generic ones &mdash; move <code>products/featured/</code> above <code>products/&lt;str:name&gt;/</code>.</p>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block" id="q1b">
+                <div class="question-label">&#128161; Question 2</div>
+                <div class="question-text">
+                    What does <code>include()</code> do in Django URL configuration?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="comment"># restaurant_project/urls.py</span>
+<span class="keyword">from</span> django.urls <span class="keyword">import</span> path, include
+
+urlpatterns = [
+    path(<span class="string">'menu/'</span>, include(<span class="string">'menu.urls'</span>)),
+]</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        It imports the views module automatically
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        It delegates URL matching to the app's urls.py
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        It registers the app with Django settings
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        It creates a copy of the URLs for testing
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1b')">Check Answer</button>
+                <div class="question-result" id="q1b-result"></div>
+                <div class="question-explanation" id="q1b-explanation">
+                    <h4>Explanation</h4>
+                    <p><code>include()</code> tells Django: "For any URL starting with <code>menu/</code>, look at the patterns in <code>menu/urls.py</code> to match the rest." This keeps apps self-contained and reusable.</p>
+                    <p class="mt-10"><strong>Example:</strong> Request to <code>/menu/list/</code> &rarr; Django matches <code>menu/</code> &rarr; passes <code>list/</code> to <code>menu.urls</code>.</p>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block" id="q2">
+                <div class="question-label">&#128161; Question 3</div>
+                <div class="question-text">
+                    Which line is the correct way to import views in a Django app?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="comment"># menu/urls.py</span>
+<span class="keyword">from</span> restaurantproject.menu <span class="keyword">import</span> views  <span class="comment"># Line A</span>
+<span class="keyword">from</span> . <span class="keyword">import</span> views                        <span class="comment"># Line B</span></pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Line A &mdash; absolute imports are clearer
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Line B &mdash; relative imports keep apps portable
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Both are equally correct
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Neither &mdash; you should use import views
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>Explanation</h4>
+                    <p>Relative imports (<code>from . import views</code>) don't hardcode the project name. If you rename the project or reuse the app elsewhere, Line A breaks. Line B always works.</p>
+                </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 4</div>
+                <div class="question-text">
+                    What is the relationship between a Django <strong>project</strong> and a Django <strong>app</strong>?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        They are the same thing &mdash; just different names
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        A project is the entire website; apps are reusable components within it
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        An app contains multiple projects
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Projects are for development; apps are for production
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>Explanation</h4>
+                    <p><strong>Project</strong> = your entire website (settings, URLs, config). <strong>App</strong> = a specific feature (menu, orders, users).</p>
+                    <p class="mt-10">Apps can be reused across projects. A "blog" app built for one site can be dropped into another!</p>
+                </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="question-block" id="q3b">
+                <div class="question-label">&#128161; Question 5</div>
+                <div class="question-text">
+                    Why split a Django project into multiple apps instead of putting everything in one app?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Django requires at least 3 apps to run
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Multiple apps make the code run faster
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Separation of concerns &mdash; each app handles one feature, easier to maintain
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        It's only for large teams; solo developers should use one app
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3b')">Check Answer</button>
+                <div class="question-result" id="q3b-result"></div>
+                <div class="question-explanation" id="q3b-explanation">
+                    <h4>Explanation</h4>
+                    <p>Multiple apps = cleaner code. Each app has its own models, views, and URLs. When your <code>menu</code> app grows, your <code>orders</code> app stays simple.</p>
+                    <p class="mt-10"><strong>Real-world:</strong> Instagram's Django codebase has separate apps for posts, stories, reels, messaging, etc.</p>
+                </div>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="question-block" id="q4">
+                <div class="question-label">&#128161; Question 6</div>
+                <div class="question-text">
+                    What's wrong with this code?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="comment"># urls.py</span>
+path(<span class="string">'order/&lt;int:order_id&gt;/'</span>, views.order_detail, name=<span class="string">'order_detail'</span>)
+
+<span class="comment"># views.py</span>
+<span class="keyword">def</span> <span class="function">order_detail</span>(request):
+    <span class="keyword">return</span> HttpResponse(<span class="string">f"Order #{order_id}"</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        The URL pattern is incorrect
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        The view is missing the order_id parameter
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        You can't use f-strings in Django
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        &lt;int:order_id&gt; should be &lt;order_id:int&gt;
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>Explanation</h4>
+                    <p>URL parameters like <code>&lt;int:order_id&gt;</code> are passed to the view function. The view must accept it: <code>def order_detail(request, order_id):</code></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What is a Model Section -->
+    <section id="models">
+        <div class="section-container">
+            <span class="section-label django">Core Concept</span>
+            <h2 class="section-title">What is a Model?</h2>
+            <p class="section-subtitle">A Model is a Python class that represents a database table.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128221;</div>
+                        <div class="flow-box-title">Python Class</div>
+                    </div>
+                    <div class="flow-arrow">&harr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128451;</div>
+                        <div class="flow-box-title">Database Table</div>
+                    </div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-title">Attribute</div>
+                        <div class="flow-box-desc">name = CharField()</div>
+                    </div>
+                    <div class="flow-arrow">&harr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-title">Column</div>
+                        <div class="flow-box-desc">name VARCHAR(100)</div>
+                    </div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-title">Instance</div>
+                        <div class="flow-box-desc">MenuItem(name="Pasta")</div>
+                    </div>
+                    <div class="flow-arrow">&harr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-title">Row</div>
+                        <div class="flow-box-desc">id=1, name="Pasta"</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#9997;</div>
+                    <h3 class="card-title">Write Python, Not SQL</h3>
+                    <p class="card-desc">Define tables with Python classes. Django handles the SQL.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128260;</div>
+                    <h3 class="card-title">Database Agnostic</h3>
+                    <p class="card-desc">Switch from SQLite to PostgreSQL without code changes.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <h3 class="card-title">Built-in Validation</h3>
+                    <p class="card-desc">Field types enforce data integrity automatically.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128736;</div>
+                    <h3 class="card-title">Automatic Migrations</h3>
+                    <p class="card-desc">Django tracks model changes and generates SQL.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Defining Models Section -->
+    <section>
+        <div class="section-container">
+            <span class="section-label django">Part 1</span>
+            <h2 class="section-title">Defining Models</h2>
+            <p class="section-subtitle">Let's add models to our menu app.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        menu/models.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> models
+
+
+<span class="keyword">class</span> <span class="class-name">Category</span>(models.Model):
+    <span class="string">"""A category for menu items."""</span>
+
+    name = models.CharField(max_length=<span class="variable">50</span>)
+    description = models.TextField(blank=<span class="keyword">True</span>)
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        verbose_name_plural = <span class="string">"Categories"</span>
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self):
+        <span class="keyword">return</span> self.name
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItem</span>(models.Model):
+    <span class="string">"""A single item on the menu."""</span>
+
+    name = models.CharField(max_length=<span class="variable">100</span>)
+    description = models.TextField(blank=<span class="keyword">True</span>)
+    price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)
+    is_available = models.BooleanField(default=<span class="keyword">True</span>)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name=<span class="string">'items'</span>
+    )
+    created_at = models.DateTimeField(auto_now_add=<span class="keyword">True</span>)
+    updated_at = models.DateTimeField(auto_now=<span class="keyword">True</span>)
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self):
+        <span class="keyword">return</span> <span class="string">f"</span>{self.name}<span class="string"> ($</span>{self.price}<span class="string">)"</span></pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Common Field Types</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Field</th>
+                    <th>Purpose</th>
+                    <th>Example Value</th>
+                </tr>
+                <tr>
+                    <td><code>CharField(max_length=100)</code></td>
+                    <td>Short text (required max_length)</td>
+                    <td>"Pasta Alfredo"</td>
+                </tr>
+                <tr>
+                    <td><code>TextField()</code></td>
+                    <td>Long text (no max)</td>
+                    <td>"A creamy pasta with..."</td>
+                </tr>
+                <tr>
+                    <td><code>DecimalField(max_digits=6, decimal_places=2)</code></td>
+                    <td>Precise numbers (money!)</td>
+                    <td>15.99</td>
+                </tr>
+                <tr>
+                    <td><code>BooleanField(default=True)</code></td>
+                    <td>True/False</td>
+                    <td>True</td>
+                </tr>
+                <tr>
+                    <td><code>DateTimeField(auto_now_add=True)</code></td>
+                    <td>Timestamp when created</td>
+                    <td>2025-05-01 10:30:00</td>
+                </tr>
+                <tr>
+                    <td><code>ForeignKey(...)</code></td>
+                    <td>Relationship to another model</td>
+                    <td>Links to Category</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Field Options</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Option</th>
+                    <th>Meaning</th>
+                </tr>
+                <tr>
+                    <td><code>max_length=100</code></td>
+                    <td>Maximum characters (required for CharField)</td>
+                </tr>
+                <tr>
+                    <td><code>blank=True</code></td>
+                    <td>Field can be empty in forms</td>
+                </tr>
+                <tr>
+                    <td><code>null=True</code></td>
+                    <td>Field can be NULL in database</td>
+                </tr>
+                <tr>
+                    <td><code>default=True</code></td>
+                    <td>Default value if not specified</td>
+                </tr>
+                <tr>
+                    <td><code>auto_now_add=True</code></td>
+                    <td>Set to now when created</td>
+                </tr>
+                <tr>
+                    <td><code>auto_now=True</code></td>
+                    <td>Update to now on every save</td>
+                </tr>
+            </table>
+
+            <div class="warning-box mt-30">
+                <strong>&#9888; blank vs null</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><code>blank=True</code> &rarr; Form validation (can submit empty)</li>
+                    <li><code>null=True</code> &rarr; Database level (can store NULL)</li>
+                    <li>For strings: use <code>blank=True</code> only (empty string, not NULL)</li>
+                    <li>For dates/numbers: use both if optional</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">ForeignKey &mdash; Relationships</h3>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre>category = models.ForeignKey(
+    Category,                    <span class="comment"># Related model</span>
+    on_delete=models.CASCADE,    <span class="comment"># Delete items when category deleted</span>
+    related_name=<span class="string">'items'</span>         <span class="comment"># Reverse accessor name</span>
+)</pre>
+                </div>
+            </div>
+
+            <table class="comparison-table mt-20">
+                <tr>
+                    <th>on_delete Option</th>
+                    <th>Behavior</th>
+                </tr>
+                <tr>
+                    <td><code>CASCADE</code></td>
+                    <td>Delete MenuItem when its Category is deleted</td>
+                </tr>
+                <tr>
+                    <td><code>PROTECT</code></td>
+                    <td>Prevent deleting Category if it has MenuItems</td>
+                </tr>
+                <tr>
+                    <td><code>SET_NULL</code></td>
+                    <td>Set category to NULL (requires <code>null=True</code>)</td>
+                </tr>
+            </table>
+
+            <div class="info-box mt-30">
+                <strong>Using Relationships:</strong>
+                <div class="code-block mt-10">
+                    <div class="code-content">
+                        <pre><span class="comment"># Forward: MenuItem &rarr; Category</span>
+pasta = MenuItem.objects.get(name=<span class="string">"Pasta"</span>)
+<span class="keyword">print</span>(pasta.category.name)  <span class="comment"># "Main Course"</span>
+
+<span class="comment"># Reverse: Category &rarr; MenuItems (uses related_name)</span>
+mains = Category.objects.get(name=<span class="string">"Main Course"</span>)
+<span class="keyword">print</span>(mains.items.all())  <span class="comment"># All items in this category</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">What if we didn't provide <code>related_name</code>?</h3>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre><span class="comment"># Without related_name='items', Django creates a default:</span>
+mains.menuitem_set.all()  <span class="comment"># Default: lowercase model name + _set</span>
+
+<span class="comment"># With related_name='items' (much cleaner!):</span>
+mains.items.all()</pre>
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-top: 10px;"><strong>Tip:</strong> Always set <code>related_name</code> for readable code. Use plural form: <code>items</code>, <code>orders</code>, <code>comments</code>.</p>
+
+            <h3 class="mt-40 mb-20">Primary Key &mdash; Where Does <code>id</code> Come From?</h3>
+            <div class="info-box">
+                <strong>&#128273; Auto-generated!</strong> Django adds an <code>id</code> field to every model automatically. You don't need to define it.
+            </div>
+            <div class="code-block mt-20">
+                <div class="code-content">
+                    <pre><span class="comment"># You write this:</span>
+<span class="keyword">class</span> <span class="class-name">MenuItem</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">100</span>)
+
+<span class="comment"># Django adds this automatically:</span>
+<span class="comment"># id = models.BigAutoField(primary_key=True)</span></pre>
+                </div>
+            </div>
+
+            <h4 class="mt-20 mb-20">Changing the Primary Key</h4>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre><span class="comment"># Use UUID instead of auto-increment integer</span>
+<span class="keyword">import</span> uuid
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    id = models.UUIDField(primary_key=<span class="keyword">True</span>, default=uuid.uuid4, editable=<span class="keyword">False</span>)
+    <span class="comment"># id will be like: "550e8400-e29b-41d4-a716-446655440000"</span></pre>
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-top: 10px;"><strong>When to use UUID?</strong> When you don't want sequential IDs visible (security), or when merging data from multiple databases.</p>
+
+            <h3 class="mt-40 mb-20">Understanding <code>class Meta</code></h3>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">Category</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">50</span>)
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        verbose_name_plural = <span class="string">"Categories"</span>  <span class="comment"># Admin shows "Categories" not "Categorys"</span>
+        ordering = [<span class="string">'name'</span>]               <span class="comment"># Default sort order</span>
+        db_table = <span class="string">'menu_categories'</span>      <span class="comment"># Custom table name (optional)</span></pre>
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-top: 10px;"><code>Meta</code> is metadata about the model &mdash; not a field, but configuration. It controls how Django and the database treat this model.</p>
+
+            <h3 class="mt-40 mb-20">Understanding <code>__str__</code></h3>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">MenuItem</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">100</span>)
+    price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self):
+        <span class="keyword">return</span> <span class="string">f"</span>{self.name}<span class="string"> ($</span>{self.price}<span class="string">)"</span></pre>
+                </div>
+            </div>
+            <table class="comparison-table mt-20">
+                <tr>
+                    <th>Without <code>__str__</code></th>
+                    <th>With <code>__str__</code></th>
+                </tr>
+                <tr>
+                    <td><code>&lt;MenuItem: MenuItem object (1)&gt;</code></td>
+                    <td><code>&lt;MenuItem: Pasta Alfredo ($15.99)&gt;</code></td>
+                </tr>
+            </table>
+            <p style="color: var(--text-secondary); margin-top: 10px;">The Admin, shell, and debug output all use <code>__str__</code>. Always define it!</p>
+
+            <h3 class="mt-40 mb-20">Why <code>created_at</code> and <code>updated_at</code>?</h3>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre>created_at = models.DateTimeField(auto_now_add=<span class="keyword">True</span>)  <span class="comment"># Set once when created</span>
+updated_at = models.DateTimeField(auto_now=<span class="keyword">True</span>)      <span class="comment"># Updates on every save</span></pre>
+                </div>
+            </div>
+            <div class="info-box mt-20">
+                <strong>&#128197; Why these matter:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Debugging:</strong> "When was this record created? When was it last modified?"</li>
+                    <li><strong>Sorting:</strong> Show newest items first: <code>MenuItem.objects.order_by('-created_at')</code></li>
+                    <li><strong>Analytics:</strong> "How many orders were created today?"</li>
+                    <li><strong>Caching:</strong> "Has this data changed since last fetch?"</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">Enum Fields with <code>TextChoices</code></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">When a field should only allow specific values (like order status), use choices:</p>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        menu/models.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    <span class="comment"># Define allowed values</span>
+    <span class="keyword">class</span> <span class="class-name">Status</span>(models.TextChoices):
+        PENDING = <span class="string">'pending'</span>, <span class="string">'Pending'</span>
+        PREPARING = <span class="string">'preparing'</span>, <span class="string">'Preparing'</span>
+        READY = <span class="string">'ready'</span>, <span class="string">'Ready for Pickup'</span>
+        DELIVERED = <span class="string">'delivered'</span>, <span class="string">'Delivered'</span>
+        CANCELLED = <span class="string">'cancelled'</span>, <span class="string">'Cancelled'</span>
+
+    status = models.CharField(
+        max_length=<span class="variable">20</span>,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+
+<span class="comment"># Usage:</span>
+order = Order.objects.create(status=Order.Status.PREPARING)
+<span class="keyword">if</span> order.status == Order.Status.READY:
+    notify_customer()</pre>
+                </div>
+            </div>
+            <div class="warning-box mt-20">
+                <strong>&#9888; Why not just use strings?</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Typos: <code>"Prepering"</code> would be stored (bad!)</li>
+                    <li>No autocomplete in IDE</li>
+                    <li>Admin won't show a dropdown</li>
+                </ul>
+                <p class="mt-10">With <code>TextChoices</code>, Django validates the value and shows a nice dropdown in Admin.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Migrations Section -->
+    <section id="migrations">
+        <div class="section-container">
+            <span class="section-label django">Part 2</span>
+            <h2 class="section-title">Migrations</h2>
+            <p class="section-subtitle">Turn model code into database tables.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128221;</div>
+                        <div class="flow-box-title">Model Code</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#9881;</div>
+                        <div class="flow-box-title">makemigrations</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128196;</div>
+                        <div class="flow-box-title">Migration File</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#9881;</div>
+                        <div class="flow-box-title">migrate</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128451;</div>
+                        <div class="flow-box-title">Database Table</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Step 1: Create Migration</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>python manage.py makemigrations menu</pre>
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-top: 10px;">Creates: <code>menu/migrations/0001_initial.py</code></p>
+
+            <h3 class="mt-30 mb-20">Step 2: Apply Migration</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>python manage.py migrate</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Migration Commands Reference</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Command</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><code>makemigrations</code></td>
+                    <td>Create migration files from model changes</td>
+                </tr>
+                <tr>
+                    <td><code>migrate</code></td>
+                    <td>Apply migrations to database</td>
+                </tr>
+                <tr>
+                    <td><code>showmigrations</code></td>
+                    <td>List all migrations and their status</td>
+                </tr>
+                <tr>
+                    <td><code>sqlmigrate menu 0001</code></td>
+                    <td>Show SQL that will be executed</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Migrations with Existing Data</h3>
+            <div class="warning-box">
+                <strong>&#9888; The Tricky Part:</strong> What happens when you add a new required field to a table that already has data?
+            </div>
+
+            <h4 class="mt-20 mb-20">Scenario: Adding a Required Field</h4>
+            <div class="code-block">
+                <div class="code-content">
+                    <pre><span class="comment"># You have MenuItems in database, then add:</span>
+spice_level = models.CharField(max_length=<span class="variable">20</span>)  <span class="comment"># Required field!</span>
+
+<span class="comment"># Django asks: "Existing rows don't have spice_level. What value should they get?"</span></pre>
+                </div>
+            </div>
+
+            <p class="mt-20 mb-20" style="color: var(--text-secondary);">When you run <code>makemigrations</code>, Django will ask you to choose:</p>
+            <table class="comparison-table">
+                <tr>
+                    <th>Option</th>
+                    <th>When to Use</th>
+                </tr>
+                <tr>
+                    <td><strong>Option 1:</strong> Provide a one-off default now</td>
+                    <td>Give a value like <code>'medium'</code> for existing rows</td>
+                </tr>
+                <tr>
+                    <td><strong>Option 2:</strong> Quit and add a default in models.py</td>
+                    <td>Add <code>default='medium'</code> to the field definition</td>
+                </tr>
+            </table>
+
+            <div class="code-block mt-20">
+                <div class="code-content">
+                    <pre><span class="comment"># Better approach: Add default in the model</span>
+spice_level = models.CharField(max_length=<span class="variable">20</span>, default=<span class="string">'medium'</span>)
+
+<span class="comment"># Or make it optional</span>
+spice_level = models.CharField(max_length=<span class="variable">20</span>, blank=<span class="keyword">True</span>, default=<span class="string">''</span>)</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Rolling Back Migrations</h3>
+            <div class="info-box">
+                <strong>&#8617; Need to undo?</strong> You can migrate backwards to a previous state.
+            </div>
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># See current state</span>
+python manage.py showmigrations menu
+<span class="comment"># menu</span>
+<span class="comment">#  [X] 0001_initial</span>
+<span class="comment">#  [X] 0002_add_spice_level</span>
+<span class="comment">#  [X] 0003_add_calories</span>
+
+<span class="comment"># Roll back to 0001 (undo 0002 and 0003)</span>
+python manage.py migrate menu 0001
+
+<span class="comment"># Roll back ALL migrations for an app</span>
+python manage.py migrate menu zero</pre>
+                </div>
+            </div>
+
+            <div class="warning-box mt-20">
+                <strong>&#9888; Caution with Rollbacks</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Rolling back <strong>deletes data</strong> in new columns</li>
+                    <li>If you removed a column in a migration, rolling back won't restore the data</li>
+                    <li>Always backup production data before migrations!</li>
+                    <li>Test migrations on a copy of production data first</li>
+                </ul>
+            </div>
+
+            <h4 class="mt-30 mb-20">Safe Migration Workflow (Production)</h4>
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128190;</div>
+                        <div class="flow-box-title">Backup DB</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#129514;</div>
+                        <div class="flow-box-title">Test Locally</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128640;</div>
+                        <div class="flow-box-title">Deploy Code</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#9881;</div>
+                        <div class="flow-box-title">Run Migrate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Django Admin Section -->
+    <section id="admin">
+        <div class="section-container">
+            <span class="section-label django">Part 3</span>
+            <h2 class="section-title">Django Admin</h2>
+            <p class="section-subtitle">Free admin interface to manage your data!</p>
+
+            <h3 class="mt-20 mb-20">Step 1: Create Superuser</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>python manage.py createsuperuser
+<span class="comment"># Username: admin</span>
+<span class="comment"># Email: admin@example.com</span>
+<span class="comment"># Password: ********</span></pre>
+                </div>
+            </div>
+
+            <h3 class="mt-30 mb-20">Step 2: Register Models</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        menu/admin.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.contrib <span class="keyword">import</span> admin
+<span class="keyword">from</span> .models <span class="keyword">import</span> Category, MenuItem
+
+
+<span class="decorator">@admin.register</span>(Category)
+<span class="keyword">class</span> <span class="class-name">CategoryAdmin</span>(admin.ModelAdmin):
+    list_display = [<span class="string">'name'</span>, <span class="string">'description'</span>]
+    search_fields = [<span class="string">'name'</span>]
+
+
+<span class="decorator">@admin.register</span>(MenuItem)
+<span class="keyword">class</span> <span class="class-name">MenuItemAdmin</span>(admin.ModelAdmin):
+    list_display = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'category'</span>, <span class="string">'is_available'</span>]
+    list_filter = [<span class="string">'category'</span>, <span class="string">'is_available'</span>]
+    search_fields = [<span class="string">'name'</span>, <span class="string">'description'</span>]
+    list_editable = [<span class="string">'price'</span>, <span class="string">'is_available'</span>]</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Admin Customization Options</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Option</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><code>list_display</code></td>
+                    <td>Columns shown in list view</td>
+                </tr>
+                <tr>
+                    <td><code>list_filter</code></td>
+                    <td>Sidebar filters</td>
+                </tr>
+                <tr>
+                    <td><code>search_fields</code></td>
+                    <td>Fields to search</td>
+                </tr>
+                <tr>
+                    <td><code>list_editable</code></td>
+                    <td>Edit directly in list view</td>
+                </tr>
+                <tr>
+                    <td><code>ordering</code></td>
+                    <td>Default sort order</td>
+                </tr>
+            </table>
+
+            <div class="success-box mt-30">
+                <strong>&#128640; Try it!</strong>
+                <p>Run <code>python manage.py runserver</code> and visit <a href="http://127.0.0.1:8000/admin/" style="color: var(--accent-django-light);">http://127.0.0.1:8000/admin/</a></p>
+            </div>
+
+            <h3 class="mt-40 mb-20">Why Django Admin? Who Uses It in Production?</h3>
+            <div class="info-box">
+                <strong>&#129300; The Big Question:</strong> If we build our own UI, why do we need Admin?
+            </div>
+
+            <table class="comparison-table mt-20">
+                <tr>
+                    <th>Who</th>
+                    <th>Uses Admin?</th>
+                    <th>Why</th>
+                </tr>
+                <tr>
+                    <td><strong>End Users</strong> (customers)</td>
+                    <td>&#10060; Never</td>
+                    <td>They use your custom frontend (React, mobile app, etc.)</td>
+                </tr>
+                <tr>
+                    <td><strong>Content Managers</strong></td>
+                    <td>&#9989; Yes</td>
+                    <td>Add blog posts, update menu items, manage categories</td>
+                </tr>
+                <tr>
+                    <td><strong>Support Team</strong></td>
+                    <td>&#9989; Yes</td>
+                    <td>Look up orders, reset user data, handle refunds</td>
+                </tr>
+                <tr>
+                    <td><strong>Developers</strong></td>
+                    <td>&#9989; Yes</td>
+                    <td>Debug issues, test data, quick fixes</td>
+                </tr>
+            </table>
+
+            <div class="warning-box mt-20">
+                <strong>&#9888; Production Best Practices</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Change admin URL from <code>/admin/</code> to something like <code>/secret-dashboard/</code></li>
+                    <li>Use strong passwords and enable 2FA</li>
+                    <li>Limit admin access by IP in production</li>
+                    <li>Never give admin access to end users &mdash; build a proper UI for them</li>
+                </ul>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Real-World Example:</strong> A restaurant app has Django Admin for the restaurant owner to update prices and menu items. Customers use the mobile app (which calls your API) &mdash; they never see the admin.
+            </div>
+
+            <h3 class="mt-40 mb-20">Bulk Import: CSV Upload via Admin</h3>
+            <div class="info-box">
+                <strong>&#129300; The Problem:</strong> What if your restaurant has 100 menu items? Adding them one by one is tedious!
+            </div>
+
+            <p class="mt-20" style="color: var(--text-secondary);">Use <code>django-import-export</code> to add Import/Export buttons to Admin.</p>
+
+            <h4 class="mt-30 mb-20">Step 1: Install</h4>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>pip install django-import-export</pre>
+                </div>
+            </div>
+
+            <h4 class="mt-30 mb-20">Step 2: Add to INSTALLED_APPS</h4>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        settings.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>INSTALLED_APPS = [
+    <span class="comment"># ... existing apps</span>
+    <span class="string">'import_export'</span>,  <span class="comment"># Add this!</span>
+    <span class="string">'menu'</span>,
+]</pre>
+                </div>
+            </div>
+
+            <h4 class="mt-30 mb-20">Step 3: Update admin.py</h4>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        menu/admin.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.contrib <span class="keyword">import</span> admin
+<span class="keyword">from</span> import_export <span class="keyword">import</span> resources, fields
+<span class="keyword">from</span> import_export.widgets <span class="keyword">import</span> ForeignKeyWidget
+<span class="keyword">from</span> import_export.admin <span class="keyword">import</span> ImportExportModelAdmin
+<span class="keyword">from</span> .models <span class="keyword">import</span> Category, MenuItem
+
+
+<span class="keyword">class</span> <span class="class-name">CategoryResource</span>(resources.ModelResource):
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = Category
+        fields = (<span class="string">'id'</span>, <span class="string">'name'</span>, <span class="string">'description'</span>)
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItemResource</span>(resources.ModelResource):
+    <span class="comment"># Use category NAME instead of ID!</span>
+    category = fields.Field(
+        column_name=<span class="string">'category'</span>,
+        attribute=<span class="string">'category'</span>,
+        widget=ForeignKeyWidget(Category, field=<span class="string">'name'</span>)
+    )
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = MenuItem
+        fields = (<span class="string">'id'</span>, <span class="string">'name'</span>, <span class="string">'description'</span>, <span class="string">'price'</span>, <span class="string">'is_available'</span>, <span class="string">'category'</span>)
+
+
+<span class="decorator">@admin.register</span>(Category)
+<span class="keyword">class</span> <span class="class-name">CategoryAdmin</span>(ImportExportModelAdmin):
+    resource_class = CategoryResource
+    list_display = [<span class="string">'name'</span>, <span class="string">'description'</span>]
+
+
+<span class="decorator">@admin.register</span>(MenuItem)
+<span class="keyword">class</span> <span class="class-name">MenuItemAdmin</span>(ImportExportModelAdmin):
+    resource_class = MenuItemResource
+    list_display = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'category'</span>, <span class="string">'is_available'</span>]
+    list_filter = [<span class="string">'category'</span>, <span class="string">'is_available'</span>]</pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; ForeignKeyWidget Magic:</strong> Lets us use category <strong>name</strong> in CSV instead of numeric IDs. Much easier for content managers!
+            </div>
+
+            <h4 class="mt-30 mb-20">Sample CSV Files</h4>
+            <div class="card-grid">
+                <div class="card">
+                    <h3 class="card-title">categories.csv</h3>
+                    <div class="code-block" style="margin: 10px 0;">
+                        <div class="code-content">
+                            <pre style="font-size: 0.8rem;">name,description
+Appetizers,Light starters
+Main Course,Hearty dishes
+Desserts,Sweet treats
+Beverages,Drinks</pre>
+                        </div>
+                    </div>
+                    <p class="card-desc">Import this FIRST!</p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">menu_items.csv</h3>
+                    <div class="code-block" style="margin: 10px 0;">
+                        <div class="code-content">
+                            <pre style="font-size: 0.8rem;">name,price,is_available,category
+Garlic Bread,6.99,True,Appetizers
+Pasta Alfredo,15.99,True,Main Course
+Chocolate Cake,8.99,True,Desserts</pre>
+                        </div>
+                    </div>
+                    <p class="card-desc">Uses category <strong>name</strong>!</p>
+                </div>
+            </div>
+
+            <div class="flow-diagram mt-30">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128196;</div>
+                        <div class="flow-box-title">Prepare CSV</div>
+                        <div class="flow-box-desc">In Excel/Sheets</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128736;</div>
+                        <div class="flow-box-title">Admin Import</div>
+                        <div class="flow-box-desc">Click IMPORT button</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128269;</div>
+                        <div class="flow-box-title">Preview</div>
+                        <div class="flow-box-desc">Review changes</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#9989;</div>
+                        <div class="flow-box-title">Confirm</div>
+                        <div class="flow-box-desc">Data saved!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-box mt-30">
+                <strong>&#128640; Content Managers Love This!</strong>
+                <p>They work in Excel, export to CSV, and upload via Admin. No coding needed!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- QuerySets Section -->
+    <section id="querysets">
+        <div class="section-container">
+            <span class="section-label django">Part 4</span>
+            <h2 class="section-title">QuerySets</h2>
+            <p class="section-subtitle">Query the database with Python.</p>
+
+            <h3 class="mt-20 mb-20">QuerySet Methods</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Method</th>
+                    <th>Purpose</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>all()</code></td>
+                    <td>Get all objects</td>
+                    <td><code>MenuItem.objects.all()</code></td>
+                </tr>
+                <tr>
+                    <td><code>filter()</code></td>
+                    <td>Get matching objects</td>
+                    <td><code>MenuItem.objects.filter(is_available=True)</code></td>
+                </tr>
+                <tr>
+                    <td><code>get()</code></td>
+                    <td>Get single object</td>
+                    <td><code>MenuItem.objects.get(id=1)</code></td>
+                </tr>
+                <tr>
+                    <td><code>exclude()</code></td>
+                    <td>Get non-matching</td>
+                    <td><code>MenuItem.objects.exclude(price__gt=20)</code></td>
+                </tr>
+                <tr>
+                    <td><code>count()</code></td>
+                    <td>Count results</td>
+                    <td><code>MenuItem.objects.count()</code></td>
+                </tr>
+                <tr>
+                    <td><code>order_by()</code></td>
+                    <td>Sort results</td>
+                    <td><code>MenuItem.objects.order_by('-price')</code></td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Field Lookups</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Lookup</th>
+                    <th>SQL Equivalent</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>exact</code></td>
+                    <td><code>=</code></td>
+                    <td><code>name__exact='Pasta'</code></td>
+                </tr>
+                <tr>
+                    <td><code>icontains</code></td>
+                    <td><code>ILIKE %...%</code></td>
+                    <td><code>name__icontains='pasta'</code></td>
+                </tr>
+                <tr>
+                    <td><code>gt</code>, <code>gte</code></td>
+                    <td><code>&gt;</code>, <code>&gt;=</code></td>
+                    <td><code>price__gt=10</code></td>
+                </tr>
+                <tr>
+                    <td><code>lt</code>, <code>lte</code></td>
+                    <td><code>&lt;</code>, <code>&lt;=</code></td>
+                    <td><code>price__lte=20</code></td>
+                </tr>
+                <tr>
+                    <td><code>in</code></td>
+                    <td><code>IN (...)</code></td>
+                    <td><code>id__in=[1, 2, 3]</code></td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Django Shell</h3>
+
+            <div class="info-box">
+                <strong>&#129300; Why Django Shell instead of regular Python?</strong>
+                <p class="mt-10">Regular <code>python</code> doesn't know about your Django project. <code>manage.py shell</code> loads your settings, apps, and database connection &mdash; so you can query models directly.</p>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>python manage.py shell
+
+<span class="comment"># Import models</span>
+>>> <span class="keyword">from</span> menu.models <span class="keyword">import</span> Category, MenuItem
+
+<span class="comment"># Create a category</span>
+>>> appetizers = Category.objects.create(
+...     name=<span class="string">"Appetizers"</span>,
+...     description=<span class="string">"Start your meal right"</span>
+... )
+
+<span class="comment"># Query items</span>
+>>> MenuItem.objects.filter(price__lt=<span class="variable">10</span>)
+&lt;QuerySet [&lt;MenuItem: Garlic Bread ($6.99)&gt;]&gt;
+
+<span class="comment"># Access relationships</span>
+>>> item = MenuItem.objects.first()
+>>> item.category.name
+<span class="string">'Appetizers'</span>
+
+<span class="comment"># Reverse relationship</span>
+>>> appetizers.items.all()
+&lt;QuerySet [&lt;MenuItem: Garlic Bread ($6.99)&gt;]&gt;</pre>
+                </div>
+            </div>
+
+            <h4 class="mt-30 mb-20">When to Use Django Shell</h4>
+            <table class="comparison-table">
+                <tr>
+                    <th>Use Case</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td>Quick data inspection</td>
+                    <td><code>User.objects.filter(is_active=False).count()</code></td>
+                </tr>
+                <tr>
+                    <td>One-time data fixes</td>
+                    <td><code>MenuItem.objects.filter(price=0).update(price=9.99)</code></td>
+                </tr>
+                <tr>
+                    <td>Testing queries before writing views</td>
+                    <td>Try complex filters before putting them in code</td>
+                </tr>
+                <tr>
+                    <td>Learning &amp; experimenting</td>
+                    <td>See how QuerySets behave without writing files</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- Diagrams Section -->
+    <section id="diagrams">
+        <div class="section-container">
+            <span class="section-label">Part 5</span>
+            <h2 class="section-title">Models & Diagrams</h2>
+            <p class="section-subtitle">Visualizing database relationships.</p>
+
+            <h3 class="mt-20 mb-20">ER Diagram (Entity-Relationship)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Shows database tables and their relationships:</p>
+
+            <div class="diagram-box">
+                <pre>
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;         &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474;    Category      &#9474;         &#9474;       MenuItem          &#9474;
+&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;         &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;
+&#9474; PK  id          &#9474;&#9472;&#9472;&#9472;&#9472;&#9488;    &#9474; PK  id                  &#9474;
+&#9474;     name        &#9474;    &#9474;    &#9474;     name                &#9474;
+&#9474;     description &#9474;    &#9474;    &#9474;     description         &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;    &#9474;    &#9474;     price               &#9474;
+                       &#9474;    &#9474;     is_available        &#9474;
+                       &#9492;&#9472;&#9472;&#9472;&#9658;&#9474; FK  category_id         &#9474;
+                            &#9474;     created_at          &#9474;
+                            &#9474;     updated_at          &#9474;
+                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+
+PK = Primary Key (unique identifier)
+FK = Foreign Key (reference to another table)
+&#9472;&#9472;&#9472;&#9658; = One-to-Many relationship
+                </pre>
+            </div>
+
+            <p class="mt-20" style="color: var(--text-secondary);"><strong>Reading it:</strong> One Category can have many MenuItems. Each MenuItem belongs to exactly one Category.</p>
+
+            <h3 class="mt-40 mb-20">ER vs Class Diagram</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>Aspect</th>
+                    <th>ER Diagram</th>
+                    <th>Class Diagram</th>
+                </tr>
+                <tr>
+                    <td><strong>Focus</strong></td>
+                    <td>Database structure</td>
+                    <td>Object-oriented design</td>
+                </tr>
+                <tr>
+                    <td><strong>Shows</strong></td>
+                    <td>Tables, columns, keys</td>
+                    <td>Classes, attributes, methods</td>
+                </tr>
+                <tr>
+                    <td><strong>Used by</strong></td>
+                    <td>Database designers</td>
+                    <td>Software designers</td>
+                </tr>
+            </table>
+
+            <div class="info-box mt-30">
+                <strong>&#128218; For this course:</strong> We'll focus on ER diagrams when designing databases. Class diagrams will be covered in detail in a later class on system design.
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section>
+        <div class="section-container">
+            <span class="section-label django">Summary</span>
+            <h2 class="section-title">What We Learned</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <h3 class="card-title">Models</h3>
+                    <p class="card-desc">Python classes that map to database tables</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128279;</div>
+                    <h3 class="card-title">Fields</h3>
+                    <p class="card-desc">Define columns with types and constraints</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128256;</div>
+                    <h3 class="card-title">ForeignKey</h3>
+                    <p class="card-desc">Creates relationships between models</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9881;</div>
+                    <h3 class="card-title">Migrations</h3>
+                    <p class="card-desc">Turn model code into database tables</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128736;</div>
+                    <h3 class="card-title">Django Admin</h3>
+                    <p class="card-desc">Free data management UI</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128269;</div>
+                    <h3 class="card-title">QuerySets</h3>
+                    <p class="card-desc">Query data with Python</p>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Quick Commands</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Create migrations</span>
+python manage.py makemigrations
+
+<span class="comment"># Apply migrations</span>
+python manage.py migrate
+
+<span class="comment"># Create admin user</span>
+python manage.py createsuperuser
+
+<span class="comment"># Open Django shell</span>
+python manage.py shell
+
+<span class="comment"># Run server</span>
+python manage.py runserver</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.innerHTML = '&#127769;'; text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.innerHTML = '&#9728;'; text.textContent = 'Light';
+            }
+        }
+
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const selected = block.querySelector('.question-option.selected');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            if (!selected) {
+                result.textContent = 'Please select an answer!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const options = block.querySelectorAll('.question-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct');
+                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
+            });
+
+            if (selected.getAttribute('data-correct') === 'true') {
+                result.innerHTML = '&#10003; Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.innerHTML = '&#10007; Incorrect. See explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+            explanation.classList.add('show');
+        }
+
+        function copyCode(button) {
+            const codeContent = button.closest('.code-block').querySelector('.code-content pre').textContent;
+            navigator.clipboard.writeText(codeContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+    </script>
+</body>
+</html>

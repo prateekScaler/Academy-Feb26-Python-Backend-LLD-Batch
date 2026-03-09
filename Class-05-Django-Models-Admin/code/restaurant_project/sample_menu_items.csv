@@ -1,0 +1,7 @@
+name,description,price,is_available,category
+Garlic Bread,Freshly baked with herbs and butter,6.99,True,Appetizers
+Bruschetta,Tomatoes and basil on toasted bread,7.99,True,Appetizers
+Pasta Alfredo,Creamy fettuccine with parmesan,15.99,True,Main Course
+Grilled Salmon,Fresh Atlantic salmon with vegetables,22.99,True,Main Course
+Margherita Pizza,Classic tomato and mozzarella,14.99,True,Main Course
+Chocolate Cake,Rich dark chocolate layer cake,8.99,True,Desserts
