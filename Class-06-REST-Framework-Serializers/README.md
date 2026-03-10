@@ -2,19 +2,19 @@
 
 ## Pre-Class Quiz: Test Your Class 5 Knowledge
 
-### Question 1: DecimalField
+### Question 1: Migration Safety
+Your `MenuItem` model has 10,000 rows in production. You add this field:
 ```python
-price = models.DecimalField(max_digits=6, decimal_places=2)
+category = models.ForeignKey(Category, on_delete=models.CASCADE)
 ```
-**What values can this field store?**
+**What happens when you run `makemigrations`?**
 
 <details>
 <summary>Answer</summary>
 
-**B) Values like 9999.99 (up to 6 total digits, 2 after decimal)**
+**B) Django asks for a default value because existing rows need a `category_id`**
 
-`max_digits=6` means 6 total digits, `decimal_places=2` means 2 after the decimal.
-Never use `FloatField` for money — floats have rounding errors!
+When adding a NOT NULL field to a table with existing rows, Django must know what value to put in that column. Safe approach: Add `null=True` first, migrate, backfill data, then remove `null=True`.
 </details>
 
 ---
