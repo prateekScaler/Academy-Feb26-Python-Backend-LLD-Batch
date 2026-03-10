@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 6: REST Framework & Serializers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-django: #092e20;
+            --accent-django-light: #44b78b;
+            --accent-drf: #a30000;
+            --accent-drf-light: #ff6b6b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-drf-light), var(--accent-primary)); z-index: 1001; transition: width 0.1s; }
+
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-drf-light); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.drf { background: linear-gradient(135deg, #a30000, #ff6b6b); }
+        .section-label.django { background: linear-gradient(135deg, #092e20, #44b78b); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(255, 107, 107, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #ff6b6b 0%, #6366f1 50%, #8b5cf6 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+        .hero-tagline strong { color: var(--accent-drf-light); }
+        .scroll-indicator {
+            position: absolute; bottom: 40px; display: flex; flex-direction: column;
+            align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+        .code-content .decorator { color: #ffa657; }
+        .code-content .class-name { color: #ffcb6b; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 30px 0; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .comparison-table th, .comparison-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 700; color: var(--accent-primary); }
+        .comparison-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .comparison-table code { background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+
+        .question-block { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 20px; padding: 40px; margin: 40px 0; }
+        .question-label { display: flex; align-items: center; gap: 10px; color: var(--warning); font-weight: 600; margin-bottom: 15px; font-size: 0.95rem; }
+        .question-text { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 25px; line-height: 1.5; }
+        .question-options { display: flex; flex-direction: column; gap: 12px; }
+        .question-option {
+            padding: 18px 24px; background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: 12px; cursor: pointer; font-size: 1rem; color: var(--text-primary);
+            transition: all 0.3s; display: flex; align-items: center; gap: 15px;
+        }
+        .question-option:hover { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+        .option-marker { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+        .question-btn { margin-top: 25px; padding: 14px 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s; }
+        .question-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); }
+        .question-result { margin-top: 20px; padding: 15px 20px; border-radius: 10px; font-weight: 600; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .question-explanation { margin-top: 20px; padding: 25px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--accent-django-light); display: none; }
+        .question-explanation.show { display: block; }
+        .question-explanation h4 { color: var(--accent-django-light); margin-bottom: 10px; }
+
+        .flow-diagram { background: var(--bg-secondary); border-radius: 16px; padding: 40px; margin: 40px 0; border: 1px solid var(--border-color); }
+        .flow-row { display: flex; justify-content: center; align-items: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
+        .flow-box { background: var(--bg-tertiary); padding: 20px 30px; border-radius: 12px; text-align: center; min-width: 150px; border: 2px solid var(--border-color); transition: all 0.3s; }
+        .flow-box:hover { border-color: var(--accent-primary); transform: scale(1.05); }
+        .flow-box.highlight { border-color: var(--accent-drf-light); background: rgba(255, 107, 107, 0.1); }
+        .flow-box-icon { font-size: 2rem; margin-bottom: 10px; }
+        .flow-box-title { font-weight: 700; margin-bottom: 5px; }
+        .flow-box-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-primary); }
+
+        .diagram-box { background: #1e1e2e; border-radius: 12px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 0.85rem; border: 1px solid var(--border-color); margin: 20px 0; overflow-x: auto; color: #e2e8f0; }
+
+        .info-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--accent-primary); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .success-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .danger-box { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+
+        .http-method { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 0.8rem; font-family: 'Fira Code', monospace; }
+        .http-get { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .http-post { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
+        .http-put { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .http-patch { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+        .http-delete { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .flow-row { gap: 15px; }
+            .flow-box { min-width: 120px; padding: 15px 20px; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Scaler Academy</div>
+        <ul class="nav-links">
+            <li><a href="../Class-05-Django-Models-Admin/index.html">&larr; Class 5</a></li>
+            <li><a href="#quiz">Quiz</a></li>
+            <li><a href="#why-api">Why APIs</a></li>
+            <li><a href="#rest">REST</a></li>
+            <li><a href="#serializers">Serializers</a></li>
+            <li><a href="#views">Views</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-icon">&#128640;</div>
+        <h1>REST Framework & Serializers</h1>
+        <div class="hero-meta">Class 6 | Python Backend LLD</div>
+        <p class="hero-tagline">
+            Build <strong>real APIs</strong> that mobile apps and frontends can consume.
+            Learn <strong>REST principles</strong> and how <strong>Serializers</strong> convert data.
+        </p>
+        <div class="scroll-indicator">
+            <span>Scroll to begin</span>
+            <span>&#8595;</span>
+        </div>
+    </section>
+
+    <!-- Pre-Class Quiz Section -->
+    <section id="quiz">
+        <div class="section-container">
+            <span class="section-label">Pre-Class Quiz</span>
+            <h2 class="section-title">Test Your Class 5 Knowledge</h2>
+            <p class="section-subtitle">Before diving into REST APIs, let's review Django Models & Admin.</p>
+
+            <!-- Question 1: Models -->
+            <div class="question-block" id="q1">
+                <div class="question-label">&#128161; Question 1</div>
+                <div class="question-text">
+                    What does this line do in a Django model?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Creates a text field that accepts numbers
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Creates a decimal field for values like 9999.99 (up to 6 digits, 2 after decimal)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Creates an integer field with 6 digits
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Creates a floating-point field (recommended for money)
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>Explanation</h4>
+                    <p><code>DecimalField</code> stores exact decimal numbers. <code>max_digits=6</code> means total digits (including decimal), <code>decimal_places=2</code> means 2 digits after the decimal point.</p>
+                    <p class="mt-10"><strong>Example:</strong> 1234.56 ✓ (6 digits total), 12345.67 ✗ (7 digits)</p>
+                    <p class="mt-10"><strong>Why not FloatField?</strong> Floats have rounding errors. $10.00 might become $9.999999... Never use FloatField for money!</p>
+                </div>
+            </div>
+
+            <!-- Question 2: ForeignKey -->
+            <div class="question-block" id="q2">
+                <div class="question-label">&#128161; Question 2</div>
+                <div class="question-text">
+                    What does <code>on_delete=models.CASCADE</code> mean in a ForeignKey?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>category = models.ForeignKey(Category, on_delete=models.CASCADE)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Prevent deletion if the category has menu items
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        When a Category is deleted, delete all its MenuItems too
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Set category to NULL when deleted
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Create a backup before deletion
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>Explanation</h4>
+                    <p><code>CASCADE</code> = "cascade" the delete operation. If Category "Appetizers" is deleted, all MenuItems in that category are also deleted.</p>
+                    <p class="mt-10"><strong>Other options:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li><code>PROTECT</code> &mdash; Prevent deletion if related objects exist</li>
+                        <li><code>SET_NULL</code> &mdash; Set FK to NULL (requires null=True)</li>
+                        <li><code>SET_DEFAULT</code> &mdash; Set FK to default value</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Question 3: Migrations -->
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 3</div>
+                <div class="question-text">
+                    You added a new field <code>is_featured = models.BooleanField()</code> to MenuItem. What happens when you run <code>makemigrations</code>?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        The field is added to the database immediately
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Django asks for a default value (existing rows need a value)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Migration succeeds silently with no prompts
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Django deletes all existing rows to add the field
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>Explanation</h4>
+                    <p>When adding a field to a table with existing rows, Django needs to know what value to put in that field for existing rows.</p>
+                    <p class="mt-10"><strong>Best practice:</strong> Add <code>default=False</code> to the field definition to avoid the prompt:</p>
+                    <code>is_featured = models.BooleanField(default=False)</code>
+                </div>
+            </div>
+
+            <!-- Question 4: QuerySets -->
+            <div class="question-block" id="q4">
+                <div class="question-label">&#128161; Question 4</div>
+                <div class="question-text">
+                    What does this QuerySet return?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>MenuItem.objects.filter(price__lte=<span class="variable">10</span>, is_available=<span class="variable">True</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Items where price &lt; 10 OR is_available = True
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Items where price &le; 10 AND is_available = True
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Items where price = 10 AND is_available = True
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        The first item matching any condition
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>Explanation</h4>
+                    <p>Multiple conditions in <code>filter()</code> are combined with <strong>AND</strong>. The lookup <code>__lte</code> means "less than or equal to".</p>
+                    <p class="mt-10"><strong>Common lookups:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li><code>__lt</code> = less than</li>
+                        <li><code>__lte</code> = less than or equal</li>
+                        <li><code>__gt</code> = greater than</li>
+                        <li><code>__gte</code> = greater than or equal</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Question 5: Admin -->
+            <div class="question-block" id="q5">
+                <div class="question-label">&#128161; Question 5</div>
+                <div class="question-text">
+                    What does <code>list_editable</code> do in Django Admin?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="decorator">@admin.register</span>(MenuItem)
+<span class="keyword">class</span> <span class="class-name">MenuItemAdmin</span>(admin.ModelAdmin):
+    list_display = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'is_available'</span>]
+    list_editable = [<span class="string">'price'</span>, <span class="string">'is_available'</span>]</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Makes all fields editable in the detail view
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Allows editing price and is_available directly in the list view
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Prevents those fields from being edited
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Creates a separate edit page for those fields
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
+                <div class="question-result" id="q5-result"></div>
+                <div class="question-explanation" id="q5-explanation">
+                    <h4>Explanation</h4>
+                    <p><code>list_editable</code> lets you edit fields directly from the list view without clicking into each item. Great for quick updates like toggling availability or adjusting prices!</p>
+                    <p class="mt-10"><strong>Note:</strong> Fields in <code>list_editable</code> must also be in <code>list_display</code>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why APIs Section -->
+    <section id="why-api">
+        <div class="section-container">
+            <span class="section-label drf">The Problem</span>
+            <h2 class="section-title">Why Do We Need APIs?</h2>
+            <p class="section-subtitle">Your Django views return HTML. But what about mobile apps? What about React frontends?</p>
+
+            <h3 class="mb-20">The Problem: HTML is for Browsers</h3>
+
+            <div class="flow-diagram">
+                <h4 style="text-align: center; margin-bottom: 30px; color: var(--text-secondary);">Current Approach (HTML Views)</h4>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128187;</div>
+                        <div class="flow-box-title">Browser</div>
+                        <div class="flow-box-desc">Requests page</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#127760;</div>
+                        <div class="flow-box-title">Django View</div>
+                        <div class="flow-box-desc">Returns HTML</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128196;</div>
+                        <div class="flow-box-title">HTML Page</div>
+                        <div class="flow-box-desc">Rendered in browser</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="danger-box mt-30">
+                <strong>&#128561; But wait...</strong>
+                <p class="mt-10">What happens when a mobile app wants your menu data?</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Mobile apps can't render HTML!</li>
+                    <li>React/Vue frontends need JSON data, not HTML</li>
+                    <li>Third-party integrations need structured data</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">The Solution: Return Data, Not HTML</h3>
+
+            <div class="flow-diagram">
+                <h4 style="text-align: center; margin-bottom: 30px; color: var(--text-secondary);">API Approach (JSON)</h4>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128241;</div>
+                        <div class="flow-box-title">Mobile App</div>
+                    </div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128187;</div>
+                        <div class="flow-box-title">React Frontend</div>
+                    </div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#129302;</div>
+                        <div class="flow-box-title">Third Party</div>
+                    </div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-arrow">&#8595;</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128640;</div>
+                        <div class="flow-box-title">Django REST API</div>
+                        <div class="flow-box-desc">Returns JSON</div>
+                    </div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-arrow">&#8595;</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128230;</div>
+                        <div class="flow-box-title">JSON Data</div>
+                        <div class="flow-box-desc">Universal format</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">HTML vs JSON Response</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">&#128196; HTML Response (browser only)</div>
+                    </div>
+                    <div class="code-content">
+                        <pre>&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Menu&lt;/h1&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Pasta - $15.99&lt;/li&gt;
+      &lt;li&gt;Pizza - $14.99&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">&#128230; JSON Response (universal)</div>
+                    </div>
+                    <div class="code-content">
+                        <pre>{
+  <span class="string">"items"</span>: [
+    {
+      <span class="string">"name"</span>: <span class="string">"Pasta"</span>,
+      <span class="string">"price"</span>: <span class="variable">15.99</span>
+    },
+    {
+      <span class="string">"name"</span>: <span class="string">"Pizza"</span>,
+      <span class="string">"price"</span>: <span class="variable">14.99</span>
+    }
+  ]
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-box mt-30">
+                <strong>&#10003; JSON is Universal</strong>
+                <p class="mt-10">JSON can be consumed by any client: iOS, Android, React, Vue, Angular, third-party services, IoT devices... anything!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- REST Section -->
+    <section id="rest">
+        <div class="section-container">
+            <span class="section-label drf">Core Concept</span>
+            <h2 class="section-title">What is REST?</h2>
+            <p class="section-subtitle">REST is a set of conventions for building APIs. It's not a technology &mdash; it's a design philosophy.</p>
+
+            <div class="info-box">
+                <strong>&#128218; REST = REpresentational State Transfer</strong>
+                <p class="mt-10">Invented by Roy Fielding in his 2000 PhD thesis. It's a way to design web services that are simple, scalable, and predictable.</p>
+            </div>
+
+            <h3 class="mt-40 mb-20">REST Principles</h3>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128279;</div>
+                    <h3 class="card-title">1. Resource-Based URLs</h3>
+                    <p class="card-desc">URLs represent <strong>things</strong> (nouns), not actions (verbs).</p>
+                    <p class="mt-10" style="color: var(--success);">&#10003; <code>/api/menu-items/</code></p>
+                    <p style="color: var(--danger);">&#10007; <code>/api/getMenuItems/</code></p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127918;</div>
+                    <h3 class="card-title">2. HTTP Methods = Actions</h3>
+                    <p class="card-desc">Use HTTP verbs to indicate what you want to do with the resource.</p>
+                    <p class="mt-10">
+                        <span class="http-method http-get">GET</span> = Read<br>
+                        <span class="http-method http-post">POST</span> = Create
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128230;</div>
+                    <h3 class="card-title">3. Stateless</h3>
+                    <p class="card-desc">Each request contains all info needed. Server doesn't remember previous requests.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128196;</div>
+                    <h3 class="card-title">4. Standard Responses</h3>
+                    <p class="card-desc">Use HTTP status codes (200, 201, 404, etc.) and consistent JSON format.</p>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">HTTP Methods (CRUD Operations)</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>HTTP Method</th>
+                    <th>CRUD</th>
+                    <th>URL Example</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><span class="http-method http-get">GET</span></td>
+                    <td>Read</td>
+                    <td><code>/api/menu-items/</code></td>
+                    <td>List all items</td>
+                </tr>
+                <tr>
+                    <td><span class="http-method http-get">GET</span></td>
+                    <td>Read</td>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td>Get item #5</td>
+                </tr>
+                <tr>
+                    <td><span class="http-method http-post">POST</span></td>
+                    <td>Create</td>
+                    <td><code>/api/menu-items/</code></td>
+                    <td>Create new item</td>
+                </tr>
+                <tr>
+                    <td><span class="http-method http-put">PUT</span></td>
+                    <td>Update (full)</td>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td>Replace item #5</td>
+                </tr>
+                <tr>
+                    <td><span class="http-method http-patch">PATCH</span></td>
+                    <td>Update (partial)</td>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td>Update some fields</td>
+                </tr>
+                <tr>
+                    <td><span class="http-method http-delete">DELETE</span></td>
+                    <td>Delete</td>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td>Delete item #5</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">HTTP Status Codes</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Code</th>
+                    <th>Meaning</th>
+                    <th>When to Use</th>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--success);">200 OK</strong></td>
+                    <td>Success</td>
+                    <td>GET, PUT, PATCH succeeded</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--success);">201 Created</strong></td>
+                    <td>Resource created</td>
+                    <td>POST succeeded</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--success);">204 No Content</strong></td>
+                    <td>Success, no body</td>
+                    <td>DELETE succeeded</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--warning);">400 Bad Request</strong></td>
+                    <td>Invalid data</td>
+                    <td>Validation failed</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--warning);">401 Unauthorized</strong></td>
+                    <td>Not logged in</td>
+                    <td>Missing/invalid auth token</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--warning);">403 Forbidden</strong></td>
+                    <td>No permission</td>
+                    <td>Logged in but can't access</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--danger);">404 Not Found</strong></td>
+                    <td>Resource not found</td>
+                    <td>Item doesn't exist</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--danger);">500 Server Error</strong></td>
+                    <td>Server crashed</td>
+                    <td>Bug in your code</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">REST vs Non-REST (RPC-style)</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Action</th>
+                    <th style="color: var(--danger);">&#10007; Non-REST (RPC-style)</th>
+                    <th style="color: var(--success);">&#10003; REST</th>
+                </tr>
+                <tr>
+                    <td>Get all items</td>
+                    <td><code>POST /getMenuItems</code></td>
+                    <td><code>GET /menu-items/</code></td>
+                </tr>
+                <tr>
+                    <td>Get one item</td>
+                    <td><code>POST /getMenuItem?id=5</code></td>
+                    <td><code>GET /menu-items/5/</code></td>
+                </tr>
+                <tr>
+                    <td>Create item</td>
+                    <td><code>POST /createMenuItem</code></td>
+                    <td><code>POST /menu-items/</code></td>
+                </tr>
+                <tr>
+                    <td>Update item</td>
+                    <td><code>POST /updateMenuItem?id=5</code></td>
+                    <td><code>PUT /menu-items/5/</code></td>
+                </tr>
+                <tr>
+                    <td>Delete item</td>
+                    <td><code>POST /deleteMenuItem?id=5</code></td>
+                    <td><code>DELETE /menu-items/5/</code></td>
+                </tr>
+            </table>
+
+            <div class="info-box mt-30">
+                <strong>&#128161; Key Insight</strong>
+                <p class="mt-10">In REST, the <strong>URL</strong> identifies the resource and the <strong>HTTP method</strong> determines the action. You don't need verbs in URLs!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Serializers Section -->
+    <section id="serializers">
+        <div class="section-container">
+            <span class="section-label drf">Core Concept</span>
+            <h2 class="section-title">What are Serializers?</h2>
+            <p class="section-subtitle">Serializers convert complex data (like Django models) to JSON, and validate incoming JSON data.</p>
+
+            <h3 class="mb-20">The Problem: Models Aren't JSON</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">&#128561; This doesn't work!</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse
+<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem
+
+<span class="keyword">def</span> <span class="function">menu_list</span>(request):
+    items = MenuItem.objects.all()
+    <span class="keyword">return</span> JsonResponse(items)  <span class="comment"># ERROR! Can't serialize QuerySet</span></pre>
+                </div>
+            </div>
+
+            <div class="danger-box">
+                <strong>&#128561; TypeError: Object of type QuerySet is not JSON serializable</strong>
+                <p class="mt-10">Django models are Python objects. JSON only understands strings, numbers, lists, and dictionaries.</p>
+            </div>
+
+            <h3 class="mt-40 mb-20">The Solution: Serializers</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128451;</div>
+                        <div class="flow-box-title">Django Model</div>
+                        <div class="flow-box-desc">Python object</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128260;</div>
+                        <div class="flow-box-title">Serializer</div>
+                        <div class="flow-box-desc">Converts data</div>
+                    </div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128230;</div>
+                        <div class="flow-box-title">JSON</div>
+                        <div class="flow-box-desc">API response</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Serializers Do Two Things</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="card">
+                    <div class="card-icon">&#128230;</div>
+                    <h3 class="card-title">1. Serialization</h3>
+                    <p class="card-desc">Convert Python objects &rarr; JSON (for API responses)</p>
+                    <div class="code-block mt-20">
+                        <div class="code-content">
+                            <pre><span class="comment"># Model → JSON</span>
+item = MenuItem.objects.get(id=<span class="variable">1</span>)
+serializer = MenuItemSerializer(item)
+serializer.data
+<span class="comment"># {'id': 1, 'name': 'Pasta', 'price': '15.99'}</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128229;</div>
+                    <h3 class="card-title">2. Deserialization</h3>
+                    <p class="card-desc">Convert JSON &rarr; Python objects (for creating/updating)</p>
+                    <div class="code-block mt-20">
+                        <div class="code-content">
+                            <pre><span class="comment"># JSON → Model</span>
+data = {<span class="string">'name'</span>: <span class="string">'Pizza'</span>, <span class="string">'price'</span>: <span class="string">'14.99'</span>}
+serializer = MenuItemSerializer(data=data)
+serializer.is_valid()  <span class="comment"># Validate!</span>
+serializer.save()      <span class="comment"># Create model</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Creating a Serializer</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">menu/serializers.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers
+<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem, Category
+
+
+<span class="keyword">class</span> <span class="class-name">CategorySerializer</span>(serializers.ModelSerializer):
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = Category
+        fields = [<span class="string">'id'</span>, <span class="string">'name'</span>, <span class="string">'description'</span>]
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItemSerializer</span>(serializers.ModelSerializer):
+    <span class="comment"># Show category name instead of just ID</span>
+    category_name = serializers.CharField(source=<span class="string">'category.name'</span>, read_only=<span class="variable">True</span>)
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = MenuItem
+        fields = [
+            <span class="string">'id'</span>,
+            <span class="string">'name'</span>,
+            <span class="string">'description'</span>,
+            <span class="string">'price'</span>,
+            <span class="string">'is_available'</span>,
+            <span class="string">'category'</span>,        <span class="comment"># FK ID (for writing)</span>
+            <span class="string">'category_name'</span>,   <span class="comment"># Name (for reading)</span>
+        ]</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">ModelSerializer vs Serializer</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Aspect</th>
+                    <th>Serializer</th>
+                    <th>ModelSerializer</th>
+                </tr>
+                <tr>
+                    <td><strong>Field definitions</strong></td>
+                    <td>Manual (you define each field)</td>
+                    <td>Automatic (from model)</td>
+                </tr>
+                <tr>
+                    <td><strong>create() / update()</strong></td>
+                    <td>You write them</td>
+                    <td>Automatic</td>
+                </tr>
+                <tr>
+                    <td><strong>Use when</strong></td>
+                    <td>Custom data structures</td>
+                    <td>Working with models (99% of cases)</td>
+                </tr>
+                <tr>
+                    <td><strong>Code required</strong></td>
+                    <td>More</td>
+                    <td>Less</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Validation</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Adding custom validation</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">MenuItemSerializer</span>(serializers.ModelSerializer):
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = MenuItem
+        fields = [<span class="string">'id'</span>, <span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'is_available'</span>]
+
+    <span class="keyword">def</span> <span class="function">validate_price</span>(self, value):
+        <span class="string">"""Price must be positive"""</span>
+        <span class="keyword">if</span> value &lt;= <span class="variable">0</span>:
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Price must be greater than 0"</span>)
+        <span class="keyword">return</span> value
+
+    <span class="keyword">def</span> <span class="function">validate</span>(self, data):
+        <span class="string">"""Cross-field validation"""</span>
+        <span class="keyword">if</span> data.get(<span class="string">'is_available'</span>) <span class="keyword">and</span> data.get(<span class="string">'price'</span>, <span class="variable">0</span>) == <span class="variable">0</span>:
+            <span class="keyword">raise</span> serializers.ValidationError(
+                <span class="string">"Available items must have a price"</span>
+            )
+        <span class="keyword">return</span> data</pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-30">
+                <strong>&#128161; Validation Methods</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><code>validate_&lt;field_name&gt;()</code> &mdash; Validate a single field</li>
+                    <li><code>validate()</code> &mdash; Validate multiple fields together</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Views Section -->
+    <section id="views">
+        <div class="section-container">
+            <span class="section-label drf">Implementation</span>
+            <h2 class="section-title">DRF Views</h2>
+            <p class="section-subtitle">Django REST Framework provides several ways to write API views, from low-level to high-level.</p>
+
+            <h3 class="mb-20">Setup: Install Django REST Framework</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Install</span>
+pip install djangorestframework
+
+<span class="comment"># Add to INSTALLED_APPS in settings.py</span>
+INSTALLED_APPS = [
+    ...
+    <span class="string">'rest_framework'</span>,
+    <span class="string">'menu'</span>,
+]</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Three Ways to Write Views</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Approach</th>
+                    <th>Abstraction Level</th>
+                    <th>Code Required</th>
+                    <th>Best For</th>
+                </tr>
+                <tr>
+                    <td><strong>@api_view</strong></td>
+                    <td>Low (function)</td>
+                    <td>Most</td>
+                    <td>Custom logic</td>
+                </tr>
+                <tr>
+                    <td><strong>APIView</strong></td>
+                    <td>Medium (class)</td>
+                    <td>Medium</td>
+                    <td>Custom + organization</td>
+                </tr>
+                <tr>
+                    <td><strong>ViewSet</strong></td>
+                    <td>High (automatic)</td>
+                    <td>Least</td>
+                    <td>Standard CRUD (90% of cases)</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Option 1: @api_view Decorator</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">menu/views.py - Function-based view</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> rest_framework.decorators <span class="keyword">import</span> api_view
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+<span class="keyword">from</span> rest_framework <span class="keyword">import</span> status
+<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem
+<span class="keyword">from</span> .serializers <span class="keyword">import</span> MenuItemSerializer
+
+
+<span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'POST'</span>])
+<span class="keyword">def</span> <span class="function">menu_item_list</span>(request):
+    <span class="string">"""List all items, or create a new item."""</span>
+    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
+        items = MenuItem.objects.all()
+        serializer = MenuItemSerializer(items, many=<span class="variable">True</span>)
+        <span class="keyword">return</span> Response(serializer.data)
+
+    <span class="keyword">elif</span> request.method == <span class="string">'POST'</span>:
+        serializer = MenuItemSerializer(data=request.data)
+        <span class="keyword">if</span> serializer.is_valid():
+            serializer.save()
+            <span class="keyword">return</span> Response(serializer.data, status=status.HTTP_201_CREATED)
+        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+<span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'PUT'</span>, <span class="string">'DELETE'</span>])
+<span class="keyword">def</span> <span class="function">menu_item_detail</span>(request, pk):
+    <span class="string">"""Retrieve, update, or delete a menu item."""</span>
+    <span class="keyword">try</span>:
+        item = MenuItem.objects.get(pk=pk)
+    <span class="keyword">except</span> MenuItem.DoesNotExist:
+        <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
+
+    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
+        serializer = MenuItemSerializer(item)
+        <span class="keyword">return</span> Response(serializer.data)
+
+    <span class="keyword">elif</span> request.method == <span class="string">'PUT'</span>:
+        serializer = MenuItemSerializer(item, data=request.data)
+        <span class="keyword">if</span> serializer.is_valid():
+            serializer.save()
+            <span class="keyword">return</span> Response(serializer.data)
+        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    <span class="keyword">elif</span> request.method == <span class="string">'DELETE'</span>:
+        item.delete()
+        <span class="keyword">return</span> Response(status=status.HTTP_204_NO_CONTENT)</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Option 2: APIView Class</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">menu/views.py - Class-based view</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> rest_framework.views <span class="keyword">import</span> APIView
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+<span class="keyword">from</span> rest_framework <span class="keyword">import</span> status
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItemList</span>(APIView):
+    <span class="string">"""List all items, or create a new item."""</span>
+
+    <span class="keyword">def</span> <span class="function">get</span>(self, request):
+        items = MenuItem.objects.all()
+        serializer = MenuItemSerializer(items, many=<span class="variable">True</span>)
+        <span class="keyword">return</span> Response(serializer.data)
+
+    <span class="keyword">def</span> <span class="function">post</span>(self, request):
+        serializer = MenuItemSerializer(data=request.data)
+        <span class="keyword">if</span> serializer.is_valid():
+            serializer.save()
+            <span class="keyword">return</span> Response(serializer.data, status=status.HTTP_201_CREATED)
+        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItemDetail</span>(APIView):
+    <span class="string">"""Retrieve, update, or delete a menu item."""</span>
+
+    <span class="keyword">def</span> <span class="function">get_object</span>(self, pk):
+        <span class="keyword">try</span>:
+            <span class="keyword">return</span> MenuItem.objects.get(pk=pk)
+        <span class="keyword">except</span> MenuItem.DoesNotExist:
+            <span class="keyword">return</span> <span class="variable">None</span>
+
+    <span class="keyword">def</span> <span class="function">get</span>(self, request, pk):
+        item = self.get_object(pk)
+        <span class="keyword">if</span> <span class="keyword">not</span> item:
+            <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = MenuItemSerializer(item)
+        <span class="keyword">return</span> Response(serializer.data)
+
+    <span class="keyword">def</span> <span class="function">put</span>(self, request, pk):
+        item = self.get_object(pk)
+        <span class="keyword">if</span> <span class="keyword">not</span> item:
+            <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = MenuItemSerializer(item, data=request.data)
+        <span class="keyword">if</span> serializer.is_valid():
+            serializer.save()
+            <span class="keyword">return</span> Response(serializer.data)
+        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    <span class="keyword">def</span> <span class="function">delete</span>(self, request, pk):
+        item = self.get_object(pk)
+        <span class="keyword">if</span> <span class="keyword">not</span> item:
+            <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
+        item.delete()
+        <span class="keyword">return</span> Response(status=status.HTTP_204_NO_CONTENT)</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Option 3: ViewSets (Recommended)</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">menu/views.py - ViewSet (minimal code!)</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> viewsets
+<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem, Category
+<span class="keyword">from</span> .serializers <span class="keyword">import</span> MenuItemSerializer, CategorySerializer
+
+
+<span class="keyword">class</span> <span class="class-name">CategoryViewSet</span>(viewsets.ModelViewSet):
+    <span class="string">"""
+    A ViewSet for viewing and editing categories.
+    Provides: list, create, retrieve, update, destroy
+    """</span>
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItemViewSet</span>(viewsets.ModelViewSet):
+    <span class="string">"""
+    A ViewSet for viewing and editing menu items.
+    """</span>
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer</pre>
+                </div>
+            </div>
+
+            <div class="success-box mt-20">
+                <strong>&#128640; That's it! 10 lines of code gives you full CRUD!</strong>
+                <p class="mt-10">ViewSets automatically provide: list, create, retrieve, update, partial_update, destroy.</p>
+            </div>
+
+            <h3 class="mt-40 mb-20">URL Configuration with Routers</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">menu/urls.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.urls <span class="keyword">import</span> path, include
+<span class="keyword">from</span> rest_framework.routers <span class="keyword">import</span> DefaultRouter
+<span class="keyword">from</span> . <span class="keyword">import</span> views
+
+router = DefaultRouter()
+router.register(<span class="string">'categories'</span>, views.CategoryViewSet)
+router.register(<span class="string">'menu-items'</span>, views.MenuItemViewSet)
+
+urlpatterns = [
+    path(<span class="string">'api/'</span>, include(router.urls)),
+]</pre>
+                </div>
+            </div>
+
+            <p class="mt-20" style="color: var(--text-secondary);">This creates all these URLs automatically:</p>
+
+            <table class="comparison-table mt-20">
+                <tr>
+                    <th>URL</th>
+                    <th>Method</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td><code>/api/menu-items/</code></td>
+                    <td><span class="http-method http-get">GET</span></td>
+                    <td>List all items</td>
+                </tr>
+                <tr>
+                    <td><code>/api/menu-items/</code></td>
+                    <td><span class="http-method http-post">POST</span></td>
+                    <td>Create new item</td>
+                </tr>
+                <tr>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td><span class="http-method http-get">GET</span></td>
+                    <td>Get item #5</td>
+                </tr>
+                <tr>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td><span class="http-method http-put">PUT</span></td>
+                    <td>Update item #5</td>
+                </tr>
+                <tr>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td><span class="http-method http-patch">PATCH</span></td>
+                    <td>Partial update item #5</td>
+                </tr>
+                <tr>
+                    <td><code>/api/menu-items/5/</code></td>
+                    <td><span class="http-method http-delete">DELETE</span></td>
+                    <td>Delete item #5</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- Testing Section -->
+    <section id="testing">
+        <div class="section-container">
+            <span class="section-label">Testing APIs</span>
+            <h2 class="section-title">Testing Your API</h2>
+            <p class="section-subtitle">DRF comes with a beautiful browsable API for testing.</p>
+
+            <h3 class="mb-20">1. Browsable API (built-in)</h3>
+            <p style="color: var(--text-secondary);">Just visit your API URL in a browser! DRF renders a nice interface.</p>
+
+            <div class="info-box mt-20">
+                <strong>&#127760; Visit: http://127.0.0.1:8000/api/menu-items/</strong>
+                <p class="mt-10">You'll see a web interface where you can:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>View JSON responses formatted nicely</li>
+                    <li>Submit POST/PUT requests using forms</li>
+                    <li>Test filters and search</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">2. Using curl (Terminal)</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># GET - List all items</span>
+curl http://127.0.0.1:8000/api/menu-items/
+
+<span class="comment"># GET - Get single item</span>
+curl http://127.0.0.1:8000/api/menu-items/1/
+
+<span class="comment"># POST - Create new item</span>
+curl -X POST http://127.0.0.1:8000/api/menu-items/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "New Pizza", "price": "12.99", "category": 1}'
+
+<span class="comment"># PUT - Update item</span>
+curl -X PUT http://127.0.0.1:8000/api/menu-items/1/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Updated Pizza", "price": "13.99", "category": 1}'
+
+<span class="comment"># DELETE - Delete item</span>
+curl -X DELETE http://127.0.0.1:8000/api/menu-items/1/</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">3. Using httpie (nicer than curl)</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal - Install with: pip install httpie</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># GET</span>
+http GET :8000/api/menu-items/
+
+<span class="comment"># POST</span>
+http POST :8000/api/menu-items/ name="New Pizza" price="12.99" category=1
+
+<span class="comment"># PUT</span>
+http PUT :8000/api/menu-items/1/ name="Updated Pizza" price="13.99" category=1
+
+<span class="comment"># DELETE</span>
+http DELETE :8000/api/menu-items/1/</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section>
+        <div class="section-container">
+            <span class="section-label drf">Summary</span>
+            <h2 class="section-title">What We Learned</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128640;</div>
+                    <h3 class="card-title">APIs Return JSON</h3>
+                    <p class="card-desc">Not HTML &mdash; data that any client can consume</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127918;</div>
+                    <h3 class="card-title">REST Conventions</h3>
+                    <p class="card-desc">URLs = resources, HTTP methods = actions</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128260;</div>
+                    <h3 class="card-title">Serializers</h3>
+                    <p class="card-desc">Convert models &harr; JSON and validate data</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128161;</div>
+                    <h3 class="card-title">ViewSets</h3>
+                    <p class="card-desc">Full CRUD with minimal code</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128279;</div>
+                    <h3 class="card-title">Routers</h3>
+                    <p class="card-desc">Auto-generate RESTful URLs</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127760;</div>
+                    <h3 class="card-title">Browsable API</h3>
+                    <p class="card-desc">Test your API in the browser</p>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Quick Commands</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Install DRF</span>
+pip install djangorestframework
+
+<span class="comment"># Run server</span>
+python manage.py runserver
+
+<span class="comment"># Test API</span>
+curl http://127.0.0.1:8000/api/menu-items/
+
+<span class="comment"># Or visit in browser</span>
+<span class="comment"># http://127.0.0.1:8000/api/menu-items/</span></pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Files Created Today</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>File</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><code>menu/serializers.py</code></td>
+                    <td>Define how models convert to/from JSON</td>
+                </tr>
+                <tr>
+                    <td><code>menu/views.py</code></td>
+                    <td>API endpoints (ViewSets)</td>
+                </tr>
+                <tr>
+                    <td><code>menu/urls.py</code></td>
+                    <td>Router configuration</td>
+                </tr>
+                <tr>
+                    <td><code>settings.py</code></td>
+                    <td>Added 'rest_framework' to INSTALLED_APPS</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.innerHTML = '&#127769;'; text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.innerHTML = '&#9728;'; text.textContent = 'Light';
+            }
+        }
+
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const selected = block.querySelector('.question-option.selected');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            if (!selected) {
+                result.textContent = 'Please select an answer!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const options = block.querySelectorAll('.question-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct');
+                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
+            });
+
+            if (selected.getAttribute('data-correct') === 'true') {
+                result.innerHTML = '&#10003; Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.innerHTML = '&#10007; Incorrect. See explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+            explanation.classList.add('show');
+        }
+
+        function copyCode(button) {
+            const codeContent = button.closest('.code-block').querySelector('.code-content pre').textContent;
+            navigator.clipboard.writeText(codeContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+    </script>
+</body>
+</html>
