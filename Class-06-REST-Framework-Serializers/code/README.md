@@ -128,12 +128,12 @@ Add these validations to your `MenuItemSerializer`:
 **Test your validation:**
 ```bash
 # Should fail - name too short
-curl -X POST http://127.0.0.1:8000/menu/api/menu-items/ \
+curl -X POST http://127.0.0.1:8000/api/menu-items/ \
   -H "Content-Type: application/json" \
   -d '{"name": "AB", "price": "10.00", "category": 1}'
 
 # Should fail - price is 0
-curl -X POST http://127.0.0.1:8000/menu/api/menu-items/ \
+curl -X POST http://127.0.0.1:8000/api/menu-items/ \
   -H "Content-Type: application/json" \
   -d '{"name": "Free Item", "price": "0", "is_available": true, "category": 1}'
 ```
@@ -237,56 +237,6 @@ curl "http://127.0.0.1:8000/api/orders/?search=john"
 
 # Order by total_amount descending
 curl "http://127.0.0.1:8000/api/orders/?ordering=-total_amount"
-```
-
----
-
-## Bonus Challenge: Write Tests
-
-Create `orders/tests.py` with API tests:
-
-```python
-from django.test import TestCase
-from rest_framework.test import APIClient
-from rest_framework import status
-from .models import Order
-
-
-class OrderAPITestCase(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.order = Order.objects.create(
-            customer_name="Test User",
-            customer_phone="1234567890",
-            total_amount=100.00
-        )
-
-    def test_list_orders(self):
-        response = self.client.get('/api/orders/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_create_order(self):
-        data = {
-            'customer_name': 'New User',
-            'customer_phone': '9876543210',
-            'total_amount': '50.00'
-        }
-        response = self.client.post('/api/orders/', data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_invalid_phone_rejected(self):
-        data = {
-            'customer_name': 'Bad Phone',
-            'customer_phone': '123',  # Too short!
-            'total_amount': '50.00'
-        }
-        response = self.client.post('/api/orders/', data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-```
-
-**Run tests:**
-```bash
-python manage.py test orders
 ```
 
 ---
