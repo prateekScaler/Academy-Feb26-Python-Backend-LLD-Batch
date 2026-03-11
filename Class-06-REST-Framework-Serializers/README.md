@@ -19,23 +19,7 @@ When adding a NOT NULL field to a table with existing rows, Django must know wha
 
 ---
 
-### Question 2: on_delete=CASCADE
-```python
-category = models.ForeignKey(Category, on_delete=models.CASCADE)
-```
-**What happens when a Category is deleted?**
-
-<details>
-<summary>Answer</summary>
-
-**B) All MenuItems in that category are also deleted**
-
-`CASCADE` = cascade the delete. Other options: `PROTECT` (prevent deletion), `SET_NULL` (set FK to null).
-</details>
-
----
-
-### Question 3: Adding Fields
+### Question 2: Adding Fields
 **You added `is_featured = models.BooleanField()` to MenuItem. What happens on `makemigrations`?**
 
 <details>
@@ -48,7 +32,7 @@ Fix: Add `default=False` to avoid the prompt.
 
 ---
 
-### Question 4: QuerySets
+### Question 3: QuerySets
 ```python
 MenuItem.objects.filter(price__lte=10, is_available=True)
 ```
@@ -64,7 +48,7 @@ Multiple conditions in `filter()` are combined with AND. `__lte` = less than or 
 
 ---
 
-### Question 5: list_editable
+### Question 4: list_editable
 ```python
 list_editable = ['price', 'is_available']
 ```
@@ -76,6 +60,37 @@ list_editable = ['price', 'is_available']
 **B) Allows editing price and is_available directly in the list view**
 
 Great for quick updates without clicking into each item!
+</details>
+
+---
+
+### Question 5: Django Views Limitations
+```python
+def menu_json(request):
+    items = MenuItem.objects.filter(is_available=True)
+    items_list = []
+    for item in items:
+        items_list.append({
+            "id": item.id,
+            "name": item.name,
+            "price": str(item.price),  # Must convert Decimal!
+        })
+    return JsonResponse({"items": items_list})
+```
+**What's the main problem with this approach?**
+
+<details>
+<summary>Answer</summary>
+
+**C) Manual conversion is tedious, has no validation, and doesn't handle POST/PUT/DELETE**
+
+This is how we've been building "APIs" so far:
+- Manual field-by-field conversion (Decimal isn't JSON serializable!)
+- No validation for incoming data
+- Only handles GET — what about create/update/delete?
+- No standard patterns
+
+Today we'll solve all these problems!
 </details>
 
 ---

@@ -300,52 +300,9 @@
                 </div>
             </div>
 
-            <!-- Question 2: ForeignKey -->
+            <!-- Question 2: Migrations -->
             <div class="question-block" id="q2">
                 <div class="question-label">&#128161; Question 2</div>
-                <div class="question-text">
-                    What does <code>on_delete=models.CASCADE</code> mean in a ForeignKey?
-                </div>
-                <div class="code-block">
-                    <div class="code-content">
-                        <pre>category = models.ForeignKey(Category, on_delete=models.CASCADE)</pre>
-                    </div>
-                </div>
-                <div class="question-options">
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">A</span>
-                        Prevent deletion if the category has menu items
-                    </div>
-                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
-                        <span class="option-marker">B</span>
-                        When a Category is deleted, delete all its MenuItems too
-                    </div>
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">C</span>
-                        Set category to NULL when deleted
-                    </div>
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">D</span>
-                        Create a backup before deletion
-                    </div>
-                </div>
-                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
-                <div class="question-result" id="q2-result"></div>
-                <div class="question-explanation" id="q2-explanation">
-                    <h4>Explanation</h4>
-                    <p><code>CASCADE</code> = "cascade" the delete operation. If Category "Appetizers" is deleted, all MenuItems in that category are also deleted.</p>
-                    <p class="mt-10"><strong>Other options:</strong></p>
-                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
-                        <li><code>PROTECT</code> &mdash; Prevent deletion if related objects exist</li>
-                        <li><code>SET_NULL</code> &mdash; Set FK to NULL (requires null=True)</li>
-                        <li><code>SET_DEFAULT</code> &mdash; Set FK to default value</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Question 3: Migrations -->
-            <div class="question-block" id="q3">
-                <div class="question-label">&#128161; Question 3</div>
                 <div class="question-text">
                     You added a new field <code>is_featured = models.BooleanField()</code> to MenuItem. What happens when you run <code>makemigrations</code>?
                 </div>
@@ -367,9 +324,9 @@
                         Django deletes all existing rows to add the field
                     </div>
                 </div>
-                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
-                <div class="question-result" id="q3-result"></div>
-                <div class="question-explanation" id="q3-explanation">
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
                     <h4>Explanation</h4>
                     <p>When adding a field to a table with existing rows, Django needs to know what value to put in that field for existing rows.</p>
                     <p class="mt-10"><strong>Best practice:</strong> Add <code>default=False</code> to the field definition to avoid the prompt:</p>
@@ -377,9 +334,9 @@
                 </div>
             </div>
 
-            <!-- Question 4: QuerySets -->
-            <div class="question-block" id="q4">
-                <div class="question-label">&#128161; Question 4</div>
+            <!-- Question 3: QuerySets -->
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 3</div>
                 <div class="question-text">
                     What does this QuerySet return?
                 </div>
@@ -406,9 +363,9 @@
                         The first item matching any condition
                     </div>
                 </div>
-                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
-                <div class="question-result" id="q4-result"></div>
-                <div class="question-explanation" id="q4-explanation">
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
                     <h4>Explanation</h4>
                     <p>Multiple conditions in <code>filter()</code> are combined with <strong>AND</strong>. The lookup <code>__lte</code> means "less than or equal to".</p>
                     <p class="mt-10"><strong>Common lookups:</strong></p>
@@ -421,9 +378,9 @@
                 </div>
             </div>
 
-            <!-- Question 5: Admin -->
-            <div class="question-block" id="q5">
-                <div class="question-label">&#128161; Question 5</div>
+            <!-- Question 4: Admin -->
+            <div class="question-block" id="q4">
+                <div class="question-label">&#128161; Question 4</div>
                 <div class="question-text">
                     What does <code>list_editable</code> do in Django Admin?
                 </div>
@@ -453,12 +410,66 @@
                         Creates a separate edit page for those fields
                     </div>
                 </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>Explanation</h4>
+                    <p><code>list_editable</code> lets you edit fields directly from the list view without clicking into each item. Great for quick updates like toggling availability or adjusting prices!</p>
+                    <p class="mt-10"><strong>Note:</strong> Fields in <code>list_editable</code> must also be in <code>list_display</code>.</p>
+                </div>
+            </div>
+
+            <!-- Question 5: Django Views Limitations -->
+            <div class="question-block" id="q5">
+                <div class="question-label">&#128161; Question 5</div>
+                <div class="question-text">
+                    Look at this Django view that returns JSON. What's the main problem with this approach?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="keyword">def</span> <span class="function">menu_json</span>(request):
+    items = MenuItem.objects.filter(is_available=<span class="variable">True</span>)
+    items_list = []
+    <span class="keyword">for</span> item <span class="keyword">in</span> items:
+        items_list.append({
+            <span class="string">"id"</span>: item.id,
+            <span class="string">"name"</span>: item.name,
+            <span class="string">"price"</span>: str(item.price),  <span class="comment"># Must convert Decimal!</span>
+            <span class="string">"category"</span>: item.category.name,
+        })
+    <span class="keyword">return</span> JsonResponse({<span class="string">"items"</span>: items_list})</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        JsonResponse is deprecated and shouldn't be used
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        The QuerySet filter is incorrect
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Manual conversion is tedious, has no validation, and doesn't handle POST/PUT/DELETE
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        You can't return JSON from Django views
+                    </div>
+                </div>
                 <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
                 <div class="question-result" id="q5-result"></div>
                 <div class="question-explanation" id="q5-explanation">
                     <h4>Explanation</h4>
-                    <p><code>list_editable</code> lets you edit fields directly from the list view without clicking into each item. Great for quick updates like toggling availability or adjusting prices!</p>
-                    <p class="mt-10"><strong>Note:</strong> Fields in <code>list_editable</code> must also be in <code>list_display</code>.</p>
+                    <p>This is how we've been building "APIs" so far. It works, but has serious limitations:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li><strong>Manual conversion</strong> &mdash; You must convert each field by hand (and remember that <code>Decimal</code> isn't JSON serializable!)</li>
+                        <li><strong>No validation</strong> &mdash; If someone POSTs data, you must validate every field yourself</li>
+                        <li><strong>Only handles GET</strong> &mdash; What about creating, updating, or deleting items?</li>
+                        <li><strong>No standards</strong> &mdash; Every developer writes it differently</li>
+                    </ul>
+                    <p class="mt-10"><strong>Today's class:</strong> We'll learn how to solve all these problems elegantly!</p>
                 </div>
             </div>
         </div>
