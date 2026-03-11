@@ -378,50 +378,9 @@
                 </div>
             </div>
 
-            <!-- Question 4: Admin -->
+            <!-- Question 4: Manual JSON Conversion -->
             <div class="question-block" id="q4">
                 <div class="question-label">&#128161; Question 4</div>
-                <div class="question-text">
-                    What does <code>list_editable</code> do in Django Admin?
-                </div>
-                <div class="code-block">
-                    <div class="code-content">
-                        <pre><span class="decorator">@admin.register</span>(MenuItem)
-<span class="keyword">class</span> <span class="class-name">MenuItemAdmin</span>(admin.ModelAdmin):
-    list_display = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'is_available'</span>]
-    list_editable = [<span class="string">'price'</span>, <span class="string">'is_available'</span>]</pre>
-                    </div>
-                </div>
-                <div class="question-options">
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">A</span>
-                        Makes all fields editable in the detail view
-                    </div>
-                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
-                        <span class="option-marker">B</span>
-                        Allows editing price and is_available directly in the list view
-                    </div>
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">C</span>
-                        Prevents those fields from being edited
-                    </div>
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">D</span>
-                        Creates a separate edit page for those fields
-                    </div>
-                </div>
-                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
-                <div class="question-result" id="q4-result"></div>
-                <div class="question-explanation" id="q4-explanation">
-                    <h4>Explanation</h4>
-                    <p><code>list_editable</code> lets you edit fields directly from the list view without clicking into each item. Great for quick updates like toggling availability or adjusting prices!</p>
-                    <p class="mt-10"><strong>Note:</strong> Fields in <code>list_editable</code> must also be in <code>list_display</code>.</p>
-                </div>
-            </div>
-
-            <!-- Question 5: Django Views Limitations -->
-            <div class="question-block" id="q5">
-                <div class="question-label">&#128161; Question 5</div>
                 <div class="question-text">
                     Look at this Django view that returns JSON. What's the main problem with this approach?
                 </div>
@@ -451,25 +410,65 @@
                     </div>
                     <div class="question-option" data-correct="true" onclick="selectOption(this)">
                         <span class="option-marker">C</span>
-                        Manual conversion is tedious, has no validation, and doesn't handle POST/PUT/DELETE
+                        Manual field-by-field conversion is tedious and error-prone
                     </div>
                     <div class="question-option" data-correct="false" onclick="selectOption(this)">
                         <span class="option-marker">D</span>
                         You can't return JSON from Django views
                     </div>
                 </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>Explanation</h4>
+                    <p>This is how we've been returning data so far. It works, but notice the pain points:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li><strong>Manual conversion</strong> &mdash; You must convert each field by hand</li>
+                        <li><strong>Type issues</strong> &mdash; <code>Decimal</code> isn't JSON serializable, so you need <code>str(item.price)</code></li>
+                        <li><strong>Repetitive</strong> &mdash; What if MenuItem has 20 fields? You'd write 20 lines!</li>
+                        <li><strong>No standards</strong> &mdash; Every developer structures it differently</li>
+                    </ul>
+                    <p class="mt-10"><strong>Today's class:</strong> We'll learn a much better approach!</p>
+                </div>
+            </div>
+
+            <!-- Question 5: Why Separate Frontend? -->
+            <div class="question-block" id="q5">
+                <div class="question-label">&#128161; Question 5</div>
+                <div class="question-text">
+                    Django can render HTML templates directly. So why do modern applications often have a <strong>separate frontend</strong> (React, Vue, mobile app) that fetches data from the backend?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        HTML templates are slower than JavaScript frameworks
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Django doesn't support modern CSS styling
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Multiple clients (web, iOS, Android) can share the same backend data
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Python is being replaced by JavaScript for all web development
+                    </div>
+                </div>
                 <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
                 <div class="question-result" id="q5-result"></div>
                 <div class="question-explanation" id="q5-explanation">
                     <h4>Explanation</h4>
-                    <p>This is how we've been building "APIs" so far. It works, but has serious limitations:</p>
+                    <p><strong>The shift happened around 2010-2015</strong> with the rise of smartphones and single-page applications (SPAs).</p>
+                    <p class="mt-10"><strong>Before:</strong> Server renders HTML &rarr; Browser displays it. Simple, but...</p>
                     <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
-                        <li><strong>Manual conversion</strong> &mdash; You must convert each field by hand (and remember that <code>Decimal</code> isn't JSON serializable!)</li>
-                        <li><strong>No validation</strong> &mdash; If someone POSTs data, you must validate every field yourself</li>
-                        <li><strong>Only handles GET</strong> &mdash; What about creating, updating, or deleting items?</li>
-                        <li><strong>No standards</strong> &mdash; Every developer writes it differently</li>
+                        <li>Mobile apps can't use HTML &mdash; they need raw data</li>
+                        <li>Every page refresh reloads everything &mdash; slow UX</li>
+                        <li>Frontend and backend teams are tightly coupled</li>
                     </ul>
-                    <p class="mt-10"><strong>Today's class:</strong> We'll learn how to solve all these problems elegantly!</p>
+                    <p class="mt-10"><strong>Now:</strong> Backend sends <strong>data (JSON)</strong> &rarr; Any client (React, iOS, Android, smart TV) can consume it and render however it wants.</p>
+                    <p class="mt-10">This is why we need to learn how to build proper data APIs &mdash; that's what this class is about!</p>
                 </div>
             </div>
         </div>
