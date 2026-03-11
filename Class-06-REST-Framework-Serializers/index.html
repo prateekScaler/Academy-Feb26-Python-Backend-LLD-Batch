@@ -226,8 +226,9 @@
             <li><a href="#quiz">Quiz</a></li>
             <li><a href="#why-api">Why APIs</a></li>
             <li><a href="#rest">REST</a></li>
+            <li><a href="#create-order-app">Order App</a></li>
             <li><a href="#serializers">Serializers</a></li>
-            <li><a href="#views">Views</a></li>
+            <li><a href="#views">DRF Views</a></li>
         </ul>
         <button class="theme-btn" onclick="toggleTheme()">
             <span id="themeIcon">&#9728;</span>
@@ -331,6 +332,91 @@
                     <p>When adding a field to a table with existing rows, Django needs to know what value to put in that field for existing rows.</p>
                     <p class="mt-10"><strong>Best practice:</strong> Add <code>default=False</code> to the field definition to avoid the prompt:</p>
                     <code>is_featured = models.BooleanField(default=False)</code>
+
+                    <h4 class="mt-20">The Database Design Principle: NOT NULL + DEFAULT</h4>
+                    <p class="mt-10">When you add a new column to a table that <strong>already has rows</strong>, the database needs a value for that column in existing rows. This is the <strong>NOT NULL constraint</strong> &mdash; a fundamental database integrity rule.</p>
+
+                    <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; margin-top: 15px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">
+                        <pre style="margin: 0; color: var(--text-secondary);">BEFORE MIGRATION:
+┌────┬────────────┬───────┐
+│ id │ name       │ price │
+├────┼────────────┼───────┤
+│ 1  │ Pasta      │ 15.00 │
+│ 2  │ Salmon     │ 22.00 │
+└────┴────────────┴───────┘
+
+AFTER ADDING is_featured (BooleanField):
+┌────┬────────────┬───────┬─────────────┐
+│ id │ name       │ price │ is_featured │
+├────┼────────────┼───────┼─────────────┤
+│ 1  │ Pasta      │ 15.00 │ <span style="color: var(--warning);">??? ← What goes here?</span> │
+│ 2  │ Salmon     │ 22.00 │ <span style="color: var(--warning);">??? ← Django doesn't know!</span> │
+└────┴────────────┴───────┴─────────────┘</pre>
+                    </div>
+
+                    <p class="mt-15"><strong>Rule:</strong> Every column must either:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li><strong>Allow NULL</strong> (<code>null=True</code>) &mdash; empty is okay</li>
+                        <li><strong>Have a DEFAULT</strong> &mdash; use this value when not specified</li>
+                        <li><strong>Be required on INSERT</strong> &mdash; reject incomplete data</li>
+                    </ul>
+
+                    <h4 class="mt-20">Best Practice Examples</h4>
+                    <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; margin-top: 10px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">
+                        <pre style="margin: 0;"><span style="color: var(--success);"># ✅ GOOD: Provide a sensible default</span>
+is_featured = models.BooleanField(<span style="color: var(--accent-primary);">default=False</span>)
+created_at = models.DateTimeField(<span style="color: var(--accent-primary);">auto_now_add=True</span>)
+status = models.CharField(max_length=20, <span style="color: var(--accent-primary);">default='pending'</span>)
+quantity = models.IntegerField(<span style="color: var(--accent-primary);">default=1</span>)
+
+<span style="color: var(--success);"># ✅ ALSO OK: Allow NULL (when "unknown" is valid)</span>
+deleted_at = models.DateTimeField(<span style="color: var(--accent-primary);">null=True, blank=True</span>)
+middle_name = models.CharField(max_length=50, <span style="color: var(--accent-primary);">null=True, blank=True</span>)
+
+<span style="color: var(--danger);"># ❌ BAD: No default, not nullable — will prompt!</span>
+is_featured = models.BooleanField()  <span style="color: var(--text-muted);"># Migration will ask!</span></pre>
+                    </div>
+
+                    <h4 class="mt-20">When to Use Each Approach</h4>
+                    <table style="width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 0.9rem;">
+                        <tr style="background: var(--bg-tertiary);">
+                            <th style="padding: 10px; text-align: left; border: 1px solid var(--border-color);">Scenario</th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid var(--border-color);">Approach</th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid var(--border-color);">Example</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Boolean flags</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>default=False</code></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>is_active</code>, <code>is_featured</code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Timestamps</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>auto_now_add=True</code></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>created_at</code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Status fields</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>default='initial'</code></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>status='pending'</code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Optional data</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>null=True, blank=True</code></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>deleted_at</code>, <code>bio</code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Numeric counters</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>default=0</code></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><code>view_count</code>, <code>stock</code></td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid var(--success);">
+                        <strong style="color: var(--success);">&#128161; Production Mindset:</strong>
+                        <p style="margin-top: 8px; color: var(--text-secondary);">
+                            Always think about <strong>existing data</strong>. Your migration will run on a database that already has rows. What should those rows contain for this new field? Plan it in your model definition, not during migration.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -378,63 +464,9 @@
                 </div>
             </div>
 
-            <!-- Question 4: Manual JSON Conversion -->
+            <!-- Question 4: Why Separate Frontend? -->
             <div class="question-block" id="q4">
                 <div class="question-label">&#128161; Question 4</div>
-                <div class="question-text">
-                    Look at this Django view that returns JSON. What's the main problem with this approach?
-                </div>
-                <div class="code-block">
-                    <div class="code-content">
-                        <pre><span class="keyword">def</span> <span class="function">menu_json</span>(request):
-    items = MenuItem.objects.filter(is_available=<span class="variable">True</span>)
-    items_list = []
-    <span class="keyword">for</span> item <span class="keyword">in</span> items:
-        items_list.append({
-            <span class="string">"id"</span>: item.id,
-            <span class="string">"name"</span>: item.name,
-            <span class="string">"price"</span>: str(item.price),  <span class="comment"># Must convert Decimal!</span>
-            <span class="string">"category"</span>: item.category.name,
-        })
-    <span class="keyword">return</span> JsonResponse({<span class="string">"items"</span>: items_list})</pre>
-                    </div>
-                </div>
-                <div class="question-options">
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">A</span>
-                        JsonResponse is deprecated and shouldn't be used
-                    </div>
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">B</span>
-                        The QuerySet filter is incorrect
-                    </div>
-                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
-                        <span class="option-marker">C</span>
-                        Manual field-by-field conversion is tedious and error-prone
-                    </div>
-                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
-                        <span class="option-marker">D</span>
-                        You can't return JSON from Django views
-                    </div>
-                </div>
-                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
-                <div class="question-result" id="q4-result"></div>
-                <div class="question-explanation" id="q4-explanation">
-                    <h4>Explanation</h4>
-                    <p>This is how we've been returning data so far. It works, but notice the pain points:</p>
-                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
-                        <li><strong>Manual conversion</strong> &mdash; You must convert each field by hand</li>
-                        <li><strong>Type issues</strong> &mdash; <code>Decimal</code> isn't JSON serializable, so you need <code>str(item.price)</code></li>
-                        <li><strong>Repetitive</strong> &mdash; What if MenuItem has 20 fields? You'd write 20 lines!</li>
-                        <li><strong>No standards</strong> &mdash; Every developer structures it differently</li>
-                    </ul>
-                    <p class="mt-10"><strong>Today's class:</strong> We'll learn a much better approach!</p>
-                </div>
-            </div>
-
-            <!-- Question 5: Why Separate Frontend? -->
-            <div class="question-block" id="q5">
-                <div class="question-label">&#128161; Question 5</div>
                 <div class="question-text">
                     Django can render HTML templates directly. So why do modern applications often have a <strong>separate frontend</strong> (React, Vue, mobile app) that fetches data from the backend?
                 </div>
@@ -456,9 +488,9 @@
                         Python is being replaced by JavaScript for all web development
                     </div>
                 </div>
-                <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
-                <div class="question-result" id="q5-result"></div>
-                <div class="question-explanation" id="q5-explanation">
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
                     <h4>Explanation</h4>
                     <p><strong>The shift happened around 2010-2015</strong> with the rise of smartphones and single-page applications (SPAs).</p>
                     <p class="mt-10"><strong>Before:</strong> Server renders HTML &rarr; Browser displays it. Simple, but...</p>
@@ -693,6 +725,52 @@
                 </tr>
             </table>
 
+            <h3 class="mt-40 mb-20">Edge Cases: Validation & Complex Queries</h3>
+
+            <div class="info-box mb-20">
+                <strong>&#129300; What method for validation without saving?</strong>
+                <p class="mt-10">Use <span class="http-method http-post">POST</span> even though you're not creating anything!</p>
+                <div class="code-block mt-10" style="background: var(--code-bg); padding: 15px; border-radius: 8px;">
+                    <pre style="margin: 0; font-size: 13px;"><span class="http-method http-post">POST</span> /orders/validate/
+Body: {"customer_name": "John", "customer_phone": "123"}
+Response: {"valid": false, "errors": {"customer_phone": "Must be 10+ digits"}}</pre>
+                </div>
+                <p class="mt-10"><strong>Why POST?</strong> We're sending a request body. GET requests shouldn't have bodies.</p>
+            </div>
+
+            <div class="warning-box mb-20">
+                <strong>&#128269; When does GET become POST?</strong>
+                <p class="mt-10">When the query is too complex for URL parameters!</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div>
+                        <strong style="color: var(--success);">Simple Query &mdash; Use GET</strong>
+                        <div class="code-block mt-10" style="background: var(--code-bg); padding: 10px; border-radius: 8px;">
+                            <pre style="margin: 0; font-size: 12px;">GET /search?q=pizza&price_max=500</pre>
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="color: var(--warning);">Complex Query &mdash; Use POST</strong>
+                        <div class="code-block mt-10" style="background: var(--code-bg); padding: 10px; border-radius: 8px;">
+                            <pre style="margin: 0; font-size: 12px;">POST /search/
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"name": "pizza"}},
+        {"range": {"price": {"lte": 500}}},
+        {"geo_distance": {...}}
+      ]
+    }
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-15"><strong>Why?</strong> URL length limits (~2000 chars), complex nested JSON, better readability.</p>
+                <p class="mt-10"><strong>Real examples:</strong> Elasticsearch, GraphQL (always POST), analytics dashboards, report filters.</p>
+            </div>
+
             <h3 class="mt-40 mb-20">HTTP Status Codes</h3>
 
             <table class="comparison-table">
@@ -778,6 +856,117 @@
                 </tr>
             </table>
 
+            <h3 class="mt-40 mb-20">Stateless: What Does It Mean?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                In REST, the server doesn't remember anything about previous requests. Each request must contain <strong>all the information</strong> needed to process it.
+            </p>
+
+            <div class="flow-diagram">
+                <h4 style="text-align: center; margin-bottom: 20px; color: var(--danger);">&#10007; Stateful (NOT REST)</h4>
+                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Server remembers who you are between requests</p>
+                <div class="diagram-box">
+                    <pre>
+Client                                    Server
+  │                                         │
+  │─────── Request 1: "Login as Prateek" ──►│
+  │                                         │  Server stores: session["user"] = "Prateek"
+  │◄────── "OK, I remember you" ────────────│
+  │                                         │
+  │─────── Request 2: "Show my orders" ────►│
+  │                                         │  Server thinks: "Who is this? Let me check session..."
+  │                                         │  Server finds: session["user"] = "Prateek"
+  │◄────── "Here are Prateek's orders" ─────│
+  │                                         │
+
+  <span style="color: #f59e0b;">Problem: Server must remember state for EVERY user!</span>
+  <span style="color: #f59e0b;">         What if you have 1 million users? 10 servers?</span>
+                    </pre>
+                </div>
+            </div>
+
+            <div class="flow-diagram mt-30">
+                <h4 style="text-align: center; margin-bottom: 20px; color: var(--success);">&#10003; Stateless (REST)</h4>
+                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Each request contains everything needed</p>
+                <div class="diagram-box">
+                    <pre>
+Client                                              Server
+  │                                                   │
+  │─── Request 1: "Login" ───────────────────────────►│
+  │                                                   │  Server: "Here's a token, keep it safe"
+  │◄── "Here's your token: abc123xyz" ────────────────│
+  │                                                   │
+  │─── Request 2: "Show orders" + Token: abc123xyz ──►│
+  │                                                   │  Server: "Token says this is Prateek"
+  │                                                   │  (No session lookup needed!)
+  │◄── "Here are Prateek's orders" ───────────────────│
+  │                                                   │
+
+  <span style="color: #10b981;">Benefit: Server doesn't store anything!</span>
+  <span style="color: #10b981;">         Any server can handle any request.</span>
+  <span style="color: #10b981;">         Easy to scale to millions of users.</span>
+                    </pre>
+                </div>
+            </div>
+
+            <h4 class="mt-40 mb-20">Why Stateless Matters</h4>
+            <table class="comparison-table">
+                <tr>
+                    <th>Aspect</th>
+                    <th>Stateful</th>
+                    <th>Stateless (REST)</th>
+                </tr>
+                <tr>
+                    <td><strong>Server Memory</strong></td>
+                    <td>Must store session for each user</td>
+                    <td>Stores nothing between requests</td>
+                </tr>
+                <tr>
+                    <td><strong>Scaling</strong></td>
+                    <td>Hard &mdash; sessions must be shared across servers</td>
+                    <td>Easy &mdash; any server can handle any request</td>
+                </tr>
+                <tr>
+                    <td><strong>Load Balancing</strong></td>
+                    <td>Sticky sessions needed (same user → same server)</td>
+                    <td>Any server works, simple round-robin</td>
+                </tr>
+                <tr>
+                    <td><strong>Server Crash</strong></td>
+                    <td>User loses session, must re-login</td>
+                    <td>No impact &mdash; next request goes to another server</td>
+                </tr>
+                <tr>
+                    <td><strong>Authentication</strong></td>
+                    <td>Session cookies</td>
+                    <td>Token in header (JWT, API key)</td>
+                </tr>
+            </table>
+
+            <div class="warning-box mt-30">
+                <strong>&#129300; "But wait, what about login?"</strong>
+                <p class="mt-10">Great question! In stateless REST:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Client logs in once → receives a <strong>token</strong> (like a JWT)</li>
+                    <li>Client sends this token with <strong>every request</strong> in the header</li>
+                    <li>Server validates the token → knows who the user is</li>
+                    <li>Server never stores "who is logged in" &mdash; the token contains that info!</li>
+                </ul>
+            </div>
+
+            <div class="code-block mt-30">
+                <div class="code-header">
+                    <div class="code-title">Stateless Request with Token</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Every request includes the token</span>
+curl -X GET http://api.restaurant.com/orders/ \
+  -H <span class="string">"Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."</span>
+
+<span class="comment"># Server decodes token → knows user is "Prateek"</span>
+<span class="comment"># No session lookup, no server-side storage!</span></pre>
+                </div>
+            </div>
+
             <div class="info-box mt-30">
                 <strong>&#128161; Key Insight</strong>
                 <p class="mt-10">In REST, the <strong>URL</strong> identifies the resource and the <strong>HTTP method</strong> determines the action. You don't need verbs in URLs!</p>
@@ -785,35 +974,165 @@
         </div>
     </section>
 
-    <!-- Serializers Section -->
-    <section id="serializers">
+    <!-- Create Order App Section -->
+    <section id="create-order-app">
         <div class="section-container">
-            <span class="section-label drf">Core Concept</span>
-            <h2 class="section-title">What are Serializers?</h2>
-            <p class="section-subtitle">Serializers convert complex data (like Django models) to JSON, and validate incoming JSON data.</p>
+            <span class="section-label drf">Hands-On</span>
+            <h2 class="section-title">Let's Build an Order System!</h2>
+            <p class="section-subtitle">Menu items are managed internally via Admin. But orders come from customers &mdash; they need an API!</p>
 
-            <h3 class="mb-20">The Problem: Models Aren't JSON</h3>
+            <div class="info-box mb-30">
+                <strong>&#128161; Why Orders?</strong>
+                <p class="mt-10">Think about it:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Menu</strong> &mdash; Staff adds items via Admin dashboard (internal)</li>
+                    <li><strong>Orders</strong> &mdash; Customers place orders via app/website (external API needed!)</li>
+                </ul>
+                <p class="mt-10">Orders are a perfect use case for APIs. Let's build one!</p>
+            </div>
+
+            <h3 class="mb-20">Step 1: Create the Order App</h3>
 
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">&#128561; This doesn't work!</div>
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
-                    <pre><span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse
-<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem
-
-<span class="keyword">def</span> <span class="function">menu_list</span>(request):
-    items = MenuItem.objects.all()
-    <span class="keyword">return</span> JsonResponse(items)  <span class="comment"># ERROR! Can't serialize QuerySet</span></pre>
+                    <pre><span class="comment"># Create the app</span>
+python manage.py startapp orders</pre>
                 </div>
             </div>
 
-            <div class="danger-box">
-                <strong>&#128561; TypeError: Object of type QuerySet is not JSON serializable</strong>
-                <p class="mt-10">Django models are Python objects. JSON only understands strings, numbers, lists, and dictionaries.</p>
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">restaurantproject/settings.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>INSTALLED_APPS = [
+    <span class="string">'django.contrib.admin'</span>,
+    <span class="string">'django.contrib.auth'</span>,
+    <span class="string">'django.contrib.contenttypes'</span>,
+    <span class="string">'django.contrib.sessions'</span>,
+    <span class="string">'django.contrib.messages'</span>,
+    <span class="string">'django.contrib.staticfiles'</span>,
+
+    <span class="comment"># Our apps</span>
+    <span class="string">'menu'</span>,
+    <span class="string">'orders'</span>,  <span class="comment"># &larr; Add this!</span>
+]</pre>
+                </div>
             </div>
 
-            <h3 class="mt-40 mb-20">The Solution: Serializers</h3>
+            <h3 class="mt-40 mb-20">Step 2: Create Order Model</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">orders/models.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> models
+
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    <span class="string">"""Simple Order model - we'll add item relationships in a later class"""</span>
+    STATUS_CHOICES = [
+        (<span class="string">'pending'</span>, <span class="string">'Pending'</span>),
+        (<span class="string">'confirmed'</span>, <span class="string">'Confirmed'</span>),
+        (<span class="string">'preparing'</span>, <span class="string">'Preparing'</span>),
+        (<span class="string">'ready'</span>, <span class="string">'Ready'</span>),
+        (<span class="string">'delivered'</span>, <span class="string">'Delivered'</span>),
+        (<span class="string">'cancelled'</span>, <span class="string">'Cancelled'</span>),
+    ]
+
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)
+    customer_phone = models.CharField(max_length=<span class="variable">15</span>)
+    status = models.CharField(
+        max_length=<span class="variable">20</span>,
+        choices=STATUS_CHOICES,
+        default=<span class="string">'pending'</span>
+    )
+    total_amount = models.DecimalField(
+        max_digits=<span class="variable">10</span>,
+        decimal_places=<span class="variable">2</span>,
+        default=<span class="variable">0</span>
+    )
+    notes = models.TextField(blank=<span class="variable">True</span>)
+    created_at = models.DateTimeField(auto_now_add=<span class="variable">True</span>)
+    updated_at = models.DateTimeField(auto_now=<span class="variable">True</span>)
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self):
+        <span class="keyword">return</span> f<span class="string">"Order #{self.id} - {self.customer_name}"</span></pre>
+                </div>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">Terminal - Run Migrations</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>python manage.py makemigrations orders
+python manage.py migrate</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Step 3: Register in Admin (Quick Check)</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">orders/admin.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.contrib <span class="keyword">import</span> admin
+<span class="keyword">from</span> .models <span class="keyword">import</span> Order
+
+admin.site.register(Order)</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Serializers Section -->
+    <section id="serializers">
+        <div class="section-container">
+            <span class="section-label drf">The Solution</span>
+            <h2 class="section-title">Enter: Django REST Framework</h2>
+            <p class="section-subtitle">DRF provides tools to build APIs quickly with automatic serialization and validation.</p>
+
+            <h3 class="mb-20">Step 1: Install Django REST Framework</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Terminal</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>pip install djangorestframework</pre>
+                </div>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">restaurantproject/settings.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre>INSTALLED_APPS = [
+    <span class="comment"># ...</span>
+    <span class="string">'rest_framework'</span>,  <span class="comment"># &larr; Add this!</span>
+    <span class="string">'menu'</span>,
+    <span class="string">'orders'</span>,
+]</pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">What are Serializers?</h3>
+
+            <p class="mb-20">Serializers convert complex data types (Django models) into JSON and vice versa. They also provide validation!</p>
 
             <div class="flow-diagram">
                 <div class="flow-row">
@@ -822,376 +1141,452 @@
                         <div class="flow-box-title">Django Model</div>
                         <div class="flow-box-desc">Python object</div>
                     </div>
-                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-arrow">&harr;</div>
                     <div class="flow-box highlight">
                         <div class="flow-box-icon">&#128260;</div>
                         <div class="flow-box-title">Serializer</div>
-                        <div class="flow-box-desc">Converts data</div>
+                        <div class="flow-box-desc">Converts &amp; Validates</div>
                     </div>
-                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-arrow">&harr;</div>
                     <div class="flow-box">
                         <div class="flow-box-icon">&#128230;</div>
                         <div class="flow-box-title">JSON</div>
-                        <div class="flow-box-desc">API response</div>
+                        <div class="flow-box-desc">API data</div>
                     </div>
                 </div>
             </div>
 
-            <h3 class="mt-40 mb-20">Serializers Do Two Things</h3>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="card">
-                    <div class="card-icon">&#128230;</div>
-                    <h3 class="card-title">1. Serialization</h3>
-                    <p class="card-desc">Convert Python objects &rarr; JSON (for API responses)</p>
-                    <div class="code-block mt-20">
-                        <div class="code-content">
-                            <pre><span class="comment"># Model → JSON</span>
-item = MenuItem.objects.get(id=<span class="variable">1</span>)
-serializer = MenuItemSerializer(item)
-serializer.data
-<span class="comment"># {'id': 1, 'name': 'Pasta', 'price': '15.99'}</span></pre>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">&#128229;</div>
-                    <h3 class="card-title">2. Deserialization</h3>
-                    <p class="card-desc">Convert JSON &rarr; Python objects (for creating/updating)</p>
-                    <div class="code-block mt-20">
-                        <div class="code-content">
-                            <pre><span class="comment"># JSON → Model</span>
-data = {<span class="string">'name'</span>: <span class="string">'Pizza'</span>, <span class="string">'price'</span>: <span class="string">'14.99'</span>}
-serializer = MenuItemSerializer(data=data)
-serializer.is_valid()  <span class="comment"># Validate!</span>
-serializer.save()      <span class="comment"># Create model</span></pre>
-                        </div>
-                    </div>
-                </div>
+            <div class="info-box mt-20">
+                <strong>&#128161; Two-Way Conversion</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Serialization:</strong> Model &rarr; JSON (for GET responses)</li>
+                    <li><strong>Deserialization:</strong> JSON &rarr; Model (for POST/PUT requests)</li>
+                </ul>
             </div>
 
-            <h3 class="mt-40 mb-20">Creating a Serializer</h3>
+            <h3 class="mt-40 mb-20">Step 2: Create a Serializer</h3>
 
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">menu/serializers.py</div>
+                    <div class="code-title">orders/serializers.py (create this file)</div>
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
                     <pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers
-<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem, Category
+<span class="keyword">from</span> .models <span class="keyword">import</span> Order
 
 
-<span class="keyword">class</span> <span class="class-name">CategorySerializer</span>(serializers.ModelSerializer):
+<span class="keyword">class</span> <span class="class-name">OrderSerializer</span>(serializers.ModelSerializer):
     <span class="keyword">class</span> <span class="class-name">Meta</span>:
-        model = Category
-        fields = [<span class="string">'id'</span>, <span class="string">'name'</span>, <span class="string">'description'</span>]
-
-
-<span class="keyword">class</span> <span class="class-name">MenuItemSerializer</span>(serializers.ModelSerializer):
-    <span class="comment"># Show category name instead of just ID</span>
-    category_name = serializers.CharField(source=<span class="string">'category.name'</span>, read_only=<span class="variable">True</span>)
-
-    <span class="keyword">class</span> <span class="class-name">Meta</span>:
-        model = MenuItem
+        model = Order
         fields = [
             <span class="string">'id'</span>,
-            <span class="string">'name'</span>,
-            <span class="string">'description'</span>,
-            <span class="string">'price'</span>,
-            <span class="string">'is_available'</span>,
-            <span class="string">'category'</span>,        <span class="comment"># FK ID (for writing)</span>
-            <span class="string">'category_name'</span>,   <span class="comment"># Name (for reading)</span>
-        ]</pre>
+            <span class="string">'customer_name'</span>,
+            <span class="string">'customer_phone'</span>,
+            <span class="string">'status'</span>,
+            <span class="string">'total_amount'</span>,
+            <span class="string">'notes'</span>,
+            <span class="string">'created_at'</span>,
+            <span class="string">'updated_at'</span>,
+        ]
+        read_only_fields = [<span class="string">'created_at'</span>, <span class="string">'updated_at'</span>]</pre>
                 </div>
             </div>
 
-            <h3 class="mt-40 mb-20">ModelSerializer vs Serializer</h3>
+            <div class="success-box mt-20">
+                <strong>&#127881; That's it!</strong>
+                <p class="mt-10">The serializer automatically handles type conversions (<code>Decimal</code>, <code>DateTime</code>) and generates validation based on model fields!</p>
+            </div>
 
-            <table class="comparison-table">
-                <tr>
-                    <th>Aspect</th>
-                    <th>Serializer</th>
-                    <th>ModelSerializer</th>
-                </tr>
-                <tr>
-                    <td><strong>Field definitions</strong></td>
-                    <td>Manual (you define each field)</td>
-                    <td>Automatic (from model)</td>
-                </tr>
-                <tr>
-                    <td><strong>create() / update()</strong></td>
-                    <td>You write them</td>
-                    <td>Automatic</td>
-                </tr>
-                <tr>
-                    <td><strong>Use when</strong></td>
-                    <td>Custom data structures</td>
-                    <td>Working with models (99% of cases)</td>
-                </tr>
-                <tr>
-                    <td><strong>Code required</strong></td>
-                    <td>More</td>
-                    <td>Less</td>
-                </tr>
-            </table>
+            <h3 class="mt-40 mb-20">Serialization vs Deserialization</h3>
 
-            <h3 class="mt-40 mb-20">Validation</h3>
+            <div class="info-box mb-20">
+                <strong>&#128260; Two-Way Data Flow</strong>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div style="background: rgba(0,200,83,0.1); padding: 15px; border-radius: 8px;">
+                        <strong style="color: var(--success);">Serialization (GET)</strong>
+                        <p class="mt-10">Model &rarr; JSON</p>
+                        <code style="font-size: 12px;">OrderSerializer(order)</code>
+                    </div>
+                    <div style="background: rgba(33,150,243,0.1); padding: 15px; border-radius: 8px;">
+                        <strong style="color: var(--info);">Deserialization (POST/PUT)</strong>
+                        <p class="mt-10">JSON &rarr; Model</p>
+                        <code style="font-size: 12px;">OrderSerializer(data=request.data)</code>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Step 3: Adding Validation</h3>
+
+            <p class="mb-20">Serializers can validate data automatically based on model fields, but you can also add custom validation:</p>
 
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">Adding custom validation</div>
+                    <div class="code-title">orders/serializers.py - With Custom Validation</div>
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
-                    <pre><span class="keyword">class</span> <span class="class-name">MenuItemSerializer</span>(serializers.ModelSerializer):
-    <span class="keyword">class</span> <span class="class-name">Meta</span>:
-        model = MenuItem
-        fields = [<span class="string">'id'</span>, <span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'is_available'</span>]
+                    <pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers
+<span class="keyword">from</span> .models <span class="keyword">import</span> Order
 
-    <span class="keyword">def</span> <span class="function">validate_price</span>(self, value):
-        <span class="string">"""Price must be positive"""</span>
-        <span class="keyword">if</span> value &lt;= <span class="variable">0</span>:
-            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Price must be greater than 0"</span>)
+
+<span class="keyword">class</span> <span class="class-name">OrderSerializer</span>(serializers.ModelSerializer):
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = Order
+        fields = [<span class="string">'id'</span>, <span class="string">'customer_name'</span>, <span class="string">'customer_phone'</span>, <span class="string">'status'</span>,
+                  <span class="string">'total_amount'</span>, <span class="string">'notes'</span>, <span class="string">'created_at'</span>, <span class="string">'updated_at'</span>]
+        read_only_fields = [<span class="string">'id'</span>, <span class="string">'created_at'</span>, <span class="string">'updated_at'</span>]
+
+    <span class="comment"># Field-level validation</span>
+    <span class="keyword">def</span> <span class="function">validate_customer_name</span>(self, value):
+        <span class="keyword">if</span> len(value) &lt; <span class="variable">2</span>:
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Name must be at least 2 characters"</span>)
+        <span class="keyword">return</span> value.strip()
+
+    <span class="keyword">def</span> <span class="function">validate_customer_phone</span>(self, value):
+        <span class="keyword">if</span> len(value) &lt; <span class="variable">10</span>:
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Phone must be at least 10 digits"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> value.isdigit():
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Phone must contain only digits"</span>)
         <span class="keyword">return</span> value
 
+    <span class="comment"># Object-level validation (across multiple fields)</span>
     <span class="keyword">def</span> <span class="function">validate</span>(self, data):
-        <span class="string">"""Cross-field validation"""</span>
-        <span class="keyword">if</span> data.get(<span class="string">'is_available'</span>) <span class="keyword">and</span> data.get(<span class="string">'price'</span>, <span class="variable">0</span>) == <span class="variable">0</span>:
-            <span class="keyword">raise</span> serializers.ValidationError(
-                <span class="string">"Available items must have a price"</span>
-            )
+        <span class="keyword">if</span> data.get(<span class="string">'status'</span>) == <span class="string">'delivered'</span> <span class="keyword">and</span> <span class="keyword">not</span> data.get(<span class="string">'total_amount'</span>):
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Delivered orders must have a total amount"</span>)
         <span class="keyword">return</span> data</pre>
                 </div>
             </div>
 
-            <div class="info-box mt-30">
+            <div class="info-box mt-20">
                 <strong>&#128161; Validation Methods</strong>
                 <ul style="margin-left: 20px; margin-top: 10px;">
-                    <li><code>validate_&lt;field_name&gt;()</code> &mdash; Validate a single field</li>
-                    <li><code>validate()</code> &mdash; Validate multiple fields together</li>
+                    <li><code>validate_&lt;field&gt;(self, value)</code> &mdash; Validates a single field</li>
+                    <li><code>validate(self, data)</code> &mdash; Validates across multiple fields</li>
+                    <li><code>raise serializers.ValidationError("message")</code> &mdash; Reject invalid data</li>
                 </ul>
             </div>
+
+            <h3 class="mt-40 mb-20">Serializer Field Types</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Django Model Field</th>
+                    <th>Serializer Handles</th>
+                    <th>JSON Output</th>
+                </tr>
+                <tr>
+                    <td><code>CharField</code></td>
+                    <td>String validation, max_length</td>
+                    <td><code>"John Doe"</code></td>
+                </tr>
+                <tr>
+                    <td><code>DecimalField</code></td>
+                    <td>Converts to string automatically</td>
+                    <td><code>"199.99"</code></td>
+                </tr>
+                <tr>
+                    <td><code>DateTimeField</code></td>
+                    <td>ISO format conversion</td>
+                    <td><code>"2024-01-15T10:30:00Z"</code></td>
+                </tr>
+                <tr>
+                    <td><code>BooleanField</code></td>
+                    <td>True/False handling</td>
+                    <td><code>true</code></td>
+                </tr>
+                <tr>
+                    <td><code>ForeignKey</code></td>
+                    <td>Returns ID by default</td>
+                    <td><code>5</code></td>
+                </tr>
+            </table>
+
+            <h3 class="mt-40 mb-20">Using the Serializer</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Django Shell Demo</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># python manage.py shell</span>
+<span class="keyword">from</span> orders.models <span class="keyword">import</span> Order
+<span class="keyword">from</span> orders.serializers <span class="keyword">import</span> OrderSerializer
+
+<span class="comment"># SERIALIZATION: Model → JSON (for GET)</span>
+order = Order.objects.first()
+serializer = OrderSerializer(order)
+print(serializer.data)
+<span class="comment"># {'id': 1, 'customer_name': 'John', 'status': 'pending', ...}</span>
+
+<span class="comment"># DESERIALIZATION: JSON → Model (for POST)</span>
+data = {<span class="string">'customer_name'</span>: <span class="string">'Jane'</span>, <span class="string">'customer_phone'</span>: <span class="string">'9876543210'</span>}
+serializer = OrderSerializer(data=data)
+print(serializer.is_valid())  <span class="comment"># True</span>
+order = serializer.save()     <span class="comment"># Creates in database!</span>
+
+<span class="comment"># VALIDATION ERRORS</span>
+bad_data = {<span class="string">'customer_name'</span>: <span class="string">'J'</span>, <span class="string">'customer_phone'</span>: <span class="string">'123'</span>}
+serializer = OrderSerializer(data=bad_data)
+print(serializer.is_valid())  <span class="comment"># False</span>
+print(serializer.errors)
+<span class="comment"># {'customer_name': ['Name must be...'], 'customer_phone': ['Phone must be...']}</span></pre>
+                </div>
+            </div>
+
         </div>
     </section>
 
     <!-- Views Section -->
     <section id="views">
         <div class="section-container">
-            <span class="section-label drf">Implementation</span>
-            <h2 class="section-title">DRF Views</h2>
-            <p class="section-subtitle">Django REST Framework provides several ways to write API views, from low-level to high-level.</p>
+            <span class="section-label drf">DRF Views</span>
+            <h2 class="section-title">Step 3: DRF Views</h2>
+            <p class="section-subtitle">Now let's replace our messy plain Django views with clean DRF views.</p>
 
-            <h3 class="mb-20">Setup: Install Django REST Framework</h3>
+            <h3 class="mb-20">Before vs After: The Power of DRF</h3>
 
-            <div class="code-block">
-                <div class="code-header">
-                    <div class="code-title">Terminal</div>
-                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h4 style="color: var(--danger); margin-bottom: 15px;">&#10007; Plain Django (~50 lines per view)</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+                            <pre style="font-size: 11px;"><span class="decorator">@csrf_exempt</span>
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    <span class="keyword">if</span> request.method != <span class="string">'POST'</span>:
+        <span class="keyword">return</span> JsonResponse({<span class="string">"error"</span>: ...})
+    <span class="keyword">try</span>:
+        data = json.loads(request.body)
+    <span class="keyword">except</span>:
+        <span class="keyword">return</span> JsonResponse({<span class="string">"error"</span>: ...})
+    <span class="keyword">if</span> <span class="keyword">not</span> data.get(<span class="string">'customer_name'</span>):
+        <span class="keyword">return</span> JsonResponse({<span class="string">"error"</span>: ...})
+    <span class="comment"># ... 30+ more lines ...</span>
+    <span class="keyword">return</span> JsonResponse({
+        <span class="string">"id"</span>: order.id,
+        <span class="comment"># ... manual conversion ...</span>
+    })</pre>
+                        </div>
+                    </div>
                 </div>
-                <div class="code-content">
-                    <pre><span class="comment"># Install</span>
-pip install djangorestframework
+                <div>
+                    <h4 style="color: var(--success); margin-bottom: 15px;">&#10003; With DRF (~15 lines total)</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+                            <pre style="font-size: 11px;"><span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'POST'</span>])
+<span class="keyword">def</span> <span class="function">order_list</span>(request):
+    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
+        orders = Order.objects.all()
+        serializer = OrderSerializer(orders, many=<span class="variable">True</span>)
+        <span class="keyword">return</span> Response(serializer.data)
 
-<span class="comment"># Add to INSTALLED_APPS in settings.py</span>
-INSTALLED_APPS = [
-    ...
-    <span class="string">'rest_framework'</span>,
-    <span class="string">'menu'</span>,
-]</pre>
+    <span class="keyword">elif</span> request.method == <span class="string">'POST'</span>:
+        serializer = OrderSerializer(data=request.data)
+        <span class="keyword">if</span> serializer.is_valid():
+            serializer.save()
+            <span class="keyword">return</span> Response(serializer.data, status=<span class="variable">201</span>)
+        <span class="keyword">return</span> Response(serializer.errors, status=<span class="variable">400</span>)</pre>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <h3 class="mt-40 mb-20">Three Ways to Write Views</h3>
+            <div class="success-box mt-30">
+                <strong>&#128161; What Changed?</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>No @csrf_exempt</strong> &mdash; DRF handles CSRF properly</li>
+                    <li><strong>No json.loads()</strong> &mdash; <code>request.data</code> is already parsed</li>
+                    <li><strong>No manual validation</strong> &mdash; <code>serializer.is_valid()</code> does it all</li>
+                    <li><strong>No manual conversion</strong> &mdash; <code>serializer.data</code> handles types</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">Three Ways to Write DRF Views</h3>
 
             <table class="comparison-table">
                 <tr>
                     <th>Approach</th>
-                    <th>Abstraction Level</th>
-                    <th>Code Required</th>
+                    <th>What It Is</th>
                     <th>Best For</th>
+                    <th>Example Endpoints</th>
                 </tr>
                 <tr>
                     <td><strong>@api_view</strong></td>
-                    <td>Low (function)</td>
-                    <td>Most</td>
-                    <td>Custom logic</td>
+                    <td>Function decorator</td>
+                    <td>Simple, one-off endpoints that don't fit CRUD</td>
+                    <td><code>/health/</code>, <code>/login/</code>, <code>/send-otp/</code></td>
                 </tr>
                 <tr>
                     <td><strong>APIView</strong></td>
-                    <td>Medium (class)</td>
-                    <td>Medium</td>
-                    <td>Custom + organization</td>
+                    <td>Class with separate methods</td>
+                    <td>Custom logic, override auth/permissions</td>
+                    <td><code>/dashboard-stats/</code>, <code>/reports/</code></td>
                 </tr>
                 <tr>
                     <td><strong>ViewSet</strong></td>
-                    <td>High (automatic)</td>
-                    <td>Least</td>
-                    <td>Standard CRUD (90% of cases)</td>
+                    <td>All CRUD in one class</td>
+                    <td>Model-backed resources (90% of APIs)</td>
+                    <td><code>/orders/</code>, <code>/menu/</code>, <code>/users/</code></td>
                 </tr>
             </table>
 
+            <div class="info-box mt-20">
+                <strong>&#128161; The Practical Rule</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Start with ModelViewSet</strong> for any model-backed resource</li>
+                    <li><strong>Use APIView</strong> when you need custom behavior that doesn't fit CRUD</li>
+                    <li><strong>Use @api_view</strong> for standalone utility endpoints</li>
+                    <li><strong>In a real project</strong>, you'll use all three!</li>
+                </ul>
+            </div>
+
             <h3 class="mt-40 mb-20">Option 1: @api_view Decorator</h3>
+
+            <div class="warning-box mb-20">
+                <strong>&#128204; When to use @api_view:</strong>
+                <p class="mt-10">Simple one-off endpoints that don't fit the standard CRUD pattern. Things like <code>/health-check/</code>, <code>/login/</code>, <code>/send-otp/</code>. It's a function &mdash; quick to write, easy to read. But if you start adding list, create, retrieve, update, delete &mdash; it gets messy fast with <code>if/elif</code> chains.</p>
+            </div>
 
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">menu/views.py - Function-based view</div>
+                    <div class="code-title">✅ Good use: Simple utility endpoints</div>
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
                     <pre><span class="keyword">from</span> rest_framework.decorators <span class="keyword">import</span> api_view
 <span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
-<span class="keyword">from</span> rest_framework <span class="keyword">import</span> status
-<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem
-<span class="keyword">from</span> .serializers <span class="keyword">import</span> MenuItemSerializer
 
+<span class="decorator">@api_view</span>([<span class="string">'GET'</span>])
+<span class="keyword">def</span> <span class="function">health_check</span>(request):
+    <span class="keyword">return</span> Response({<span class="string">'status'</span>: <span class="string">'healthy'</span>})
 
-<span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'POST'</span>])
-<span class="keyword">def</span> <span class="function">menu_item_list</span>(request):
-    <span class="string">"""List all items, or create a new item."""</span>
+<span class="decorator">@api_view</span>([<span class="string">'POST'</span>])
+<span class="keyword">def</span> <span class="function">send_otp</span>(request):
+    phone = request.data.get(<span class="string">'phone'</span>)
+    <span class="comment"># send OTP logic...</span>
+    <span class="keyword">return</span> Response({<span class="string">'message'</span>: <span class="string">'OTP sent'</span>})</pre>
+                </div>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">⚠️ Gets messy: CRUD operations (use ViewSet instead!)</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'POST'</span>])
+<span class="keyword">def</span> <span class="function">order_list</span>(request):
     <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
-        items = MenuItem.objects.all()
-        serializer = MenuItemSerializer(items, many=<span class="variable">True</span>)
+        orders = Order.objects.all()
+        serializer = OrderSerializer(orders, many=<span class="variable">True</span>)
         <span class="keyword">return</span> Response(serializer.data)
-
     <span class="keyword">elif</span> request.method == <span class="string">'POST'</span>:
-        serializer = MenuItemSerializer(data=request.data)
+        serializer = OrderSerializer(data=request.data)
         <span class="keyword">if</span> serializer.is_valid():
             serializer.save()
-            <span class="keyword">return</span> Response(serializer.data, status=status.HTTP_201_CREATED)
-        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            <span class="keyword">return</span> Response(serializer.data, status=<span class="variable">201</span>)
+        <span class="keyword">return</span> Response(serializer.errors, status=<span class="variable">400</span>)
 
-
-<span class="decorator">@api_view</span>([<span class="string">'GET'</span>, <span class="string">'PUT'</span>, <span class="string">'DELETE'</span>])
-<span class="keyword">def</span> <span class="function">menu_item_detail</span>(request, pk):
-    <span class="string">"""Retrieve, update, or delete a menu item."""</span>
-    <span class="keyword">try</span>:
-        item = MenuItem.objects.get(pk=pk)
-    <span class="keyword">except</span> MenuItem.DoesNotExist:
-        <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
-
-    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
-        serializer = MenuItemSerializer(item)
-        <span class="keyword">return</span> Response(serializer.data)
-
-    <span class="keyword">elif</span> request.method == <span class="string">'PUT'</span>:
-        serializer = MenuItemSerializer(item, data=request.data)
-        <span class="keyword">if</span> serializer.is_valid():
-            serializer.save()
-            <span class="keyword">return</span> Response(serializer.data)
-        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    <span class="keyword">elif</span> request.method == <span class="string">'DELETE'</span>:
-        item.delete()
-        <span class="keyword">return</span> Response(status=status.HTTP_204_NO_CONTENT)</pre>
+<span class="comment"># Need another function for detail view (GET, PUT, DELETE)...</span>
+<span class="comment"># This gets repetitive fast!</span></pre>
                 </div>
             </div>
 
             <h3 class="mt-40 mb-20">Option 2: APIView Class</h3>
 
+            <div class="warning-box mb-20">
+                <strong>&#128204; When to use APIView:</strong>
+                <p class="mt-10">The class-based version of <code>@api_view</code>. Gives you more structure &mdash; separate <code>get()</code>, <code>post()</code>, <code>put()</code> methods instead of one function with <code>if/else</code>. Good when you need custom logic that doesn't map cleanly to CRUD, or when you want to override things like authentication or permissions at the view level.</p>
+            </div>
+
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">menu/views.py - Class-based view</div>
+                    <div class="code-title">✅ Good use: Dashboard stats (not standard CRUD)</div>
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
                     <pre><span class="keyword">from</span> rest_framework.views <span class="keyword">import</span> APIView
 <span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
-<span class="keyword">from</span> rest_framework <span class="keyword">import</span> status
 
-
-<span class="keyword">class</span> <span class="class-name">MenuItemList</span>(APIView):
-    <span class="string">"""List all items, or create a new item."""</span>
+<span class="keyword">class</span> <span class="class-name">DashboardStatsView</span>(APIView):
+    <span class="string">"""Custom endpoint for dashboard statistics"""</span>
 
     <span class="keyword">def</span> <span class="function">get</span>(self, request):
-        items = MenuItem.objects.all()
-        serializer = MenuItemSerializer(items, many=<span class="variable">True</span>)
+        <span class="keyword">return</span> Response({
+            <span class="string">'total_orders'</span>: Order.objects.count(),
+            <span class="string">'pending'</span>: Order.objects.filter(status=<span class="string">'pending'</span>).count(),
+            <span class="string">'delivered_today'</span>: Order.objects.filter(
+                status=<span class="string">'delivered'</span>,
+                updated_at__date=date.today()
+            ).count(),
+        })
+
+<span class="comment"># urls.py: path('dashboard-stats/', DashboardStatsView.as_view())</span></pre>
+                </div>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">⚠️ Also works for CRUD but gets verbose</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">OrderList</span>(APIView):
+    <span class="keyword">def</span> <span class="function">get</span>(self, request):
+        orders = Order.objects.all()
+        serializer = OrderSerializer(orders, many=<span class="variable">True</span>)
         <span class="keyword">return</span> Response(serializer.data)
 
     <span class="keyword">def</span> <span class="function">post</span>(self, request):
-        serializer = MenuItemSerializer(data=request.data)
+        serializer = OrderSerializer(data=request.data)
         <span class="keyword">if</span> serializer.is_valid():
             serializer.save()
-            <span class="keyword">return</span> Response(serializer.data, status=status.HTTP_201_CREATED)
-        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            <span class="keyword">return</span> Response(serializer.data, status=<span class="variable">201</span>)
+        <span class="keyword">return</span> Response(serializer.errors, status=<span class="variable">400</span>)
 
-
-<span class="keyword">class</span> <span class="class-name">MenuItemDetail</span>(APIView):
-    <span class="string">"""Retrieve, update, or delete a menu item."""</span>
-
-    <span class="keyword">def</span> <span class="function">get_object</span>(self, pk):
-        <span class="keyword">try</span>:
-            <span class="keyword">return</span> MenuItem.objects.get(pk=pk)
-        <span class="keyword">except</span> MenuItem.DoesNotExist:
-            <span class="keyword">return</span> <span class="variable">None</span>
-
-    <span class="keyword">def</span> <span class="function">get</span>(self, request, pk):
-        item = self.get_object(pk)
-        <span class="keyword">if</span> <span class="keyword">not</span> item:
-            <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MenuItemSerializer(item)
-        <span class="keyword">return</span> Response(serializer.data)
-
-    <span class="keyword">def</span> <span class="function">put</span>(self, request, pk):
-        item = self.get_object(pk)
-        <span class="keyword">if</span> <span class="keyword">not</span> item:
-            <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MenuItemSerializer(item, data=request.data)
-        <span class="keyword">if</span> serializer.is_valid():
-            serializer.save()
-            <span class="keyword">return</span> Response(serializer.data)
-        <span class="keyword">return</span> Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    <span class="keyword">def</span> <span class="function">delete</span>(self, request, pk):
-        item = self.get_object(pk)
-        <span class="keyword">if</span> <span class="keyword">not</span> item:
-            <span class="keyword">return</span> Response(status=status.HTTP_404_NOT_FOUND)
-        item.delete()
-        <span class="keyword">return</span> Response(status=status.HTTP_204_NO_CONTENT)</pre>
+<span class="comment"># Need another class for detail view... Use ViewSet instead!</span></pre>
                 </div>
             </div>
 
             <h3 class="mt-40 mb-20">Option 3: ViewSets (Recommended)</h3>
 
+            <div class="warning-box mb-20">
+                <strong>&#128204; When to use ViewSet:</strong>
+                <p class="mt-10">For standard CRUD resources &mdash; anything that maps to a database model with list, create, retrieve, update, destroy operations. Combined with a Router, it eliminates boilerplate entirely. <code>ModelViewSet</code> goes even further &mdash; connect it to a serializer and a queryset and you get all 5 endpoints with almost zero code.</p>
+            </div>
+
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">menu/views.py - ViewSet (minimal code!)</div>
+                    <div class="code-title">orders/views.py - ViewSet (minimal code!)</div>
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
                     <pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> viewsets
-<span class="keyword">from</span> .models <span class="keyword">import</span> MenuItem, Category
-<span class="keyword">from</span> .serializers <span class="keyword">import</span> MenuItemSerializer, CategorySerializer
+<span class="keyword">from</span> .models <span class="keyword">import</span> Order
+<span class="keyword">from</span> .serializers <span class="keyword">import</span> OrderSerializer
 
 
-<span class="keyword">class</span> <span class="class-name">CategoryViewSet</span>(viewsets.ModelViewSet):
+<span class="keyword">class</span> <span class="class-name">OrderViewSet</span>(viewsets.ModelViewSet):
     <span class="string">"""
-    A ViewSet for viewing and editing categories.
+    A ViewSet for viewing and editing orders.
     Provides: list, create, retrieve, update, destroy
     """</span>
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
-
-<span class="keyword">class</span> <span class="class-name">MenuItemViewSet</span>(viewsets.ModelViewSet):
-    <span class="string">"""
-    A ViewSet for viewing and editing menu items.
-    """</span>
-    queryset = MenuItem.objects.all()
-    serializer_class = MenuItemSerializer</pre>
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer</pre>
                 </div>
             </div>
 
             <div class="success-box mt-20">
-                <strong>&#128640; That's it! 10 lines of code gives you full CRUD!</strong>
+                <strong>&#128640; That's it! 5 lines of code gives you full CRUD!</strong>
                 <p class="mt-10">ViewSets automatically provide: list, create, retrieve, update, partial_update, destroy.</p>
             </div>
 
-            <h3 class="mt-40 mb-20">URL Configuration with Routers</h3>
+            <h3 class="mt-40 mb-20">Step 4: URL Configuration with Routers</h3>
 
             <div class="code-block">
                 <div class="code-header">
-                    <div class="code-title">menu/urls.py</div>
+                    <div class="code-title">orders/urls.py (replace the old one!)</div>
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
@@ -1200,16 +1595,15 @@ INSTALLED_APPS = [
 <span class="keyword">from</span> . <span class="keyword">import</span> views
 
 router = DefaultRouter()
-router.register(<span class="string">'categories'</span>, views.CategoryViewSet)
-router.register(<span class="string">'menu-items'</span>, views.MenuItemViewSet)
+router.register(<span class="string">'orders'</span>, views.OrderViewSet)
 
 urlpatterns = [
-    path(<span class="string">'api/'</span>, include(router.urls)),
+    path(<span class="string">''</span>, include(router.urls)),
 ]</pre>
                 </div>
             </div>
 
-            <p class="mt-20" style="color: var(--text-secondary);">This creates all these URLs automatically:</p>
+            <p class="mt-20" style="color: var(--text-secondary);">This creates all these URLs automatically (proper REST!):</p>
 
             <table class="comparison-table mt-20">
                 <tr>
@@ -1218,36 +1612,59 @@ urlpatterns = [
                     <th>Action</th>
                 </tr>
                 <tr>
-                    <td><code>/api/menu-items/</code></td>
+                    <td><code>/orders/</code></td>
                     <td><span class="http-method http-get">GET</span></td>
-                    <td>List all items</td>
+                    <td>List all orders</td>
                 </tr>
                 <tr>
-                    <td><code>/api/menu-items/</code></td>
+                    <td><code>/orders/</code></td>
                     <td><span class="http-method http-post">POST</span></td>
-                    <td>Create new item</td>
+                    <td>Create new order</td>
                 </tr>
                 <tr>
-                    <td><code>/api/menu-items/5/</code></td>
+                    <td><code>/orders/5/</code></td>
                     <td><span class="http-method http-get">GET</span></td>
-                    <td>Get item #5</td>
+                    <td>Get order #5</td>
                 </tr>
                 <tr>
-                    <td><code>/api/menu-items/5/</code></td>
+                    <td><code>/orders/5/</code></td>
                     <td><span class="http-method http-put">PUT</span></td>
-                    <td>Update item #5</td>
+                    <td>Update order #5</td>
                 </tr>
                 <tr>
-                    <td><code>/api/menu-items/5/</code></td>
+                    <td><code>/orders/5/</code></td>
                     <td><span class="http-method http-patch">PATCH</span></td>
-                    <td>Partial update item #5</td>
+                    <td>Partial update order #5</td>
                 </tr>
                 <tr>
-                    <td><code>/api/menu-items/5/</code></td>
+                    <td><code>/orders/5/</code></td>
                     <td><span class="http-method http-delete">DELETE</span></td>
-                    <td>Delete item #5</td>
+                    <td>Delete order #5</td>
                 </tr>
             </table>
+
+            <div class="warning-box mt-30">
+                <strong>&#129300; Compare to What We Wrote Earlier!</strong>
+                <table style="width: 100%; margin-top: 15px; color: var(--text-secondary);">
+                    <tr>
+                        <th style="text-align: left; padding: 8px;">Plain Django (we wrote)</th>
+                        <th style="text-align: left; padding: 8px;">DRF Router (automatic)</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;"><code>POST /orders/create/</code></td>
+                        <td style="padding: 8px;"><code>POST /orders/</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;"><code>PUT /orders/1/update/</code></td>
+                        <td style="padding: 8px;"><code>PUT /orders/1/</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;"><code>DELETE /orders/1/delete/</code></td>
+                        <td style="padding: 8px;"><code>DELETE /orders/1/</code></td>
+                    </tr>
+                </table>
+                <p class="mt-10">DRF follows REST conventions automatically!</p>
+            </div>
         </div>
     </section>
 
@@ -1262,7 +1679,7 @@ urlpatterns = [
             <p style="color: var(--text-secondary);">Just visit your API URL in a browser! DRF renders a nice interface.</p>
 
             <div class="info-box mt-20">
-                <strong>&#127760; Visit: http://127.0.0.1:8000/api/menu-items/</strong>
+                <strong>&#127760; Visit: http://127.0.0.1:8000/orders/</strong>
                 <p class="mt-10">You'll see a web interface where you can:</p>
                 <ul style="margin-left: 20px; margin-top: 10px;">
                     <li>View JSON responses formatted nicely</li>
@@ -1279,24 +1696,24 @@ urlpatterns = [
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
                 <div class="code-content">
-                    <pre><span class="comment"># GET - List all items</span>
-curl http://127.0.0.1:8000/api/menu-items/
+                    <pre><span class="comment"># GET - List all orders</span>
+curl http://127.0.0.1:8000/orders/
 
-<span class="comment"># GET - Get single item</span>
-curl http://127.0.0.1:8000/api/menu-items/1/
+<span class="comment"># GET - Get single order</span>
+curl http://127.0.0.1:8000/orders/1/
 
-<span class="comment"># POST - Create new item</span>
-curl -X POST http://127.0.0.1:8000/api/menu-items/ \
+<span class="comment"># POST - Create new order</span>
+curl -X POST http://127.0.0.1:8000/orders/ \
   -H "Content-Type: application/json" \
-  -d '{"name": "New Pizza", "price": "12.99", "category": 1}'
+  -d '{"customer_name": "John Doe", "customer_phone": "9876543210"}'
 
-<span class="comment"># PUT - Update item</span>
-curl -X PUT http://127.0.0.1:8000/api/menu-items/1/ \
+<span class="comment"># PUT - Update order status</span>
+curl -X PUT http://127.0.0.1:8000/orders/1/ \
   -H "Content-Type: application/json" \
-  -d '{"name": "Updated Pizza", "price": "13.99", "category": 1}'
+  -d '{"customer_name": "John Doe", "customer_phone": "9876543210", "status": "confirmed"}'
 
-<span class="comment"># DELETE - Delete item</span>
-curl -X DELETE http://127.0.0.1:8000/api/menu-items/1/</pre>
+<span class="comment"># DELETE - Cancel order</span>
+curl -X DELETE http://127.0.0.1:8000/orders/1/</pre>
                 </div>
             </div>
 
