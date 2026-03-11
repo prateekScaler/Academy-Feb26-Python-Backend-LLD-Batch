@@ -48,35 +48,7 @@ Multiple conditions in `filter()` are combined with AND. `__lte` = less than or 
 
 ---
 
-### Question 4: Manual JSON Conversion
-```python
-def menu_json(request):
-    items = MenuItem.objects.filter(is_available=True)
-    items_list = []
-    for item in items:
-        items_list.append({
-            "id": item.id,
-            "name": item.name,
-            "price": str(item.price),  # Must convert Decimal!
-        })
-    return JsonResponse({"items": items_list})
-```
-**What's the main problem with this approach?**
-
-<details>
-<summary>Answer</summary>
-
-**C) Manual field-by-field conversion is tedious and error-prone**
-
-- You must convert each field by hand
-- `Decimal` isn't JSON serializable — need `str(item.price)`
-- What if MenuItem has 20 fields? 20 lines of boilerplate!
-- No standards — every developer does it differently
-</details>
-
----
-
-### Question 5: Why Separate Frontend?
+### Question 4: Why Separate Frontend?
 **Django can render HTML templates. So why do modern apps often have a separate frontend (React, Vue, mobile app) fetching data from the backend?**
 
 <details>
@@ -103,11 +75,12 @@ This is why we need proper data APIs!
 By the end of this class, you will:
 
 1. Understand why APIs return JSON instead of HTML
-2. Know REST principles (resources, HTTP methods, status codes)
-3. Create Serializers to convert models to JSON
-4. Build API endpoints with ViewSets
-5. Use Routers for automatic URL generation
-6. Test APIs with the browsable interface
+2. Know REST principles (resources, HTTP methods, statelessness, status codes)
+3. Build a basic REST API with @api_view
+4. Understand why Serializers are needed
+5. Create Serializers to convert models to JSON
+6. Build API endpoints with ViewSets
+7. Use Routers for automatic URL generation
 
 ---
 
@@ -148,7 +121,87 @@ REST (REpresentational State Transfer) is a design philosophy:
 
 ---
 
-## Serializers
+## Statelessness Explained
+
+In REST, the server doesn't remember anything about previous requests.
+
+**Stateful (NOT REST):**
+```
+Client: "Login as Prateek"
+Server: "OK, I remember you" (stores session)
+Client: "Show my orders"
+Server: (looks up session) → Returns orders
+```
+
+**Stateless (REST):**
+```
+Client: "Show my orders" + Token: xyz123
+Server: (validates token) → Returns orders
+        (stores nothing!)
+```
+
+**Why Stateless?**
+- Any server can handle any request (easy scaling)
+- Server crash doesn't affect users
+- Simple load balancing
+
+---
+
+## Step 1: Install Django REST Framework
+
+```bash
+pip install djangorestframework
+```
+
+Add to `settings.py`:
+```python
+INSTALLED_APPS = [
+    # ...
+    'rest_framework',
+    'menu',
+]
+```
+
+---
+
+## Step 2: Build Basic REST API (Manual Way)
+
+```python
+# menu/views.py
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+
+@api_view(['GET'])
+def menu_items_api(request):
+    items = MenuItem.objects.filter(is_available=True)
+
+    # Manual conversion - tedious!
+    items_list = []
+    for item in items:
+        items_list.append({
+            "id": item.id,
+            "name": item.name,
+            "price": str(item.price),  # Decimal → string
+            "category": item.category.name,
+        })
+
+    return Response(items_list)
+```
+
+**Pain points:**
+- Manual field-by-field conversion
+- `Decimal` isn't JSON serializable — need `str(item.price)`
+- 20 fields = 20 lines of repetitive code
+- No validation for POST/PUT
+
+**Solution:** Serializers!
+
+---
+
+## Step 3: Serializers
 
 Serializers convert Python objects ↔ JSON:
 
@@ -173,9 +226,18 @@ class MenuItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price', 'is_available', 'category', 'category_name']
 ```
 
+**Now the view becomes:**
+```python
+@api_view(['GET'])
+def menu_items_api(request):
+    items = MenuItem.objects.all()
+    serializer = MenuItemSerializer(items, many=True)
+    return Response(serializer.data)  # That's it!
+```
+
 ---
 
-## ViewSets
+## Step 4: ViewSets
 
 ViewSets provide full CRUD with minimal code:
 
@@ -199,7 +261,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
 ---
 
-## URL Configuration
+## Step 5: URL Configuration
 
 ```python
 # menu/urls.py
@@ -228,20 +290,20 @@ This auto-generates:
 ## Testing APIs
 
 **1. Browser (Browsable API):**
-Visit `http://127.0.0.1:8000/api/menu-items/`
+Visit `http://127.0.0.1:8000/menu/api/menu-items/`
 
 **2. curl:**
 ```bash
-curl http://127.0.0.1:8000/api/menu-items/
-curl -X POST http://127.0.0.1:8000/api/menu-items/ \
+curl http://127.0.0.1:8000/menu/api/menu-items/
+curl -X POST http://127.0.0.1:8000/menu/api/menu-items/ \
   -H "Content-Type: application/json" \
   -d '{"name": "Pizza", "price": "12.99", "category": 1}'
 ```
 
 **3. httpie:**
 ```bash
-http GET :8000/api/menu-items/
-http POST :8000/api/menu-items/ name="Pizza" price="12.99" category=1
+http GET :8000/menu/api/menu-items/
+http POST :8000/menu/api/menu-items/ name="Pizza" price="12.99" category=1
 ```
 
 ---
@@ -259,7 +321,7 @@ pip install djangorestframework
 python manage.py runserver
 
 # Test API
-curl http://127.0.0.1:8000/api/menu-items/
+curl http://127.0.0.1:8000/menu/api/menu-items/
 ```
 
 ---
@@ -272,6 +334,14 @@ curl http://127.0.0.1:8000/api/menu-items/
 | `menu/views.py` | API endpoints (ViewSets) |
 | `menu/urls.py` | Router configuration |
 | `settings.py` | Added 'rest_framework' |
+
+---
+
+## Teaching Flow
+
+```
+REST Concepts → Build Basic API → Feel the Pain → Serializers → ViewSets
+```
 
 ---
 
