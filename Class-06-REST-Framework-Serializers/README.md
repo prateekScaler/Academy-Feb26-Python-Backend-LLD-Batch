@@ -48,23 +48,7 @@ Multiple conditions in `filter()` are combined with AND. `__lte` = less than or 
 
 ---
 
-### Question 4: list_editable
-```python
-list_editable = ['price', 'is_available']
-```
-**What does this do in Django Admin?**
-
-<details>
-<summary>Answer</summary>
-
-**B) Allows editing price and is_available directly in the list view**
-
-Great for quick updates without clicking into each item!
-</details>
-
----
-
-### Question 5: Django Views Limitations
+### Question 4: Manual JSON Conversion
 ```python
 def menu_json(request):
     items = MenuItem.objects.filter(is_available=True)
@@ -82,15 +66,34 @@ def menu_json(request):
 <details>
 <summary>Answer</summary>
 
-**C) Manual conversion is tedious, has no validation, and doesn't handle POST/PUT/DELETE**
+**C) Manual field-by-field conversion is tedious and error-prone**
 
-This is how we've been building "APIs" so far:
-- Manual field-by-field conversion (Decimal isn't JSON serializable!)
-- No validation for incoming data
-- Only handles GET — what about create/update/delete?
-- No standard patterns
+- You must convert each field by hand
+- `Decimal` isn't JSON serializable — need `str(item.price)`
+- What if MenuItem has 20 fields? 20 lines of boilerplate!
+- No standards — every developer does it differently
+</details>
 
-Today we'll solve all these problems!
+---
+
+### Question 5: Why Separate Frontend?
+**Django can render HTML templates. So why do modern apps often have a separate frontend (React, Vue, mobile app) fetching data from the backend?**
+
+<details>
+<summary>Answer</summary>
+
+**C) Multiple clients (web, iOS, Android) can share the same backend data**
+
+**The shift happened ~2010-2015** with smartphones and SPAs.
+
+**Before:** Server renders HTML → Browser displays it. But...
+- Mobile apps can't use HTML — they need raw data
+- Every page refresh reloads everything — slow UX
+- Frontend/backend teams tightly coupled
+
+**Now:** Backend sends **data (JSON)** → Any client renders it however it wants.
+
+This is why we need proper data APIs!
 </details>
 
 ---
