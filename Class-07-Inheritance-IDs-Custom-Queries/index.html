@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 7: Inheritance, IDs & Custom Queries</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-django: #092e20;
+            --accent-django-light: #44b78b;
+            --accent-drf: #a30000;
+            --accent-drf-light: #ff6b6b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); z-index: 1001; transition: width 0.1s; }
+
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-secondary); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.models { background: linear-gradient(135deg, #9333ea, #c084fc); }
+        .section-label.ids { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+        .section-label.queries { background: linear-gradient(135deg, #ea580c, #fb923c); }
+        .section-label.filtering { background: linear-gradient(135deg, #16a34a, #4ade80); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #22d3ee 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+        .hero-tagline strong { color: var(--accent-secondary); }
+        .scroll-indicator {
+            position: absolute; bottom: 40px; display: flex; flex-direction: column;
+            align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+        .code-content .decorator { color: #ffa657; }
+        .code-content .class-name { color: #ffcb6b; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 30px 0; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .comparison-table th, .comparison-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 700; color: var(--accent-primary); }
+        .comparison-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .comparison-table code { background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+
+        .question-block { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 20px; padding: 40px; margin: 40px 0; }
+        .question-label { display: flex; align-items: center; gap: 10px; color: var(--warning); font-weight: 600; margin-bottom: 15px; font-size: 0.95rem; }
+        .question-text { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 25px; line-height: 1.5; }
+        .question-options { display: flex; flex-direction: column; gap: 12px; }
+        .question-option {
+            padding: 18px 24px; background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: 12px; cursor: pointer; font-size: 1rem; color: var(--text-primary);
+            transition: all 0.3s; display: flex; align-items: center; gap: 15px;
+        }
+        .question-option:hover { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+        .option-marker { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+        .question-btn { margin-top: 25px; padding: 14px 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s; }
+        .question-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); }
+        .question-result { margin-top: 20px; padding: 15px 20px; border-radius: 10px; font-weight: 600; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .question-explanation { margin-top: 20px; padding: 25px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--accent-django-light); display: none; }
+        .question-explanation.show { display: block; }
+        .question-explanation h4 { color: var(--accent-django-light); margin-bottom: 10px; }
+
+        .flow-diagram { background: var(--bg-secondary); border-radius: 16px; padding: 40px; margin: 40px 0; border: 1px solid var(--border-color); }
+        .flow-row { display: flex; justify-content: center; align-items: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
+        .flow-box { background: var(--bg-tertiary); padding: 20px 30px; border-radius: 12px; text-align: center; min-width: 150px; border: 2px solid var(--border-color); transition: all 0.3s; }
+        .flow-box:hover { border-color: var(--accent-primary); transform: scale(1.05); }
+        .flow-box.highlight { border-color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1); }
+        .flow-box-icon { font-size: 2rem; margin-bottom: 10px; }
+        .flow-box-title { font-weight: 700; margin-bottom: 5px; }
+        .flow-box-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-primary); }
+
+        .diagram-box { background: #1e1e2e; border-radius: 12px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 0.85rem; border: 1px solid var(--border-color); margin: 20px 0; overflow-x: auto; color: #e2e8f0; white-space: pre; line-height: 1.5; }
+
+        .info-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--accent-primary); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .success-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .danger-box { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+
+        .story-box { background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; margin: 30px 0; }
+        .story-box h4 { color: var(--accent-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+        .http-method { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 0.8rem; font-family: 'Fira Code', monospace; }
+        .http-get { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .http-post { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
+        .http-put { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .http-patch { background: rgba(236, 72, 153, 0.2); color: #ec4899; }
+        .http-delete { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .three-column { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .flow-row { gap: 15px; }
+            .flow-box { min-width: 120px; padding: 15px 20px; }
+            .two-column, .three-column { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Scaler Academy</div>
+        <ul class="nav-links">
+            <li><a href="../Class-06-REST-Framework-Serializers/index.html">&larr; Class 6</a></li>
+            <li><a href="#quiz">Quiz</a></li>
+            <li><a href="#inheritance">Inheritance</a></li>
+            <li><a href="#ids">IDs</a></li>
+            <li><a href="#queries">Queries</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-icon">&#128736;</div>
+        <h1>Inheritance, IDs & Custom Queries</h1>
+        <div class="hero-meta">Class 7 | Python Backend LLD</div>
+        <p class="hero-tagline">
+            Write <strong>cleaner code</strong> with model inheritance, <strong>secure IDs</strong> with UUIDs,
+            and <strong>powerful queries</strong> with Q objects.
+        </p>
+        <div class="scroll-indicator">
+            <span>Scroll to begin</span>
+            <span>&#8595;</span>
+        </div>
+    </section>
+
+    <!-- Pre-Class Quiz Section -->
+    <section id="quiz">
+        <div class="section-container">
+            <span class="section-label">Pre-Class Quiz</span>
+            <h2 class="section-title">Test Your Class 6 Knowledge</h2>
+            <p class="section-subtitle">Before diving into advanced patterns, let's review REST Framework & Serializers.</p>
+
+            <!-- Question 1: Serializer Data -->
+            <div class="question-block" id="q1">
+                <div class="question-label">&#128161; Question 1: Serializer Output</div>
+                <div class="question-text">
+                    Given this code, what does <code>serializer.data</code> contain?
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            Django Shell
+                        </div>
+                    </div>
+                    <div class="code-content">
+                        <pre><span class="keyword">from</span> orders.models <span class="keyword">import</span> Order
+<span class="keyword">from</span> orders.serializers <span class="keyword">import</span> OrderSerializer
+
+order = Order.objects.get(id=<span class="variable">1</span>)  <span class="comment"># Get an order from database</span>
+serializer = OrderSerializer(order)  <span class="comment"># Note: no data= parameter</span>
+
+print(serializer.data)  <span class="comment"># What is this?</span></pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        The original Order model instance
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        A Python dictionary with JSON-serializable data
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        A JSON string ready to send over HTTP
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        The raw database row as a tuple
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>Explanation</h4>
+                    <p>When you pass a model instance to a serializer (without <code>data=</code>), it <strong>serializes</strong> the object &mdash; converting Python objects (Decimal, datetime) into JSON-compatible types.</p>
+                    <p class="mt-10"><code>serializer.data</code> returns a <strong>Python dictionary</strong>, not a JSON string. DRF's <code>Response()</code> converts it to JSON when sending the HTTP response.</p>
+                    <div class="code-block mt-20">
+                        <div class="code-content">
+                            <pre><span class="comment"># serializer.data looks like:</span>
+{
+    <span class="string">'id'</span>: <span class="variable">1</span>,
+    <span class="string">'customer_name'</span>: <span class="string">'John Doe'</span>,
+    <span class="string">'total_amount'</span>: <span class="string">'150.00'</span>,  <span class="comment"># Decimal → string</span>
+    <span class="string">'created_at'</span>: <span class="string">'2024-01-15T10:30:00Z'</span>  <span class="comment"># datetime → ISO string</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 2: API Design with Idempotency -->
+            <div class="question-block" id="q2">
+                <div class="question-label">&#128161; Question 2: HTTP Method Design</div>
+                <div class="question-text">
+                    You need to implement a "cancel order" feature. The order stays in the database, but its status changes to "cancelled". Which HTTP method and URL is most appropriate?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <span class="http-method http-get">GET</span> <code>/api/orders/5/cancel/</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <span class="http-method http-delete">DELETE</span> <code>/api/orders/5/</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        <span class="http-method http-post">POST</span> <code>/api/orders/5/cancel/</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <span class="http-method http-patch">PATCH</span> <code>/api/orders/5/</code> with <code>{"status": "cancelled"}</code>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>Explanation</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li><strong>A is wrong:</strong> GET must never cause side effects (change data)</li>
+                        <li><strong>B is wrong:</strong> DELETE implies the resource is removed from the database. A cancelled order should remain for records/audit</li>
+                        <li><strong>C is correct:</strong> POST to an action endpoint for state-changing operations</li>
+                        <li><strong>D seems ok but:</strong> PATCH exposes internal implementation. What if "cancel" later requires sending refund emails, logging, or triggering other systems? A dedicated endpoint encapsulates this better.</li>
+                    </ul>
+
+                    <h4 class="mt-20">Why Not PUT or PATCH?</h4>
+                    <p><strong>PUT/PATCH</strong> are for updating resource properties directly. "Cancel" is a <em>business action</em>, not just changing a field. Consider:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                        <li>Cancel might send notification emails</li>
+                        <li>Cancel might trigger refund processing</li>
+                        <li>Cancel might have preconditions (can't cancel if already shipped)</li>
+                        <li>Cancel might log audit events</li>
+                    </ul>
+                    <p class="mt-10">A POST to <code>/cancel/</code> encapsulates all this logic cleanly.</p>
+
+                    <h4 class="mt-20">Understanding Idempotency</h4>
+                    <p><strong>Idempotent operations</strong> produce the same result if called multiple times.</p>
+                    <table class="comparison-table mt-10">
+                        <tr><th>Method</th><th>Idempotent?</th><th>Why</th></tr>
+                        <tr><td>GET</td><td>Yes</td><td>Reading never changes state</td></tr>
+                        <tr><td>PUT</td><td>Yes</td><td>Replaces entire resource; same result every time</td></tr>
+                        <tr><td>DELETE</td><td>Yes</td><td>Resource is gone; deleting again = same result</td></tr>
+                        <tr><td>POST</td><td>No</td><td>Creates new resource each time (usually)</td></tr>
+                        <tr><td>PATCH</td><td>Usually No</td><td>Depends on the operation</td></tr>
+                    </table>
+                    <p class="mt-10"><strong>Note:</strong> A <code>POST /cancel/</code> action CAN be idempotent if designed correctly (calling it twice doesn't double-cancel).</p>
+
+                    <div class="code-block mt-20">
+                        <div class="code-content">
+                            <pre><span class="decorator">@action</span>(detail=<span class="variable">True</span>, methods=[<span class="string">'post'</span>])
+<span class="keyword">def</span> <span class="function">cancel</span>(self, request, pk=<span class="variable">None</span>):
+    order = self.get_object()
+    <span class="keyword">if</span> order.status == <span class="string">'cancelled'</span>:
+        <span class="keyword">return</span> Response({<span class="string">'message'</span>: <span class="string">'Already cancelled'</span>})
+    order.cancel()  <span class="comment"># Business logic: update status, send emails, log audit</span>
+    <span class="keyword">return</span> Response({<span class="string">'status'</span>: <span class="string">'cancelled'</span>})</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 3: ModelViewSet Validation -->
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 3: Adding Validation in ModelViewSet</div>
+                <div class="question-text">
+                    You have a <code>ModelViewSet</code> and need to ensure <code>total_amount</code> is never negative. Where should you add this validation?
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-title">Current code</div>
+                    </div>
+                    <div class="code-content">
+                        <pre><span class="keyword">class</span> <span class="class-name">OrderViewSet</span>(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Override <code>create()</code> method in the ViewSet
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Add <code>validate_total_amount()</code> method in the Serializer
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Add a <code>check_constraint</code> in the database only
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Override <code>get_queryset()</code> in the ViewSet
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>Explanation</h4>
+                    <p>Validation logic belongs in the <strong>Serializer</strong>, not the ViewSet. The ViewSet handles HTTP concerns; the Serializer handles data validation.</p>
+
+                    <h4 class="mt-20">Field-Level Validation</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+                            <pre><span class="keyword">class</span> <span class="class-name">OrderSerializer</span>(serializers.ModelSerializer):
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = Order
+        fields = [<span class="string">'id'</span>, <span class="string">'customer_name'</span>, <span class="string">'total_amount'</span>, <span class="string">'discount'</span>]
+
+    <span class="keyword">def</span> <span class="function">validate_total_amount</span>(self, value):
+        <span class="string">"""Field-level validation: validates a single field"""</span>
+        <span class="keyword">if</span> value < <span class="variable">0</span>:
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Amount cannot be negative"</span>)
+        <span class="keyword">return</span> value</pre>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-20">Cross-Field Validation (Object-Level)</h4>
+                    <p>Use <code>validate()</code> when you need to validate multiple fields together:</p>
+                    <div class="code-block">
+                        <div class="code-content">
+                            <pre><span class="keyword">class</span> <span class="class-name">OrderSerializer</span>(serializers.ModelSerializer):
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        model = Order
+        fields = [<span class="string">'customer_name'</span>, <span class="string">'total_amount'</span>, <span class="string">'discount'</span>, <span class="string">'order_type'</span>]
+
+    <span class="keyword">def</span> <span class="function">validate</span>(self, attrs):
+        <span class="string">"""Object-level validation: validates multiple fields together"""</span>
+        total = attrs.get(<span class="string">'total_amount'</span>, <span class="variable">0</span>)
+        discount = attrs.get(<span class="string">'discount'</span>, <span class="variable">0</span>)
+        order_type = attrs.get(<span class="string">'order_type'</span>)
+
+        <span class="comment"># Example 1: Discount cannot exceed total</span>
+        <span class="keyword">if</span> discount > total:
+            <span class="keyword">raise</span> serializers.ValidationError({
+                <span class="string">'discount'</span>: <span class="string">"Discount cannot exceed total amount"</span>
+            })
+
+        <span class="comment"># Example 2: Online orders must have minimum amount</span>
+        <span class="keyword">if</span> order_type == <span class="string">'online'</span> <span class="keyword">and</span> total < <span class="variable">50</span>:
+            <span class="keyword">raise</span> serializers.ValidationError(
+                <span class="string">"Online orders require minimum ₹50"</span>
+            )
+
+        <span class="keyword">return</span> attrs</pre>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-20">DRF Validation Flow Diagram</h4>
+                    <p>Understanding when each validation method is called:</p>
+                    <div class="flow-diagram">
+                        <div class="flow-row">
+                            <div class="flow-box">
+                                <div class="flow-box-icon">📥</div>
+                                <div class="flow-box-title">Request Data</div>
+                                <div class="flow-box-desc">JSON from client</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-box highlight">
+                                <div class="flow-box-icon">🔄</div>
+                                <div class="flow-box-title">serializer.is_valid()</div>
+                                <div class="flow-box-desc">Triggers validation</div>
+                            </div>
+                        </div>
+                        <div class="flow-row">
+                            <div class="flow-arrow" style="transform: rotate(90deg);">→</div>
+                        </div>
+                        <div class="flow-row">
+                            <div class="flow-box" style="border-color: var(--warning);">
+                                <div class="flow-box-icon">1️⃣</div>
+                                <div class="flow-box-title">Field Type Validation</div>
+                                <div class="flow-box-desc">IntegerField, EmailField, etc.</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-box" style="border-color: var(--success);">
+                                <div class="flow-box-icon">2️⃣</div>
+                                <div class="flow-box-title">validate_&lt;field&gt;()</div>
+                                <div class="flow-box-desc">Per-field custom validation</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-box" style="border-color: var(--accent-secondary);">
+                                <div class="flow-box-icon">3️⃣</div>
+                                <div class="flow-box-title">validate()</div>
+                                <div class="flow-box-desc">Cross-field validation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>⚠️ Method Naming Convention is Critical!</strong>
+                        <p>The method name MUST match the pattern <code>validate_&lt;field_name&gt;</code> exactly:</p>
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><code>validate_total_amount</code> ✅ → Called for field <code>total_amount</code></li>
+                            <li><code>validate_totalAmount</code> ❌ → Will NOT be called (wrong case)</li>
+                            <li><code>validateTotalAmount</code> ❌ → Will NOT be called (missing underscore)</li>
+                            <li><code>check_total_amount</code> ❌ → Will NOT be called (wrong prefix)</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>💡 Validation Order:</strong>
+                        <ol style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>Field-level type validation</strong> - Is it the right type? (automatic)</li>
+                            <li><strong>validate_&lt;field&gt;()</strong> - Custom field validation (you write this)</li>
+                            <li><strong>validate()</strong> - Object-level cross-field validation (you write this)</li>
+                        </ol>
+                        <p style="margin-top: 10px;">If any step fails, subsequent steps are <strong>not executed</strong>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 4: @api_view vs APIView -->
+            <div class="question-block" id="q4">
+                <div class="question-label">&#128161; Question 4: @api_view vs ModelViewSet</div>
+                <div class="question-text">
+                    When would you choose <code>@api_view</code> over <code>ModelViewSet</code>?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        When you need full CRUD operations on a model
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        For simple, one-off endpoints like health checks or aggregations
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        When you need automatic URL routing
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <code>@api_view</code> is deprecated; always use ViewSets
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>Explanation</h4>
+                    <table class="comparison-table mt-20">
+                        <tr>
+                            <th>Use Case</th>
+                            <th>Best Choice</th>
+                        </tr>
+                        <tr>
+                            <td>Full CRUD on a model</td>
+                            <td><code>ModelViewSet</code></td>
+                        </tr>
+                        <tr>
+                            <td>Health check endpoint</td>
+                            <td><code>@api_view</code></td>
+                        </tr>
+                        <tr>
+                            <td>Dashboard aggregations</td>
+                            <td><code>@api_view</code></td>
+                        </tr>
+                        <tr>
+                            <td>Complex custom logic</td>
+                            <td><code>APIView</code> (class-based)</td>
+                        </tr>
+                    </table>
+
+                    <div class="code-block mt-20">
+                        <div class="code-header">
+                            <div class="code-title">views.py - @api_view examples</div>
+                        </div>
+                        <div class="code-content">
+                            <pre><span class="keyword">from</span> rest_framework.decorators <span class="keyword">import</span> api_view
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+
+<span class="decorator">@api_view</span>([<span class="string">'GET'</span>])
+<span class="keyword">def</span> <span class="function">health_check</span>(request):
+    <span class="string">"""Simple endpoint - @api_view is perfect"""</span>
+    <span class="keyword">return</span> Response({<span class="string">'status'</span>: <span class="string">'healthy'</span>})
+
+<span class="decorator">@api_view</span>([<span class="string">'GET'</span>])
+<span class="keyword">def</span> <span class="function">order_stats</span>(request):
+    <span class="string">"""Aggregation endpoint - doesn't map to a single model"""</span>
+    stats = Order.objects.aggregate(
+        total=Count(<span class="string">'id'</span>),
+        revenue=Sum(<span class="string">'total_amount'</span>)
+    )
+    <span class="keyword">return</span> Response(stats)</pre>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-20">Registering @api_view in urls.py</h4>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-title">urls.py - Manual URL registration</div>
+                        </div>
+                        <div class="code-content">
+                            <pre><span class="keyword">from</span> django.urls <span class="keyword">import</span> path
+<span class="keyword">from</span> . <span class="keyword">import</span> views
+
+urlpatterns = [
+    <span class="comment"># @api_view functions are registered directly with path()</span>
+    path(<span class="string">'health/'</span>, views.health_check, name=<span class="string">'health-check'</span>),
+    path(<span class="string">'stats/'</span>, views.order_stats, name=<span class="string">'order-stats'</span>),
+
+    <span class="comment"># Compare with ViewSet (uses Router)</span>
+    <span class="comment"># router.register('orders', views.OrderViewSet)</span>
+]</pre>
+                        </div>
+                    </div>
+
+                    <div class="info-box mt-20">
+                        <strong>Key Difference:</strong> <code>@api_view</code> needs manual <code>path()</code> registration, while ViewSets use a Router for automatic URL generation.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Inheritance Section -->
+    <section id="inheritance">
+        <div class="section-container">
+            <span class="section-label models">Model Inheritance</span>
+            <h2 class="section-title">Three Types of Model Inheritance</h2>
+            <p class="section-subtitle">Django offers three inheritance patterns. Each solves different problems.</p>
+
+            <!-- Abstract Base Quiz -->
+            <div class="question-block" id="q-abstract">
+                <div class="question-label">&#129300; Think About This...</div>
+                <div class="question-text">
+                    Your restaurant app has <code>MenuItem</code>, <code>Order</code>, and <code>Customer</code> models. All need <code>created_at</code> and <code>updated_at</code> fields. What's the problem with copy-pasting these fields to each model?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        No problem &mdash; copy-paste is fine for 2 fields
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Django doesn't allow the same field name in multiple models
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Violates DRY; changes need updates in multiple places
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Creates database performance issues
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-abstract')">Check Answer</button>
+                <div class="question-result" id="q-abstract-result"></div>
+                <div class="question-explanation" id="q-abstract-explanation">
+                    <h4>Solution: Abstract Base Classes</h4>
+                    <p>Define shared fields once in an abstract model, then inherit from it. Django will "copy" these fields to each child model &mdash; no database join needed!</p>
+                </div>
+            </div>
+
+            <!-- Type 1: Abstract Base Classes -->
+            <h3 class="mt-40 mb-20">Type 1: Abstract Base Classes</h3>
+            <p style="color: var(--text-secondary);">Share common fields without creating a database table.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        core/models.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> models
+
+
+<span class="keyword">class</span> <span class="class-name">TimestampedModel</span>(models.Model):
+    <span class="string">"""Abstract base model with timestamps."""</span>
+    created_at = models.DateTimeField(auto_now_add=<span class="variable">True</span>)
+    updated_at = models.DateTimeField(auto_now=<span class="variable">True</span>)
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        abstract = <span class="variable">True</span>  <span class="comment"># No database table!</span>
+
+
+<span class="comment"># Now use it everywhere:</span>
+<span class="keyword">class</span> <span class="class-name">MenuItem</span>(TimestampedModel):
+    name = models.CharField(max_length=<span class="variable">100</span>)
+    <span class="comment"># created_at and updated_at are inherited!</span>
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(TimestampedModel):
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)
+    <span class="comment"># created_at and updated_at are inherited!</span></pre>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>&#128161; Best Practice: Where to Put Abstract Models?</strong><br><br>
+                Create a <code>core</code> app for shared utilities like <code>TimestampedModel</code>. This keeps your code organized and reusable across all apps in your project.
+                <div class="code-block mt-10" style="margin-bottom: 0;">
+                    <div class="code-content">
+                        <pre>restaurant_project/
+├── core/              <span class="comment"># Shared base models</span>
+│   └── models.py      <span class="comment"># TimestampedModel, SoftDeleteModel, etc.</span>
+├── menu/
+│   └── models.py      <span class="comment"># from core.models import TimestampedModel</span>
+├── orders/
+│   └── models.py      <span class="comment"># from core.models import TimestampedModel</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="diagram-box">Database result (only child tables exist):
+
+┌───────────────────┐     ┌───────────────────┐
+│ menu_menuitem     │     │ orders_order      │
+├───────────────────┤     ├───────────────────┤
+│ id                │     │ id                │
+│ name              │     │ customer_name     │
+│ created_at ◀──────────── created_at ◀─── Same fields in both!
+│ updated_at ◀──────────── updated_at ◀─── No parent table.
+└───────────────────┘     └───────────────────┘</div>
+
+            <!-- Multi-Table Quiz -->
+            <div class="question-block mt-40" id="q-multitable">
+                <div class="question-label">&#129300; Think About This...</div>
+                <div class="question-text">
+                    Your restaurant sells <code>Food</code> items and <code>Beverage</code> items. Both have name and price, but Food has <code>calories</code> and Beverages have <code>volume_ml</code>. You want to query ALL menu items together (Food + Beverages). What's the best approach?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        One <code>MenuItem</code> model with nullable <code>calories</code> and <code>volume_ml</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Multi-table inheritance: <code>MenuItem</code> parent with <code>Food</code> and <code>Beverage</code> children
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Abstract base class with <code>Food</code> and <code>Beverage</code> models
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Two completely separate models, query them separately
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-multitable')">Check Answer</button>
+                <div class="question-result" id="q-multitable-result"></div>
+                <div class="question-explanation" id="q-multitable-explanation">
+                    <h4>Why Multi-Table Inheritance?</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary);">
+                        <li><strong>A is wrong:</strong> Nullable fields for type-specific data is messy</li>
+                        <li><strong>B is correct:</strong> Query <code>MenuItem.objects.all()</code> gets both types!</li>
+                        <li><strong>C is wrong:</strong> Abstract won't let you query across both types</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Type 2: Multi-Table Inheritance -->
+            <h3 class="mt-40 mb-20">Type 2: Multi-Table Inheritance</h3>
+            <p style="color: var(--text-secondary);">Each model gets its own table. Parent can be queried directly.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        menu/models.py - Multi-table inheritance
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">MenuItem</span>(models.Model):
+    <span class="string">"""Parent model - has its own table"""</span>
+    name = models.CharField(max_length=<span class="variable">100</span>)
+    price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)
+    is_available = models.BooleanField(default=<span class="variable">True</span>)
+
+    <span class="comment"># Note: NO abstract = True!</span>
+
+
+<span class="keyword">class</span> <span class="class-name">Food</span>(MenuItem):
+    <span class="string">"""Child model - gets its own table + FK to MenuItem"""</span>
+    calories = models.IntegerField()
+    is_vegetarian = models.BooleanField(default=<span class="variable">False</span>)
+
+
+<span class="keyword">class</span> <span class="class-name">Beverage</span>(MenuItem):
+    <span class="string">"""Child model - gets its own table + FK to MenuItem"""</span>
+    volume_ml = models.IntegerField()
+    is_alcoholic = models.BooleanField(default=<span class="variable">False</span>)</pre>
+                </div>
+            </div>
+
+            <h4 class="mt-30 mb-20">Database Structure (Three Tables)</h4>
+            <table class="comparison-table">
+                <tr>
+                    <th>Table: menu_menuitem</th>
+                    <th>Table: menu_food</th>
+                    <th>Table: menu_beverage</th>
+                </tr>
+                <tr>
+                    <td>
+                        <code>id</code> (PK)<br>
+                        <code>name</code><br>
+                        <code>price</code><br>
+                        <code>is_available</code>
+                    </td>
+                    <td>
+                        <code>menuitem_ptr_id</code> (FK → menuitem)<br>
+                        <code>calories</code><br>
+                        <code>is_vegetarian</code>
+                    </td>
+                    <td>
+                        <code>menuitem_ptr_id</code> (FK → menuitem)<br>
+                        <code>volume_ml</code><br>
+                        <code>is_alcoholic</code>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Querying multi-table inheritance</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Query ALL menu items (Food + Beverages)</span>
+MenuItem.objects.all()  <span class="comment"># Returns both types!</span>
+
+<span class="comment"># Query only Food items</span>
+Food.objects.all()
+
+<span class="comment"># Access parent from child</span>
+pizza = Food.objects.get(name=<span class="string">"Pizza"</span>)
+print(pizza.price)  <span class="comment"># Works! Inherited from MenuItem</span>
+
+<span class="comment"># Access child from parent (if it exists)</span>
+item = MenuItem.objects.get(id=<span class="variable">1</span>)
+<span class="keyword">try</span>:
+    print(item.food.calories)  <span class="comment"># Access Food-specific field</span>
+<span class="keyword">except</span> Food.DoesNotExist:
+    print(item.beverage.volume_ml)  <span class="comment"># It's a Beverage</span></pre>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong>&#9888; Performance Warning:</strong> Multi-table inheritance creates JOINs when accessing child fields from parent. Use <code>select_related()</code> or avoid for high-traffic queries.
+            </div>
+
+            <!-- Proxy Quiz -->
+            <div class="question-block mt-40" id="q-proxy">
+                <div class="question-label">&#129300; Think About This...</div>
+                <div class="question-text">
+                    You have an <code>Order</code> model. In your admin panel, you want to show "Recent Orders" (last 7 days) and "Archived Orders" (older) as separate sections, but they use the same database table. How?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Create two separate models with an <code>is_archived</code> field
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Use multi-table inheritance
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Use proxy models with different default managers
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Create two different database views
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-proxy')">Check Answer</button>
+                <div class="question-result" id="q-proxy-result"></div>
+                <div class="question-explanation" id="q-proxy-explanation">
+                    <h4>Proxy Models Are Perfect Here</h4>
+                    <p>Proxy models let you change Python behavior (methods, default ordering, managers) without creating a new table. Same data, different views!</p>
+                </div>
+            </div>
+
+            <!-- Type 3: Proxy Models -->
+            <h3 class="mt-40 mb-20">Type 3: Proxy Models</h3>
+            <p style="color: var(--text-secondary);">Same database table, different Python behavior.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py - Proxy models
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> models
+<span class="keyword">from</span> django.utils <span class="keyword">import</span> timezone
+<span class="keyword">from</span> datetime <span class="keyword">import</span> timedelta
+
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    <span class="string">"""Base Order model"""</span>
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)
+    total_amount = models.DecimalField(max_digits=<span class="variable">10</span>, decimal_places=<span class="variable">2</span>)
+    created_at = models.DateTimeField(auto_now_add=<span class="variable">True</span>)
+
+
+<span class="keyword">class</span> <span class="class-name">RecentOrderManager</span>(models.Manager):
+    <span class="keyword">def</span> <span class="function">get_queryset</span>(self):
+        week_ago = timezone.now() - timedelta(days=<span class="variable">7</span>)
+        <span class="keyword">return</span> super().get_queryset().filter(created_at__gte=week_ago)
+
+
+<span class="keyword">class</span> <span class="class-name">RecentOrder</span>(Order):
+    <span class="string">"""Proxy model - same table, only recent orders"""</span>
+    objects = RecentOrderManager()
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        proxy = <span class="variable">True</span>  <span class="comment"># No new table!</span>
+        ordering = [<span class="string">'-created_at'</span>]
+
+
+<span class="keyword">class</span> <span class="class-name">ArchivedOrderManager</span>(models.Manager):
+    <span class="keyword">def</span> <span class="function">get_queryset</span>(self):
+        week_ago = timezone.now() - timedelta(days=<span class="variable">7</span>)
+        <span class="keyword">return</span> super().get_queryset().filter(created_at__lt=week_ago)
+
+
+<span class="keyword">class</span> <span class="class-name">ArchivedOrder</span>(Order):
+    <span class="string">"""Proxy model - same table, only old orders"""</span>
+    objects = ArchivedOrderManager()
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        proxy = <span class="variable">True</span>
+        ordering = [<span class="string">'created_at'</span>]  <span class="comment"># Oldest first</span></pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Using proxy models</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># All three query the SAME table</span>
+Order.objects.all()         <span class="comment"># All orders</span>
+RecentOrder.objects.all()   <span class="comment"># Only last 7 days</span>
+ArchivedOrder.objects.all() <span class="comment"># Only older than 7 days</span>
+
+<span class="comment"># In Django Admin, register all three for different views:</span>
+admin.site.register(Order)
+admin.site.register(RecentOrder)   <span class="comment"># Shows as separate section!</span>
+admin.site.register(ArchivedOrder) <span class="comment"># Shows as separate section!</span></pre>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <h3 class="mt-40 mb-20">When to Use Each Type</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Type</th>
+                    <th>Database Tables</th>
+                    <th>Use When</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><strong>Abstract</strong></td>
+                    <td>Only child tables</td>
+                    <td>Share fields across unrelated models</td>
+                    <td><code>TimestampedModel</code> with created_at/updated_at</td>
+                </tr>
+                <tr>
+                    <td><strong>Multi-Table</strong></td>
+                    <td>Parent + child tables (FK)</td>
+                    <td>Query parent to get all children; type-specific fields</td>
+                    <td><code>MenuItem</code> → <code>Food</code>, <code>Beverage</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Proxy</strong></td>
+                    <td>Same table as parent</td>
+                    <td>Different Python behavior, same data</td>
+                    <td><code>RecentOrder</code>, <code>ArchivedOrder</code></td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- IDs Section -->
+    <section id="ids">
+        <div class="section-container">
+            <span class="section-label ids">Primary Keys</span>
+            <h2 class="section-title">UUIDs vs Auto-Increment IDs</h2>
+            <p class="section-subtitle">Why sequential IDs can be a security risk, and how to fix it.</p>
+
+            <!-- WW2 Story -->
+            <div class="story-box">
+                <h4>&#128218; The German Tank Problem (WWII)</h4>
+                <p>During World War II, the Allies wanted to estimate German tank production. They noticed captured tanks had <strong>sequential serial numbers</strong>: 1, 2, 3, 4...</p>
+                <p class="mt-10">Using statistical analysis of captured tank serial numbers, mathematicians estimated Germany was producing <strong>~255 tanks per month</strong>.</p>
+                <p class="mt-10">Meanwhile, traditional intelligence (spies, aerial photos) estimated <strong>~1,400 tanks per month</strong>.</p>
+                <p class="mt-10"><strong>After the war:</strong> German records showed actual production was <strong>256 tanks/month</strong> &mdash; the math was almost perfect!</p>
+                <p class="mt-20" style="color: var(--accent-secondary); font-weight: 600;">Lesson: Sequential IDs leak information. Attackers can estimate your data volume and enumerate resources.</p>
+            </div>
+
+            <h3 class="mt-40 mb-20">The Problem: Sequential IDs in APIs</h3>
+
+            <div class="diagram-box">GET /api/orders/1/      ← First order ever
+GET /api/orders/100/    ← 100th order
+GET /api/orders/1000/   ← Competitor now knows you have ~1000 orders
+GET /api/orders/1001/   ← Probably 404 (doesn't exist yet)
+
+Attack: Loop from 1 to 10,000 and scrape all valid orders!</div>
+
+            <div class="danger-box">
+                <strong>&#9888; Security Risk:</strong> Sequential IDs let attackers enumerate your entire database, estimate your business size, and scrape customer data.
+            </div>
+
+            <h3 class="mt-40 mb-20">Solution 1: UUID Primary Keys</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py - UUID primary key
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> uuid
+<span class="keyword">from</span> django.db <span class="keyword">import</span> models
+
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    id = models.UUIDField(
+        primary_key=<span class="variable">True</span>,
+        default=uuid.uuid4,
+        editable=<span class="variable">False</span>
+    )
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)
+
+
+<span class="comment"># URLs now look like:</span>
+<span class="comment"># GET /api/orders/550e8400-e29b-41d4-a716-446655440000/</span>
+<span class="comment"># Can't guess other IDs! Can't enumerate!</span></pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Solution 2: Dual ID Approach</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Keep integer IDs for database performance, expose UUIDs in APIs.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py - Dual ID approach
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> uuid
+<span class="keyword">from</span> django.db <span class="keyword">import</span> models
+
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    <span class="comment"># Internal: fast integer primary key (for joins, indexes)</span>
+    id = models.BigAutoField(primary_key=<span class="variable">True</span>)
+
+    <span class="comment"># External: UUID for API exposure</span>
+    public_id = models.UUIDField(
+        default=uuid.uuid4,
+        editable=<span class="variable">False</span>,
+        unique=<span class="variable">True</span>,
+        db_index=<span class="variable">True</span>  <span class="comment"># Important for lookup performance!</span>
+    )
+
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">orders/views.py - Use public_id in API</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">OrderViewSet</span>(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    lookup_field = <span class="string">'public_id'</span>  <span class="comment"># Use UUID in URLs, not id</span>
+
+
+<span class="comment"># Now URLs use public_id:</span>
+<span class="comment"># GET /api/orders/550e8400-e29b-41d4-a716-446655440000/</span>
+<span class="comment">#</span>
+<span class="comment"># But internally, joins use the fast integer id!</span></pre>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>&#128161; Why is the UUID indexed in Dual ID?</strong><br><br>
+                Yes, <code>db_index=True</code> creates an index on the UUID column. This is <strong>necessary</strong> because API lookups query by <code>public_id</code>. Without an index, every API request would do a full table scan!<br><br>
+                <strong>The benefit:</strong> JOINs between tables still use the integer <code>id</code> (which is faster), while only API lookups use the indexed UUID.
+            </div>
+
+            <h3 class="mt-40 mb-20">Solution 3: Prefixed IDs (HashIDs)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Human-readable, type-prefixed identifiers used by many modern APIs.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Examples of Prefixed IDs</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Stripe-style prefixed IDs:</span>
+<span class="string">"cus_1234567890abcdef"</span>   <span class="comment"># Customer</span>
+<span class="string">"ord_9876543210fedcba"</span>   <span class="comment"># Order</span>
+<span class="string">"pay_abcdef1234567890"</span>   <span class="comment"># Payment</span>
+<span class="string">"inv_fedcba0987654321"</span>   <span class="comment"># Invoice</span>
+
+<span class="comment"># Benefits:</span>
+<span class="comment"># 1. Human-readable: You know "cus_" is a customer at a glance</span>
+<span class="comment"># 2. Debugging: Easy to identify resource type in logs</span>
+<span class="comment"># 3. Security: Non-sequential, can't enumerate</span>
+<span class="comment"># 4. Shorter than UUIDs</span></pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Simple implementation (conceptual)</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> secrets
+
+<span class="keyword">def</span> <span class="function">generate_prefixed_id</span>(prefix):
+    <span class="string">"""Generate a prefixed ID like 'ord_abc123def456'"""</span>
+    random_part = secrets.token_hex(<span class="variable">12</span>)  <span class="comment"># 24 chars of random hex</span>
+    <span class="keyword">return</span> f<span class="string">"{prefix}_{random_part}"</span>
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    public_id = models.CharField(
+        max_length=<span class="variable">50</span>,
+        unique=<span class="variable">True</span>,
+        default=<span class="keyword">lambda</span>: generate_prefixed_id(<span class="string">'ord'</span>)
+    )</pre>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong>&#9888; Trade-offs of Prefixed IDs:</strong><br>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>More complex to generate than UUIDs</li>
+                    <li>Need to ensure uniqueness (use database constraints)</li>
+                    <li>Prefix leaks resource type (might be a feature or a bug!)</li>
+                    <li>Libraries like <code>hashids</code> or <code>sqids</code> can help</li>
+                </ul>
+            </div>
+
+            <h3 class="mt-40 mb-20">When to Use What</h3>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Approach</th>
+                    <th>Pros</th>
+                    <th>Cons</th>
+                    <th>Use When</th>
+                </tr>
+                <tr>
+                    <td><strong>Auto Integer</strong></td>
+                    <td>Fast, small, easy to debug</td>
+                    <td>Predictable, leaks info</td>
+                    <td>Internal/admin-only resources</td>
+                </tr>
+                <tr>
+                    <td><strong>UUID Primary Key</strong></td>
+                    <td>Secure, simple</td>
+                    <td>Larger indexes, slower joins</td>
+                    <td>New projects, low-medium traffic</td>
+                </tr>
+                <tr>
+                    <td><strong>Dual ID (int + UUID)</strong></td>
+                    <td>Fast indexes + secure API</td>
+                    <td>More complex, extra column</td>
+                    <td>High-traffic production systems</td>
+                </tr>
+                <tr>
+                    <td><strong>Prefixed IDs</strong></td>
+                    <td>Human-readable, debuggable</td>
+                    <td>More implementation work</td>
+                    <td>Developer-facing APIs (like Stripe)</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- Queries Section -->
+    <section id="queries">
+        <div class="section-container">
+            <span class="section-label queries">Custom Queries</span>
+            <h2 class="section-title">QuerySet Methods & Q Objects</h2>
+            <p class="section-subtitle">Master Django's query API for powerful database operations.</p>
+
+            <!-- QuerySet Review Quiz -->
+            <div class="question-block" id="q-qs1">
+                <div class="question-label">&#128161; Quick Review: Field Lookups</div>
+                <div class="question-text">
+                    Which query returns menu items priced between $10 and $20 (inclusive)?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <code>MenuItem.objects.filter(price__between=(10, 20))</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <code>MenuItem.objects.filter(price__gte=10, price__lte=20)</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        <code>MenuItem.objects.filter(price > 10, price < 20)</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <code>MenuItem.objects.filter(10 <= price <= 20)</code>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-qs1')">Check Answer</button>
+                <div class="question-result" id="q-qs1-result"></div>
+                <div class="question-explanation" id="q-qs1-explanation">
+                    <h4>Field Lookup Reference</h4>
+                    <table class="comparison-table mt-10">
+                        <tr><th>Lookup</th><th>SQL</th><th>Example</th></tr>
+                        <tr><td><code>__exact</code></td><td><code>=</code></td><td><code>status__exact='pending'</code></td></tr>
+                        <tr><td><code>__gt</code></td><td><code>></code></td><td><code>price__gt=10</code></td></tr>
+                        <tr><td><code>__gte</code></td><td><code>>=</code></td><td><code>price__gte=10</code></td></tr>
+                        <tr><td><code>__lt</code></td><td><code><</code></td><td><code>price__lt=20</code></td></tr>
+                        <tr><td><code>__lte</code></td><td><code><=</code></td><td><code>price__lte=20</code></td></tr>
+                        <tr><td><code>__in</code></td><td><code>IN (...)</code></td><td><code>status__in=['a','b']</code></td></tr>
+                        <tr><td><code>__range</code></td><td><code>BETWEEN</code></td><td><code>price__range=(10,20)</code></td></tr>
+                        <tr><td><code>__icontains</code></td><td><code>ILIKE %x%</code></td><td><code>name__icontains='pizza'</code></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- QuerySet Review Quiz 2 -->
+            <div class="question-block" id="q-qs2">
+                <div class="question-label">&#128161; Quick Review: Chained Filters</div>
+                <div class="question-text">
+                    What does this query return?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>Order.objects.filter(status=<span class="string">'pending'</span>).filter(total_amount__gte=<span class="variable">100</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Orders that are pending <strong>AND</strong> total >= 100
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Orders that are pending <strong>OR</strong> total >= 100
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        All pending orders, then filters those to >= 100 (two queries)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Error: can't chain filter() calls
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-qs2')">Check Answer</button>
+                <div class="question-result" id="q-qs2-result"></div>
+                <div class="question-explanation" id="q-qs2-explanation">
+                    <h4>Chained Filters = AND</h4>
+                    <p>Multiple <code>.filter()</code> calls are combined with <strong>AND</strong>. Both conditions must be true.</p>
+                    <div class="code-block mt-10">
+                        <div class="code-content">
+                            <pre><span class="comment"># These are equivalent:</span>
+Order.objects.filter(status=<span class="string">'pending'</span>).filter(total_amount__gte=<span class="variable">100</span>)
+Order.objects.filter(status=<span class="string">'pending'</span>, total_amount__gte=<span class="variable">100</span>)
+
+<span class="comment"># SQL: WHERE status = 'pending' AND total_amount >= 100</span></pre>
+                        </div>
+                    </div>
+                    <p class="mt-10"><strong>But what if you need OR?</strong> That's where Q objects come in!</p>
+                </div>
+            </div>
+
+            <!-- Q Objects -->
+            <h3 class="mt-40 mb-20">Q Objects: OR, AND, NOT</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">When you need complex conditions beyond simple AND.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Q Object Examples
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Q
+
+<span class="comment"># OR: Orders that are pending OR confirmed</span>
+Order.objects.filter(
+    Q(status=<span class="string">'pending'</span>) | Q(status=<span class="string">'confirmed'</span>)
+)
+<span class="comment"># SQL: WHERE status = 'pending' OR status = 'confirmed'</span>
+
+
+<span class="comment"># NOT: Orders that are NOT cancelled</span>
+Order.objects.filter(
+    ~Q(status=<span class="string">'cancelled'</span>)
+)
+<span class="comment"># SQL: WHERE NOT status = 'cancelled'</span>
+
+
+<span class="comment"># Complex: (pending OR confirmed) AND high value AND NOT john</span>
+Order.objects.filter(
+    (Q(status=<span class="string">'pending'</span>) | Q(status=<span class="string">'confirmed'</span>)) &
+    Q(total_amount__gte=<span class="variable">100</span>) &
+    ~Q(customer_name__icontains=<span class="string">'john'</span>)
+)
+
+
+<span class="comment"># Combining with regular kwargs</span>
+Order.objects.filter(
+    Q(status=<span class="string">'pending'</span>) | Q(status=<span class="string">'confirmed'</span>),
+    total_amount__gte=<span class="variable">100</span>  <span class="comment"># Regular kwarg (AND with Q)</span>
+)</pre>
+                </div>
+            </div>
+
+            <table class="comparison-table mt-30">
+                <tr>
+                    <th>Operator</th>
+                    <th>Meaning</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>|</code></td>
+                    <td>OR</td>
+                    <td><code>Q(a=1) | Q(b=2)</code></td>
+                </tr>
+                <tr>
+                    <td><code>&</code></td>
+                    <td>AND</td>
+                    <td><code>Q(a=1) & Q(b=2)</code></td>
+                </tr>
+                <tr>
+                    <td><code>~</code></td>
+                    <td>NOT</td>
+                    <td><code>~Q(status='cancelled')</code></td>
+                </tr>
+            </table>
+
+            <div class="warning-box mt-30">
+                <strong>&#9888; Common Mistake:</strong> Both sides must be Q objects!<br><br>
+                <code>Q(a=1) | b=2</code> &#8592; <strong>SyntaxError!</strong><br>
+                <code>Q(a=1) | Q(b=2)</code> &#8592; Correct
+            </div>
+
+            <!-- Custom QuerySet -->
+            <h3 class="mt-40 mb-20">Custom QuerySet Methods</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">DRY your queries by creating reusable methods.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py - Custom QuerySet
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">OrderQuerySet</span>(models.QuerySet):
+    <span class="keyword">def</span> <span class="function">pending</span>(self):
+        <span class="keyword">return</span> self.filter(status=<span class="string">'pending'</span>)
+
+    <span class="keyword">def</span> <span class="function">active</span>(self):
+        <span class="keyword">return</span> self.exclude(status__in=[<span class="string">'cancelled'</span>, <span class="string">'completed'</span>])
+
+    <span class="keyword">def</span> <span class="function">high_value</span>(self, min_amount=<span class="variable">100</span>):
+        <span class="keyword">return</span> self.filter(total_amount__gte=min_amount)
+
+    <span class="keyword">def</span> <span class="function">today</span>(self):
+        <span class="keyword">from</span> django.utils <span class="keyword">import</span> timezone
+        <span class="keyword">return</span> self.filter(created_at__date=timezone.now().date())
+
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    <span class="comment"># ... fields ...</span>
+    objects = OrderQuerySet.as_manager()  <span class="comment"># Use custom QuerySet</span>
+
+
+<span class="comment"># Now you can chain them!</span>
+Order.objects.pending()                    <span class="comment"># Pending orders</span>
+Order.objects.pending().today()            <span class="comment"># Pending AND today</span>
+Order.objects.active().high_value(<span class="variable">500</span>)     <span class="comment"># Active AND >= $500</span></pre>
+                </div>
+            </div>
+
+            <div class="success-box">
+                <strong>&#10003; Benefits:</strong> Query logic is defined once, can be chained, easy to test, and documents your business rules.
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section>
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">What We Learned</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#127981;</div>
+                    <h3 class="card-title">Abstract Base Models</h3>
+                    <p class="card-desc">Share fields without creating tables. Use for timestamps, audit fields.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128290;</div>
+                    <h3 class="card-title">Multi-Table Inheritance</h3>
+                    <p class="card-desc">Query parent to get all children. Use for polymorphic types.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128065;</div>
+                    <h3 class="card-title">Proxy Models</h3>
+                    <p class="card-desc">Same table, different behavior. Use for filtered views.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128273;</div>
+                    <h3 class="card-title">UUID Primary Keys</h3>
+                    <p class="card-desc">Secure, non-guessable IDs. Use for public-facing APIs.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128269;</div>
+                    <h3 class="card-title">Q Objects</h3>
+                    <p class="card-desc">OR, AND, NOT for complex queries. Essential for advanced filtering.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9881;</div>
+                    <h3 class="card-title">Custom QuerySets</h3>
+                    <p class="card-desc">Reusable, chainable query methods. DRY for business logic.</p>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Files Modified Today</h3>
+            <table class="comparison-table">
+                <tr>
+                    <th>File</th>
+                    <th>Changes</th>
+                </tr>
+                <tr>
+                    <td><code>core/models.py</code></td>
+                    <td>TimestampedModel (abstract base)</td>
+                </tr>
+                <tr>
+                    <td><code>menu/models.py</code></td>
+                    <td>Food, Beverage (multi-table inheritance example)</td>
+                </tr>
+                <tr>
+                    <td><code>orders/models.py</code></td>
+                    <td>UUID, OrderQuerySet, RecentOrder/ArchivedOrder (proxy)</td>
+                </tr>
+            </table>
+
+            <div class="info-box mt-30">
+                <strong>Coming Next:</strong> Pagination, Searching & Sorting &mdash; filtering via URL parameters with django-filter!
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.innerHTML = '&#127769;'; text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.innerHTML = '&#9728;'; text.textContent = 'Light';
+            }
+        }
+
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const selected = block.querySelector('.question-option.selected');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            if (!selected) {
+                result.textContent = 'Please select an answer!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const options = block.querySelectorAll('.question-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct');
+                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
+            });
+
+            if (selected.getAttribute('data-correct') === 'true') {
+                result.innerHTML = '&#10003; Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.innerHTML = '&#10007; Incorrect. See explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+            explanation.classList.add('show');
+        }
+
+        function copyCode(button) {
+            const codeContent = button.closest('.code-block').querySelector('.code-content pre').textContent;
+            navigator.clipboard.writeText(codeContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+    </script>
+</body>
+</html>
