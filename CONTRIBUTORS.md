@@ -24,6 +24,7 @@ This file lists all students who have completed the **Class 3 Assignment** — t
 |---|------|-----------------|----------|
 | 0 | Prateek (Instructor) | [@prateekScaler](https://github.com/prateekScaler) | Loves teaching Git! |
 | 1 | Anand Banerjee	   | [@anandsbanerjee](https://github.com/anandsbanerjee) | Loves coding |
+| 2 | Jayendra Khole	   | [@jayendra02](https://github.com/jayendra02) | Learner & Implementor |
 <!-- Add your row above this line -->
 
 ---
