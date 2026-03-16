@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 8: Cardinalities, N+1 Problem & Migrations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-django: #092e20;
+            --accent-django-light: #44b78b;
+            --accent-drf: #a30000;
+            --accent-drf-light: #ff6b6b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); z-index: 1001; transition: width 0.1s; }
+
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-secondary); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.relationships { background: linear-gradient(135deg, #9333ea, #c084fc); }
+        .section-label.n1 { background: linear-gradient(135deg, #dc2626, #f87171); }
+        .section-label.fetch { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+        .section-label.querysets { background: linear-gradient(135deg, #ea580c, #fb923c); }
+        .section-label.migrations { background: linear-gradient(135deg, #16a34a, #4ade80); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #22d3ee 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+        .hero-tagline strong { color: var(--accent-secondary); }
+        .scroll-indicator {
+            position: absolute; bottom: 40px; display: flex; flex-direction: column;
+            align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+        .code-content .decorator { color: #ffa657; }
+        .code-content .class-name { color: #ffcb6b; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 30px 0; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .comparison-table th, .comparison-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 700; color: var(--accent-primary); }
+        .comparison-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .comparison-table code { background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+
+        .question-block { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 20px; padding: 40px; margin: 40px 0; }
+        .question-label { display: flex; align-items: center; gap: 10px; color: var(--warning); font-weight: 600; margin-bottom: 15px; font-size: 0.95rem; }
+        .question-text { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 25px; line-height: 1.5; }
+        .question-options { display: flex; flex-direction: column; gap: 12px; }
+        .question-option {
+            padding: 18px 24px; background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: 12px; cursor: pointer; font-size: 1rem; color: var(--text-primary);
+            transition: all 0.3s; display: flex; align-items: center; gap: 15px;
+        }
+        .question-option:hover { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+        .option-marker { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+        .question-btn { margin-top: 25px; padding: 14px 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s; }
+        .question-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); }
+        .question-result { margin-top: 20px; padding: 15px 20px; border-radius: 10px; font-weight: 600; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .question-explanation { margin-top: 20px; padding: 25px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--accent-django-light); display: none; }
+        .question-explanation.show { display: block; }
+        .question-explanation h4 { color: var(--accent-django-light); margin-bottom: 10px; }
+
+        .flow-diagram { background: var(--bg-secondary); border-radius: 16px; padding: 40px; margin: 40px 0; border: 1px solid var(--border-color); }
+        .flow-row { display: flex; justify-content: center; align-items: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
+        .flow-box { background: var(--bg-tertiary); padding: 20px 30px; border-radius: 12px; text-align: center; min-width: 150px; border: 2px solid var(--border-color); transition: all 0.3s; }
+        .flow-box:hover { border-color: var(--accent-primary); transform: scale(1.05); }
+        .flow-box.highlight { border-color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1); }
+        .flow-box.danger { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        .flow-box-icon { font-size: 2rem; margin-bottom: 10px; }
+        .flow-box-title { font-weight: 700; margin-bottom: 5px; }
+        .flow-box-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-primary); }
+
+        .diagram-box { background: #1e1e2e; border-radius: 12px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 0.85rem; border: 1px solid var(--border-color); margin: 20px 0; overflow-x: auto; color: #e2e8f0; white-space: pre; line-height: 1.5; }
+
+        .info-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--accent-primary); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .success-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .danger-box { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 20px 25px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+
+        .story-box { background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; margin: 30px 0; }
+        .story-box h4 { color: var(--accent-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .three-column { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+        /* Interactive reveal table */
+        .reveal-table { width: 100%; border-collapse: collapse; margin: 30px 0; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .reveal-table th, .reveal-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .reveal-table th { background: var(--bg-tertiary); font-weight: 700; color: var(--accent-primary); }
+        .reveal-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .reveal-cell {
+            background: var(--bg-tertiary);
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .reveal-cell:hover { background: var(--accent-primary); color: white; }
+        .reveal-cell.revealed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            cursor: default;
+        }
+        .reveal-cell .hidden-text { display: none; }
+        .reveal-cell.revealed .hidden-text { display: inline; }
+        .reveal-cell .click-text { display: inline; }
+        .reveal-cell.revealed .click-text { display: none; }
+
+        .scenario-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 15px 0;
+        }
+        .scenario-box h5 {
+            color: var(--accent-secondary);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .flow-row { gap: 15px; }
+            .flow-box { min-width: 120px; padding: 15px 20px; }
+            .two-column, .three-column { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Scaler Academy</div>
+        <ul class="nav-links">
+            <li><a href="../Class-07-Inheritance-IDs-Custom-Queries/index.html">&larr; Class 7</a></li>
+            <li><a href="#quiz">Quiz</a></li>
+            <li><a href="#relationships">Relationships</a></li>
+            <li><a href="#n1">N+1</a></li>
+            <li><a href="#fetch">Fetch Types</a></li>
+            <li><a href="#querysets">QuerySets</a></li>
+            <li><a href="#migrations">Migrations</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-icon">&#128279;</div>
+        <h1>Cardinalities, N+1 & Migrations</h1>
+        <div class="hero-meta">Class 8 | Python Backend LLD</div>
+        <p class="hero-tagline">
+            Master <strong>database relationships</strong>, eliminate the <strong>N+1 problem</strong>,
+            and understand how <strong>migrations</strong> evolve your schema.
+        </p>
+        <div class="scroll-indicator">
+            <span>Scroll to begin</span>
+            <span>&#8595;</span>
+        </div>
+    </section>
+
+    <!-- Pre-Class Quiz Section -->
+    <section id="quiz">
+        <div class="section-container">
+            <span class="section-label">Pre-Class Quiz</span>
+            <h2 class="section-title">Test Your Knowledge</h2>
+            <p class="section-subtitle">Let's review model inheritance, IDs, and think about database relationships.</p>
+
+            <!-- ==================== INHERITANCE QUESTIONS ==================== -->
+            <h3 class="mt-20 mb-20" style="color: var(--accent-secondary);">&#128218; Model Inheritance</h3>
+
+            <!-- Q1: Abstract Base Model -->
+            <div class="question-block" id="q1">
+                <div class="question-label">&#128161; Question 1: Shared Fields Problem</div>
+                <div class="question-text">
+                    You have 5 models (User, Order, Product, Category, Review) and each needs <code>created_at</code> and <code>updated_at</code> fields. What's the best approach?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Copy-paste the fields into each model manually
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Create an Abstract Base Model with <code>class Meta: abstract = True</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Use Multi-Table Inheritance from a TimestampedModel
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Create a Proxy Model for timestamps
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>Abstract Base Model is Perfect Here!</h4>
+                    <p><strong>Why Abstract?</strong> It shares fields WITHOUT creating a database table. The fields are copied into each child model's table.</p>
+                    <p class="mt-10"><strong>Why not Multi-Table?</strong> That would create an actual TimestampedModel table and require JOINs for every query - unnecessary overhead!</p>
+                    <p class="mt-10"><strong>Why not Proxy?</strong> Proxy models don't add fields - they only change Python behavior on existing models.</p>
+                </div>
+            </div>
+
+            <!-- Q2: Multi-Table Inheritance -->
+            <div class="question-block" id="q2">
+                <div class="question-label">&#128161; Question 2: Payment Processing System</div>
+                <div class="question-text">
+                    A payment system has different payment methods. Credit cards need <code>card_number</code>, <code>cvv</code>, <code>expiry_date</code>. UPI payments need <code>upi_id</code>, <code>bank_name</code>. Both share <code>amount</code>, <code>timestamp</code>, <code>status</code>. You need to query "all payments" regardless of type. Which inheritance type?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Abstract Base Model
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Multi-Table Inheritance (CreditCardPayment and UPIPayment inherit from Payment)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Proxy Model
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Single table with nullable columns for all fields
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>Multi-Table Inheritance!</h4>
+                    <p><strong>Why?</strong> You need to query "all payments" (parent) AND have type-specific fields (children). Multi-table creates:</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li><code>payments_payment</code> table (shared: amount, timestamp, status)</li>
+                        <li><code>payments_creditcardpayment</code> table (card_number, cvv, expiry + FK to payment)</li>
+                        <li><code>payments_upipayment</code> table (upi_id, bank_name + FK to payment)</li>
+                    </ul>
+                    <p class="mt-10"><strong>Trade-off:</strong> Queries on specific types require JOINs, but you can query all payments via Payment.objects.all()!</p>
+                    <p class="mt-10"><strong>Why not Abstract?</strong> Abstract would create separate tables with no common parent - you couldn't query "all payments"!</p>
+                </div>
+            </div>
+
+            <!-- Q3: Proxy Model -->
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 3: Vehicle Fleet Management</div>
+                <div class="question-text">
+                    A fleet management system has a <code>Vehicle</code> model. You want to display "Available Vehicles" and "Under Maintenance" as separate lists in Django Admin. Both use the same database table with a <code>status</code> field. Which approach?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Create two separate tables (AvailableVehicle, MaintenanceVehicle)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Use Multi-Table Inheritance from Vehicle
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Proxy Models with custom Managers that filter by status
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Abstract Base Model
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>Proxy Models are Perfect!</h4>
+                    <p><strong>Key insight:</strong> Same table, different Python behavior. Proxy models:</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>Don't create new database tables</li>
+                        <li>Can have different default managers (filters by status)</li>
+                        <li>Can have different Meta options (ordering)</li>
+                        <li>Show as separate sections in Django Admin</li>
+                    </ul>
+                    <p class="mt-10"><strong>Example:</strong></p>
+                    <pre style="background: #1e1e2e; padding: 10px; border-radius: 8px; color: #e2e8f0; margin-top: 10px; font-size: 0.85rem;">class AvailableVehicle(Vehicle):
+    class Meta:
+        proxy = True
+    objects = AvailableVehicleManager()  # filters status='available'</pre>
+                </div>
+            </div>
+
+            <!-- ==================== ID QUESTIONS ==================== -->
+            <h3 class="mt-40 mb-20" style="color: var(--accent-secondary);">&#128273; IDs & Security</h3>
+
+            <!-- Q4: UUID vs Auto-increment -->
+            <div class="question-block" id="q4">
+                <div class="question-label">&#128161; Question 4: Public API IDs</div>
+                <div class="question-text">
+                    Your API exposes order URLs like <code>/api/orders/1/</code>, <code>/api/orders/2/</code>. A competitor checks <code>/api/orders/50000/</code> and gets data. What information did you leak?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Nothing - they just got one order
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Your business has approximately 50,000 orders (business intelligence)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Your database password
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Nothing if authentication is required
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>Sequential IDs Leak Business Intelligence!</h4>
+                    <p>This is the <strong>German Tank Problem</strong> from WWII. Sequential IDs reveal:</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>Total number of records (business size)</li>
+                        <li>Growth rate (check IDs over time)</li>
+                        <li>Valid IDs to enumerate and scrape</li>
+                    </ul>
+                    <p class="mt-10"><strong>Solution:</strong> Use UUIDs for public-facing IDs!</p>
+                </div>
+            </div>
+
+            <!-- Q5: Dual ID Approach -->
+            <div class="question-block" id="q5">
+                <div class="question-label">&#128161; Question 5: Best of Both Worlds</div>
+                <div class="question-text">
+                    UUIDs are secure but slower for database JOINs. Integer IDs are fast but insecure for APIs. What's the recommended approach?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Always use UUID as primary key
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Always use integer auto-increment
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Integer PK for internal JOINs + UUID public_id for API exposure
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Use hashed IDs that can be reversed
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
+                <div class="question-result" id="q5-result"></div>
+                <div class="question-explanation" id="q5-explanation">
+                    <h4>Dual ID Approach!</h4>
+                    <p>Keep the auto-increment <code>id</code> as primary key for fast JOINs. Add a <code>public_id</code> UUID field for API exposure:</p>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;">public_id = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)</pre>
+                    <p class="mt-10">Use <code>lookup_field = 'public_id'</code> in your ViewSet.</p>
+                </div>
+            </div>
+
+            <!-- ==================== RELATIONSHIP QUESTIONS ==================== -->
+            <h3 class="mt-40 mb-20" style="color: var(--accent-secondary);">&#128279; Relationship Scenarios (No Code!)</h3>
+
+            <!-- Q6: Order-Invoice -->
+            <div class="question-block" id="q6">
+                <div class="question-label">&#128161; Question 6: Order & Invoice (Restaurant)</div>
+                <div class="question-text">
+                    In our restaurant project: Each Order has exactly ONE Invoice. Each Invoice belongs to exactly ONE Order. What relationship is this?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        One-to-One
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        One-to-Many
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Many-to-Many
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Many-to-One
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q6')">Check Answer</button>
+                <div class="question-result" id="q6-result"></div>
+                <div class="question-explanation" id="q6-explanation">
+                    <h4>One-to-One (1:1)</h4>
+                    <p>Use <code>OneToOneField</code> when each record on both sides has exactly one corresponding record.</p>
+                    <p class="mt-10"><strong>Restaurant examples:</strong> Order &harr; Invoice, Table &harr; TableQRCode</p>
+                </div>
+            </div>
+
+            <!-- Q7: Category-MenuItems -->
+            <div class="question-block" id="q7">
+                <div class="question-label">&#128161; Question 7: Category & MenuItems (Restaurant)</div>
+                <div class="question-text">
+                    In our restaurant project: Each Category (Starters, Main Course, Desserts) contains MANY MenuItems. Each MenuItem belongs to ONE Category. What relationship?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        One-to-One
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        One-to-Many (Category has many MenuItems)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Many-to-Many
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Many-to-One (MenuItems have many Categories)
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q7')">Check Answer</button>
+                <div class="question-result" id="q7-result"></div>
+                <div class="question-explanation" id="q7-explanation">
+                    <h4>One-to-Many (1:N)</h4>
+                    <p>Category (ONE) &rarr; MenuItems (MANY). Use <code>ForeignKey</code> on the MenuItem model pointing to Category.</p>
+                    <p class="mt-10"><strong>Rule:</strong> ForeignKey goes on the "MANY" side!</p>
+                    <p class="mt-10"><strong>In code:</strong> <code>MenuItem.category = ForeignKey(Category)</code></p>
+                </div>
+            </div>
+
+            <!-- Q8: Order-MenuItems -->
+            <div class="question-block" id="q8">
+                <div class="question-label">&#128161; Question 8: Order & MenuItems (Restaurant)</div>
+                <div class="question-text">
+                    In our restaurant project: Each Order can have MANY MenuItems. Each MenuItem can be in MANY Orders. What relationship?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        One-to-One
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        One-to-Many
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Many-to-Many
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        This cannot be modeled in a database
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q8')">Check Answer</button>
+                <div class="question-result" id="q8-result"></div>
+                <div class="question-explanation" id="q8-explanation">
+                    <h4>Many-to-Many (M:N)</h4>
+                    <p>Both sides can have multiple related records. Django can create a junction table automatically!</p>
+                    <p class="mt-10"><strong>But wait!</strong> We need to store <code>quantity</code> and <code>unit_price</code> for each item in the order. So we use a <strong>through model</strong> called <code>OrderItem</code>!</p>
+                </div>
+            </div>
+
+            <!-- Q9: Where does ForeignKey go? -->
+            <div class="question-block" id="q9">
+                <div class="question-label">&#128161; Question 9: Where Does the ForeignKey Go? (Restaurant)</div>
+                <div class="question-text">
+                    In our restaurant: Each Order has MANY OrderItems. Each OrderItem belongs to ONE Order. Where should the ForeignKey be defined?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        In the Order model: <code>items = ForeignKey(OrderItem)</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        In the OrderItem model: <code>order = ForeignKey(Order)</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        In both models
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        In a separate junction table
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q9')">Check Answer</button>
+                <div class="question-result" id="q9-result"></div>
+                <div class="question-explanation" id="q9-explanation">
+                    <h4>ForeignKey Goes on the "MANY" Side!</h4>
+                    <p><strong>Golden Rule:</strong> The model that can have only ONE of the other gets the ForeignKey.</p>
+                    <p class="mt-10">OrderItem can have only ONE Order &rarr; ForeignKey in OrderItem</p>
+                    <p class="mt-10">Think: "Each OrderItem belongs to ONE Order" &rarr; FK in OrderItem</p>
+                    <p class="mt-10"><strong>Same pattern:</strong> MenuItem &rarr; Category (MenuItem has FK to Category)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Relationships Section -->
+    <section id="relationships">
+        <div class="section-container">
+            <span class="section-label relationships">Database Design</span>
+            <h2 class="section-title">Cardinalities: Database Relationships</h2>
+            <p class="section-subtitle">Understanding the three types of relationships and where to define them.</p>
+
+            <div class="diagram-box">┌─────────────────────────────────────────────────────────────────┐
+│                    THE THREE RELATIONSHIP TYPES                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ONE-TO-ONE (1:1)         ONE-TO-MANY (1:N)      MANY-TO-MANY   │
+│  ┌───┐     ┌───┐          ┌───┐                 ┌───┐   ┌───┐  │
+│  │ A │────▶│ B │          │ 1 │──┬──▶ Many      │ M │◀─▶│ N │  │
+│  └───┘     └───┘          └───┘  ├──▶           └───┘   └───┘  │
+│                                  └──▶                           │
+│  User ─── Profile         Category ── Products  Student ─ Course│
+│  Order ─── Invoice        Author ─── Books      Order ─ Items   │
+│                                                                  │
+│  OneToOneField            ForeignKey            ManyToManyField │
+│  (on either side)         (on MANY side!)       (on either side)│
+└─────────────────────────────────────────────────────────────────┘</div>
+
+            <!-- ==================== ONE TO ONE ==================== -->
+            <h3 class="mt-40 mb-20">&#128100; OneToOneField &mdash; One-to-One</h3>
+
+            <div class="info-box">
+                <strong>When to use:</strong> Each record on side A has exactly ONE record on side B, and vice versa.<br>
+                <strong>Examples:</strong> User &harr; Profile, Order &harr; Invoice, Employee &harr; EmployeeDetails
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py - OneToOne Example
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)
+    total_price = models.DecimalField(max_digits=<span class="variable">10</span>, decimal_places=<span class="variable">2</span>)
+
+
+<span class="keyword">class</span> <span class="class-name">OrderInvoice</span>(models.Model):
+    <span class="comment"># Each Order has exactly ONE Invoice</span>
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name=<span class="string">'invoice'</span>  <span class="comment"># order.invoice (not order.orderinvoice!)</span>
+    )
+    invoice_number = models.CharField(max_length=<span class="variable">20</span>, unique=<span class="variable">True</span>)
+    generated_at = models.DateTimeField(auto_now_add=<span class="variable">True</span>)
+
+
+<span class="comment"># Usage:</span>
+order.invoice              <span class="comment"># Direct access to single object</span>
+invoice.order              <span class="comment"># Reverse also works</span></pre>
+                </div>
+            </div>
+
+            <!-- Why OneToOneField in OrderInvoice? -->
+            <div class="story-box">
+                <h4>&#128161; Why is OneToOneField in OrderInvoice, not in Order?</h4>
+                <p class="mt-10"><strong>The "Dependent Model" Principle:</strong> The OneToOneField goes in the model that <em>depends on</em> or <em>extends</em> the other.</p>
+                <ul style="margin: 15px 0 0 20px;">
+                    <li><strong>Order can exist without Invoice</strong> (order placed, invoice not yet generated)</li>
+                    <li><strong>Invoice CANNOT exist without Order</strong> (invoice is always for an order)</li>
+                    <li>Invoice is the "dependent" or "child" model &rarr; OneToOneField goes here</li>
+                </ul>
+                <p class="mt-10"><strong>Same pattern:</strong> Profile depends on User &rarr; OneToOneField in Profile</p>
+            </div>
+
+            <!-- Default related_name explanation -->
+            <div class="warning-box">
+                <h4>&#9888; What if we don't specify <code>related_name</code>?</h4>
+                <p class="mt-10">Django creates a default reverse accessor using <strong>lowercase model name</strong>:</p>
+                <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="comment"># Without related_name:</span>
+order.orderinvoice         <span class="comment"># Default: lowercase model name</span>
+
+<span class="comment"># With related_name='invoice':</span>
+order.invoice              <span class="comment"># Much cleaner!</span></pre>
+                <p class="mt-10"><strong>For ForeignKey (One-to-Many):</strong> Default is <code>modelname_set</code> (e.g., <code>category.menuitem_set</code>)</p>
+                <p><strong>For OneToOneField:</strong> Default is just <code>modelname</code> (e.g., <code>order.orderinvoice</code>) - no <code>_set</code> because it's singular!</p>
+            </div>
+
+            <!-- ==================== ONE TO MANY ==================== -->
+            <h3 class="mt-40 mb-20">&#128279; ForeignKey &mdash; One-to-Many</h3>
+
+            <div class="warning-box">
+                <strong>&#9888; Golden Rule:</strong> ForeignKey goes on the "MANY" side!<br>
+                <strong>Think:</strong> "Each [Child] belongs to ONE [Parent]" &rarr; FK in Child model
+            </div>
+
+            <div class="scenario-box">
+                <h5>&#128218; Scenario: Category & MenuItems</h5>
+                <p>Each Category has MANY MenuItems. Each MenuItem belongs to ONE Category.</p>
+                <p class="mt-10"><strong>Question:</strong> Where does ForeignKey go?</p>
+                <p><strong>Answer:</strong> In MenuItem! Because "Each MenuItem belongs to ONE Category"</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        menu/models.py - ForeignKey Example
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">Category</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">50</span>)
+    <span class="comment"># NO ForeignKey here! Category is the "ONE" side.</span>
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItem</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">100</span>)
+    price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)
+
+    <span class="comment"># ForeignKey on "MANY" side - each item belongs to ONE category</span>
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,     <span class="comment"># Delete items when category deleted</span>
+        related_name=<span class="string">'items'</span>          <span class="comment"># Enables: category.items.all()</span>
+    )
+
+
+<span class="comment"># Usage:</span>
+item.category              <span class="comment"># Forward: Get the ONE category</span>
+item.category.name         <span class="comment"># Access category's fields</span>
+
+category.items.all()       <span class="comment"># Reverse: Get ALL items in category</span>
+category.items.count()     <span class="comment"># Count items</span></pre>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>on_delete</th>
+                    <th>What happens when parent is deleted?</th>
+                </tr>
+                <tr>
+                    <td><code>CASCADE</code></td>
+                    <td>Delete all children (most common)</td>
+                </tr>
+                <tr>
+                    <td><code>PROTECT</code></td>
+                    <td>Prevent deletion if children exist</td>
+                </tr>
+                <tr>
+                    <td><code>SET_NULL</code></td>
+                    <td>Set FK to NULL (requires <code>null=True</code>)</td>
+                </tr>
+                <tr>
+                    <td><code>SET_DEFAULT</code></td>
+                    <td>Set FK to a default value</td>
+                </tr>
+            </table>
+
+            <!-- ==================== MANY TO MANY ==================== -->
+            <h3 class="mt-40 mb-20">&#128101; ManyToManyField &mdash; Many-to-Many</h3>
+
+            <div class="info-box">
+                <strong>When to use:</strong> Records on both sides can have multiple related records.<br>
+                <strong>Examples:</strong> Students &harr; Courses, Orders &harr; Products, Articles &harr; Tags
+            </div>
+
+            <!-- Simple M2M -->
+            <h4 class="mt-30 mb-20">Option 1: Simple ManyToMany (Django creates the table)</h4>
+
+            <div class="scenario-box">
+                <h5>&#127869; Restaurant Scenario: MenuItem Tags</h5>
+                <p>MenuItems can have multiple Tags (Spicy, Vegan, Gluten-Free, Chef's Special). Each Tag can be on multiple MenuItems.</p>
+                <p class="mt-10"><strong>No extra data needed</strong> on the relationship &rarr; Simple ManyToMany!</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        menu/models.py - Simple ManyToMany for Tags
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">Tag</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">50</span>, unique=<span class="variable">True</span>)
+    <span class="comment"># Examples: "Spicy", "Vegan", "Gluten-Free", "Chef's Special"</span>
+
+
+<span class="keyword">class</span> <span class="class-name">MenuItem</span>(models.Model):
+    name = models.CharField(max_length=<span class="variable">100</span>)
+    price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)
+
+    <span class="comment"># ManyToMany - Django creates menu_menuitem_tags table automatically!</span>
+    tags = models.ManyToManyField(
+        Tag,
+        related_name=<span class="string">'menu_items'</span>,
+        blank=<span class="variable">True</span>  <span class="comment"># Items can have no tags</span>
+    )
+
+
+<span class="comment"># Django automatically creates a junction table:</span>
+<span class="comment"># menu_menuitem_tags (id, menuitem_id, tag_id)</span>
+
+<span class="comment"># Usage:</span>
+item.tags.all()                  <span class="comment"># All tags for this item</span>
+item.tags.add(spicy_tag)         <span class="comment"># Add "Spicy" tag</span>
+item.tags.remove(spicy_tag)      <span class="comment"># Remove tag</span>
+
+spicy_tag.menu_items.all()       <span class="comment"># All spicy items</span>
+MenuItem.objects.filter(tags__name=<span class="string">'Vegan'</span>)  <span class="comment"># Filter by tag</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">Django auto-creates this junction table:
+
+┌───────────────────────────────────────────┐
+│         menu_menuitem_tags                 │
+├───────────────────────────────────────────┤
+│ id │ menuitem_id │ tag_id                  │
+├────┼─────────────┼─────────────────────────┤
+│ 1  │     1       │    1    │  (Butter Chicken + Spicy)
+│ 2  │     1       │    4    │  (Butter Chicken + Chef's Special)
+│ 3  │     2       │    2    │  (Dal Makhani + Vegan)
+│ 4  │     3       │    1    │  (Paneer Tikka + Spicy)
+│ 5  │     3       │    2    │  (Paneer Tikka + Vegan)
+└────┴─────────────┴─────────┴───────────────┘
+
+No extra fields needed - just linking items to tags!</div>
+
+            <!-- Through Model M2M -->
+            <h4 class="mt-40 mb-20">Option 2: Through Model (When you need extra fields)</h4>
+
+            <div class="warning-box">
+                <strong>Use Through Model when:</strong> You need to store additional data about the relationship.<br>
+                <strong>Examples:</strong> Enrollment date, grade, quantity, price at time of order
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py - Through Model for Order Items
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    customer_name = models.CharField(max_length=<span class="variable">100</span>)
+
+    <span class="comment"># ManyToMany VIA the through model</span>
+    menu_items = models.ManyToManyField(
+        <span class="string">'menu.MenuItem'</span>,
+        through=<span class="string">'OrderItem'</span>,  <span class="comment"># Use our custom junction table</span>
+        related_name=<span class="string">'orders'</span>
+    )
+
+
+<span class="keyword">class</span> <span class="class-name">OrderItem</span>(models.Model):
+    <span class="string">"""Through model - stores extra relationship data."""</span>
+
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name=<span class="string">'items'</span>
+    )
+    menu_item = models.ForeignKey(
+        <span class="string">'menu.MenuItem'</span>, on_delete=models.PROTECT
+    )
+
+    <span class="comment"># Extra fields on the relationship!</span>
+    quantity = models.PositiveIntegerField(default=<span class="variable">1</span>)
+    unit_price = models.DecimalField(max_digits=<span class="variable">6</span>, decimal_places=<span class="variable">2</span>)
+
+    <span class="keyword">class</span> <span class="class-name">Meta</span>:
+        unique_together = [<span class="string">'order'</span>, <span class="string">'menu_item'</span>]  <span class="comment"># No duplicates</span>
+
+
+<span class="comment"># Usage:</span>
+order.items.all()              <span class="comment"># Get OrderItem objects (with quantity!)</span>
+order.menu_items.all()         <span class="comment"># Get MenuItem objects directly</span>
+
+<span class="keyword">for</span> item <span class="keyword">in</span> order.items.all():
+    print(f<span class="string">"{item.quantity}x {item.menu_item.name}"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">Through Model gives you control over the junction table:
+
+┌─────────────────────────────────────────────────────────────┐
+│                     orders_orderitem                         │
+├─────────────────────────────────────────────────────────────┤
+│ id │ order_id │ menu_item_id │ quantity │ unit_price        │
+├────┼──────────┼──────────────┼──────────┼───────────────────┤
+│ 1  │    1     │      5       │    2     │   329.00          │  (2x Butter Chicken)
+│ 2  │    1     │      8       │    3     │    49.00          │  (3x Naan)
+│ 3  │    2     │      5       │    1     │   329.00          │  (1x Butter Chicken)
+└────┴──────────┴──────────────┴──────────┴───────────────────┘
+
+You can store quantity, price at time of order, notes, etc!</div>
+
+            <!-- Summary Table - Interactive -->
+            <h3 class="mt-40 mb-20">Summary: Where to Define Relationships</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Click each row to reveal the answers!</p>
+
+            <table class="reveal-table">
+                <tr>
+                    <th>Relationship</th>
+                    <th>Django Field (Click to reveal)</th>
+                    <th>Where to Define (Click to reveal)</th>
+                    <th>Restaurant Example (Click to reveal)</th>
+                </tr>
+                <tr>
+                    <td>One-to-One</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text"><code>OneToOneField</code></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">Dependent model (child)</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">OrderInvoice has O2O to Order</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>One-to-Many</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text"><code>ForeignKey</code></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text"><strong>MANY side!</strong></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">MenuItem has FK to Category</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Many-to-Many</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text"><code>ManyToManyField</code></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">Either model works</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">MenuItem.tags or Tag.menu_items</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>M2M with extra fields</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text"><code>ManyToManyField</code> + <code>through</code></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">Create explicit through model</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click</span>
+                            <span class="hidden-text">Order &harr; MenuItem via OrderItem</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- N+1 Problem Section -->
+    <section id="n1">
+        <div class="section-container">
+            <span class="section-label n1">Performance</span>
+            <h2 class="section-title">The N+1 Problem</h2>
+            <p class="section-subtitle">The most common Django performance issue. Let's understand it step by step.</p>
+
+            <div class="danger-box">
+                <strong>&#9888; What is N+1?</strong> When you access related objects in a loop, Django runs a separate query for EACH iteration. 1 query becomes 1 + N queries!
+            </div>
+
+            <!-- Simple Example First -->
+            <h3 class="mt-40 mb-20">Simple Example: Categories & Items</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        The Problem - Looks innocent!
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Get all menu items and print their category name</span>
+items = MenuItem.objects.all()  <span class="comment"># Query 1: Get all items</span>
+
+<span class="keyword">for</span> item <span class="keyword">in</span> items:
+    print(item.category.name)   <span class="comment"># Query 2, 3, 4... per item!</span></pre>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h4 style="text-align: center; margin-bottom: 30px;">What Actually Happens</h4>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">1️⃣</div>
+                        <div class="flow-box-title">Query 1</div>
+                        <div class="flow-box-desc">Get all items</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box danger">
+                        <div class="flow-box-icon">🔄</div>
+                        <div class="flow-box-title">Query 2</div>
+                        <div class="flow-box-desc">Get category for item 1</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box danger">
+                        <div class="flow-box-icon">🔄</div>
+                        <div class="flow-box-title">Query 3</div>
+                        <div class="flow-box-desc">Get category for item 2</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box danger">
+                        <div class="flow-box-icon">💥</div>
+                        <div class="flow-box-title">... N more</div>
+                        <div class="flow-box-desc">One per item!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="diagram-box">With 100 menu items:
+
+1 query (get items) + 100 queries (get category for each) = <span style="color: #ef4444; font-weight: bold;">101 queries!</span>
+
+At 5ms per query: 101 × 5ms = <span style="color: #ef4444; font-weight: bold;">505ms</span>
+Should be:        2 × 5ms  = <span style="color: #10b981; font-weight: bold;">10ms</span></div>
+
+            <!-- More Complex Example -->
+            <h3 class="mt-40 mb-20">Nested N+1: Orders with Items</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Even Worse - Nested loops!
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre>orders = Order.objects.all()  <span class="comment"># Query 1: Get all orders</span>
+
+<span class="keyword">for</span> order <span class="keyword">in</span> orders:
+    <span class="keyword">for</span> item <span class="keyword">in</span> order.items.all():    <span class="comment"># Query per ORDER (N queries)</span>
+        print(item.menu_item.name)    <span class="comment"># Query per ITEM (M queries)</span>
+
+<span class="comment"># Total: 1 + N + M queries!</span>
+<span class="comment"># With 100 orders, 3 items each: 1 + 100 + 300 = 401 queries!</span></pre>
+                </div>
+            </div>
+
+            <div class="story-box">
+                <h4>&#128161; How to Detect N+1</h4>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Django Debug Toolbar</strong> - Shows all queries in SQL panel</li>
+                    <li><strong>Query logging</strong> - Enable in settings</li>
+                    <li><strong>Pattern</strong> - Many similar queries with different IDs</li>
+                </ul>
+            </div>
+
+            <!-- Expanded N+1 Detection -->
+            <h3 class="mt-40 mb-20">&#128269; Detecting N+1 in Detail</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        settings.py - Enable Query Logging
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Add to settings.py for development</span>
+LOGGING = {
+    <span class="string">'version'</span>: <span class="variable">1</span>,
+    <span class="string">'disable_existing_loggers'</span>: <span class="variable">False</span>,
+    <span class="string">'handlers'</span>: {
+        <span class="string">'console'</span>: {
+            <span class="string">'class'</span>: <span class="string">'logging.StreamHandler'</span>,
+        },
+    },
+    <span class="string">'loggers'</span>: {
+        <span class="string">'django.db.backends'</span>: {
+            <span class="string">'level'</span>: <span class="string">'DEBUG'</span>,
+            <span class="string">'handlers'</span>: [<span class="string">'console'</span>],
+        },
+    },
+}</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Django Shell - Check Query Count
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> connection, reset_queries
+<span class="keyword">from</span> django.conf <span class="keyword">import</span> settings
+
+settings.DEBUG = <span class="variable">True</span>  <span class="comment"># Required for query logging</span>
+reset_queries()
+
+<span class="comment"># Run your code here</span>
+items = MenuItem.objects.all()
+<span class="keyword">for</span> item <span class="keyword">in</span> items:
+    print(item.category.name)
+
+<span class="comment"># Check how many queries ran</span>
+print(f<span class="string">"Queries: {len(connection.queries)}"</span>)
+<span class="keyword">for</span> q <span class="keyword">in</span> connection.queries:
+    print(q[<span class="string">'sql'</span>][:100])  <span class="comment"># First 100 chars of each query</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">What N+1 looks like in logs:
+
+<span style="color: #6b7280;">(0.001)</span> SELECT * FROM menu_menuitem;
+<span style="color: #ef4444;">(0.001)</span> SELECT * FROM menu_category WHERE id = 1;
+<span style="color: #ef4444;">(0.001)</span> SELECT * FROM menu_category WHERE id = 2;
+<span style="color: #ef4444;">(0.001)</span> SELECT * FROM menu_category WHERE id = 1;  <span style="color: #6b7280;">← Same ID! Duplicate query!</span>
+<span style="color: #ef4444;">(0.001)</span> SELECT * FROM menu_category WHERE id = 3;
+<span style="color: #ef4444;">(0.001)</span> SELECT * FROM menu_category WHERE id = 2;
+... (continues for each item)
+
+<span style="color: #10b981;">Red flag: Multiple similar queries with different/same IDs = N+1 problem!</span></div>
+
+            <div class="success-box">
+                <strong>&#128736; Django Debug Toolbar Setup</strong>
+                <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;">pip install django-debug-toolbar
+
+<span class="comment"># settings.py</span>
+INSTALLED_APPS += ['debug_toolbar']
+MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
+INTERNAL_IPS = ['127.0.0.1']
+
+<span class="comment"># urls.py</span>
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]</pre>
+                <p class="mt-10">The toolbar shows a SQL panel with query count, time, and duplicates highlighted!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fetch Types Section -->
+    <section id="fetch">
+        <div class="section-container">
+            <span class="section-label fetch">Optimization</span>
+            <h2 class="section-title">Solving N+1: select_related vs prefetch_related</h2>
+            <p class="section-subtitle">Two tools to eliminate N+1. Understanding the difference is crucial!</p>
+
+            <div class="two-column">
+                <div class="card">
+                    <div class="card-icon">&#128279;</div>
+                    <h3 class="card-title">select_related()</h3>
+                    <p class="card-desc">
+                        <strong>How:</strong> SQL JOIN<br>
+                        <strong>For:</strong> ForeignKey, OneToOne<br>
+                        <strong>Direction:</strong> Forward only<br>
+                        <strong>Result:</strong> Single query
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128230;</div>
+                    <h3 class="card-title">prefetch_related()</h3>
+                    <p class="card-desc">
+                        <strong>How:</strong> Separate queries + Python<br>
+                        <strong>For:</strong> ManyToMany, Reverse FK<br>
+                        <strong>Direction:</strong> Any direction<br>
+                        <strong>Result:</strong> 2+ queries
+                    </p>
+                </div>
+            </div>
+
+            <!-- select_related -->
+            <h3 class="mt-40 mb-20">select_related &mdash; Uses SQL JOIN</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Fixing N+1 with select_related
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># ❌ BEFORE: N+1 problem (101 queries)</span>
+items = MenuItem.objects.all()
+<span class="keyword">for</span> item <span class="keyword">in</span> items:
+    print(item.category.name)
+
+
+<span class="comment"># ✅ AFTER: Single query with JOIN</span>
+items = MenuItem.objects.<span class="function">select_related</span>(<span class="string">'category'</span>)
+<span class="keyword">for</span> item <span class="keyword">in</span> items:
+    print(item.category.name)  <span class="comment"># No extra query!</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">select_related generates ONE query with JOIN:
+
+SELECT menu_menuitem.*, menu_category.*
+FROM menu_menuitem
+INNER JOIN menu_category ON (menu_menuitem.category_id = menu_category.id)
+
+All data fetched in single round-trip to database!</div>
+
+            <!-- JOIN Table Visualization -->
+            <h4 class="mt-30 mb-20">&#128200; What the JOIN Actually Returns</h4>
+
+            <div class="diagram-box">The database returns ONE table with ALL columns from both tables:
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        RESULT OF JOIN QUERY                                      │
+├────────────────────────────────────────┬────────────────────────────────────────┤
+│        menu_menuitem columns           │         menu_category columns          │
+├────┬──────────────────┬────────┬───────┼────┬──────────────┬────────────────────┤
+│ id │ name             │ price  │cat_id │ id │ name         │ description        │
+├────┼──────────────────┼────────┼───────┼────┼──────────────┼────────────────────┤
+│ 1  │ Butter Chicken   │ 329.00 │  1    │ 1  │ Main Course  │ Hearty dishes      │
+│ 2  │ Dal Makhani      │ 199.00 │  1    │ 1  │ Main Course  │ Hearty dishes      │
+│ 3  │ Paneer Tikka     │ 249.00 │  2    │ 2  │ Starters     │ Light appetizers   │
+│ 4  │ Gulab Jamun      │  99.00 │  3    │ 3  │ Desserts     │ Sweet endings      │
+└────┴──────────────────┴────────┴───────┴────┴──────────────┴────────────────────┘
+
+Django then <span style="color: #10b981; font-weight: bold;">automatically creates Python objects</span> from this:
+- Creates MenuItem objects with item.category already populated
+- No additional queries needed when you access item.category!</div>
+
+            <!-- prefetch_related -->
+            <h3 class="mt-40 mb-20">prefetch_related &mdash; Separate Queries + Python Matching</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Fixing N+1 with prefetch_related
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># ❌ BEFORE: N+1 problem (101 queries)</span>
+categories = Category.objects.all()
+<span class="keyword">for</span> cat <span class="keyword">in</span> categories:
+    print(cat.items.all())  <span class="comment"># Query per category!</span>
+
+
+<span class="comment"># ✅ AFTER: Just 2 queries</span>
+categories = Category.objects.<span class="function">prefetch_related</span>(<span class="string">'items'</span>)
+<span class="keyword">for</span> cat <span class="keyword">in</span> categories:
+    print(cat.items.all())  <span class="comment"># Uses prefetched data!</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">prefetch_related generates 2 queries:
+
+Query 1: SELECT * FROM menu_category
+Query 2: SELECT * FROM menu_menuitem WHERE category_id IN (1, 2, 3, 4, 5)
+
+Python then matches items to categories in memory.
+Still much better than 101 queries!</div>
+
+            <!-- Prefetch Data Flow Visualization -->
+            <h4 class="mt-30 mb-20">&#128200; How Prefetch Works Step-by-Step</h4>
+
+            <div class="flow-diagram">
+                <h4 style="text-align: center; margin-bottom: 30px;">prefetch_related Data Flow</h4>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">1️⃣</div>
+                        <div class="flow-box-title">Query 1</div>
+                        <div class="flow-box-desc">Get all categories</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">2️⃣</div>
+                        <div class="flow-box-title">Query 2</div>
+                        <div class="flow-box-desc">Get items WHERE cat_id IN (...)</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128013;</div>
+                        <div class="flow-box-title">Python</div>
+                        <div class="flow-box-desc">Matches in memory</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box" style="border-color: var(--success);">
+                        <div class="flow-box-icon">&#10003;</div>
+                        <div class="flow-box-title">Done!</div>
+                        <div class="flow-box-desc">cat.items cached</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="diagram-box">Step-by-step breakdown:
+
+<span style="color: #6366f1; font-weight: bold;">STEP 1: Query Categories</span>
+SELECT * FROM menu_category;
+┌────┬──────────────┐
+│ id │ name         │
+├────┼──────────────┤
+│ 1  │ Main Course  │
+│ 2  │ Starters     │
+│ 3  │ Desserts     │
+└────┴──────────────┘
+
+<span style="color: #6366f1; font-weight: bold;">STEP 2: Query Items (with IN clause)</span>
+SELECT * FROM menu_menuitem WHERE category_id IN (1, 2, 3);
+┌────┬──────────────────┬───────────┐
+│ id │ name             │ cat_id    │
+├────┼──────────────────┼───────────┤
+│ 1  │ Butter Chicken   │ 1         │
+│ 2  │ Dal Makhani      │ 1         │
+│ 3  │ Paneer Tikka     │ 2         │
+│ 4  │ Gulab Jamun      │ 3         │
+└────┴──────────────────┴───────────┘
+
+<span style="color: #10b981; font-weight: bold;">STEP 3: Python Matching (in memory)</span>
+Django builds a dictionary: {1: [item1, item2], 2: [item3], 3: [item4]}
+Then attaches to each category: category.items._result_cache = [...]
+
+Now <span style="color: #10b981;">category.items.all()</span> uses cached data - NO database query!</div>
+
+            <!-- Key Difference -->
+            <h3 class="mt-40 mb-20">Key Difference: Why Two Methods?</h3>
+
+            <div class="scenario-box">
+                <h5>&#128161; Why can't we always use SQL JOIN?</h5>
+                <p><strong>Problem with JOINing reverse relationships:</strong></p>
+                <p class="mt-10">If Category has 100 items, a JOIN would return 100 rows per category, duplicating category data. With 10 categories × 100 items = 1000 rows with lots of duplicate data!</p>
+                <p class="mt-10"><strong>Solution:</strong> prefetch_related does 2 small queries and matches in Python - much more efficient for "many" sides.</p>
+            </div>
+
+            <!-- Interactive Decision Table -->
+            <h3 class="mt-40 mb-20">Decision Table: Which to Use?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Click each cell to reveal the answer!</p>
+
+            <table class="reveal-table">
+                <tr>
+                    <th>Relationship</th>
+                    <th>Direction</th>
+                    <th>Which to Use? (Click to reveal)</th>
+                </tr>
+                <tr>
+                    <td>ForeignKey</td>
+                    <td>Forward (<code>item.category</code>)</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click to reveal</span>
+                            <span class="hidden-text"><code>select_related</code></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>OneToOneField</td>
+                    <td>Forward (<code>order.invoice</code>)</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click to reveal</span>
+                            <span class="hidden-text"><code>select_related</code></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>ForeignKey</td>
+                    <td>Reverse (<code>category.items</code>)</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click to reveal</span>
+                            <span class="hidden-text"><code>prefetch_related</code></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>ManyToManyField</td>
+                    <td>Either direction</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click to reveal</span>
+                            <span class="hidden-text"><code>prefetch_related</code></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Reverse OneToOne</td>
+                    <td>(<code>invoice.order</code>)</td>
+                    <td>
+                        <div class="reveal-cell" onclick="revealCell(this)">
+                            <span class="click-text">&#128270; Click to reveal</span>
+                            <span class="hidden-text"><code>select_related</code></span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="success-box">
+                <strong>&#128161; Memory Trick:</strong><br>
+                <code>select_related</code> = <strong>S</strong>QL does the work (JOIN) - for <strong>S</strong>ingle objects (FK forward, O2O)<br>
+                <code>prefetch_related</code> = <strong>P</strong>ython does the work - for <strong>P</strong>lural/many objects (M2M, reverse FK)
+            </div>
+        </div>
+    </section>
+
+    <!-- Custom QuerySets Section -->
+    <section id="querysets">
+        <div class="section-container">
+            <span class="section-label querysets">DRY Queries</span>
+            <h2 class="section-title">Custom QuerySets</h2>
+            <p class="section-subtitle">Encapsulate query patterns and optimizations in reusable, chainable methods.</p>
+
+            <!-- Quick Review from Class 7 -->
+            <h3 class="mb-20">&#128218; Quick Review: QuerySet Methods (from Class 7)</h3>
+
+            <!-- QuerySet Review Quiz 1 -->
+            <div class="question-block" id="q-qs1">
+                <div class="question-label">&#128161; Quick Review: Field Lookups</div>
+                <div class="question-text">
+                    Which query returns menu items priced between &#x20B9;100 and &#x20B9;500 (inclusive)?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <code>MenuItem.objects.filter(price__between=(100, 500))</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <code>MenuItem.objects.filter(price__gte=100, price__lte=500)</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        <code>MenuItem.objects.filter(price > 100, price < 500)</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <code>MenuItem.objects.filter(100 <= price <= 500)</code>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-qs1')">Check Answer</button>
+                <div class="question-result" id="q-qs1-result"></div>
+                <div class="question-explanation" id="q-qs1-explanation">
+                    <h4>Field Lookup Reference</h4>
+                    <table class="comparison-table mt-10">
+                        <tr><th>Lookup</th><th>SQL</th><th>Example</th></tr>
+                        <tr><td><code>__gte</code></td><td><code>>=</code></td><td><code>price__gte=100</code></td></tr>
+                        <tr><td><code>__lte</code></td><td><code><=</code></td><td><code>price__lte=500</code></td></tr>
+                        <tr><td><code>__range</code></td><td><code>BETWEEN</code></td><td><code>price__range=(100,500)</code></td></tr>
+                        <tr><td><code>__in</code></td><td><code>IN (...)</code></td><td><code>status__in=['a','b']</code></td></tr>
+                        <tr><td><code>__icontains</code></td><td><code>ILIKE %x%</code></td><td><code>name__icontains='paneer'</code></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- QuerySet Review Quiz 2 -->
+            <div class="question-block" id="q-qs2">
+                <div class="question-label">&#128161; Quick Review: Chained Filters</div>
+                <div class="question-text">
+                    What does this query return?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre>Order.objects.filter(status=<span class="string">'pending'</span>).filter(total_price__gte=<span class="variable">500</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Orders that are pending <strong>AND</strong> total >= 500
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Orders that are pending <strong>OR</strong> total >= 500
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        All pending orders, then filters to >= 500 (two database queries)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Error: can't chain filter() calls
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-qs2')">Check Answer</button>
+                <div class="question-result" id="q-qs2-result"></div>
+                <div class="question-explanation" id="q-qs2-explanation">
+                    <h4>Chained Filters = AND</h4>
+                    <p>Chaining <code>.filter()</code> calls creates AND conditions. It's the same as:</p>
+                    <pre style="background: #1e1e2e; padding: 10px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;">Order.objects.filter(status='pending', total_price__gte=500)</pre>
+                    <p class="mt-10"><strong>Important:</strong> QuerySets are lazy - this creates ONE SQL query with both conditions!</p>
+                </div>
+            </div>
+
+            <!-- Q Objects Section -->
+            <h3 class="mt-40 mb-20">&#128161; Q Objects: OR, AND, NOT</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">When you need complex conditions beyond simple AND:</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Q Object Examples
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Q
+
+<span class="comment"># OR: Orders that are pending OR confirmed</span>
+Order.objects.filter(
+    Q(status=<span class="string">'pending'</span>) | Q(status=<span class="string">'confirmed'</span>)
+)
+<span class="comment"># SQL: WHERE status = 'pending' OR status = 'confirmed'</span>
+
+
+<span class="comment"># NOT: Orders that are NOT cancelled</span>
+Order.objects.filter(
+    ~Q(status=<span class="string">'cancelled'</span>)
+)
+<span class="comment"># SQL: WHERE NOT status = 'cancelled'</span>
+
+
+<span class="comment"># Complex: (pending OR confirmed) AND high value AND NOT "test"</span>
+Order.objects.filter(
+    (Q(status=<span class="string">'pending'</span>) | Q(status=<span class="string">'confirmed'</span>)) &amp;
+    Q(total_price__gte=<span class="variable">1000</span>) &amp;
+    ~Q(customer_name__icontains=<span class="string">'test'</span>)
+)</pre>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>Q Object Operators:</strong><br>
+                <code>|</code> = OR<br>
+                <code>&amp;</code> = AND<br>
+                <code>~</code> = NOT
+            </div>
+
+            <h3 class="mt-40 mb-20">The Repetition Problem</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Same queries scattered everywhere...</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># In views.py</span>
+Order.objects.filter(status=<span class="string">'pending'</span>).prefetch_related(<span class="string">'items'</span>)
+
+<span class="comment"># In admin.py</span>
+Order.objects.filter(status=<span class="string">'pending'</span>)  <span class="comment"># Forgot prefetch!</span>
+
+<span class="comment"># In tasks.py</span>
+Order.objects.filter(status=<span class="string">'pending'</span>).prefetch_related(<span class="string">'items'</span>)
+
+<span class="comment"># Problems:</span>
+<span class="comment"># 1. DRY violation - same filter repeated</span>
+<span class="comment"># 2. Easy to forget optimization</span>
+<span class="comment"># 3. If "pending" logic changes, update everywhere</span></pre>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">The Solution: Custom QuerySet</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        orders/models.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">OrderQuerySet</span>(models.QuerySet):
+
+    <span class="keyword">def</span> <span class="function">with_items</span>(self):
+        <span class="string">"""Prefetch items and menu_items - solves N+1!"""</span>
+        <span class="keyword">return</span> self.prefetch_related(<span class="string">'items__menu_item'</span>)
+
+    <span class="keyword">def</span> <span class="function">pending</span>(self):
+        <span class="keyword">return</span> self.filter(status=<span class="string">'pending'</span>)
+
+    <span class="keyword">def</span> <span class="function">active</span>(self):
+        <span class="keyword">return</span> self.exclude(status__in=[<span class="string">'cancelled'</span>, <span class="string">'completed'</span>])
+
+    <span class="keyword">def</span> <span class="function">today</span>(self):
+        <span class="keyword">return</span> self.filter(created_at__date=timezone.now().date())
+
+
+<span class="keyword">class</span> <span class="class-name">Order</span>(models.Model):
+    <span class="comment"># ... fields ...</span>
+    objects = OrderQuerySet.as_manager()
+
+
+<span class="comment"># Now use clean, chainable methods:</span>
+Order.objects.pending()                   <span class="comment"># Pending orders</span>
+Order.objects.pending().with_items()      <span class="comment"># With optimization!</span>
+Order.objects.active().today()            <span class="comment"># Chain multiple</span></pre>
+                </div>
+            </div>
+
+            <div class="success-box">
+                <strong>&#10003; Benefits:</strong><br>
+                • Query logic defined <strong>once</strong><br>
+                • Optimizations built into methods like <code>with_items()</code><br>
+                • Methods are <strong>chainable</strong><br>
+                • Self-documenting business rules
+            </div>
+        </div>
+    </section>
+
+    <!-- Migrations Section -->
+    <section id="migrations">
+        <div class="section-container">
+            <span class="section-label migrations">Schema Evolution</span>
+            <h2 class="section-title">Migrations Deep Dive</h2>
+            <p class="section-subtitle">Version control for your database schema.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128221;</div>
+                        <div class="flow-box-title">models.py</div>
+                        <div class="flow-box-desc">Change models</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#9881;</div>
+                        <div class="flow-box-title">makemigrations</div>
+                        <div class="flow-box-desc">Generate .py file</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-box-icon">&#128230;</div>
+                        <div class="flow-box-title">0002_xxx.py</div>
+                        <div class="flow-box-desc">Migration file</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box highlight">
+                        <div class="flow-box-icon">&#128640;</div>
+                        <div class="flow-box-title">migrate</div>
+                        <div class="flow-box-desc">Apply to DB</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-40 mb-20">Essential Commands</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Migration commands</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># See migration status</span>
+python manage.py showmigrations
+
+<span class="comment"># Create migrations</span>
+python manage.py makemigrations
+
+<span class="comment"># Preview SQL without running</span>
+python manage.py sqlmigrate orders <span class="variable">0002</span>
+
+<span class="comment"># Apply migrations</span>
+python manage.py migrate
+
+<span class="comment"># Rollback to specific migration</span>
+python manage.py migrate orders <span class="variable">0001</span>
+
+<span class="comment"># Rollback all migrations for an app</span>
+python manage.py migrate orders zero</pre>
+                </div>
+            </div>
+
+            <!-- Fake Migrations -->
+            <h3 class="mt-40 mb-20">&#128293; Fake Migrations</h3>
+
+            <div class="warning-box">
+                <strong>When to use --fake:</strong> When the database already has the changes, but Django doesn't know about it. This marks migrations as applied WITHOUT actually running them.
+            </div>
+
+            <div class="scenario-box">
+                <h5>&#128218; Common Scenario: Production DB already modified</h5>
+                <p>You manually added a column to production DB. Now Django thinks migration isn't applied, but running it would fail because column already exists!</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">Fake migration commands</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Mark a specific migration as applied (without running it)</span>
+python manage.py migrate orders <span class="variable">0003</span> --fake
+
+<span class="comment"># Mark ALL migrations as applied (fresh DB that matches models)</span>
+python manage.py migrate --fake
+
+<span class="comment"># Mark initial migration as applied (starting fresh)</span>
+python manage.py migrate orders --fake-initial
+
+<span class="comment"># Reset: Mark all as unapplied, then fake to current state</span>
+python manage.py migrate orders zero --fake
+python manage.py migrate orders --fake</pre>
+                </div>
+            </div>
+
+            <div class="danger-box">
+                <strong>&#9888; Warning:</strong> Only use <code>--fake</code> when you're CERTAIN the database schema matches what the migration would do. Using it incorrectly can cause schema mismatches!
+            </div>
+
+            <!-- Data Migrations -->
+            <h3 class="mt-40 mb-20">Data Migrations</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Create empty migration for data
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Create empty migration file</span>
+python manage.py makemigrations orders --empty -n populate_totals</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">orders/migrations/0003_populate_totals.py</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> migrations
+
+
+<span class="keyword">def</span> <span class="function">calculate_totals</span>(apps, schema_editor):
+    <span class="comment"># Use apps.get_model - NOT direct import!</span>
+    Order = apps.get_model(<span class="string">'orders'</span>, <span class="string">'Order'</span>)
+
+    <span class="keyword">for</span> order <span class="keyword">in</span> Order.objects.filter(total_price__isnull=<span class="variable">True</span>):
+        order.total_price = sum(
+            item.quantity * item.unit_price
+            <span class="keyword">for</span> item <span class="keyword">in</span> order.items.all()
+        )
+        order.save()
+
+
+<span class="keyword">def</span> <span class="function">reverse_totals</span>(apps, schema_editor):
+    Order = apps.get_model(<span class="string">'orders'</span>, <span class="string">'Order'</span>)
+    Order.objects.update(total_price=<span class="variable">None</span>)
+
+
+<span class="keyword">class</span> <span class="class-name">Migration</span>(migrations.Migration):
+    dependencies = [(<span class="string">'orders'</span>, <span class="string">'0002_orderitem'</span>)]
+
+    operations = [
+        migrations.RunPython(calculate_totals, reverse_totals),
+    ]</pre>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>&#128161; Always provide reverse function!</strong> This allows rolling back the migration if needed.
+            </div>
+
+            <!-- Best Practices -->
+            <div class="diagram-box mt-40">┌─────────────────────────────────────────────────────────────────┐
+│                  MIGRATION BEST PRACTICES                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ✅ DO:                                                          │
+│  • Commit migrations to version control                          │
+│  • Review generated migrations before applying                   │
+│  • Test migrations on staging first                              │
+│  • Always provide reverse function for RunPython                 │
+│  • Use apps.get_model() in data migrations                       │
+│                                                                  │
+│  ❌ DON'T:                                                       │
+│  • Edit migrations after they're applied in production           │
+│  • Delete migrations that are already deployed                   │
+│  • Use --fake without understanding consequences                 │
+│                                                                  │
+│  ⚠️  CAREFUL:                                                    │
+│  • Adding NOT NULL field: add default or null=True first         │
+│  • Removing fields: data loss!                                   │
+│  • Renaming fields: Django might create + delete instead         │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘</div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section>
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">What We Learned</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128100;</div>
+                    <h3 class="card-title">OneToOne (1:1)</h3>
+                    <p class="card-desc">Each record has exactly one related record.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128279;</div>
+                    <h3 class="card-title">ForeignKey (1:N)</h3>
+                    <p class="card-desc">FK goes on the MANY side!</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128101;</div>
+                    <h3 class="card-title">ManyToMany (M:N)</h3>
+                    <p class="card-desc">Use through model for extra fields.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128165;</div>
+                    <h3 class="card-title">N+1 Problem</h3>
+                    <p class="card-desc">Loop + related access = disaster!</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9889;</div>
+                    <h3 class="card-title">select_related</h3>
+                    <p class="card-desc">SQL JOIN for FK/O2O forward.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128230;</div>
+                    <h3 class="card-title">prefetch_related</h3>
+                    <p class="card-desc">Separate queries for M2M/reverse.</p>
+                </div>
+            </div>
+
+            <div class="diagram-box mt-40">┌─────────────────────────────────────────────────────────────────┐
+│                     TODAY'S MENTAL MODEL                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Relationship type?   → OneToOne / ForeignKey / ManyToMany      │
+│   Where does FK go?    → On the MANY side!                       │
+│                                                                  │
+│   Accessing related    → Watch out for N+1!                      │
+│   objects in a loop?                                             │
+│                                                                  │
+│   Forward FK/O2O?      → select_related (SQL JOIN)               │
+│   Reverse FK/M2M?      → prefetch_related (Python)               │
+│                                                                  │
+│   Schema change?       → makemigrations → migrate                │
+│   DB already changed?  → migrate --fake                          │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘</div>
+
+            <div class="info-box mt-30">
+                <strong>Coming Next:</strong> Exception Handling &amp; Middlewares &mdash; building robust APIs that handle errors gracefully!
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.innerHTML = '&#127769;'; text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.innerHTML = '&#9728;'; text.textContent = 'Light';
+            }
+        }
+
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const selected = block.querySelector('.question-option.selected');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            if (!selected) {
+                result.textContent = 'Please select an answer!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const options = block.querySelectorAll('.question-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct');
+                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
+            });
+
+            if (selected.getAttribute('data-correct') === 'true') {
+                result.innerHTML = '&#10003; Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.innerHTML = '&#10007; Incorrect. See explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+            explanation.classList.add('show');
+        }
+
+        function copyCode(button) {
+            const codeContent = button.closest('.code-block').querySelector('.code-content pre').textContent;
+            navigator.clipboard.writeText(codeContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        }
+
+        function revealCell(element) {
+            element.classList.add('revealed');
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+    </script>
+</body>
+</html>

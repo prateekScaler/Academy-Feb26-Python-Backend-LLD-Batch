@@ -17,9 +17,14 @@
 
 # IDE
 .idea/
+**/.idea/
 .vscode/
+**/.vscode/
 *.swp
 *.swo
+
+# Standalone scripts (not part of course material)
+main.py
 
 # Node (if using any build tools)
 node_modules/
