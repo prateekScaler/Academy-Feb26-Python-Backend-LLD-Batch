@@ -25,6 +25,10 @@ This file lists all students who have completed the **Class 3 Assignment** — t
 | 0 | Prateek (Instructor) | [@prateekScaler](https://github.com/prateekScaler) | Loves teaching Git! |
 | 1 | Anand Banerjee	   | [@anandsbanerjee](https://github.com/anandsbanerjee) | Loves coding |
 | 2 | Vipul Mahajan        | [@v-scaler](https://github.com/v-scaler) | Update CONTRIBUTORS.md |
+| 3 | Anand Banerjee	    | [@anandsbanerjee](https://github.com/anandsbanerjee) | Loves coding |
+| 4 | Ajit Garg         | [@gargajit](https://github.com/gargajit) | Code-Curious Builder |
+| 5 | Arnab Tripathy       | [@Akt99](https://github.com/Akt99) |              Building and Learning
+| 6 | Jayendra Khole	   | [@jayendra02](https://github.com/jayendra02) | Learner & Implementor |
 <!-- Add your row above this line -->
 
 ---
