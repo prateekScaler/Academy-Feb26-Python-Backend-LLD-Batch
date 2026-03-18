@@ -49,6 +49,7 @@ INSTRUCTOR.md
 INSTRUCTOR-GUIDE.md
 **/INSTRUCTOR.md
 **/INSTRUCTOR-GUIDE.md
+**/instructor.md
 
 # Django
 *.sqlite3
