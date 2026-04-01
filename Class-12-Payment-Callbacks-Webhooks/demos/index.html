@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Flow Demos - Class 12</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --accent: #10b981;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 60px 40px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+        }
+        .demo-card {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .demo-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+        .demo-icon { font-size: 3rem; margin-bottom: 20px; }
+        .demo-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+        .demo-desc { color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+        .demo-examples {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .demo-examples strong { color: var(--accent); }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← Back to Class 12</a>
+
+    <h1>Payment Flow Demos</h1>
+    <p class="subtitle">See how different companies implement payment checkouts</p>
+
+    <div class="demo-grid">
+        <a href="pattern1-redirect.html" class="demo-card">
+            <div class="demo-icon">🔄</div>
+            <div class="demo-title">Pattern 1: Full Redirect</div>
+            <div class="demo-desc">
+                User clicks "Pay" and is redirected to the payment gateway's website.
+                Card details entered on Stripe/Razorpay domain. User returns after payment.
+            </div>
+            <div class="demo-examples">
+                <strong>Used by:</strong> Small D2C brands, indie e-commerce, subscription sites
+            </div>
+        </a>
+
+        <a href="pattern2-embedded.html" class="demo-card">
+            <div class="demo-icon">📦</div>
+            <div class="demo-title">Pattern 2: Embedded iframe</div>
+            <div class="demo-desc">
+                Checkout page looks like merchant's site, but card input is actually a
+                Stripe/Razorpay iframe. Best of both worlds - seamless UX, no PCI burden.
+            </div>
+            <div class="demo-examples">
+                <strong>Used by:</strong> Shopify stores, Frido, Boat, modern e-commerce
+            </div>
+        </a>
+
+        <a href="pattern3-direct.html" class="demo-card">
+            <div class="demo-icon">🏢</div>
+            <div class="demo-title">Pattern 3: Direct API</div>
+            <div class="demo-desc">
+                Large companies handle card data directly on their servers.
+                Requires PCI DSS Level 1 certification - expensive and complex.
+            </div>
+            <div class="demo-examples">
+                <strong>Used by:</strong> Amazon, Netflix, Uber (millions of transactions)
+            </div>
+        </a>
+
+        <a href="callback-webhook.html" class="demo-card">
+            <div class="demo-icon">🔀</div>
+            <div class="demo-title">Callback + Webhook Flow</div>
+            <div class="demo-desc">
+                Interactive demo showing how callback (browser redirect) and
+                webhook (server POST) happen simultaneously after payment.
+            </div>
+            <div class="demo-examples">
+                <strong>Learn:</strong> Why both are needed, what to trust
+            </div>
+        </a>
+    </div>
+</body>
+</html>

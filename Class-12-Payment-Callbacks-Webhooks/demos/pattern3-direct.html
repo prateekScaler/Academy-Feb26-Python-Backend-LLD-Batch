@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern 3: Direct API - Payment Demo</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --accent: #10b981;
+            --amazon: #ff9900;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+        .warning-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 40px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        .warning-icon {
+            font-size: 2rem;
+        }
+        .warning-text h3 {
+            color: var(--danger);
+            margin-bottom: 10px;
+        }
+        .warning-text p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+        }
+        .flow-diagram {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .flow-number {
+            width: 40px;
+            height: 40px;
+            background: var(--amazon);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .flow-box {
+            flex: 1;
+            background: #1a1a2e;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 3px solid var(--amazon);
+        }
+        .flow-box h4 { margin-bottom: 5px; }
+        .flow-box p { color: var(--text-secondary); font-size: 0.9rem; }
+        .flow-arrow {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
+        .requirements {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .requirements h2 {
+            color: var(--danger);
+            margin-bottom: 25px;
+        }
+        .requirement-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .requirement-item:last-child {
+            border-bottom: none;
+        }
+        .requirement-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+        .requirement-text h4 {
+            margin-bottom: 5px;
+        }
+        .requirement-text p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .cost-badge {
+            display: inline-block;
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 10px;
+        }
+        .comparison-section {
+            margin-top: 50px;
+        }
+        .comparison-section h2 {
+            margin-bottom: 25px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .comparison-table th {
+            background: #1a1a2e;
+            font-weight: 600;
+        }
+        .comparison-table td {
+            color: var(--text-secondary);
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge.easy { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
+        .badge.medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .badge.hard { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .browser-mockup {
+            margin-top: 30px;
+        }
+        .browser-frame {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .browser-header {
+            background: #2d2d3d;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .browser-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .browser-dot.red { background: #ff5f56; }
+        .browser-dot.yellow { background: #ffbd2e; }
+        .browser-dot.green { background: #27ca40; }
+        .browser-url {
+            flex: 1;
+            background: #1a1a2e;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-left: 10px;
+        }
+        .amazon-checkout {
+            background: #fff;
+            color: #333;
+            padding: 25px;
+        }
+        .amazon-logo {
+            color: #333;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .amazon-logo span {
+            color: var(--amazon);
+        }
+        .amazon-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .amazon-btn {
+            background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+            border: 1px solid #a88734;
+            border-radius: 4px;
+            padding: 10px 20px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .pci-note {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--danger);
+            padding: 10px 15px;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Demos</a>
+
+    <h1>Pattern 3: Direct API (Amazon, Netflix, Uber)</h1>
+    <p class="subtitle">Large companies handle card data directly - requires massive compliance investment</p>
+
+    <div class="warning-banner">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+            <h3>This Pattern is NOT for Most Companies</h3>
+            <p>
+                Unless you're processing millions of transactions and have a dedicated security team,
+                <strong>don't do this</strong>. Use Pattern 1 or 2 instead. The compliance burden
+                is enormous and the risk of data breaches is catastrophic.
+            </p>
+        </div>
+    </div>
+
+    <div class="demo-layout">
+        <!-- Flow Diagram -->
+        <div class="flow-diagram">
+            <h2 style="margin-bottom: 25px;">How It Works</h2>
+
+            <div class="flow-step">
+                <div class="flow-number">1</div>
+                <div class="flow-box">
+                    <h4>User enters card on Amazon.com</h4>
+                    <p>Card data is collected on Amazon's own page</p>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="flow-number">2</div>
+                <div class="flow-box">
+                    <h4>Data sent to Amazon's PCI-certified servers</h4>
+                    <p>Card data is encrypted and stored securely</p>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="flow-number">3</div>
+                <div class="flow-box">
+                    <h4>Amazon calls payment processor API</h4>
+                    <p>Direct integration with Visa/Mastercard networks</p>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="flow-number">4</div>
+                <div class="flow-box">
+                    <h4>Card stored for 1-click payments</h4>
+                    <p>Token stored for future purchases</p>
+                </div>
+            </div>
+
+            <div class="browser-mockup">
+                <div class="browser-frame">
+                    <div class="browser-header">
+                        <div class="browser-dot red"></div>
+                        <div class="browser-dot yellow"></div>
+                        <div class="browser-dot green"></div>
+                        <div class="browser-url">🔒 amazon.in/checkout</div>
+                    </div>
+                    <div class="amazon-checkout">
+                        <div class="amazon-logo">amazon<span>.in</span></div>
+                        <h4 style="margin-bottom: 15px;">Add a credit or debit card</h4>
+                        <div class="amazon-form">
+                            <input type="text" placeholder="Card number" value="4242 4242 4242 4242">
+                            <input type="text" placeholder="Name on card" value="Prateek Sharma">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" placeholder="Expiry" value="12/28" style="flex:1">
+                                <input type="text" placeholder="CVV" value="123" style="flex:1">
+                            </div>
+                            <button class="amazon-btn">Add your card</button>
+                        </div>
+                        <div class="pci-note">
+                            Card data goes directly to Amazon's PCI-certified servers.<br>
+                            No Stripe/Razorpay iframe here - Amazon handles it all.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirements -->
+        <div class="requirements">
+            <h2>PCI DSS Level 1 Requirements</h2>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">💰</div>
+                <div class="requirement-text">
+                    <h4>Annual Security Audit <span class="cost-badge">$50K-$200K/year</span></h4>
+                    <p>Qualified Security Assessor (QSA) must audit your systems annually</p>
+                </div>
+            </div>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">🔒</div>
+                <div class="requirement-text">
+                    <h4>Network Segmentation</h4>
+                    <p>Cardholder data environment must be isolated from rest of network</p>
+                </div>
+            </div>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">🔍</div>
+                <div class="requirement-text">
+                    <h4>Quarterly Penetration Testing <span class="cost-badge">$10K-$50K/quarter</span></h4>
+                    <p>External security firm must attempt to breach your systems</p>
+                </div>
+            </div>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">👥</div>
+                <div class="requirement-text">
+                    <h4>Dedicated Security Team <span class="cost-badge">$500K+/year</span></h4>
+                    <p>Multiple FTEs focused solely on payment security</p>
+                </div>
+            </div>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">🗄️</div>
+                <div class="requirement-text">
+                    <h4>Encrypted Storage</h4>
+                    <p>All card data encrypted at rest with HSM-protected keys</p>
+                </div>
+            </div>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">📝</div>
+                <div class="requirement-text">
+                    <h4>Detailed Logging & Monitoring</h4>
+                    <p>Every access to card data must be logged and monitored 24/7</p>
+                </div>
+            </div>
+
+            <div class="requirement-item">
+                <div class="requirement-icon">⚡</div>
+                <div class="requirement-text">
+                    <h4>Incident Response Plan</h4>
+                    <p>Documented procedures for handling breaches, with 72-hour notification</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-section">
+        <h2>Pattern Comparison</h2>
+        <table class="comparison-table">
+            <tr>
+                <th>Aspect</th>
+                <th>Pattern 1: Redirect</th>
+                <th>Pattern 2: iframe</th>
+                <th>Pattern 3: Direct API</th>
+            </tr>
+            <tr>
+                <td>Card data touches your servers?</td>
+                <td>No</td>
+                <td>No</td>
+                <td><strong style="color: var(--danger);">Yes</strong></td>
+            </tr>
+            <tr>
+                <td>PCI Compliance</td>
+                <td><span class="badge easy">Minimal (SAQ A)</span></td>
+                <td><span class="badge easy">Minimal (SAQ A)</span></td>
+                <td><span class="badge hard">Full (Level 1)</span></td>
+            </tr>
+            <tr>
+                <td>Annual Cost</td>
+                <td>~$0</td>
+                <td>~$0</td>
+                <td><strong style="color: var(--danger);">$500K+</strong></td>
+            </tr>
+            <tr>
+                <td>User Experience</td>
+                <td><span class="badge medium">Redirect friction</span></td>
+                <td><span class="badge easy">Seamless</span></td>
+                <td><span class="badge easy">Full control</span></td>
+            </tr>
+            <tr>
+                <td>Setup Complexity</td>
+                <td><span class="badge easy">Easy</span></td>
+                <td><span class="badge medium">Medium</span></td>
+                <td><span class="badge hard">Very Hard</span></td>
+            </tr>
+            <tr>
+                <td>Best For</td>
+                <td>Small merchants</td>
+                <td>Most companies</td>
+                <td>Enterprise only</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
