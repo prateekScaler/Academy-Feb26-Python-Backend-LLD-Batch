@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Callback + Webhook Timeline Demo</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --accent: #10b981;
+            --callback: #f59e0b;
+            --webhook: #8b5cf6;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+        h1 { font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: var(--text-secondary); margin-bottom: 40px; }
+
+        .timeline-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .legend {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        .legend-dot.callback { background: var(--callback); }
+        .legend-dot.webhook { background: var(--webhook); }
+        .legend-dot.both { background: linear-gradient(135deg, var(--callback) 50%, var(--webhook) 50%); }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--border-color);
+            transform: translateX(-50%);
+        }
+        .timeline-event {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+            opacity: 0.3;
+            transition: all 0.5s;
+        }
+        .timeline-event.active { opacity: 1; }
+        .timeline-event.callback { flex-direction: row; }
+        .timeline-event.webhook { flex-direction: row-reverse; }
+
+        .event-content {
+            width: 45%;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+        .timeline-event.callback .event-content { border-color: var(--callback); }
+        .timeline-event.webhook .event-content { border-color: var(--webhook); }
+
+        .event-dot {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--border-color);
+            z-index: 1;
+        }
+        .timeline-event.callback .event-dot { background: var(--callback); }
+        .timeline-event.webhook .event-dot { background: var(--webhook); }
+        .timeline-event.active .event-dot {
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .event-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .event-badge {
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
+        }
+        .event-badge.callback { background: var(--callback); }
+        .event-badge.webhook { background: var(--webhook); }
+        .event-time { color: var(--text-secondary); font-size: 0.8rem; }
+
+        .event-title { font-weight: 700; margin-bottom: 8px; }
+        .event-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+
+        .controls {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        .btn.secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn.secondary:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .highlight-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Demos</a>
+
+    <h1>Callback + Webhook: Both Happen!</h1>
+    <p class="subtitle">Watch the timeline to see how callback and webhook happen simultaneously but serve different purposes</p>
+
+    <div class="timeline-container">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot callback"></div>
+                <span>Callback (Browser)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot webhook"></div>
+                <span>Webhook (Server)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot both"></div>
+                <span>Happen Together</span>
+            </div>
+        </div>
+
+        <div class="timeline" id="timeline">
+            <div class="timeline-event callback" id="event1">
+                <div class="event-content">
+                    <div class="event-header">
+                        <span class="event-badge callback">CALLBACK</span>
+                        <span class="event-time">T+0s</span>
+                    </div>
+                    <div class="event-title">User clicks "Pay Now"</div>
+                    <div class="event-desc">
+                        Customer submits payment on Razorpay/Stripe checkout.
+                        Browser is waiting for redirect...
+                    </div>
+                </div>
+                <div class="event-dot"></div>
+            </div>
+
+            <div class="timeline-event webhook" id="event2">
+                <div class="event-content">
+                    <div class="event-header">
+                        <span class="event-badge webhook">WEBHOOK</span>
+                        <span class="event-time">T+1s</span>
+                    </div>
+                    <div class="event-title">Gateway processes payment</div>
+                    <div class="event-desc">
+                        Razorpay/Stripe verifies card, contacts bank, runs fraud checks.
+                        User is still waiting...
+                    </div>
+                </div>
+                <div class="event-dot"></div>
+            </div>
+
+            <div class="timeline-event callback" id="event3">
+                <div class="event-content">
+                    <div class="event-header">
+                        <span class="event-badge callback">CALLBACK</span>
+                        <span class="event-time">T+3s</span>
+                    </div>
+                    <div class="event-title">Browser redirects to /success</div>
+                    <div class="event-desc">
+                        User sees "Thank you!" page on your site.
+                        URL: <code>yoursite.com/success?payment_id=xxx</code>
+                    </div>
+                </div>
+                <div class="event-dot"></div>
+            </div>
+
+            <div class="timeline-event webhook" id="event4">
+                <div class="event-content">
+                    <div class="event-header">
+                        <span class="event-badge webhook">WEBHOOK</span>
+                        <span class="event-time">T+3s to T+30s</span>
+                    </div>
+                    <div class="event-title">Webhook POSTs to your server</div>
+                    <div class="event-desc">
+                        Gateway's server calls <code>POST /webhook/</code> with signed payload.
+                        Contains: payment status, amount, signature for verification.
+                    </div>
+                </div>
+                <div class="event-dot"></div>
+            </div>
+
+            <div class="timeline-event webhook" id="event5">
+                <div class="event-content">
+                    <div class="event-header">
+                        <span class="event-badge webhook">WEBHOOK</span>
+                        <span class="event-time">T+4s to T+31s</span>
+                    </div>
+                    <div class="event-title">Your server processes webhook</div>
+                    <div class="event-desc">
+                        1. Verify signature (HMAC SHA256)<br>
+                        2. Check idempotency (no duplicates)<br>
+                        3. Update order status in database<br>
+                        4. Return 200 OK
+                    </div>
+                </div>
+                <div class="event-dot"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="playTimeline()">▶️ Play Animation</button>
+            <button class="btn secondary" onclick="resetTimeline()">🔄 Reset</button>
+        </div>
+
+        <div class="highlight-box">
+            <p style="font-size: 1.1rem; font-weight: 600;">
+                <span style="color: var(--callback);">Callback</span> tells the <em>user</em> what happened.<br>
+                <span style="color: var(--webhook);">Webhook</span> tells your <em>server</em> what happened.<br><br>
+                <span style="color: var(--accent); font-size: 1.3rem; font-weight: 700;">Trust the webhook.</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let currentEvent = 0;
+        let animationInterval;
+
+        function playTimeline() {
+            resetTimeline();
+            currentEvent = 0;
+
+            animationInterval = setInterval(() => {
+                if (currentEvent < 5) {
+                    document.getElementById('event' + (currentEvent + 1)).classList.add('active');
+                    currentEvent++;
+                } else {
+                    clearInterval(animationInterval);
+                }
+            }, 1500);
+        }
+
+        function resetTimeline() {
+            clearInterval(animationInterval);
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('event' + i).classList.remove('active');
+            }
+            currentEvent = 0;
+        }
+
+        // Auto-play on load
+        setTimeout(playTimeline, 500);
+    </script>
+</body>
+</html>
