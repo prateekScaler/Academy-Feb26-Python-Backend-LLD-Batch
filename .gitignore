@@ -61,6 +61,9 @@ media/
 # Claude Code
 .claude/
 
+# Instructor reference files
+UI-ELEMENTS-REFERENCE.html
+
 # Migrations (optional - some teams commit these, some don't)
 # **/migrations/*.py
 # !**/migrations/__init__.py

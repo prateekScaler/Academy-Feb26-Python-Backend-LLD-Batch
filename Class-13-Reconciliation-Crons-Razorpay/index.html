@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 13: Reconciliation, Crons & Razorpay Integration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #6366f1;
+            --accent-secondary: #4f46e5;
+            --accent-razorpay: #2962ff;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #818cf8, #6366f1); z-index: 1001; }
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #818cf8; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+        }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label {
+            display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 650px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #818cf8; }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 25px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; user-select: none;
+        }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; }
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .function { color: #82aaff; }
+        .number { color: #f78c6c; }
+        .decorator { color: #f59e0b; }
+
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+
+        .highlight-box { background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+
+        .timeline { position: relative; padding-left: 30px; margin: 30px 0; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border-color); }
+        .timeline-item { position: relative; margin-bottom: 25px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -26px; top: 5px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent-primary); border: 3px solid var(--bg-primary);
+        }
+        .timeline-item.success::before { background: var(--accent-success); }
+        .timeline-item.warning::before { background: var(--accent-warning); }
+        .timeline-item.danger::before { background: var(--accent-danger); }
+
+        .step-number {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; background: var(--accent-primary);
+            color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px;
+        }
+
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+
+        .flow-diagram {
+            background: var(--bg-secondary); border-radius: 12px; padding: 30px;
+            margin: 20px 0; overflow-x: auto; border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+        }
+        .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .status-badge.success { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .status-badge.mismatch { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Question boxes */
+        .question-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08));
+            border: 2px dashed var(--accent-primary);
+            border-radius: 12px; padding: 25px; margin: 40px 0;
+            position: relative;
+        }
+        .question-box::before {
+            content: 'Think About It';
+            position: absolute; top: -12px; left: 20px;
+            background: var(--accent-primary); color: white;
+            padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+
+        /* Visual diagram styles */
+        .visual-diagram {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 40px 30px; margin: 25px 0; text-align: center;
+        }
+        .diagram-row {
+            display: flex; justify-content: center; align-items: center;
+            gap: 15px; margin: 15px 0; flex-wrap: wrap;
+        }
+        .diagram-box {
+            padding: 14px 22px; border-radius: 10px; font-weight: 600;
+            font-size: 0.9rem; min-width: 120px; text-align: center;
+            border: 2px solid transparent;
+        }
+        .diagram-box.primary { background: rgba(99, 102, 241, 0.15); border-color: var(--accent-primary); color: #818cf8; }
+        .diagram-box.success { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); color: #10b981; }
+        .diagram-box.warning { background: rgba(245, 158, 11, 0.15); border-color: var(--accent-warning); color: #f59e0b; }
+        .diagram-box.danger { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .diagram-box.blue { background: rgba(41, 98, 255, 0.15); border-color: #2962ff; color: #60a5fa; }
+        .diagram-box.purple { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #a855f7; }
+        .diagram-box.muted { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-secondary); }
+        .diagram-box small { display: block; font-weight: 400; font-size: 0.75rem; margin-top: 4px; opacity: 0.8; }
+        .diagram-arrow { color: var(--text-muted); font-size: 1.3rem; font-weight: 700; }
+        .diagram-arrow.down { display: block; text-align: center; margin: 8px 0; }
+        .diagram-label { font-size: 0.8rem; color: var(--text-muted); margin: 8px 0; font-weight: 500; }
+        .diagram-divider {
+            border: none; border-top: 2px dashed var(--border-color);
+            margin: 25px 40px;
+        }
+
+        /* PG comparison table styling */
+        .pg-table { margin: 25px 0; }
+        .pg-table th { text-align: center; }
+        .pg-table td { text-align: center; font-size: 0.85rem; }
+        .pg-table td:first-child { text-align: left; font-weight: 600; color: var(--text-primary); }
+        .pg-logo { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .diagram-row { flex-direction: column; }
+            .diagram-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 13: Reconciliation & Razorpay</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap Quiz</a></li>
+            <li><a href="#why-reconciliation">Why Reconcile?</a></li>
+            <li><a href="#what-goes-wrong">What Goes Wrong</a></li>
+            <li><a href="#crons">Crons</a></li>
+            <li><a href="#razorpay">Razorpay Integration</a></li>
+            <li><a href="#putting-together">Full Flow</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;&#65039;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#128260;</div>
+        <h1>Reconciliation, Crons & Razorpay</h1>
+        <p class="hero-meta">Class 13 &bull; Building Reliable Payment Systems</p>
+        <p class="hero-tagline">
+            Webhooks aren't 100% reliable. Learn how to <strong>reconcile</strong> payment data,
+            schedule <strong>cron jobs</strong> for automated checks, and integrate <strong>Razorpay</strong> end-to-end.
+        </p>
+    </section>
+
+    <!-- Section 0: Recap Quiz -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label warning">Quick Recap</span>
+            <h2 class="section-title">Before We Begin &mdash; Do You Remember?</h2>
+            <p class="section-subtitle">
+                Let's test your understanding of payment fundamentals from Class 12. These concepts are the foundation for everything we'll build today.
+            </p>
+
+            <div class="question-box">
+                <p><strong>Q1: A customer pays &#8377;500 for an order. What amount does your backend send to Razorpay when creating an order?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <p><strong>50000</strong> (fifty thousand paise). Payment gateways expect amounts in the <strong>smallest currency unit</strong> &mdash; paise for INR, cents for USD. <code>&#8377;500 &times; 100 = 50000 paise</code>.</p>
+
+                        <p style="margin-top: 12px;"><strong>But why? Try this in your Python terminal:</strong></p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; margin: 10px 0; font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.7; color: #e2e8f0; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #6b7280;">>>> </span>0.1 + 0.2
+<span style="color: #f78c6c;">0.30000000000000004</span>    <span style="color: #6b7280;"># NOT 0.3!</span>
+
+<span style="color: #6b7280;">>>> </span>0.1 + 0.2 == 0.3
+<span style="color: #f78c6c;">False</span>                  <span style="color: #6b7280;"># Python says 0.3 != 0.3</span>
+
+<span style="color: #6b7280;"># Now imagine this in payments:</span>
+<span style="color: #6b7280;">>>> </span>price = 10.10          <span style="color: #6b7280;"># &#8377;10.10</span>
+<span style="color: #6b7280;">>>> </span>qty = 3
+<span style="color: #6b7280;">>>> </span>price * qty
+<span style="color: #f78c6c;">30.299999999999997</span>     <span style="color: #6b7280;"># Should be &#8377;30.30!</span>
+
+<span style="color: #6b7280;"># Customer is charged &#8377;30.299999... or &#8377;30.30?</span>
+<span style="color: #6b7280;"># Over millions of transactions, these tiny errors add up</span>
+<span style="color: #6b7280;"># to REAL money discrepancies.</span>
+
+<span style="color: #6b7280;"># With integers (paise), this NEVER happens:</span>
+<span style="color: #6b7280;">>>> </span>price_paise = 1010     <span style="color: #6b7280;"># 1010 paise = &#8377;10.10</span>
+<span style="color: #6b7280;">>>> </span>price_paise * 3
+<span style="color: #f78c6c;">3030</span>                   <span style="color: #6b7280;"># Exactly 3030 paise = &#8377;30.30. Always.</span></pre>
+                        </div>
+
+                        <p style="margin-top: 10px;">This is <strong>IEEE 754 floating-point</strong> &mdash; computers store decimals as binary fractions, and some values (like 0.1) can't be represented exactly. Integers don't have this problem, which is why every PG uses the smallest currency unit.</p>
+
+                        <p style="margin-top: 12px; font-size: 0.82rem; color: var(--text-muted);">
+                            <strong>Official docs confirming this:</strong><br>
+                            Razorpay: <em>"amount &mdash; The amount to be paid by the customer in <strong>paise</strong>"</em> &mdash;
+                            <a href="https://razorpay.com/docs/api/orders/create/" target="_blank" style="color: var(--accent-primary);">razorpay.com/docs/api/orders/create</a><br>
+                            Stripe: <em>"amount &mdash; in the <strong>smallest currency unit</strong> (e.g., 100 cents to charge $1.00)"</em> &mdash;
+                            <a href="https://docs.stripe.com/api/payment_intents/create" target="_blank" style="color: var(--accent-primary);">docs.stripe.com/api/payment_intents/create</a><br><br>
+                            <strong>Great explainer video:</strong>
+                            <a href="https://www.youtube.com/watch?v=PZRI1IfStY0&t=38s" target="_blank" style="color: var(--accent-primary);">Why 0.1 + 0.2 != 0.3 (YouTube) &rarr;</a>
+                        </p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q2: What's the difference between a Callback and a Webhook? Which one should you trust to update your database?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <p><strong>Callback</strong> = Browser redirect after payment. The PG redirects the user's browser to a URL you specify (your "callback URL"). This happens <em>in the user's browser</em>.</p>
+
+                        <p style="margin-top: 10px;"><strong>How do you set up a callback?</strong></p>
+                        <ul style="margin: 6px 0 0 20px;">
+                            <li><strong>In API request:</strong> Pass <code>callback_url</code> when creating a payment link or order &mdash; <code>"callback_url": "https://yoursite.com/payment-result/"</code></li>
+                            <li><strong>In Razorpay Dashboard:</strong> Settings &rarr; Checkout &rarr; set a default redirect URL</li>
+                            <li><strong>In frontend JS:</strong> The <code>handler</code> function in Razorpay Checkout options runs after payment</li>
+                        </ul>
+                        <p style="margin-top: 8px;">The API approach (<code>callback_url</code>) is better &mdash; it's per-payment, configurable, and doesn't depend on frontend code.</p>
+
+                        <p style="margin-top: 14px;"><strong>Webhook</strong> = Server-to-server POST from the PG to your backend. Not through the user's browser at all. <strong>Cryptographically signed</strong> so you can verify it's really from Razorpay.</p>
+
+                        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 12px 15px; margin-top: 14px;">
+                            <p><strong>Important: Callback does NOT mean payment was successful.</strong></p>
+                            <p style="margin-top: 6px;">The callback just means the user <em>came back from the PG's page</em>. They could have:</p>
+                            <ul style="margin: 6px 0 0 20px;">
+                                <li>Paid successfully &rarr; callback arrives with <code>razorpay_payment_id</code></li>
+                                <li>Payment failed &rarr; callback still arrives (with error info)</li>
+                                <li>Closed the browser mid-payment &rarr; <strong>callback never arrives at all</strong></li>
+                                <li>Manually typed your callback URL &rarr; <strong>fake callback, no real payment</strong></li>
+                            </ul>
+                            <p style="margin-top: 8px;">This is why you <strong>never trust the callback to update your database</strong>. Use it only to show the user a "thank you" or "payment failed" page. The <strong>webhook</strong> is the only reliable signal.</p>
+                        </div>
+
+                        <p style="margin-top: 14px;"><strong>TL;DR:</strong> Callback = for <strong>UX</strong> (redirect the user somewhere nice). Webhook = for <strong>data</strong> (actually update your DB). Trust the webhook, not the callback.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q3: Why do we use UUIDs instead of auto-incrementing IDs (1, 2, 3...) for payment records?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        Sequential IDs are <strong>guessable</strong>. If your payment ID is <code>pay_1042</code>, an attacker knows <code>pay_1041</code> and <code>pay_1043</code> exist and can try to access them. UUIDs like <code>a3f7b2c1-...</code> are random and unguessable &mdash; this prevents <strong>enumeration attacks</strong>.
+                    </p>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q4: In a payment flow, the frontend sends the order amount to the backend. Can a malicious user change &#8377;5000 to &#8377;1 in the request and pay less?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <p><strong>Not if you design it correctly.</strong> The frontend should only send the <code>order_id</code>. The backend should <strong>calculate the amount itself</strong> from the order items in the database, then pass that to Razorpay. Never trust the frontend for amounts.</p>
+                        <p style="margin-top: 8px;">Additionally, the Razorpay order is created with a <strong>fixed amount</strong>. Even if someone tampers with the checkout, Razorpay won't accept a payment that doesn't match the order amount.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q5: Why do PGs verify webhook signatures using <code>hmac.compare_digest()</code> instead of a simple <code>==</code> comparison?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        A regular <code>==</code> comparison <strong>short-circuits</strong> &mdash; it returns False as soon as it finds the first mismatched character. An attacker can measure how long the comparison takes and figure out the secret one character at a time. This is called a <strong>timing attack</strong>. <code>hmac.compare_digest()</code> always takes the <strong>same amount of time</strong> regardless of where the mismatch is.
+                    </p>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q6: Your Razorpay API keys are in <code>settings.py</code>. A teammate accidentally pushes the code to a public GitHub repo. What's the risk, and how should you have stored the keys?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <p><strong>Risk:</strong> Anyone can find the keys via GitHub search and make API calls on your behalf &mdash; create fake refunds, access customer data, or drain your account.</p>
+                        <p style="margin-top: 8px;"><strong>Solution: Environment variables.</strong> Store secrets outside code:</p>
+                        <ul style="margin: 8px 0 0 20px;">
+                            <li><strong>Local dev:</strong> Use a <code>.env</code> file (added to <code>.gitignore</code>) or <code>export RAZORPAY_KEY_ID='...'</code> in your <code>~/.zshrc</code> / <code>~/.bashrc</code></li>
+                            <li><strong>Production:</strong> Set via your hosting platform (AWS EB config, Heroku config vars, Docker env)</li>
+                            <li><strong>In Django:</strong> Read with <code>os.environ.get('RAZORPAY_KEY_ID')</code></li>
+                        </ul>
+                        <p style="margin-top: 8px;"><code>~/.bashrc</code> and <code>~/.zshrc</code> are shell config files that load every time you open a terminal. Any <code>export KEY=VALUE</code> in them becomes available to all programs in that session.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 30px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 10px;">Great. Now the real question...</h4>
+                <p style="color: var(--text-secondary);">
+                    We learned that <strong>webhooks</strong> are the source of truth for payment updates. But webhooks are just HTTP requests &mdash; and HTTP requests can fail. <strong>What happens when a webhook never reaches your server?</strong> That's exactly what reconciliation solves.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 1: Why Reconciliation -->
+    <section id="why-reconciliation">
+        <div class="section-container">
+            <span class="section-label">The Problem</span>
+            <h2 class="section-title">Why Do We Need Reconciliation?</h2>
+            <p class="section-subtitle">
+                In Class 12, we learned webhooks are the best way to get payment updates. But what happens when webhooks fail?
+            </p>
+
+            <div class="highlight-box warning">
+                <h4 style="color: #f59e0b; margin-bottom: 15px;">The Uncomfortable Truth About Webhooks</h4>
+                <p style="color: var(--text-secondary);">
+                    Webhooks are <strong>not guaranteed</strong> to reach your server. Even with retries, things can go wrong:
+                </p>
+                <ul style="margin: 15px 0 0 20px; color: var(--text-secondary);">
+                    <li>Your server was down during all retry attempts</li>
+                    <li>Network issues between PG and your server</li>
+                    <li>Your webhook endpoint returned 200 OK but crashed before updating DB</li>
+                    <li>PG's webhook system itself had issues (rare, but happens)</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">What is Reconciliation?</h3>
+
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                <strong>Reconciliation</strong> = Comparing your database with the Payment Gateway's records to find and fix mismatches.
+            </p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Your Database</h4>
+                    <div class="table-container">
+                        <table>
+                            <tr><th>Order ID</th><th>Amount</th><th>Status</th></tr>
+                            <tr><td>ORD-001</td><td>&#8377;500</td><td><span class="status-badge success">Paid</span></td></tr>
+                            <tr><td>ORD-002</td><td>&#8377;1200</td><td><span class="status-badge pending">Pending</span></td></tr>
+                            <tr><td>ORD-003</td><td>&#8377;800</td><td><span class="status-badge pending">Pending</span></td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Payment Gateway</h4>
+                    <div class="table-container">
+                        <table>
+                            <tr><th>Payment ID</th><th>Amount</th><th>Status</th></tr>
+                            <tr><td>pay_001</td><td>&#8377;500</td><td><span class="status-badge success">Captured</span></td></tr>
+                            <tr><td>pay_002</td><td>&#8377;1200</td><td><span class="status-badge success">Captured</span></td></tr>
+                            <tr><td>pay_003</td><td>&#8377;800</td><td><span class="status-badge failed">Failed</span></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box danger" style="margin-top: 20px;">
+                <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Mismatches Found!</h4>
+                <ul style="margin-left: 20px; color: var(--text-secondary);">
+                    <li><strong>ORD-002:</strong> You think it's "Pending", but PG says "Captured" &mdash; <em>Customer paid but didn't get the product!</em></li>
+                    <li><strong>ORD-003:</strong> You think it's "Pending", but PG says "Failed" &mdash; <em>Customer didn't pay, order should be cancelled</em></li>
+                </ul>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 20px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 10px;">Reconciliation Fixes This</h4>
+                <p style="color: var(--text-secondary);">
+                    A reconciliation job runs periodically (e.g., every hour), fetches payment statuses from PG,
+                    and updates your database to match reality.
+                </p>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>If reconciliation can fix all mismatches, why don't we just skip webhooks entirely and only rely on reconciliation?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        Because reconciliation is <strong>polling-based</strong> &mdash; it runs at fixed intervals (e.g., every hour). That means a customer could pay and wait up to an hour before their order is confirmed. Webhooks give you <strong>real-time</strong> updates (within seconds). So webhooks are the primary mechanism, and reconciliation is the <strong>safety net</strong>.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: What Goes Wrong -->
+    <section id="what-goes-wrong">
+        <div class="section-container">
+            <span class="section-label warning">Real Scenarios</span>
+            <h2 class="section-title">What Can Go Wrong?</h2>
+            <p class="section-subtitle">
+                Understanding failure modes helps you build robust systems. Here are real scenarios that happen in production.
+            </p>
+
+            <div class="timeline">
+                <div class="timeline-item danger">
+                    <h4 style="margin-bottom: 8px;">1. Webhook Never Arrived</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Your server was deploying new code (downtime) exactly when Razorpay sent the webhook.
+                        All retry attempts failed. Customer paid &#8377;5000 but order shows "pending".
+                    </p>
+                    <details style="margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 15px;">
+                        <summary style="cursor: pointer; color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">&#128737;&#65039; How to Prevent</summary>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">
+                            <strong>Reconciliation cron job</strong> &mdash; Run a periodic job (e.g., every hour) that fetches payment statuses from Razorpay's API and compares with your DB. This catches any webhook that never arrived. It's your ultimate safety net.
+                        </p>
+                    </details>
+                </div>
+                <div class="timeline-item warning">
+                    <h4 style="margin-bottom: 8px;">2. Webhook Arrived, DB Update Failed</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Your webhook handler returned 200 OK (so PG won't retry), but the database
+                        was temporarily unavailable. Payment captured, but your DB still says "pending".
+                    </p>
+                    <details style="margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 15px;">
+                        <summary style="cursor: pointer; color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">&#128737;&#65039; How to Prevent</summary>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">
+                            <strong>Only return 200 after a successful DB update.</strong> If your DB write fails, return 500 so the PG knows to retry. Structure your handler as: verify &rarr; update DB &rarr; <em>then</em> return 200. Never return 200 optimistically.
+                        </p>
+                    </details>
+                </div>
+                <div class="timeline-item warning">
+                    <h4 style="margin-bottom: 8px;">3. Partial Failure</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Order has 3 items. Payment succeeded, but inventory update for 1 item failed.
+                        Customer charged, 2 items shipped, 1 item forgotten.
+                    </p>
+                    <details style="margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 15px;">
+                        <summary style="cursor: pointer; color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">&#128737;&#65039; How to Prevent</summary>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">
+                            <strong>Database transactions</strong> &mdash; Wrap all related updates in <code>transaction.atomic()</code>. Either <em>all</em> changes succeed (order status + all inventory items), or <em>none</em> do. The DB rolls back everything on any failure. No more "2 of 3 items shipped".
+                        </p>
+                    </details>
+                </div>
+                <div class="timeline-item danger">
+                    <h4 style="margin-bottom: 8px;">4. Duplicate Webhook Processing</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Your server was slow, Razorpay retried, you processed the same webhook twice.
+                        Customer charged once, but your system shows 2 orders.
+                    </p>
+                    <details style="margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 15px;">
+                        <summary style="cursor: pointer; color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">&#128737;&#65039; How to Prevent</summary>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">
+                            <strong>Idempotency keys</strong> &mdash; Store each webhook's <code>event_id</code> in a <code>WebhookEvent</code> table. Before processing, check: "Have I seen this event_id before?" If yes, return 200 and skip. This makes your handler safe to call multiple times with the same data.
+                        </p>
+                    </details>
+                </div>
+                <div class="timeline-item success">
+                    <h4 style="margin-bottom: 8px;">5. Refund Not Recorded</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Customer support issued refund directly from Razorpay dashboard.
+                        Webhook missed. Your DB shows "paid", but money was returned.
+                    </p>
+                    <details style="margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 15px;">
+                        <summary style="cursor: pointer; color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">&#128737;&#65039; How to Prevent</summary>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">
+                            <strong>Reconciliation + listen for refund webhooks.</strong> Subscribe to <code>refund.created</code> events in your webhook handler. And your reconciliation cron should also check for refund status, not just payment status. The cron is your catch-all for anything the webhook missed &mdash; including manual actions from the dashboard.
+                        </p>
+                    </details>
+                </div>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>We know reconciliation needs to run automatically every hour. But how do we make code run on its own without someone manually typing a command?</strong></p>
+                <p style="margin-top: 8px;">That's exactly what <strong>cron jobs</strong> solve. Let's dive in.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Crons -->
+    <section id="crons">
+        <div class="section-container">
+            <span class="section-label">Automation</span>
+            <h2 class="section-title">Scheduled Jobs (Crons)</h2>
+            <p class="section-subtitle">
+                Reconciliation needs to run automatically at regular intervals. But the concept of scheduling jobs goes far beyond just payments &mdash; it's one of the most fundamental patterns in backend engineering.
+            </p>
+
+            <!-- What is a Cron Job - Expanded -->
+            <h3 style="margin-bottom: 20px;">What is a Cron Job?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                A <strong>cron job</strong> is a task that runs <strong>automatically at scheduled times</strong> &mdash; without anyone pressing a button or hitting an API.
+                The name comes from Unix's <code>cron</code> daemon (from the Greek word <em>chronos</em> = time), a background service that has been scheduling tasks on servers since the 1970s.
+            </p>
+            <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                Think of it like setting an alarm on your phone. You configure <em>when</em> it should go off, and the system handles the rest.
+                The difference? Instead of waking you up, it runs a piece of code.
+            </p>
+
+            <!-- Cron Diagram -->
+            <div class="visual-diagram">
+                <div class="diagram-label">How a Cron Job Works</div>
+                <div class="diagram-row">
+                    <div class="diagram-box primary">
+                        &#9200; Scheduler
+                        <small>"Run at 2:00 AM daily"</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box warning">
+                        &#9881;&#65039; Triggers
+                        <small>Wakes up your code</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#128187; Your Script Runs
+                        <small>Does the work</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">
+                        &#128164; Sleeps
+                        <small>Until next schedule</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-world use cases -->
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Where Are Cron Jobs Used? (Everywhere!)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Almost every production backend you've ever used relies on cron jobs. Here are real examples:
+            </p>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-icon">&#128176;</div>
+                    <div class="card-title">Payment Reconciliation</div>
+                    <div class="card-desc">
+                        <strong>Every hour:</strong> Compare your DB with Razorpay/Stripe to catch missed webhooks.
+                        <br><em>This is what we're building today!</em>
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);">
+                    <div class="card-icon">&#128231;</div>
+                    <div class="card-title">Email Digests</div>
+                    <div class="card-desc">
+                        <strong>Daily at 8 AM:</strong> Send users a summary of yesterday's activity. (GitHub notification digests, Slack weekly reports)
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-warning);">
+                    <div class="card-icon">&#128465;&#65039;</div>
+                    <div class="card-title">Data Cleanup</div>
+                    <div class="card-desc">
+                        <strong>Daily at 3 AM:</strong> Delete expired sessions, temp files, old logs. Keep the database lean.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid #a855f7;">
+                    <div class="card-icon">&#128202;</div>
+                    <div class="card-title">Report Generation</div>
+                    <div class="card-desc">
+                        <strong>Every Monday 6 AM:</strong> Generate weekly sales reports, analytics dashboards, or CSV exports for the business team.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-danger);">
+                    <div class="card-icon">&#128276;</div>
+                    <div class="card-title">Reminders & Alerts</div>
+                    <div class="card-desc">
+                        <strong>Every 30 mins:</strong> Check for abandoned carts and send reminder emails. Check server health and alert on anomalies.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid #10b981;">
+                    <div class="card-icon">&#128259;</div>
+                    <div class="card-title">Database Backups</div>
+                    <div class="card-desc">
+                        <strong>Every 6 hours:</strong> Dump the database and upload to S3. A crashed DB without backups = game over.
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>Now that we know <em>what</em> cron jobs are and <em>where</em> they're used &mdash; how do we actually implement one in Django?</strong></p>
+                <p style="margin-top: 8px;">There are 3 common approaches. Let's start with the simplest.</p>
+            </div>
+
+            <!-- Three Options Overview -->
+            <div class="card-grid" style="margin-top: 30px;">
+                <div class="card">
+                    <div class="card-icon">&#128013;</div>
+                    <div class="card-title">Option 1: Django Management Commands + System Cron</div>
+                    <div class="card-desc">
+                        Write a Django command, schedule it with Linux crontab.
+                        Simple, no extra dependencies. Good for small projects.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129452;</div>
+                    <div class="card-title">Option 2: Celery Beat</div>
+                    <div class="card-desc">
+                        Use Celery for background tasks + Celery Beat for scheduling.
+                        More complex but scales better. Industry standard.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9729;&#65039;</div>
+                    <div class="card-title">Option 3: Cloud Schedulers</div>
+                    <div class="card-desc">
+                        AWS CloudWatch Events, Google Cloud Scheduler, etc.
+                        Triggers your endpoint at scheduled times. Serverless-friendly.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 1: Management Commands -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">1</span> Django Management Commands + System Cron
+            </h3>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                Django has a built-in concept called <strong>management commands</strong> &mdash; these are scripts you can run from the terminal with <code>python manage.py &lt;command_name&gt;</code>. You've already used some: <code>runserver</code>, <code>migrate</code>, <code>createsuperuser</code>. They're all management commands!
+            </p>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                The idea is simple: <strong>write your job as a management command, then use Linux's crontab to run it on a schedule.</strong>
+            </p>
+
+            <!-- Generic Example First -->
+            <h4 style="margin-bottom: 15px; color: var(--text-primary);">The Generic Pattern (works for any Django project)</h4>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>yourapp/management/commands/your_task.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># File location matters! Must follow this structure:</span>
+<span class="comment"># yourapp/</span>
+<span class="comment">#   management/</span>
+<span class="comment">#     __init__.py</span>
+<span class="comment">#     commands/</span>
+<span class="comment">#       __init__.py</span>
+<span class="comment">#       your_task.py    &lt;-- Your command goes here</span>
+
+<span class="keyword">from</span> django.core.management.base <span class="keyword">import</span> BaseCommand
+
+<span class="keyword">class</span> <span class="function">Command</span>(BaseCommand):
+    help = <span class="string">'Description of what this command does'</span>
+
+    <span class="comment"># Optional: Accept command line arguments</span>
+    <span class="keyword">def</span> <span class="function">add_arguments</span>(self, parser):
+        parser.add_argument(<span class="string">'--dry-run'</span>, action=<span class="string">'store_true'</span>,
+                            help=<span class="string">'Show what would happen without making changes'</span>)
+
+    <span class="keyword">def</span> <span class="function">handle</span>(self, *args, **options):
+        <span class="comment"># This is where your job logic goes</span>
+        <span class="comment"># You have full access to Django models, settings, etc.</span>
+
+        <span class="keyword">if</span> options[<span class="string">'dry_run'</span>]:
+            self.stdout.write(<span class="string">'DRY RUN MODE - no changes will be made'</span>)
+
+        <span class="comment"># Do your work here...</span>
+        self.stdout.write(self.style.SUCCESS(<span class="string">'Task completed successfully!'</span>))
+
+<span class="comment"># Usage:</span>
+<span class="comment"># python manage.py your_task</span>
+<span class="comment"># python manage.py your_task --dry-run</span></pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 20px 0;">
+                Now let's apply this pattern to our restaurant project's reconciliation job.
+            </p>
+
+            <!-- Restaurant Project Example -->
+            <h4 style="margin-bottom: 15px; color: var(--text-primary);">Our Restaurant Project: Reconciliation Command</h4>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>orders/management/commands/reconcile_payments.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.core.management.base <span class="keyword">import</span> BaseCommand
+<span class="keyword">from</span> django.conf <span class="keyword">import</span> settings
+<span class="keyword">from</span> orders.models <span class="keyword">import</span> Order
+<span class="keyword">import</span> razorpay
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+<span class="keyword">class</span> <span class="function">Command</span>(BaseCommand):
+    help = <span class="string">'Reconcile pending orders with Razorpay'</span>
+
+    <span class="keyword">def</span> <span class="function">handle</span>(self, *args, **options):
+        <span class="comment"># Find orders that have been "pending" for more than 1 hour</span>
+        one_hour_ago = datetime.now() - timedelta(hours=<span class="number">1</span>)
+        pending_orders = Order.objects.filter(
+            status=<span class="string">'pending'</span>,
+            created_at__lt=one_hour_ago,
+            razorpay_order_id__isnull=<span class="keyword">False</span>
+        )
+
+        self.stdout.write(<span class="string">f'Found {pending_orders.count()} pending orders to check'</span>)
+
+        <span class="keyword">for</span> order <span class="keyword">in</span> pending_orders:
+            <span class="keyword">try</span>:
+                <span class="comment"># Fetch payments for this Razorpay order</span>
+                payments = client.order.payments(order.razorpay_order_id)
+
+                <span class="keyword">for</span> payment <span class="keyword">in</span> payments[<span class="string">'items'</span>]:
+                    <span class="keyword">if</span> payment[<span class="string">'status'</span>] == <span class="string">'captured'</span>:
+                        order.status = <span class="string">'paid'</span>
+                        order.razorpay_payment_id = payment[<span class="string">'id'</span>]
+                        order.save()
+                        self.stdout.write(self.style.SUCCESS(
+                            <span class="string">f'Order {order.id}: Updated to PAID'</span>
+                        ))
+                        <span class="keyword">break</span>
+                    <span class="keyword">elif</span> payment[<span class="string">'status'</span>] == <span class="string">'failed'</span>:
+                        order.status = <span class="string">'failed'</span>
+                        order.save()
+                        self.stdout.write(self.style.WARNING(
+                            <span class="string">f'Order {order.id}: Updated to FAILED'</span>
+                        ))
+                        <span class="keyword">break</span>
+                    <span class="keyword">else</span>:
+                        self.stdout.write(
+                            <span class="string">f'Order {order.id}: Payment status {payment["status"]}, skipping'</span>
+                        )
+            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+                self.stdout.write(self.style.ERROR(
+                    <span class="string">f'Order {order.id}: Razorpay error - {e}'</span>
+                ))</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Run it manually first</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Always test manually before scheduling!</span>
+python manage.py reconcile_payments</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Schedule with Linux crontab</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Edit crontab</span>
+crontab -e
+
+<span class="comment"># Add this line to run every hour</span>
+0 * * * * cd /path/to/project && /path/to/venv/bin/python manage.py reconcile_payments >> /var/log/reconcile.log 2>&1
+
+<span class="comment"># Cron syntax: minute hour day month weekday command</span>
+<span class="comment"># 0 * * * *   = "At minute 0 of every hour"</span>
+<span class="comment"># */15 * * * * = "Every 15 minutes"</span>
+<span class="comment"># 0 0 * * *   = "At midnight every day"</span>
+<span class="comment"># 0 9 * * 1   = "Every Monday at 9 AM"</span></pre>
+                </div>
+            </div>
+
+            <!-- Cron Syntax Visual -->
+            <div class="visual-diagram" style="margin-top: 25px; text-align: left; padding: 30px 35px;">
+                <h4 style="text-align: center; margin-bottom: 25px; color: var(--accent-primary);">Reading a Cron Expression</h4>
+                <div style="font-family: 'Fira Code', monospace; font-size: 0.95rem; line-height: 1.4; max-width: 600px; margin: 0 auto;">
+                    <!-- The 5 fields -->
+                    <div style="display: flex; justify-content: center; gap: 0; margin-bottom: 8px;">
+                        <div style="text-align: center; width: 80px;"><span style="background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 1.1rem;">0</span></div>
+                        <div style="text-align: center; width: 80px;"><span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 1.1rem;">9</span></div>
+                        <div style="text-align: center; width: 80px;"><span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 1.1rem;">*</span></div>
+                        <div style="text-align: center; width: 80px;"><span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 1.1rem;">*</span></div>
+                        <div style="text-align: center; width: 80px;"><span style="background: rgba(168, 85, 247, 0.2); color: #a855f7; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 1.1rem;">1</span></div>
+                    </div>
+                    <!-- Dotted lines -->
+                    <div style="display: flex; justify-content: center; gap: 0; margin-bottom: 4px;">
+                        <div style="text-align: center; width: 80px; color: var(--text-muted);">&#9474;</div>
+                        <div style="text-align: center; width: 80px; color: var(--text-muted);">&#9474;</div>
+                        <div style="text-align: center; width: 80px; color: var(--text-muted);">&#9474;</div>
+                        <div style="text-align: center; width: 80px; color: var(--text-muted);">&#9474;</div>
+                        <div style="text-align: center; width: 80px; color: var(--text-muted);">&#9474;</div>
+                    </div>
+                    <!-- Labels -->
+                    <div style="display: flex; justify-content: center; gap: 0;">
+                        <div style="text-align: center; width: 80px; font-size: 0.7rem; color: #818cf8; font-weight: 600;">Minute<br><span style="font-weight: 400; color: var(--text-muted);">(0-59)</span></div>
+                        <div style="text-align: center; width: 80px; font-size: 0.7rem; color: #10b981; font-weight: 600;">Hour<br><span style="font-weight: 400; color: var(--text-muted);">(0-23)</span></div>
+                        <div style="text-align: center; width: 80px; font-size: 0.7rem; color: #f59e0b; font-weight: 600;">Day<br><span style="font-weight: 400; color: var(--text-muted);">(1-31)</span></div>
+                        <div style="text-align: center; width: 80px; font-size: 0.7rem; color: #ef4444; font-weight: 600;">Month<br><span style="font-weight: 400; color: var(--text-muted);">(1-12)</span></div>
+                        <div style="text-align: center; width: 80px; font-size: 0.7rem; color: #a855f7; font-weight: 600;">Weekday<br><span style="font-weight: 400; color: var(--text-muted);">(0-6, Sun=0)</span></div>
+                    </div>
+                </div>
+
+                <p style="text-align: center; margin-top: 18px; color: var(--text-secondary); font-size: 0.9rem; font-family: 'Inter', sans-serif;">
+                    &#9757; <strong style="color: #818cf8;">0</strong> <strong style="color: #10b981;">9</strong> <strong style="color: #f59e0b;">*</strong> <strong style="color: #ef4444;">*</strong> <strong style="color: #a855f7;">1</strong> = "At minute <strong>0</strong>, hour <strong>9</strong>, any day, any month, on <strong>Monday</strong>"
+                    <br>= <strong>Every Monday at 9:00 AM</strong>
+                </p>
+
+                <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 22px 0;">
+
+                <!-- Special characters -->
+                <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-secondary);">
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; max-width: 500px; margin: 0 auto;">
+                        <code style="color: #818cf8; font-family: 'Fira Code', monospace; font-size: 0.9rem;">*</code>
+                        <span>"every" &mdash; matches all values</span>
+                        <code style="color: #10b981; font-family: 'Fira Code', monospace; font-size: 0.9rem;">*/15</code>
+                        <span>"every 15th" &mdash; <code>*/15 * * * *</code> = every 15 minutes</span>
+                        <code style="color: #f59e0b; font-family: 'Fira Code', monospace; font-size: 0.9rem;">5</code>
+                        <span>"exactly 5" &mdash; a specific value</span>
+                        <code style="color: #ef4444; font-family: 'Fira Code', monospace; font-size: 0.9rem;">1,15</code>
+                        <span>"1st and 15th" &mdash; multiple values</span>
+                        <code style="color: #a855f7; font-family: 'Fira Code', monospace; font-size: 0.9rem;">1-5</code>
+                        <span>"1 through 5" &mdash; a range (Mon-Fri)</span>
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 22px 0;">
+
+                <!-- Common examples -->
+                <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem;">
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; max-width: 550px; margin: 0 auto;">
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">* * * * *</code>
+                        <span style="color: var(--text-secondary);">Every minute</span>
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">0 * * * *</code>
+                        <span style="color: var(--text-secondary);">Every hour at :00</span>
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">*/15 * * * *</code>
+                        <span style="color: var(--text-secondary);">Every 15 minutes</span>
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">0 0 * * *</code>
+                        <span style="color: var(--text-secondary);">Midnight daily</span>
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">0 9 * * 1</code>
+                        <span style="color: var(--text-secondary);">Every Monday at 9 AM</span>
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">0 9,18 * * 1-5</code>
+                        <span style="color: var(--text-secondary);">9 AM and 6 PM, Mon-Fri</span>
+                        <code style="color: var(--text-primary); font-family: 'Fira Code', monospace;">0 0 1,15 * *</code>
+                        <span style="color: var(--text-secondary);">Midnight on 1st and 15th of every month</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real crons on macOS -->
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">Cron Jobs Already Running on Your Mac</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 12px;">
+                    macOS uses <strong>launchd</strong> instead of cron for its own scheduled tasks. These are essentially Apple's version of cron jobs:
+                </p>
+                <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.7; color: #e2e8f0; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #6b7280;"># See Apple's scheduled jobs (launchd = macOS cron)</span>
+ls /System/Library/LaunchDaemons/ | head -10
+
+<span style="color: #6b7280;"># Examples you'll see:</span>
+<span style="color: #c3e88d;">com.apple.backupd-helper.plist</span>    <span style="color: #6b7280;"># Time Machine backup scheduler</span>
+<span style="color: #c3e88d;">com.apple.softwareupdated.plist</span>   <span style="color: #6b7280;"># Auto software updates</span>
+<span style="color: #c3e88d;">com.apple.metadata.mds.plist</span>      <span style="color: #6b7280;"># Spotlight index rebuilder</span>
+
+<span style="color: #6b7280;"># Quick cron demo — runs every minute, writes timestamp:</span>
+echo "* * * * * echo \"Cron ran at \$(date)\" >> /tmp/cron_demo.log" | crontab -
+tail -f /tmp/cron_demo.log    <span style="color: #6b7280;"># Wait ~60s, watch entries appear</span>
+
+<span style="color: #6b7280;"># Clean up when done:</span>
+crontab -r && rm /tmp/cron_demo.log</pre>
+                </div>
+            </div>
+
+            <div class="question-box" style="margin-top: 30px;">
+                <p><strong>What does this cron expression do? &nbsp;<code>30 2 * * 0</code></strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Every Sunday at 2:30 AM.</strong><br>
+                        Minute=<strong>30</strong>, Hour=<strong>2</strong>, Day=<strong>*</strong>(any), Month=<strong>*</strong>(any), Weekday=<strong>0</strong>(Sunday).<br>
+                        This is a common schedule for weekly database backups &mdash; runs at a quiet time when traffic is low.
+                    </p>
+                </details>
+            </div>
+
+            <div class="highlight-box warning" style="margin-top: 20px;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">&#9888;&#65039; Key Things to Keep in Mind with System Cron</h4>
+                <ul style="margin-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Always use absolute paths</strong> &mdash; cron doesn't know your working directory or virtualenv</li>
+                    <li><strong>Redirect output to a log file</strong> &mdash; <code>>> /var/log/file.log 2>&1</code> captures both stdout and stderr</li>
+                    <li><strong>Environment variables aren't loaded</strong> &mdash; cron runs with a minimal shell, so your <code>.bashrc</code> / <code>.env</code> won't be sourced</li>
+                    <li><strong>Test manually first</strong> &mdash; always run the command by hand before scheduling it</li>
+                    <li><strong>Monitor failures</strong> &mdash; cron silently swallows errors unless you set up logging</li>
+                </ul>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>System crontab works, but what if your cron job crashes halfway? What if you need to retry failed jobs? What if you're running 20 different scheduled tasks and need to monitor them all?</strong></p>
+                <p style="margin-top: 8px;">This is where Celery comes in &mdash; it's like crontab on steroids.</p>
+            </div>
+
+            <!-- Option 2: Celery Beat -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">2</span> Celery Beat (Production-Grade)
+            </h3>
+
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                <strong>Celery</strong> is a task queue &mdash; it lets you run code in the background, retry on failure, and monitor everything.
+                <strong>Celery Beat</strong> is the scheduler that tells Celery <em>when</em> to run tasks. Together, they replace crontab with something far more powerful.
+            </p>
+
+            <!-- Why Celery is Better - Visual -->
+            <h4 style="margin-bottom: 15px; color: var(--text-primary);">Why is Celery Better for Production?</h4>
+
+            <div class="visual-diagram">
+                <div class="diagram-label">System Cron (Simple but Limited)</div>
+                <div class="diagram-row">
+                    <div class="diagram-box muted">
+                        &#128197; Crontab
+                        <small>OS-level scheduler</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">
+                        &#128187; Script Runs
+                        <small>In main process</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">
+                        &#10060; If it fails?
+                        <small>Gone. No retry.</small>
+                    </div>
+                </div>
+                <hr class="diagram-divider">
+                <div class="diagram-label">Celery + Beat (Production-Ready)</div>
+                <div class="diagram-row">
+                    <div class="diagram-box primary">
+                        &#128197; Celery Beat
+                        <small>Smart scheduler</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box warning">
+                        &#128232; Redis/RabbitMQ
+                        <small>Message queue</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#9881;&#65039; Celery Workers
+                        <small>Multiple workers</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#128260; Auto-Retry
+                        <small>On failure</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-grid" style="margin-top: 20px;">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 12px;">System Cron Limitations</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <li>Job fails? <strong>Silent failure</strong>. No automatic retry.</li>
+                        <li>Running on 3 servers? Cron runs <strong>on all 3</strong> (duplicate work!)</li>
+                        <li>Want to see which jobs ran? <strong>Parse log files manually</strong></li>
+                        <li>Job takes 2 hours but scheduled every hour? <strong>Overlap! Two copies running</strong></li>
+                        <li>Need to run 50 tasks concurrently? <strong>Blocks the server</strong></li>
+                    </ul>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 12px;">Celery Solves All of These</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <li>Job fails? <strong>Automatic retry</strong> with exponential backoff</li>
+                        <li>3 servers? Tasks go to a <strong>shared queue</strong> &mdash; only one worker picks it up</li>
+                        <li>Built-in <strong>monitoring dashboard</strong> (Flower)</li>
+                        <li>Task already running? <strong>Skip or queue the next one</strong></li>
+                        <li>50 tasks? <strong>Distributed across multiple workers</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Install Celery</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>pip install celery redis django-celery-beat</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>restaurant_project/celery.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> os
+<span class="keyword">from</span> celery <span class="keyword">import</span> Celery
+
+os.environ.setdefault(<span class="string">'DJANGO_SETTINGS_MODULE'</span>, <span class="string">'restaurant_project.settings'</span>)
+
+app = Celery(<span class="string">'restaurant_project'</span>)
+app.config_from_object(<span class="string">'django.conf:settings'</span>, namespace=<span class="string">'CELERY'</span>)
+app.autodiscover_tasks()</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>orders/tasks.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> celery <span class="keyword">import</span> shared_task
+<span class="keyword">from</span> django.conf <span class="keyword">import</span> settings
+<span class="keyword">from</span> orders.models <span class="keyword">import</span> Order
+<span class="keyword">import</span> razorpay
+
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+<span class="decorator">@shared_task</span>
+<span class="keyword">def</span> <span class="function">reconcile_payments</span>():
+    <span class="string">"""Reconcile pending orders with Razorpay - runs every hour"""</span>
+    pending_orders = Order.objects.filter(
+        status=<span class="string">'pending'</span>,
+        razorpay_order_id__isnull=<span class="keyword">False</span>
+    )
+
+    updated_count = <span class="number">0</span>
+    <span class="keyword">for</span> order <span class="keyword">in</span> pending_orders:
+        payments = client.order.payments(order.razorpay_order_id)
+        <span class="keyword">for</span> payment <span class="keyword">in</span> payments[<span class="string">'items'</span>]:
+            <span class="keyword">if</span> payment[<span class="string">'status'</span>] == <span class="string">'captured'</span>:
+                order.status = <span class="string">'paid'</span>
+                order.razorpay_payment_id = payment[<span class="string">'id'</span>]
+                order.save()
+                updated_count += <span class="number">1</span>
+                <span class="keyword">break</span>
+
+    <span class="keyword">return</span> <span class="string">f'Reconciled {updated_count} orders'</span></pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>settings.py - Celery Beat Schedule</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Celery Configuration</span>
+CELERY_BROKER_URL = <span class="string">'redis://localhost:6379/0'</span>
+CELERY_RESULT_BACKEND = <span class="string">'redis://localhost:6379/0'</span>
+
+<span class="comment"># Celery Beat Schedule</span>
+<span class="keyword">from</span> celery.schedules <span class="keyword">import</span> crontab
+
+CELERY_BEAT_SCHEDULE = {
+    <span class="string">'reconcile-payments-hourly'</span>: {
+        <span class="string">'task'</span>: <span class="string">'orders.tasks.reconcile_payments'</span>,
+        <span class="string">'schedule'</span>: crontab(minute=<span class="number">0</span>),  <span class="comment"># Every hour at :00</span>
+    },
+    <span class="string">'send-abandoned-cart-emails'</span>: {
+        <span class="string">'task'</span>: <span class="string">'orders.tasks.send_abandoned_cart_reminders'</span>,
+        <span class="string">'schedule'</span>: crontab(hour=<span class="number">10</span>, minute=<span class="number">0</span>),  <span class="comment"># Daily at 10 AM</span>
+    },
+}</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Running Celery (3 terminals)</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Terminal 1: Start Redis (message broker)</span>
+redis-server
+
+<span class="comment"># Terminal 2: Start Celery worker (executes tasks)</span>
+celery -A restaurant_project worker -l info
+
+<span class="comment"># Terminal 3: Start Celery Beat (scheduler)</span>
+celery -A restaurant_project beat -l info</pre>
+                </div>
+            </div>
+
+            <!-- Option 3: Cloud Schedulers -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">3</span> Cloud Schedulers
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                If you're running serverless (AWS Lambda, Google Cloud Functions) or don't want to manage Redis/Celery infrastructure, cloud schedulers trigger an HTTP endpoint on a schedule. You write the logic in a regular Django view, and the cloud handles timing.
+            </p>
+
+            <!-- Comparison Table -->
+            <div class="highlight-box" style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">When to Use Which?</h4>
+                <div class="table-container">
+                    <table>
+                        <tr>
+                            <th>Approach</th>
+                            <th>Best For</th>
+                            <th>Retry on Failure?</th>
+                            <th>Monitoring?</th>
+                            <th>Scales?</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Crontab + Management Command</strong></td>
+                            <td>Side projects, simple tasks, learning</td>
+                            <td style="color: var(--accent-danger);">No</td>
+                            <td style="color: var(--accent-danger);">Manual (logs)</td>
+                            <td style="color: var(--accent-danger);">No</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Celery Beat</strong></td>
+                            <td>Production apps, multiple tasks, teams</td>
+                            <td style="color: var(--accent-success);">Yes (built-in)</td>
+                            <td style="color: var(--accent-success);">Yes (Flower UI)</td>
+                            <td style="color: var(--accent-success);">Yes (add workers)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cloud Scheduler</strong></td>
+                            <td>Serverless, microservices, pay-per-use</td>
+                            <td style="color: var(--accent-success);">Yes (configurable)</td>
+                            <td style="color: var(--accent-success);">Yes (cloud dashboard)</td>
+                            <td style="color: var(--accent-success);">Yes (auto)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 20px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 10px;">TL;DR Recommendation</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Learning / small project?</strong> Start with management commands + crontab. It works, it's simple, and you'll understand what's happening.<br>
+                    <strong>Going to production?</strong> Use Celery Beat. The extra setup pays for itself immediately with retry, monitoring, and no-duplicate guarantees.<br>
+                    <strong>Already on AWS/GCP?</strong> Cloud schedulers save you from managing Celery infrastructure.
+                </p>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>Now we know how to schedule reconciliation jobs. But reconciliation compares data with a Payment Gateway &mdash; so far we've been talking abstractly about "PGs". Let's build an actual integration with Razorpay.</strong></p>
+                <p style="margin-top: 8px;">But first &mdash; why Razorpay? Why not Stripe or PayPal?</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Razorpay Integration -->
+    <section id="razorpay">
+        <div class="section-container">
+            <span class="section-label" style="background: linear-gradient(135deg, #2962ff, #1565c0);">Razorpay</span>
+            <h2 class="section-title">Integrating Razorpay Payment Gateway</h2>
+            <p class="section-subtitle">
+                Let's build a complete Razorpay integration from scratch &mdash; creating orders, handling payments, webhooks, and reconciliation.
+                <br><a href="https://razorpay.com/docs/api/payments/payment-links/create-standard/" target="_blank" style="color: var(--accent-primary); font-size: 0.9rem;">Razorpay Payment Links API Docs &rarr;</a>
+            </p>
+
+            <!-- Why Razorpay, not Stripe -->
+            <h3 style="margin-bottom: 20px;">Why Razorpay? (And Not Stripe or PayPal)</h3>
+
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Every payment gateway does the same core thing: <strong>take money from the customer and put it in your bank account</strong>. But they differ in UPI support, pricing, regional availability, and developer experience. For Indian businesses, Razorpay is the go-to choice.
+            </p>
+
+            <div class="table-container pg-table">
+                <table>
+                    <tr>
+                        <th style="text-align: left;">Feature</th>
+                        <th><span class="pg-logo">&#128171;</span>Razorpay</th>
+                        <th><span class="pg-logo">&#128309;</span>Stripe</th>
+                        <th><span class="pg-logo">&#128309;</span>PayPal</th>
+                    </tr>
+                    <tr>
+                        <td>UPI Support</td>
+                        <td style="color: var(--accent-success);">&#10004; Native, excellent</td>
+                        <td style="color: var(--accent-danger);">&#10008; No UPI</td>
+                        <td style="color: var(--accent-danger);">&#10008; No UPI</td>
+                    </tr>
+                    <tr>
+                        <td>Indian Cards/Netbanking</td>
+                        <td style="color: var(--accent-success);">&#10004; All Indian banks</td>
+                        <td style="color: var(--accent-warning);">&#9888; Limited</td>
+                        <td style="color: var(--accent-warning);">&#9888; Limited</td>
+                    </tr>
+                    <tr>
+                        <td>INR Settlement</td>
+                        <td style="color: var(--accent-success);">&#10004; Direct to Indian bank</td>
+                        <td style="color: var(--accent-success);">&#10004; Yes (since 2023)</td>
+                        <td style="color: var(--accent-warning);">&#9888; Higher conversion fees</td>
+                    </tr>
+                    <tr>
+                        <td>Global Payments</td>
+                        <td style="color: var(--accent-warning);">&#9888; India-focused</td>
+                        <td style="color: var(--accent-success);">&#10004; 135+ countries</td>
+                        <td style="color: var(--accent-success);">&#10004; 200+ countries</td>
+                    </tr>
+                    <tr>
+                        <td>Pricing (India)</td>
+                        <td>2% per txn</td>
+                        <td>2% + &#8377;2 per txn</td>
+                        <td>2.5% + fixed fee</td>
+                    </tr>
+                    <tr>
+                        <td>Developer Experience</td>
+                        <td style="color: var(--accent-success);">Excellent docs, Python SDK</td>
+                        <td style="color: var(--accent-success);">Best-in-class docs</td>
+                        <td style="color: var(--accent-warning);">Dated, complex</td>
+                    </tr>
+                    <tr>
+                        <td>Test Mode</td>
+                        <td style="color: var(--accent-success);">&#10004; Full sandbox</td>
+                        <td style="color: var(--accent-success);">&#10004; Full sandbox</td>
+                        <td style="color: var(--accent-success);">&#10004; Sandbox</td>
+                    </tr>
+                    <tr>
+                        <td>Best For</td>
+                        <td><strong>Indian businesses</strong></td>
+                        <td><strong>Global SaaS products</strong></td>
+                        <td><strong>International freelancers</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">The Big Takeaway: Learn the Pattern, Not the PG</h4>
+                <p style="color: var(--text-secondary);">
+                    Every PG follows the same fundamental flow: <strong>Create Order &rarr; Collect Payment &rarr; Verify &rarr; Webhook</strong>. The SDK methods and field names differ, but the architecture is identical. Once you understand Razorpay's integration, switching to Stripe or PayPal is mostly about reading their docs and mapping the equivalent API calls.
+                </p>
+            </div>
+
+            <!-- Flow Comparison Diagram -->
+            <div class="visual-diagram" style="margin-top: 25px;">
+                <div class="diagram-label">Same Pattern, Different SDKs</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center; margin-top: 15px;">
+                    <div>
+                        <strong style="color: #60a5fa;">Razorpay</strong>
+                        <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; line-height: 2;">
+                            <code>client.order.create()</code><br>
+                            <code>Checkout.js modal</code><br>
+                            <code>verify_payment_signature()</code><br>
+                            <code>X-Razorpay-Signature</code>
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="color: #818cf8;">Stripe</strong>
+                        <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; line-height: 2;">
+                            <code>stripe.checkout.Session.create()</code><br>
+                            <code>Stripe Checkout redirect</code><br>
+                            <code>stripe.Webhook.construct_event()</code><br>
+                            <code>Stripe-Signature</code>
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="color: #f59e0b;">PayPal</strong>
+                        <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; line-height: 2;">
+                            <code>orders.create()</code><br>
+                            <code>PayPal buttons/redirect</code><br>
+                            <code>orders.capture()</code><br>
+                            <code>PAYPAL-TRANSMISSION-SIG</code>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 15px;">
+                    Different method names, same steps: Create &rarr; Pay &rarr; Verify &rarr; Webhook
+                </p>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>Now that we understand the landscape, let's build it step-by-step with Razorpay. Ready?</strong></p>
+            </div>
+
+            <!-- Step 1: Setup -->
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">
+                <span class="step-number">1</span> Setup & Configuration
+            </h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Install Razorpay SDK</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>pip install razorpay</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>settings.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Razorpay API Keys (use environment variables in production!)</span>
+RAZORPAY_KEY_ID = os.environ.get(<span class="string">'RAZORPAY_KEY_ID'</span>, <span class="string">'rzp_test_...'</span>)
+RAZORPAY_KEY_SECRET = os.environ.get(<span class="string">'RAZORPAY_KEY_SECRET'</span>, <span class="string">'secret_test_...'</span>)
+RAZORPAY_WEBHOOK_SECRET = os.environ.get(<span class="string">'RAZORPAY_WEBHOOK_SECRET'</span>, <span class="string">'whsec_...'</span>)
+
+<span class="comment"># Initialize Razorpay client</span>
+<span class="keyword">import</span> razorpay
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))</pre>
+                </div>
+            </div>
+
+            <div class="highlight-box warning">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">Where to Get Keys</h4>
+                <ol style="margin-left: 20px; color: var(--text-secondary);">
+                    <li>Go to <strong>Razorpay Dashboard &rarr; Settings &rarr; API Keys</strong></li>
+                    <li><strong>Key ID</strong> (rzp_test_...): Used on both frontend and backend</li>
+                    <li><strong>Key Secret</strong> (secret_test_...): Keep secret! Only on backend</li>
+                    <li><strong>Webhook secret</strong>: Found in Dashboard &rarr; Webhooks section</li>
+                </ol>
+            </div>
+
+            <!-- Step 2: Models -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">2</span> Database Models
+            </h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>orders/models.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.db <span class="keyword">import</span> models
+
+<span class="keyword">class</span> <span class="function">Order</span>(models.Model):
+    STATUS_CHOICES = [
+        (<span class="string">'pending'</span>, <span class="string">'Pending'</span>),
+        (<span class="string">'paid'</span>, <span class="string">'Paid'</span>),
+        (<span class="string">'failed'</span>, <span class="string">'Failed'</span>),
+        (<span class="string">'refunded'</span>, <span class="string">'Refunded'</span>),
+    ]
+
+    user = models.ForeignKey(<span class="string">'auth.User'</span>, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=<span class="number">10</span>, decimal_places=<span class="number">2</span>)
+    status = models.CharField(max_length=<span class="number">20</span>, choices=STATUS_CHOICES, default=<span class="string">'pending'</span>)
+
+    <span class="comment"># Razorpay-specific fields</span>
+    razorpay_order_id = models.CharField(max_length=<span class="number">255</span>, blank=<span class="keyword">True</span>, null=<span class="keyword">True</span>)
+    razorpay_payment_id = models.CharField(max_length=<span class="number">255</span>, blank=<span class="keyword">True</span>, null=<span class="keyword">True</span>)
+
+    created_at = models.DateTimeField(auto_now_add=<span class="keyword">True</span>)
+    updated_at = models.DateTimeField(auto_now=<span class="keyword">True</span>)
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self):
+        <span class="keyword">return</span> <span class="string">f"Order {self.id} - &#8377;{self.amount} - {self.status}"</span>
+
+
+<span class="keyword">class</span> <span class="function">WebhookEvent</span>(models.Model):
+    <span class="string">"""Track processed webhooks to prevent duplicate processing"""</span>
+    razorpay_event_id = models.CharField(max_length=<span class="number">255</span>, unique=<span class="keyword">True</span>)
+    event_type = models.CharField(max_length=<span class="number">100</span>)
+    processed_at = models.DateTimeField(auto_now_add=<span class="keyword">True</span>)
+
+    <span class="keyword">class</span> <span class="function">Meta</span>:
+        indexes = [
+            models.Index(fields=[<span class="string">'razorpay_event_id'</span>]),
+        ]</pre>
+                </div>
+            </div>
+
+            <div class="question-box" style="margin-top: 25px;">
+                <p><strong>Why do we need a separate WebhookEvent model? Can't we just check if the Order is already "paid"?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        Checking order status alone isn't enough. What if you receive a <code>refund.created</code> webhook for an order that's already "paid"? You'd process it. But if Razorpay retries the same refund webhook, you'd process it <em>again</em>. The WebhookEvent model tracks each unique event by ID, so you can safely say "I've already handled this exact event" regardless of order status.
+                    </p>
+                </details>
+            </div>
+
+            <!-- Step 3: Create Payment -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">3</span> Create Razorpay Order
+            </h3>
+
+            <!-- Improved visual flow diagram -->
+            <div class="visual-diagram">
+                <div class="diagram-label">Payment Flow: Who Talks to Whom?</div>
+                <div class="diagram-row" style="margin-top: 20px;">
+                    <div class="diagram-box primary">
+                        &#128100; Frontend
+                        <small>User's browser</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#128187; Your Backend
+                        <small>Django server</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box blue">
+                        &#128176; Razorpay API
+                        <small>Payment gateway</small>
+                    </div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-width: 700px; margin: 0 auto; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 15px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <span style="background: var(--accent-primary); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">1</span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Frontend sends <code>POST /create-order</code> to your backend</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 15px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <span style="background: var(--accent-success); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">2</span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Backend creates Razorpay Order via API, gets <code>order_id</code></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 15px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <span style="background: #60a5fa; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">3</span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Frontend opens Razorpay Checkout modal &mdash; user enters card/UPI</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 15px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <span style="background: var(--accent-warning); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">4</span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">On success, frontend sends <code>payment_id + signature</code> to backend for verification</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 15px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <span style="background: #a855f7; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">5</span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Razorpay sends <strong>webhook</strong> to your backend &mdash; the source of truth for DB update</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>orders/views.py - Create Order & Razorpay Order</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> razorpay
+<span class="keyword">from</span> django.conf <span class="keyword">import</span> settings
+<span class="keyword">from</span> rest_framework.views <span class="keyword">import</span> APIView
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+<span class="keyword">from</span> .models <span class="keyword">import</span> Order
+
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+<span class="keyword">class</span> <span class="function">CreateOrderView</span>(APIView):
+    <span class="keyword">def</span> <span class="function">post</span>(self, request):
+        amount = request.data.get(<span class="string">'amount'</span>)  <span class="comment"># Amount in rupees</span>
+
+        <span class="comment"># 1. Create order in your database</span>
+        order = Order.objects.create(
+            user=request.user,
+            amount=amount,
+            status=<span class="string">'pending'</span>
+        )
+
+        <span class="comment"># 2. Create Razorpay Order</span>
+        <span class="comment"># Note: Razorpay expects amount in smallest currency unit (paise)</span>
+        razorpay_order = client.order.create({
+            <span class="string">'amount'</span>: <span class="keyword">int</span>(amount * <span class="number">100</span>),  <span class="comment"># &#8377;500 = 50000 paise</span>
+            <span class="string">'currency'</span>: <span class="string">'INR'</span>,
+            <span class="string">'receipt'</span>: <span class="string">f'order_{order.id}'</span>,
+            <span class="string">'notes'</span>: {
+                <span class="string">'order_id'</span>: order.id,  <span class="comment"># Link payment to your order</span>
+            }
+        })
+
+        <span class="comment"># 3. Save Razorpay order ID to your order</span>
+        order.razorpay_order_id = razorpay_order[<span class="string">'id'</span>]
+        order.save()
+
+        <span class="comment"># 4. Return order_id and key_id to frontend</span>
+        <span class="keyword">return</span> Response({
+            <span class="string">'order_id'</span>: order.id,
+            <span class="string">'razorpay_order_id'</span>: razorpay_order[<span class="string">'id'</span>],
+            <span class="string">'razorpay_key_id'</span>: settings.RAZORPAY_KEY_ID,
+            <span class="string">'amount'</span>: razorpay_order[<span class="string">'amount'</span>],
+        })</pre>
+                </div>
+            </div>
+
+            <!-- Step 4: Frontend -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">4</span> Frontend Integration
+            </h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>checkout.html</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment">&lt;!-- Include Razorpay Checkout.js --&gt;</span>
+&lt;script src=<span class="string">"https://checkout.razorpay.com/v1/checkout.js"</span>&gt;&lt;/script&gt;
+
+&lt;button id=<span class="string">"pay-btn"</span>&gt;Pay &#8377;500&lt;/button&gt;
+
+&lt;script&gt;
+<span class="comment">// 1. Create order and get razorpay_order_id from your backend</span>
+<span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'/api/create-order/'</span>, {
+    method: <span class="string">'POST'</span>,
+    headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+    body: JSON.stringify({ amount: <span class="number">500</span> })
+});
+<span class="keyword">const</span> { razorpay_order_id, razorpay_key_id, amount } = <span class="keyword">await</span> response.json();
+
+<span class="comment">// 2. Configure Razorpay Checkout options</span>
+<span class="keyword">var</span> options = {
+    key: razorpay_key_id,
+    amount: amount,
+    currency: <span class="string">"INR"</span>,
+    name: <span class="string">"Restaurant"</span>,
+    description: <span class="string">"Order Payment"</span>,
+    order_id: razorpay_order_id,
+    handler: <span class="keyword">function</span>(response) {
+        <span class="comment">// 3. On success, send payment details to backend for verification</span>
+        <span class="function">fetch</span>(<span class="string">'/api/verify-payment/'</span>, {
+            method: <span class="string">'POST'</span>,
+            headers: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+            body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+            })
+        }).then(res => {
+            <span class="keyword">if</span> (res.ok) window.location.href = <span class="string">'/order-success/'</span>;
+        });
+    },
+    prefill: {
+        name: <span class="string">"Customer Name"</span>,
+        email: <span class="string">"customer@example.com"</span>,
+        contact: <span class="string">"9999999999"</span>
+    },
+    theme: { color: <span class="string">"#2962ff"</span> }
+};
+
+<span class="comment">// 4. Open Razorpay Checkout modal</span>
+document.getElementById(<span class="string">'pay-btn'</span>).addEventListener(<span class="string">'click'</span>, <span class="keyword">function</span>() {
+    <span class="keyword">var</span> rzp = <span class="keyword">new</span> Razorpay(options);
+    rzp.open();
+});
+&lt;/script&gt;</pre>
+                </div>
+            </div>
+
+            <!-- Step 5: Webhook -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">5</span> Webhook Handler (The Important Part!)
+            </h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>orders/views.py - Webhook Handler</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> json
+<span class="keyword">import</span> razorpay
+<span class="keyword">from</span> django.conf <span class="keyword">import</span> settings
+<span class="keyword">from</span> django.http <span class="keyword">import</span> HttpResponse
+<span class="keyword">from</span> django.views.decorators.csrf <span class="keyword">import</span> csrf_exempt
+<span class="keyword">from</span> django.db <span class="keyword">import</span> transaction
+<span class="keyword">from</span> .models <span class="keyword">import</span> Order, WebhookEvent
+
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+<span class="decorator">@csrf_exempt</span>
+<span class="keyword">def</span> <span class="function">razorpay_webhook</span>(request):
+    payload = request.body
+    signature = request.META.get(<span class="string">'HTTP_X_RAZORPAY_SIGNATURE'</span>, <span class="string">''</span>)
+
+    <span class="comment"># 1. Verify webhook signature (CRITICAL for security!)</span>
+    <span class="keyword">try</span>:
+        client.utility.verify_webhook_signature(
+            payload.decode(<span class="string">'utf-8'</span>), signature, settings.RAZORPAY_WEBHOOK_SECRET
+        )
+    <span class="keyword">except</span> razorpay.errors.SignatureVerificationError:
+        <span class="keyword">return</span> HttpResponse(status=<span class="number">400</span>)  <span class="comment"># Invalid signature</span>
+
+    event = json.loads(payload)
+
+    <span class="comment"># 2. Check for duplicate (idempotency)</span>
+    event_id = event.get(<span class="string">'event_id'</span>, <span class="string">''</span>)
+    <span class="keyword">if</span> WebhookEvent.objects.filter(razorpay_event_id=event_id).exists():
+        <span class="keyword">return</span> HttpResponse(status=<span class="number">200</span>)  <span class="comment"># Already processed</span>
+
+    <span class="comment"># 3. Process the event</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">with</span> transaction.atomic():
+            <span class="keyword">if</span> event[<span class="string">'event'</span>] == <span class="string">'payment.captured'</span>:
+                handle_payment_success(event[<span class="string">'payload'</span>][<span class="string">'payment'</span>][<span class="string">'entity'</span>])
+            <span class="keyword">elif</span> event[<span class="string">'event'</span>] == <span class="string">'payment.failed'</span>:
+                handle_payment_failure(event[<span class="string">'payload'</span>][<span class="string">'payment'</span>][<span class="string">'entity'</span>])
+            <span class="keyword">elif</span> event[<span class="string">'event'</span>] == <span class="string">'refund.created'</span>:
+                handle_refund(event[<span class="string">'payload'</span>][<span class="string">'refund'</span>][<span class="string">'entity'</span>])
+
+            <span class="comment"># 4. Record that we processed this event</span>
+            WebhookEvent.objects.create(
+                razorpay_event_id=event_id,
+                event_type=event[<span class="string">'event'</span>]
+            )
+
+        <span class="keyword">return</span> HttpResponse(status=<span class="number">200</span>)
+
+    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+        <span class="comment"># Return 500 so Razorpay retries</span>
+        <span class="keyword">return</span> HttpResponse(status=<span class="number">500</span>)
+
+
+<span class="keyword">def</span> <span class="function">handle_payment_success</span>(payment):
+    <span class="string">"""Handle successful payment"""</span>
+    order_id = payment.get(<span class="string">'notes'</span>, {}).get(<span class="string">'order_id'</span>)
+    <span class="keyword">if</span> order_id:
+        Order.objects.filter(id=order_id).update(
+            status=<span class="string">'paid'</span>,
+            razorpay_payment_id=payment[<span class="string">'id'</span>]
+        )
+        <span class="comment"># TODO: Send confirmation email, update inventory, etc.</span>
+
+
+<span class="keyword">def</span> <span class="function">handle_payment_failure</span>(payment):
+    <span class="string">"""Handle failed payment"""</span>
+    order_id = payment.get(<span class="string">'notes'</span>, {}).get(<span class="string">'order_id'</span>)
+    <span class="keyword">if</span> order_id:
+        Order.objects.filter(id=order_id).update(status=<span class="string">'failed'</span>)
+
+
+<span class="keyword">def</span> <span class="function">handle_refund</span>(refund):
+    <span class="string">"""Handle refund"""</span>
+    payment_id = refund.get(<span class="string">'payment_id'</span>)
+    Order.objects.filter(
+        razorpay_payment_id=payment_id
+    ).update(status=<span class="string">'refunded'</span>)</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>orders/urls.py</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.urls <span class="keyword">import</span> path
+<span class="keyword">from</span> . <span class="keyword">import</span> views
+
+urlpatterns = [
+    path(<span class="string">'create-order/'</span>, views.CreateOrderView.as_view()),
+    path(<span class="string">'verify-payment/'</span>, views.VerifyPaymentView.as_view()),
+    path(<span class="string">'webhook/razorpay/'</span>, views.razorpay_webhook),
+]</pre>
+                </div>
+            </div>
+
+            <!-- Testing Webhooks -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">6</span> Testing Webhooks Locally
+            </h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Using ngrok for local webhook testing</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># 1. Install ngrok (https://ngrok.com/)</span>
+brew install ngrok   <span class="comment"># macOS</span>
+
+<span class="comment"># 2. Start your Django server</span>
+python manage.py runserver
+
+<span class="comment"># 3. In another terminal, expose localhost via ngrok</span>
+ngrok http 8000
+
+<span class="comment"># Output: Forwarding https://abc123.ngrok.io -> http://localhost:8000</span>
+
+<span class="comment"># 4. Go to Razorpay Dashboard -> Webhooks -> Add New Webhook</span>
+<span class="comment"># Set URL: https://abc123.ngrok.io/api/webhook/razorpay/</span>
+<span class="comment"># Select events: payment.captured, payment.failed, refund.created</span>
+<span class="comment"># Copy the webhook secret to your settings.py</span>
+
+<span class="comment"># 5. Make a test payment using Razorpay test mode</span>
+<span class="comment"># Use test card: 4111 1111 1111 1111, any future expiry, any CVV</span></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Putting It All Together -->
+    <section id="putting-together">
+        <div class="section-container">
+            <span class="section-label success">Complete Flow</span>
+            <h2 class="section-title">Putting It All Together</h2>
+            <p class="section-subtitle">
+                Here's how webhooks, reconciliation, and crons work together in a production system.
+            </p>
+
+            <!-- Improved Architecture Diagram -->
+            <div class="visual-diagram" style="padding: 40px 25px;">
+                <h4 style="margin-bottom: 30px; color: var(--accent-primary); font-size: 1.2rem;">Payment System Architecture</h4>
+
+                <!-- Happy Path -->
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 18px;">
+                        <span style="background: var(--accent-success); color: white; padding: 3px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">HAPPY PATH</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">99% of transactions</span>
+                    </div>
+                    <div class="diagram-row">
+                        <div class="diagram-box primary">
+                            &#128100; User
+                            <small>Clicks "Pay"</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box success">
+                            &#128187; Backend
+                            <small>Creates Order</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box blue">
+                            &#128176; Razorpay
+                            <small>Checkout Modal</small>
+                        </div>
+                    </div>
+                    <div class="diagram-arrow down">&#8595;</div>
+                    <div class="diagram-row">
+                        <div class="diagram-box blue">
+                            &#9989; Payment Done
+                            <small>Razorpay confirms</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box purple">
+                            &#128232; Webhook
+                            <small>payment.captured</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box success">
+                            &#128451;&#65039; DB Updated
+                            <small>status = "paid"</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Safety Net -->
+                <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 18px;">
+                        <span style="background: var(--accent-warning); color: white; padding: 3px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">SAFETY NET</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">When webhooks fail (~1%)</span>
+                    </div>
+                    <div class="diagram-row">
+                        <div class="diagram-box danger">
+                            &#10060; Webhook Failed
+                            <small>Server was down</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box warning">
+                            &#9200; Cron Job
+                            <small>Runs every hour</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box blue">
+                            &#128269; Fetches from API
+                            <small>Razorpay status</small>
+                        </div>
+                    </div>
+                    <div class="diagram-arrow down">&#8595;</div>
+                    <div class="diagram-row">
+                        <div class="diagram-box muted">
+                            &#9878;&#65039; Compares
+                            <small>DB vs Razorpay</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box success">
+                            &#128260; Fixes Mismatches
+                            <small>Updates DB</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box danger">
+                            &#128680; Alerts Team
+                            <small>If many mismatches</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Principles -->
+                <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 25px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                        <span style="background: var(--accent-primary); color: white; padding: 3px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">KEY PRINCIPLES</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <span style="font-size: 1.2rem;">&#9889;</span>
+                            <div style="text-align: left;">
+                                <strong style="font-size: 0.85rem;">Primary: Webhooks</strong>
+                                <p style="color: var(--text-muted); font-size: 0.8rem;">Real-time, event-driven</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <span style="font-size: 1.2rem;">&#128737;&#65039;</span>
+                            <div style="text-align: left;">
+                                <strong style="font-size: 0.85rem;">Backup: Reconciliation</strong>
+                                <p style="color: var(--text-muted); font-size: 0.8rem;">Catches missed webhooks</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <span style="font-size: 1.2rem;">&#128680;</span>
+                            <div style="text-align: left;">
+                                <strong style="font-size: 0.85rem;">Alert: On Anomalies</strong>
+                                <p style="color: var(--text-muted); font-size: 0.8rem;">Many mismatches = problem</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <span style="font-size: 1.2rem;">&#128220;</span>
+                            <div style="text-align: left;">
+                                <strong style="font-size: 0.85rem;">Audit: Log Everything</strong>
+                                <p style="color: var(--text-muted); font-size: 0.8rem;">Debug trail for every txn</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-grid" style="margin-top: 40px;">
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title">Webhooks Handle 99%</div>
+                    <div class="card-desc">
+                        Most payments are confirmed instantly via webhooks. They're real-time and efficient.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-warning);">
+                    <div class="card-icon">&#128737;&#65039;</div>
+                    <div class="card-title">Reconciliation Handles 1%</div>
+                    <div class="card-desc">
+                        Hourly cron job catches the rare cases where webhooks failed. It's your safety net.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-danger);">
+                    <div class="card-icon">&#128680;</div>
+                    <div class="card-title">Alerts for Anomalies</div>
+                    <div class="card-desc">
+                        If reconciliation finds many mismatches, alert the team. Something might be seriously wrong.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Razorpay Reconciliation in Production -->
+            <div class="highlight-box" style="margin-top: 40px;">
+                <h4 style="margin-bottom: 15px;">How Reconciliation Works at Scale (Real Production)</h4>
+                <div class="table-container" style="margin-top: 15px;">
+                    <table>
+                        <tr>
+                            <th>Level</th>
+                            <th>Frequency</th>
+                            <th>What It Does</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Webhook-level</strong></td>
+                            <td>Every 1 hour</td>
+                            <td>Catches missed webhooks &mdash; compares "pending" payments in your DB against Razorpay API. <em>This is what we built today.</em></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Settlement-level</strong></td>
+                            <td>Daily</td>
+                            <td>Razorpay settles money to your bank on a <strong>T+2 basis</strong> (2 business days after capture). Daily reconciliation matches Razorpay's settlement reports against your DB.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Financial reconciliation</strong></td>
+                            <td>Monthly</td>
+                            <td>Full audit &mdash; match bank statements with PG settlement reports. Catches fees, chargebacks, and refund discrepancies.</td>
+                        </tr>
+                    </table>
+                </div>
+                <p style="color: var(--text-secondary); margin-top: 15px; font-size: 0.9rem;">
+                    <strong>Razorpay's tools:</strong> The Dashboard has a built-in Reconciliation section under <strong>Reports &rarr; Settlements</strong>. Large merchants use the <a href="https://razorpay.com/docs/api/settlements/" target="_blank" style="color: var(--accent-primary);">Razorpay Settlements API</a> to pull transaction data in bulk for automated reconciliation. Some merchants negotiate <strong>T+1 or instant settlement</strong> for faster cash flow.
+                </p>
+
+                <h4 style="margin-top: 25px; margin-bottom: 12px;">What Merchants Actually Do with Razorpay</h4>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <p>In the real world, Razorpay merchants reconcile using a combination of approaches:</p>
+                    <ul style="margin: 12px 0 0 20px;">
+                        <li><strong>Daily CSV download:</strong> Most small-medium merchants download the daily transaction report from <strong>Razorpay Dashboard &rarr; Reports &rarr; Transactions</strong> and match it against their order database (often in a spreadsheet or accounting tool).</li>
+                        <li style="margin-top: 8px;"><strong>Settlement report matching:</strong> When Razorpay settles money to your bank (T+2), they provide a settlement report listing which payments were included. Merchants match this against their bank statement to verify the correct amount arrived. Razorpay groups multiple payments into one bank transfer, so you need the report to know which payments are included.</li>
+                        <li style="margin-top: 8px;"><strong>Automated via API:</strong> Larger merchants (e.g., Swiggy, Zomato) build automated reconciliation pipelines: a cron job calls the <code>/settlements/recon/combined</code> API after each settlement, compares with the DB, and flags discrepancies automatically. Alerts go to a Slack channel or PagerDuty.</li>
+                        <li style="margin-top: 8px;"><strong>Third-party tools:</strong> Some merchants use dedicated reconciliation services (like Cashfree Reconciliation, Zoho Books integration) that connect to Razorpay's API and auto-reconcile.</li>
+                    </ul>
+                    <p style="margin-top: 12px;"><strong>The key insight:</strong> No matter how automated your webhooks are, you always need a separate reconciliation process because money moving through banks is a different system from payment status updates. A payment can be "captured" in Razorpay but the actual money settles to your bank days later &mdash; and sometimes the amounts don't match due to fees, chargebacks, or currency conversion.</p>
+                </div>
+            </div>
+
+            <div class="collapsible" style="margin-top: 40px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128203; Production Checklist</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="highlight-box">
+                            <h4 style="margin-bottom: 15px;">Before Going Live</h4>
+                            <ul style="margin-left: 20px; color: var(--text-secondary);">
+                                <li>&#9989; Store Razorpay keys in environment variables, not code</li>
+                                <li>&#9989; Verify webhook signatures (prevent spoofed requests)</li>
+                                <li>&#9989; Implement idempotency (WebhookEvent model)</li>
+                                <li>&#9989; Use database transactions in webhook handler</li>
+                                <li>&#9989; Return 200 only after successful DB update</li>
+                                <li>&#9989; Set up reconciliation cron job</li>
+                                <li>&#9989; Add logging for debugging</li>
+                                <li>&#9989; Test with ngrok + Razorpay test mode before deploying</li>
+                                <li>&#9989; Set up alerts for high mismatch rates</li>
+                                <li>&#9989; Handle edge cases: refunds, disputes, partial payments</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible" style="margin-top: 20px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#129514; Quick Quiz</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div style="margin-bottom: 20px;">
+                            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                                <strong>Q1:</strong> Why do we store <code>razorpay_event_id</code> in the database?
+                            </p>
+                            <details style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                                <summary style="cursor: pointer; color: var(--accent-primary);">Show Answer</summary>
+                                <p style="margin-top: 10px; color: var(--text-secondary);">
+                                    To prevent duplicate processing. If Razorpay retries a webhook and we've already
+                                    processed it, we skip it. This is called idempotency.
+                                </p>
+                            </details>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                                <strong>Q2:</strong> Why do we return 500 (not 200) when the webhook handler crashes?
+                            </p>
+                            <details style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                                <summary style="cursor: pointer; color: var(--accent-primary);">Show Answer</summary>
+                                <p style="margin-top: 10px; color: var(--text-secondary);">
+                                    So Razorpay knows the webhook wasn't processed successfully and will retry.
+                                    If we returned 200, Razorpay would think it succeeded and won't retry.
+                                </p>
+                            </details>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                                <strong>Q3:</strong> Why do we need both webhooks AND reconciliation?
+                            </p>
+                            <details style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                                <summary style="cursor: pointer; color: var(--accent-primary);">Show Answer</summary>
+                                <p style="margin-top: 10px; color: var(--text-secondary);">
+                                    Webhooks are real-time but not 100% reliable. Reconciliation is the backup
+                                    that catches any missed webhooks. Belt and suspenders approach!
+                                </p>
+                            </details>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                                <strong>Q4:</strong> Your cron job runs every hour. A customer pays at 2:01 PM and the webhook fails. When is the earliest their order could be updated?
+                            </p>
+                            <details style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                                <summary style="cursor: pointer; color: var(--accent-primary);">Show Answer</summary>
+                                <p style="margin-top: 10px; color: var(--text-secondary);">
+                                    At 3:00 PM &mdash; when the next cron run happens. But our reconciliation also checks for orders older than 1 hour, so the order (created at 2:01 PM) won't be picked up until 3:01 PM at the earliest. In practice, the 4:00 PM cron run would catch it. This is why webhooks are the primary mechanism!
+                                </p>
+                            </details>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                                <strong>Q5:</strong> You're building a SaaS product that serves customers in the US, Europe, and India. Which payment gateway(s) would you choose?
+                            </p>
+                            <details style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                                <summary style="cursor: pointer; color: var(--accent-primary);">Show Answer</summary>
+                                <p style="margin-top: 10px; color: var(--text-secondary);">
+                                    <strong>Stripe</strong> for US/Europe (best global coverage and developer experience), and <strong>Razorpay</strong> for India (UPI support is a must for Indian customers). Many companies use multiple PGs for different regions. The integration pattern is the same &mdash; just different SDKs!
+                                </p>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            Class 13 &bull; Reconciliation, Crons & Razorpay Integration<br>
+            <span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span>
+        </p>
+    </footer>
+
+    <script>
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (winScroll / height) * 100 + '%';
+        });
+
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.textContent = '\u{1F319}';
+                text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.textContent = '\u{2600}\u{FE0F}';
+                text.textContent = 'Light';
+            }
+        }
+
+        // Collapsible sections
+        function toggleCollapsible(header) {
+            const collapsible = header.parentElement;
+            collapsible.classList.toggle('open');
+        }
+
+        // Toggle code blocks
+        function toggleCode(header) {
+            const codeBlock = header.parentElement;
+            codeBlock.classList.toggle('collapsed');
+        }
+
+        // Copy code
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Expand all code blocks shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'e' && e.altKey) {
+                document.querySelectorAll('.code-block.collapsed').forEach(block => {
+                    block.classList.remove('collapsed');
+                });
+            }
+            if (e.key === 'c' && e.altKey) {
+                document.querySelectorAll('.code-block:not(.collapsed)').forEach(block => {
+                    block.classList.add('collapsed');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
