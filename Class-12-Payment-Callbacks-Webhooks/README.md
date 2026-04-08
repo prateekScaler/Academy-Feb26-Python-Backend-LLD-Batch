@@ -1239,6 +1239,9 @@ def webhook(request):
 
 ## 📚 Resources & Further Reading
 
+### Recommended Video
+- [Designing Idempotent API Endpoints for Payments at Stripe](https://www.youtube.com/watch?v=J2IcD9FZvZU&t=7s) — Deep dive into how Stripe designs idempotent APIs to prevent duplicate payments
+
 ### Official Documentation
 - [Stripe Webhooks Guide](https://stripe.com/docs/webhooks)
 - [Razorpay Webhooks](https://razorpay.com/docs/webhooks/)
