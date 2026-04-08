@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Architecture Journey - Interactive Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f1a;
+            --card: #1a1a2e;
+            --card-hover: #222240;
+            --border: #2a2a4a;
+            --accent: #ff9900;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --red: #ef4444;
+            --cyan: #06b6d4;
+            --text: #e2e8f0;
+            --muted: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 40px;
+            background: rgba(15,15,26,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        .logo { font-weight: 700; color: var(--accent); }
+        .progress { display: flex; gap: 6px; }
+        .progress-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .progress-dot:hover { background: var(--muted); }
+        .progress-dot.active { background: var(--accent); transform: scale(1.2); }
+        .progress-dot.done { background: var(--green); }
+
+        /* Main Container */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 100px 30px 50px;
+        }
+
+        /* Section */
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Situation Header */
+        .situation {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255,153,0,0.08), rgba(139,92,246,0.08));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .situation-num {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        .situation h2 { font-size: 1.6rem; margin-bottom: 8px; }
+        .situation p { color: var(--muted); font-size: 0.95rem; }
+
+        /* Flow Container */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Node */
+        .node {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 30px;
+            min-width: 200px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .node:hover { border-color: var(--accent); background: var(--card-hover); }
+        .node.revealed { border-color: var(--green); }
+        .node-icon { font-size: 2rem; margin-bottom: 8px; }
+        .node-title { font-weight: 700; font-size: 1rem; }
+        .node-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+        /* Hidden content - only show on reveal */
+        .node .node-icon,
+        .node .node-title,
+        .node .node-sub { display: none; }
+        .node.revealed .node-icon,
+        .node.revealed .node-title,
+        .node.revealed .node-sub { display: block; }
+
+        /* Mystery state */
+        .node .mystery {
+            font-size: 2.5rem;
+            opacity: 0.6;
+        }
+        .node.revealed .mystery { display: none; }
+
+        .click-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--accent);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        .node.revealed .click-badge { display: none; }
+
+        /* Connector */
+        .connector {
+            width: 2px;
+            height: 30px;
+            background: var(--border);
+        }
+        .connector.done { background: var(--green); }
+
+        /* Branch Layout */
+        .branch {
+            display: flex;
+            gap: 40px;
+            position: relative;
+            margin: 20px 0;
+        }
+        .branch::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25%;
+            right: 25%;
+            height: 2px;
+            background: var(--border);
+        }
+        .branch-item { display: flex; flex-direction: column; align-items: center; }
+        .branch-connector { width: 2px; height: 20px; background: var(--border); }
+
+        /* Grid Layout */
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .node-grid .node { min-width: unset; }
+
+        /* Reveal Panel */
+        .reveal-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-top: 30px;
+            overflow: hidden;
+            display: none;
+        }
+        .reveal-panel.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal-header {
+            padding: 20px 25px;
+            background: rgba(255,153,0,0.1);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .reveal-header span { font-size: 1.5rem; }
+        .reveal-header h3 { font-size: 1.1rem; }
+        .reveal-body { padding: 25px; }
+
+        /* Diagram */
+        .diagram {
+            background: #0a0a12;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--muted);
+        }
+        .diagram .h { color: var(--accent); }
+        .diagram .b { color: var(--blue); }
+        .diagram .g { color: var(--green); }
+        .diagram .r { color: var(--red); }
+        .diagram .p { color: var(--purple); }
+        .diagram .c { color: var(--cyan); }
+
+        /* Clickable Box */
+        .click-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .click-box:hover { border-color: var(--accent); }
+        .click-box.open { border-color: var(--green); }
+        .click-box-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        .click-box-header .arrow { transition: transform 0.3s; color: var(--muted); }
+        .click-box.open .arrow { transform: rotate(180deg); }
+        .click-box-content {
+            display: none;
+            padding: 0 20px 20px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+        .click-box.open .click-box-content { display: block; }
+
+        /* Table */
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin: 15px 0;
+        }
+        .mini-table th, .mini-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+        .mini-table th { background: var(--bg); color: var(--accent); }
+        .mini-table td { color: var(--muted); }
+        .mini-table strong { color: var(--text); }
+
+        /* Comparison */
+        .compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .compare-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .compare-card:hover { border-color: var(--accent); }
+        .compare-card.reveal { border-color: var(--green); background: rgba(16,185,129,0.05); }
+        .compare-card h4 { font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .compare-card p { font-size: 0.85rem; color: var(--muted); display: none; }
+        .compare-card.reveal p { display: block; }
+
+        /* Tags */
+        .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; align-items: center; }
+        .tag {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: rgba(255,153,0,0.15);
+            color: var(--accent);
+        }
+        .tag.blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+        .tag.green { background: rgba(16,185,129,0.15); color: var(--green); }
+        .tag.purple { background: rgba(139,92,246,0.15); color: var(--purple); }
+        .tag.pink { background: rgba(236,72,153,0.15); color: var(--pink); }
+        .tag.red { background: rgba(239,68,68,0.15); color: var(--red); }
+
+        /* AWS Console Link */
+        .aws-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(35,47,62,0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+        .aws-link:hover {
+            border-color: var(--accent);
+            background: rgba(255,153,0,0.1);
+        }
+
+        /* Navigation */
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+        .nav-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-btn:hover { border-color: var(--accent); }
+        .nav-btn.primary { background: var(--accent); color: #000; border: none; }
+        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Start Screen */
+        .start-screen {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .start-screen h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .start-screen p { color: var(--muted); margin-bottom: 40px; max-width: 500px; }
+        .start-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 16px 45px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .start-btn:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(255,153,0,0.3); }
+
+        /* Service Icons Row */
+        .service-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+        .service-icon:hover { border-color: var(--accent); transform: translateY(-3px); }
+
+        /* Warning/Info boxes */
+        .info-box {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        .info-box.warn { background: rgba(239,68,68,0.1); border: 1px solid var(--red); }
+        .info-box.tip { background: rgba(16,185,129,0.1); border: 1px solid var(--green); }
+        .info-box.note { background: rgba(59,130,246,0.1); border: 1px solid var(--blue); }
+        .info-box strong { color: var(--text); }
+
+        /* Port Grid */
+        .port-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .port-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .port-item:hover { border-color: var(--accent); }
+        .port-item.open { border-color: var(--green); }
+        .port-num { font-family: 'Fira Code', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+        .port-name { font-size: 0.8rem; color: var(--muted); }
+        .port-desc { display: none; font-size: 0.75rem; color: var(--text); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+        .port-item.open .port-desc { display: block; }
+
+        @media (max-width: 768px) {
+            .container { padding: 80px 15px 30px; }
+            header { padding: 12px 20px; }
+            .branch { flex-direction: column; gap: 15px; }
+            .branch::before { display: none; }
+            .compare { grid-template-columns: 1fr; }
+            .start-screen h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">AWS Journey</div>
+        <div class="progress" id="progress"></div>
+    </header>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div class="section active" id="sec-start">
+            <div class="start-screen">
+                <div style="font-size: 4rem; margin-bottom: 25px;">🏗️</div>
+                <h1>AWS Architecture Journey</h1>
+                <p>An interactive flowchart quiz. Click on each component to reveal what you need to know.</p>
+                <div class="service-row">
+                    <div class="service-icon">💻</div>
+                    <div class="service-icon">🗄️</div>
+                    <div class="service-icon">🌐</div>
+                    <div class="service-icon">🛡️</div>
+                    <div class="service-icon">🌍</div>
+                    <div class="service-icon">📊</div>
+                    <div class="service-icon">🚀</div>
+                </div>
+                <button class="start-btn" onclick="goTo(1)">Start →</button>
+            </div>
+        </div>
+
+        <!-- Section 1: EC2 Fundamentals -->
+        <div class="section" id="sec-1">
+            <div class="situation">
+                <div class="situation-num">Situation 1</div>
+                <h2>Your Django app runs on localhost:8000</h2>
+                <p>Your friend in another city wants to see it. You need a server with a public IP.</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('ec2-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">💻</div>
+                    <div class="node-title">EC2</div>
+                    <div class="node-sub">Elastic Compute Cloud</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="ec2-panel">
+                <div class="reveal-header">
+                    <span>💻</span>
+                    <h3>EC2 = Virtual Server in the Cloud</h3>
+                </div>
+                <div class="reveal-body">
+                    <p style="color: var(--muted); margin-bottom: 20px;">Click each component to understand what you need to launch an EC2:</p>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🖼️ AMI (Amazon Machine Image)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>What:</strong> A template containing OS + pre-installed software.<br><br>
+                            <strong>Common choices:</strong><br>
+                            • Ubuntu 22.04 LTS (most Django tutorials use this)<br>
+                            • Amazon Linux 2023 (AWS optimized)<br><br>
+                            <strong>Think of it as:</strong> A "snapshot" you can clone to create new servers.
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>⚙️ Instance Type</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>Format:</strong> <code>t2.micro</code><br><br>
+                            • <strong>t</strong> = Family (t=general, c=compute, r=memory)<br>
+                            • <strong>2</strong> = Generation (higher = newer)<br>
+                            • <strong>micro</strong> = Size (CPU + RAM)<br><br>
+                            <table class="mini-table">
+                                <tr><th>Family</th><th>Optimized For</th><th>Use Case</th></tr>
+                                <tr><td><strong>T</strong> (t2, t3)</td><td>General, burstable</td><td>Web servers, dev</td></tr>
+                                <tr><td><strong>M</strong> (m5, m6)</td><td>Balanced</td><td>Production apps</td></tr>
+                                <tr><td><strong>C</strong> (c5, c6)</td><td>CPU intensive</td><td>ML, video encoding</td></tr>
+                                <tr><td><strong>R</strong> (r5, r6)</td><td>Memory intensive</td><td>Databases, caching</td></tr>
+                            </table>
+                            <div class="info-box tip"><strong>Free Tier:</strong> t2.micro or t3.micro (750 hrs/month)</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔑 Key Pair</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>What:</strong> SSH key to connect to your instance.<br><br>
+                            <strong>Important:</strong> Download the <code>.pem</code> file immediately - you can't get it again!<br><br>
+                            <div class="diagram">
+# Set permissions (required!)
+<span class="h">chmod 400</span> my-key.pem
+
+# Connect to EC2
+<span class="g">ssh</span> -i my-key.pem ubuntu@<span class="b">&lt;public-ip&gt;</span></div>
+                            <div class="info-box warn"><strong>chmod 400:</strong> Owner read-only. SSH refuses keys with loose permissions.</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🌍 Regions & Availability Zones</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>Region:</strong> Geographic location (ap-south-1 = Mumbai)<br>
+                            <strong>AZ:</strong> Independent data center within a region<br><br>
+                            <strong>Choose region based on:</strong><br>
+                            • <strong>Latency:</strong> Close to your users<br>
+                            • <strong>Cost:</strong> US regions often cheapest<br>
+                            • <strong>Compliance:</strong> Data residency laws<br><br>
+                            <div class="diagram">
+Region: <span class="h">ap-south-1</span> (Mumbai)
+├── AZ: ap-south-1<span class="b">a</span>  ← Independent data center
+├── AZ: ap-south-1<span class="b">b</span>  ← If one fails, others survive
+└── AZ: ap-south-1<span class="b">c</span></div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">Compute</span>
+                        <span class="tag green">750 hrs/month free</span>
+                        <a href="https://console.aws.amazon.com/ec2/" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(0)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(2)">Next: Security & Ports →</button>
+            </div>
+        </div>
+
+        <!-- Section 2: Security Groups & Ports -->
+        <div class="section" id="sec-2">
+            <div class="situation">
+                <div class="situation-num">Situation 2</div>
+                <h2>Your EC2 is running, but no one can connect!</h2>
+                <p>By default, all inbound traffic is blocked. You need to configure the firewall.</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('sg-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">🛡️</div>
+                    <div class="node-title">Security Group</div>
+                    <div class="node-sub">Virtual Firewall</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="sg-panel">
+                <div class="reveal-header">
+                    <span>🛡️</span>
+                    <h3>Security Groups = Instance-Level Firewall</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔄 Stateful Behavior</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>Key concept:</strong> If you allow traffic IN, the response OUT is automatic!<br><br>
+                            <div class="diagram">
+Request:  Client ──<span class="g">allowed</span>──► EC2
+Response: EC2 ──<span class="g">auto-allowed</span>──► Client  ← No rule needed!</div>
+                            This is what <strong>"stateful"</strong> means. NACLs are stateless (you'd need both rules).
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>📋 Common Ports (click each)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="port-grid">
+                                <div class="port-item" onclick="event.stopPropagation(); this.classList.toggle('open')">
+                                    <div class="port-num">22</div>
+                                    <div class="port-name">SSH</div>
+                                    <div class="port-desc">Remote terminal. <strong style="color:var(--red)">NEVER open to 0.0.0.0/0!</strong> Use "My IP" only.</div>
+                                </div>
+                                <div class="port-item" onclick="event.stopPropagation(); this.classList.toggle('open')">
+                                    <div class="port-num">80</div>
+                                    <div class="port-name">HTTP</div>
+                                    <div class="port-desc">Web traffic (unencrypted). OK to open to 0.0.0.0/0</div>
+                                </div>
+                                <div class="port-item" onclick="event.stopPropagation(); this.classList.toggle('open')">
+                                    <div class="port-num">443</div>
+                                    <div class="port-name">HTTPS</div>
+                                    <div class="port-desc">Web traffic (encrypted). Production standard.</div>
+                                </div>
+                                <div class="port-item" onclick="event.stopPropagation(); this.classList.toggle('open')">
+                                    <div class="port-num">5432</div>
+                                    <div class="port-name">PostgreSQL</div>
+                                    <div class="port-desc">Database. Only allow from app servers!</div>
+                                </div>
+                                <div class="port-item" onclick="event.stopPropagation(); this.classList.toggle('open')">
+                                    <div class="port-num">3306</div>
+                                    <div class="port-name">MySQL</div>
+                                    <div class="port-desc">Database. Never expose to internet.</div>
+                                </div>
+                                <div class="port-item" onclick="event.stopPropagation(); this.classList.toggle('open')">
+                                    <div class="port-num">6379</div>
+                                    <div class="port-name">Redis</div>
+                                    <div class="port-desc">Cache/queue. Keep private.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔢 CIDR Notation</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            The <code>/number</code> tells how many bits are fixed (network part):<br><br>
+                            <table class="mini-table">
+                                <tr><th>CIDR</th><th>Available IPs</th><th>Meaning</th></tr>
+                                <tr><td><code>/32</code></td><td>1</td><td>Exact single IP</td></tr>
+                                <tr><td><code>/24</code></td><td>256</td><td>x.x.x.0 to x.x.x.255</td></tr>
+                                <tr><td><code>/16</code></td><td>65,536</td><td>x.x.0.0 to x.x.255.255</td></tr>
+                                <tr><td><code>/0</code></td><td>All</td><td><strong>0.0.0.0/0 = anywhere</strong></td></tr>
+                            </table>
+                            <div class="info-box note">
+                                <strong>In Security Groups:</strong><br>
+                                <code>0.0.0.0/0</code> = any IPv4<br>
+                                <code>::/0</code> = any IPv6
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔗 SG Reference Pattern (Important!)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            Instead of hardcoding IPs, reference other Security Groups:<br><br>
+                            <div class="diagram">
+<span class="h">Web-SG:</span>  Allow 80,443 from <span class="g">0.0.0.0/0</span>
+<span class="h">App-SG:</span>  Allow 8000 from <span class="b">Web-SG-ID</span>    ← Not an IP!
+<span class="h">DB-SG:</span>   Allow 5432 from <span class="b">App-SG-ID</span>    ← Not an IP!</div>
+                            <div class="info-box tip">
+                                <strong>Why?</strong> EC2 IPs change. SG IDs don't. Auto-scaling friendly!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">Firewall</span>
+                        <span class="tag green">Stateful</span>
+                        <a href="https://console.aws.amazon.com/ec2/#SecurityGroups" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(1)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(3)">Next: Production Stack →</button>
+            </div>
+        </div>
+
+        <!-- Section 3: Production Stack -->
+        <div class="section" id="sec-3">
+            <div class="situation">
+                <div class="situation-num">Situation 3</div>
+                <h2>python manage.py runserver works... but is it production-ready?</h2>
+                <p>Django's dev server is single-threaded and insecure. You need a real stack.</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('stack-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">⚡</div>
+                    <div class="node-title">Production Stack</div>
+                    <div class="node-sub">Nginx + Gunicorn + Django</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="stack-panel">
+                <div class="reveal-header">
+                    <span>⚡</span>
+                    <h3>The Production Stack</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="diagram">
+        <span class="h">Internet</span>
+            │
+            ▼
+    ┌───────────────┐
+    │    <span class="g">Nginx</span>      │  ← Reverse proxy, SSL, static files
+    │   (Port 80)   │
+    └───────┬───────┘
+            │
+            ▼
+    ┌───────────────┐
+    │   <span class="b">Gunicorn</span>   │  ← WSGI server, multiple workers
+    │  (Port 8000)  │
+    └───────┬───────┘
+            │
+            ▼
+    ┌───────────────┐
+    │   <span class="p">Django</span>     │  ← Your application
+    └───────────────┘</div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔷 Nginx (Reverse Proxy)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>What it does:</strong><br>
+                            • Handles HTTPS/SSL termination<br>
+                            • Serves static files directly (CSS, JS, images)<br>
+                            • Load balances across multiple Gunicorns<br>
+                            • Buffers slow clients (protects backend)<br>
+                            • Gzip compression<br><br>
+                            <strong>Why?</strong> Nginx handles 10,000+ concurrent connections. Gunicorn can't.
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🐍 Gunicorn (WSGI Server)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>What:</strong> Python HTTP server that runs Django<br><br>
+                            <div class="diagram">
+gunicorn mysite.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers <span class="h">3</span></div>
+                            <strong>Workers formula:</strong> (2 × CPU cores) + 1<br><br>
+                            Each worker = independent Python process handling requests.
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔄 Forward vs Reverse Proxy (Interview Question!)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+<span class="h">FORWARD PROXY</span> (client-side, protects clients):
+┌────────┐     ┌─────────┐     ┌────────┐
+│ Client │ ──► │ Forward │ ──► │ Server │
+│  (You) │     │  Proxy  │     │        │
+└────────┘     └─────────┘     └────────┘
+               Client knows,    Server doesn't
+               server doesn't   know client
+
+Use cases: VPNs, corporate firewalls, anonymity
+
+
+<span class="h">REVERSE PROXY</span> (server-side, protects servers):
+┌────────┐     ┌─────────┐     ┌────────┐
+│ Client │ ──► │ Reverse │ ──► │ Server │
+│        │     │  Proxy  │     │ (Nginx)│
+└────────┘     └─────────┘     └────────┘
+               Client doesn't  Server knows
+               know it exists
+
+Use cases: Load balancing, SSL, caching, security</div>
+                            <table class="mini-table">
+                                <tr><th>Type</th><th>Sits in front of</th><th>Examples</th></tr>
+                                <tr><td><strong>Forward</strong></td><td>Clients</td><td>VPNs, Squid</td></tr>
+                                <tr><td><strong>Reverse</strong></td><td>Servers</td><td>Nginx, HAProxy, AWS ALB</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(2)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(4)">Next: Database →</button>
+            </div>
+        </div>
+
+        <!-- Section 4: RDS -->
+        <div class="section" id="sec-4">
+            <div class="situation">
+                <div class="situation-num">Situation 4</div>
+                <h2>SQLite won't scale. You need a real database.</h2>
+                <p>Install PostgreSQL yourself, or let AWS manage backups, patches, failover?</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('rds-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">🗄️</div>
+                    <div class="node-title">RDS</div>
+                    <div class="node-sub">Managed Database Service</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="rds-panel">
+                <div class="reveal-header">
+                    <span>🗄️</span>
+                    <h3>RDS = Relational Database Service</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>⚖️ Self-Managed vs RDS</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th>Task</th><th>Self-Managed (EC2)</th><th>RDS</th></tr>
+                                <tr><td>Install database</td><td>You</td><td>AWS</td></tr>
+                                <tr><td>Security patches</td><td>You (manually)</td><td>AWS (automatic)</td></tr>
+                                <tr><td>Backups</td><td>You (cron jobs)</td><td>Automatic daily</td></tr>
+                                <tr><td>3 AM crash</td><td><strong>You wake up</strong></td><td>AWS handles</td></tr>
+                                <tr><td>Multi-AZ failover</td><td>Complex setup</td><td>One checkbox</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔌 Django Connection</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+<span class="c"># settings.py</span>
+DATABASES = {
+    'default': {
+        'ENGINE': '<span class="g">django.db.backends.postgresql</span>',
+        'NAME': 'mydb',
+        'USER': 'admin',
+        'PASSWORD': <span class="h">os.environ.get('DB_PASSWORD')</span>,  <span class="c"># Never hardcode!</span>
+        'HOST': 'mydb.xxx.<span class="b">ap-south-1</span>.rds.amazonaws.com',
+        'PORT': '<span class="p">5432</span>',
+    }
+}
+
+<span class="c"># Install adapter</span>
+pip install psycopg2-binary</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔒 RDS Security (Critical!)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="info-box warn">
+                                <strong>RDS should NEVER be publicly accessible!</strong><br>
+                                Only your EC2 instances should talk to the database.
+                            </div>
+                            <div class="diagram">
+<span class="h">RDS Security Group:</span>
+┌────────────┬────────┬─────────────────────┐
+│ Type       │ Port   │ Source              │
+├────────────┼────────┼─────────────────────┤
+│ PostgreSQL │ 5432   │ <span class="g">App-SG-ID</span>           │  ← Only app servers!
+└────────────┴────────┴─────────────────────┘</div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag blue">PostgreSQL</span>
+                        <span class="tag blue">MySQL</span>
+                        <span class="tag green">750 hrs/month free</span>
+                        <a href="https://console.aws.amazon.com/rds/" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(3)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(5)">Next: VPC & Subnets →</button>
+            </div>
+        </div>
+
+        <!-- Section 5: VPC -->
+        <div class="section" id="sec-5">
+            <div class="situation">
+                <div class="situation-num">Situation 5</div>
+                <h2>Your database shouldn't be reachable from the internet at all!</h2>
+                <p>You need public subnets (for load balancers) and private subnets (for apps/DB).</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('vpc-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">🌐</div>
+                    <div class="node-title">VPC</div>
+                    <div class="node-sub">Virtual Private Cloud</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="vpc-panel">
+                <div class="reveal-header">
+                    <span>🌐</span>
+                    <h3>VPC = Your Isolated Network in AWS</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🏗️ VPC Architecture Diagram</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+                    <span class="h">INTERNET</span>
+                        │
+                        ▼
+          ┌─────────────────────────┐
+          │    <span class="g">Internet Gateway</span>     │  ← Front door
+          └───────────┬─────────────┘
+                      │
+╔═════════════════════════════════════════════════════╗
+║  <span class="p">VPC (10.0.0.0/16)</span>                                  ║
+║                                                     ║
+║  ┌───────────────────┐   ┌───────────────────┐     ║
+║  │ <span class="g">PUBLIC SUBNET</span>      │   │ <span class="r">PRIVATE SUBNET</span>     │     ║
+║  │ 10.0.1.0/24       │   │ 10.0.2.0/24       │     ║
+║  │                   │   │                   │     ║
+║  │ • Load Balancer   │   │ • EC2 (Django)    │     ║
+║  │ • NAT Gateway     │   │ • RDS (Database)  │     ║
+║  │ • Bastion Host    │   │                   │     ║
+║  └───────────────────┘   └───────────────────┘     ║
+║           │                        ▲               ║
+║           └──── <span class="b">NAT Gateway</span> ──────┘               ║
+║                 (outbound only)                    ║
+╚═════════════════════════════════════════════════════╝</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>📦 VPC Components</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th>Component</th><th>What It Does</th><th>Analogy</th></tr>
+                                <tr><td><strong>VPC</strong></td><td>Your isolated network</td><td>Your apartment building</td></tr>
+                                <tr><td><strong>Subnet</strong></td><td>Smaller network inside VPC</td><td>Individual apartments</td></tr>
+                                <tr><td><strong>Internet Gateway</strong></td><td>Connects VPC to internet</td><td>Front door</td></tr>
+                                <tr><td><strong>NAT Gateway</strong></td><td>Outbound internet for private subnet</td><td>Service entrance (out only)</td></tr>
+                                <tr><td><strong>Route Table</strong></td><td>Traffic rules</td><td>Building directory</td></tr>
+                                <tr><td><strong>Bastion Host</strong></td><td>SSH jump server</td><td>Reception desk</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔀 Public vs Private Subnet</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th></th><th>Public Subnet</th><th>Private Subnet</th></tr>
+                                <tr><td><strong>Has route to IGW?</strong></td><td>Yes</td><td>No</td></tr>
+                                <tr><td><strong>Public IP?</strong></td><td>Yes</td><td>No</td></tr>
+                                <tr><td><strong>Internet access</strong></td><td>Direct</td><td>Via NAT (outbound only)</td></tr>
+                                <tr><td><strong>Put here</strong></td><td>ALB, NAT, Bastion</td><td>App servers, Databases</td></tr>
+                            </table>
+                            <div class="info-box note">
+                                A subnet is <strong>public</strong> because its route table has <code>0.0.0.0/0 → igw-xxx</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔄 NAT Gateway</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <strong>Problem:</strong> Private EC2 needs to run <code>pip install django</code>. But it has no public IP!<br><br>
+                            <strong>Solution:</strong> NAT Gateway sits in public subnet and translates private → public.<br><br>
+                            <div class="diagram">
+Private EC2 ──► <span class="b">NAT Gateway</span> ──► Internet Gateway ──► Internet
+                    │
+          (Lives in public subnet)
+          (One-way: outbound only)</div>
+                            <div class="info-box warn">
+                                <strong>Cost:</strong> ~$32/month! For dev, use NAT Instance (t3.micro) instead.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🛡️ Security Group vs NACL</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th></th><th>Security Group</th><th>NACL</th></tr>
+                                <tr><td><strong>Level</strong></td><td>Instance</td><td>Subnet</td></tr>
+                                <tr><td><strong>Stateful?</strong></td><td><span style="color:var(--green)">Yes ✓</span></td><td><span style="color:var(--red)">No ✗</span></td></tr>
+                                <tr><td><strong>Rules</strong></td><td>Allow only</td><td>Allow + Deny</td></tr>
+                                <tr><td><strong>Use</strong></td><td>99% of cases</td><td>Extra compliance layer</td></tr>
+                            </table>
+                            <div class="info-box tip">
+                                <strong>Stateful:</strong> Allow inbound → response auto-allowed outbound<br>
+                                <strong>Stateless:</strong> Must configure BOTH directions explicitly
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag purple">Networking</span>
+                        <span class="tag purple">Subnets</span>
+                        <a href="https://console.aws.amazon.com/vpc/" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(4)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(6)">Next: DNS →</button>
+            </div>
+        </div>
+
+        <!-- Section 6: Route 53 -->
+        <div class="section" id="sec-6">
+            <div class="situation">
+                <div class="situation-num">Situation 6</div>
+                <h2>Users can't remember 13.232.45.67</h2>
+                <p>They want to type myapp.com. You need DNS.</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('dns-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">🌍</div>
+                    <div class="node-title">Route 53</div>
+                    <div class="node-sub">DNS Service</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="dns-panel">
+                <div class="reveal-header">
+                    <span>🌍</span>
+                    <h3>Route 53 = DNS (port 53)</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔄 How DNS Works</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+User types: <span class="h">myapp.com</span>
+      │
+      ▼
+┌─────────────┐
+│  Route 53   │ ──► Returns: <span class="g">13.232.x.x</span>
+│   (DNS)     │
+└─────────────┘
+      │
+      ▼
+Browser connects to that IP</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>📋 DNS Record Types</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th>Record</th><th>Points To</th><th>Use Case</th></tr>
+                                <tr><td><strong>A</strong></td><td>IP address</td><td><code>myapp.com → 13.232.x.x</code></td></tr>
+                                <tr><td><strong>CNAME</strong></td><td>Another domain</td><td><code>www.myapp.com → myapp.com</code></td></tr>
+                                <tr><td><strong>Alias</strong></td><td>AWS resource</td><td><code>myapp.com → ALB</code></td></tr>
+                                <tr><td><strong>TXT</strong></td><td>Text</td><td>Domain verification, SPF</td></tr>
+                                <tr><td><strong>MX</strong></td><td>Mail servers</td><td>Email routing</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>⚡ A vs CNAME vs Alias</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th></th><th>A Record</th><th>CNAME</th><th>Alias</th></tr>
+                                <tr><td><strong>Works for naked domain?</strong></td><td><span style="color:var(--green)">Yes</span></td><td><span style="color:var(--red)">No!</span></td><td><span style="color:var(--green)">Yes</span></td></tr>
+                                <tr><td><strong>Points to</strong></td><td>IP</td><td>Domain</td><td>AWS resource</td></tr>
+                                <tr><td><strong>Query cost</strong></td><td>$0.40/million</td><td>$0.40/million</td><td><strong>FREE</strong></td></tr>
+                            </table>
+                            <div class="info-box tip">
+                                <strong>Rule:</strong> Use <strong>Alias</strong> for ALB, CloudFront, S3. Works for naked domain + free!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔐 TXT Records</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            Used for <strong>domain verification</strong>:<br><br>
+                            <div class="diagram">
+Google says: "Add this TXT record to prove you own the domain"
+   <span class="h">google-site-verification=abc123xyz</span>
+
+You add it to Route 53
+
+Google checks DNS → Finds your code → <span class="g">Verified!</span></div>
+                            <strong>Used for:</strong> SSL certificates, Google Search Console, email SPF/DKIM
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag pink">$0.50/zone/month</span>
+                        <span class="tag green">Alias = FREE queries</span>
+                        <a href="https://console.aws.amazon.com/route53/" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(5)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(7)">Next: Monitoring →</button>
+            </div>
+        </div>
+
+        <!-- Section 7: CloudWatch -->
+        <div class="section" id="sec-7">
+            <div class="situation">
+                <div class="situation-num">Situation 7</div>
+                <h2>Your app crashed at 3 AM. You found out from angry users.</h2>
+                <p>You need monitoring and alerts BEFORE users notice problems.</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('cw-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">📊</div>
+                    <div class="node-title">CloudWatch</div>
+                    <div class="node-sub">Monitoring & Alarms</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="cw-panel">
+                <div class="reveal-header">
+                    <span>📊</span>
+                    <h3>CloudWatch = Your AWS Dashboard</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>📈 Default EC2 Metrics</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th>Metric</th><th>What It Measures</th><th>Alert When</th></tr>
+                                <tr><td><strong>CPUUtilization</strong></td><td>CPU usage %</td><td>> 80% sustained</td></tr>
+                                <tr><td><strong>NetworkIn/Out</strong></td><td>Bytes transferred</td><td>Sudden spike</td></tr>
+                                <tr><td><strong>StatusCheckFailed</strong></td><td>Instance health</td><td>Any failure</td></tr>
+                                <tr><td><strong>DiskReadOps</strong></td><td>Disk operations</td><td>Unusual pattern</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>⚠️ Memory & Disk NOT Included!</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="info-box warn">
+                                <strong>Why?</strong> CloudWatch runs outside the EC2. It can see CPU (hypervisor schedules it), but can't see inside the guest OS.
+                            </div>
+                            <strong>Solution:</strong> Install CloudWatch Agent inside EC2:<br><br>
+                            <div class="diagram">
+<span class="c"># Install agent</span>
+wget https://s3.amazonaws.com/.../amazon-cloudwatch-agent.deb
+sudo dpkg -i amazon-cloudwatch-agent.deb
+
+<span class="c"># Configure</span>
+sudo /opt/aws/.../amazon-cloudwatch-agent-config-wizard</div>
+                            Now you get: Memory %, Disk %, process counts, etc.
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔔 Setting Up Alarms</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+<span class="h">Step 1:</span> Create SNS Topic (email notifications)
+<span class="h">Step 2:</span> Create CloudWatch Alarm
+         └─ Metric: CPUUtilization > 80%
+         └─ Period: 5 minutes
+<span class="h">Step 3:</span> Set Action → notify SNS topic
+
+When CPU > 80% for 5 min → <span class="g">Email sent!</span></div>
+                            <div class="info-box tip">
+                                <strong>Pro tip:</strong> Set up billing alarms at $5, $10, $20 to avoid surprise bills!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">Free: 10 metrics, 3 dashboards</span>
+                        <span class="tag blue">$0.10/alarm/month</span>
+                        <a href="https://console.aws.amazon.com/cloudwatch/" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(6)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(8)">Next: Easy Deployment →</button>
+            </div>
+        </div>
+
+        <!-- Section 8: Elastic Beanstalk -->
+        <div class="section" id="sec-8">
+            <div class="situation">
+                <div class="situation-num">Situation 8</div>
+                <h2>Setting up EC2 + ALB + Auto Scaling + CloudWatch is complex!</h2>
+                <p>What if you could just upload your code and let AWS handle everything?</p>
+            </div>
+
+            <div class="flow">
+                <div class="node" onclick="toggleReveal('eb-panel', this)">
+                    <span class="click-badge">click</span>
+                    <div class="mystery">❓</div>
+                    <div class="node-icon">🚀</div>
+                    <div class="node-title">Elastic Beanstalk</div>
+                    <div class="node-sub">PaaS - Just Deploy Code</div>
+                </div>
+            </div>
+
+            <div class="reveal-panel" id="eb-panel">
+                <div class="reveal-header">
+                    <span>🚀</span>
+                    <h3>Elastic Beanstalk = Heroku on AWS</h3>
+                </div>
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>✨ What EB Does For You</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+<span class="h">You:</span>   Upload code (zip file)
+          │
+          ▼
+<span class="g">EB:</span>    Creates EVERYTHING:
+        ├── EC2 instances
+        ├── Load Balancer (ALB)
+        ├── Auto Scaling Group
+        ├── Security Groups
+        ├── CloudWatch monitoring
+        └── Deployment pipeline</div>
+                            <div class="info-box tip">
+                                <strong>EB itself is FREE!</strong> You only pay for the resources it creates (EC2, RDS, etc.)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🛠️ EB CLI Commands</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th>Command</th><th>What It Does</th></tr>
+                                <tr><td><code>eb init</code></td><td>Initialize project (choose region, app name)</td></tr>
+                                <tr><td><code>eb create</code></td><td>Create environment (launches everything)</td></tr>
+                                <tr><td><code>eb deploy</code></td><td>Deploy new code version</td></tr>
+                                <tr><td><code>eb open</code></td><td>Open app in browser</td></tr>
+                                <tr><td><code>eb logs</code></td><td>View application logs</td></tr>
+                                <tr><td><code>eb terminate</code></td><td>Delete everything (stop billing!)</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>📁 Django Project Structure for EB</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+myproject/
+├── <span class="h">requirements.txt</span>      ← Python dependencies
+├── <span class="h">.ebextensions/</span>
+│   └── django.config      ← EB configuration
+├── myapp/
+│   └── ...
+└── manage.py</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>⚖️ Auto-Scaling with EB</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+<span class="h">Default:</span> Scale up when CPU > 70%
+
+<span class="g">Customizable:</span>
+├── Trigger metric: CPU, Memory, Network
+├── Thresholds: 50%, 80%, etc.
+├── Min instances: 1
+├── Max instances: 4
+└── Cool-down period: 5 minutes</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>❌ When NOT to Use EB</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            • Need fine-grained control over infrastructure<br>
+                            • Complex networking requirements<br>
+                            • Using containers (use ECS/EKS instead)<br>
+                            • Serverless (use Lambda)<br><br>
+                            <div class="info-box note">
+                                <strong>EB is great for:</strong> Standard web apps, Django/Flask, quick deployments, MVPs
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag green">FREE (pay for resources)</span>
+                        <span class="tag purple">Auto-scaling included</span>
+                        <a href="https://console.aws.amazon.com/elasticbeanstalk/" target="_blank" class="aws-link">🔗 AWS Console</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(7)">← Back</button>
+                <button class="nav-btn primary" onclick="goTo(9)">Final: Complete Architecture →</button>
+            </div>
+        </div>
+
+        <!-- Section 9: Final Architecture -->
+        <div class="section" id="sec-9">
+            <div class="situation" style="border-color: var(--green); background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.1));">
+                <div class="situation-num" style="color: var(--green);">Complete</div>
+                <h2>Your Production Architecture 🎉</h2>
+                <p>Click the diagram to see the complete request flow</p>
+            </div>
+
+            <div class="reveal-panel show">
+                <div class="reveal-body">
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🏗️ Full Architecture Diagram</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div class="diagram">
+                   User: <span class="h">myapp.com</span>
+                          │
+                          ▼
+                ┌──────────────────┐
+                │   <span class="p">Route 53</span>       │  DNS
+                └────────┬─────────┘
+                         │
+╔════════════════════════════════════════════════════════════╗
+║  <span class="b">VPC</span>                                                       ║
+║                                                            ║
+║  ┌──────────────────────────────────────────────────────┐  ║
+║  │  <span class="g">PUBLIC SUBNET</span>                                        │  ║
+║  │  ┌────────────────────────────────────────────────┐  │  ║
+║  │  │  Application Load Balancer (ALB)               │  │  ║
+║  │  │  • SSL termination (443 → 80)                  │  │  ║
+║  │  │  • Health checks                               │  │  ║
+║  │  └────────────────────┬───────────────────────────┘  │  ║
+║  └───────────────────────┼──────────────────────────────┘  ║
+║                          │                                  ║
+║  ┌───────────────────────┼──────────────────────────────┐  ║
+║  │  <span class="r">PRIVATE SUBNET</span>       │                              │  ║
+║  │            ┌──────────┴──────────┐                   │  ║
+║  │            ▼                     ▼                   │  ║
+║  │     ┌───────────┐         ┌───────────┐              │  ║
+║  │     │ <span class="h">EC2 #1</span>    │         │ <span class="h">EC2 #2</span>    │ Auto-scale  │  ║
+║  │     │  Django   │         │  Django   │              │  ║
+║  │     └─────┬─────┘         └─────┬─────┘              │  ║
+║  │           └──────────┬──────────┘                    │  ║
+║  │                      ▼                               │  ║
+║  │               ┌───────────┐                          │  ║
+║  │               │ <span class="b">RDS</span>       │                          │  ║
+║  │               │ PostgreSQL│                          │  ║
+║  │               └───────────┘                          │  ║
+║  └──────────────────────────────────────────────────────┘  ║
+║                                                            ║
+║  <span class="g">Security Groups:</span>                                         ║
+║  • ALB-SG: 443 from 0.0.0.0/0                              ║
+║  • App-SG: 8000 from ALB-SG                                ║
+║  • DB-SG:  5432 from App-SG                                ║
+║                                                            ║
+║  <span class="p">CloudWatch:</span> Monitoring all components                     ║
+╚════════════════════════════════════════════════════════════╝</div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>🔄 Request Flow (Step by Step)</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <div style="line-height: 2.2;">
+                                <strong>1.</strong> User types <code>myapp.com</code><br>
+                                <strong>2.</strong> <span class="tag purple">Route 53</span> returns ALB IP (Alias record)<br>
+                                <strong>3.</strong> Request hits <span class="tag blue">Internet Gateway</span><br>
+                                <strong>4.</strong> <span class="tag green">ALB</span> terminates SSL, health checks<br>
+                                <strong>5.</strong> <span class="tag">Security Group</span> allows port 443 ✓<br>
+                                <strong>6.</strong> ALB forwards to <span class="tag">EC2</span> in private subnet<br>
+                                <strong>7.</strong> Django processes request<br>
+                                <strong>8.</strong> Queries <span class="tag blue">RDS</span> (SG allows from App-SG)<br>
+                                <strong>9.</strong> Response returns same path<br>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="click-box" onclick="this.classList.toggle('open')">
+                        <div class="click-box-header">
+                            <span>💰 Cost Reference</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="click-box-content">
+                            <table class="mini-table">
+                                <tr><th>Service</th><th>Free Tier</th><th>After</th></tr>
+                                <tr><td>EC2 (t2.micro)</td><td>750 hrs/month</td><td>~$8/month</td></tr>
+                                <tr><td>RDS (db.t3.micro)</td><td>750 hrs/month</td><td>~$15/month</td></tr>
+                                <tr><td>NAT Gateway</td><td>None</td><td>~$32/month</td></tr>
+                                <tr><td>Route 53</td><td>None</td><td>$0.50/zone</td></tr>
+                                <tr><td>Elastic Beanstalk</td><td>Free</td><td>Free (pay resources)</td></tr>
+                                <tr><td>CloudWatch</td><td>10 metrics</td><td>$0.10/alarm</td></tr>
+                            </table>
+                            <div class="info-box warn">
+                                <strong>Avoid surprise bills:</strong><br>
+                                • Set billing alerts at $5, $10, $20<br>
+                                • Stop EC2 when not using<br>
+                                • Delete RDS when done (charges even when stopped after 7 days!)<br>
+                                • Terminate EB environments after practice
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="nav-btn" onclick="goTo(8)">← Back</button>
+                <button class="nav-btn primary" onclick="location.reload()">🔄 Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const totalSections = 10; // 0-9
+
+        function goTo(n) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            const sectionId = n === 0 ? 'sec-start' : `sec-${n}`;
+            document.getElementById(sectionId).classList.add('active');
+            updateProgress(n);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateProgress(current) {
+            const progress = document.getElementById('progress');
+            progress.innerHTML = '';
+            for (let i = 1; i <= 9; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i < current) dot.classList.add('done');
+                if (i === current) dot.classList.add('active');
+                dot.onclick = () => goTo(i);
+                progress.appendChild(dot);
+            }
+        }
+
+        function toggleReveal(panelId, node) {
+            const panel = document.getElementById(panelId);
+            panel.classList.toggle('show');
+            node.classList.toggle('revealed');
+        }
+
+        // Initialize
+        updateProgress(0);
+    </script>
+</body>
+</html>

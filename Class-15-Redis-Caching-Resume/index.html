@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 15: Redis Caching & Resume Writing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #f59e0b;
+            --accent-secondary: #d97706;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-purple: #a855f7;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(245, 158, 11, 0.2);
+        }
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(245, 158, 11, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #fbbf24, #f59e0b); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #fbbf24; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(245, 158, 11, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #fbbf24; }
+
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+
+        .highlight-box { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .highlight-box.blue { background: rgba(14, 165, 233, 0.1); border-color: #0ea5e9; }
+
+        .question-box { background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+
+        .visual-diagram { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 40px 30px; margin: 25px 0; text-align: center; }
+        .diagram-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 15px 0; flex-wrap: wrap; }
+        .diagram-box { padding: 14px 22px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; min-width: 120px; text-align: center; border: 2px solid transparent; }
+        .diagram-box.primary { background: rgba(245, 158, 11, 0.15); border-color: var(--accent-primary); color: #fbbf24; }
+        .diagram-box.success { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); color: #10b981; }
+        .diagram-box.warning { background: rgba(245, 158, 11, 0.15); border-color: var(--accent-warning); color: #f59e0b; }
+        .diagram-box.danger { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .diagram-box.purple { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #a855f7; }
+        .diagram-box.blue { background: rgba(14, 165, 233, 0.15); border-color: #0ea5e9; color: #38bdf8; }
+        .diagram-box.muted { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-secondary); }
+        .diagram-box small { display: block; font-weight: 400; font-size: 0.75rem; margin-top: 4px; opacity: 0.8; }
+        .diagram-arrow { color: var(--text-muted); font-size: 1.3rem; font-weight: 700; }
+        .diagram-arrow.down { display: block; text-align: center; margin: 8px 0; }
+        .diagram-label { font-size: 0.8rem; color: var(--text-muted); margin: 8px 0; font-weight: 500; }
+        .diagram-divider { border: none; border-top: 2px dashed var(--border-color); margin: 25px 40px; }
+
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+
+        .reveal-cell { position: relative; text-align: center; cursor: pointer; min-height: 40px; }
+        .reveal-cell .hidden-answer { display: none; }
+        .reveal-cell::before { content: '?'; color: var(--text-muted); font-weight: 700; font-size: 1.2rem; background: var(--bg-tertiary); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .reveal-cell.revealed .hidden-answer { display: inline; }
+        .reveal-cell.revealed::before { display: none; }
+        .reveal-cell:hover:not(.revealed) { background: rgba(245, 158, 11, 0.05); }
+
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .diagram-row { flex-direction: column; }
+            .diagram-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 15: Redis & Resume</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#latency">Latency</a></li>
+            <li><a href="#caching">Caching</a></li>
+            <li><a href="#cache-solutions">Cache Solutions</a></li>
+            <li><a href="#redis">Redis</a></li>
+            <li><a href="#django-redis">Django+Redis</a></li>
+            <li><a href="#pitfalls">Pitfalls</a></li>
+            <li><a href="#resume">Resume</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;&#65039;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#128640;</div>
+        <h1>Optimizing APIs with Redis & Resume Writing</h1>
+        <p class="hero-meta">Class 15 &bull; Optimizing APIs & Selling Your Work</p>
+        <p class="hero-tagline">
+            Your API works. Every request hits the database. <strong>1000 users = 1000 identical queries.</strong>
+            Let's fix that with Redis &mdash; and then learn how to brag about it on your resume.
+        </p>
+    </section>
+
+    <!-- Section 1: Recap Quiz -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label warning">Quick Recap</span>
+            <h2 class="section-title">Before We Begin</h2>
+            <p class="section-subtitle">Two quick questions from last class to warm up.</p>
+
+            <!-- Q1 -->
+            <div class="question-box">
+                <p><strong>Q1: Your API supports searching menu items. Which HTTP method should you use for a simple text search like <code>?search=chicken</code>?</strong></p>
+                <div style="margin-top: 15px; color: var(--text-secondary); font-size: 0.95rem; line-height: 2.2;">
+                    A) POST &mdash; search modifies server state<br>
+                    B) GET &mdash; search is just reading/filtering data<br>
+                    C) PUT &mdash; search updates search history<br>
+                    D) Either works, doesn't matter
+                </div>
+                <details style="margin-top: 15px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 12px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong style="color: var(--accent-success);">B) GET.</strong> Search is a read operation &mdash; it doesn't modify data. GET requests are cacheable, bookmarkable, and shareable. POST is only needed when the search query is too complex for a URL (like Elasticsearch's nested boolean queries).
+                    </div>
+                </details>
+            </div>
+
+            <!-- Q2 -->
+            <div class="question-box">
+                <p><strong>Q2: Elasticsearch uses POST for its <code>_search</code> endpoint instead of GET. Why?</strong></p>
+                <div style="margin-top: 15px; color: var(--text-secondary); font-size: 0.95rem; line-height: 2.2;">
+                    A) POST is more secure<br>
+                    B) POST is faster than GET<br>
+                    C) The query body is complex JSON that doesn't fit in a URL (~2000 char limit)<br>
+                    D) Elasticsearch doesn't support GET
+                </div>
+                <details style="margin-top: 15px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 12px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong style="color: var(--accent-success);">C.</strong> ES queries can have deeply nested boolean logic, aggregations, geo-filters, and scoring rules &mdash; hundreds of lines of JSON. This doesn't fit in a URL. The HTTP spec allows GET with a body, but most tools don't support it well, so POST is the practical choice.
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Latency -->
+    <section id="latency">
+        <div class="section-container">
+            <span class="section-label blue">Foundation</span>
+            <h2 class="section-title">Latency &mdash; Why Every Millisecond Matters</h2>
+            <p class="section-subtitle">Before we optimize, let's understand what we're fighting.</p>
+
+            <h3 style="margin-bottom: 15px;">What is Latency?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 1.05rem;">
+                The time between sending a request and getting a response. Like ordering food &mdash; latency is how long you wait.
+            </p>
+
+            <!-- Amazon stat -->
+            <div class="highlight-box danger">
+                <h4 style="color: var(--accent-danger); margin-bottom: 8px;">The Amazon Stat</h4>
+                <p style="color: var(--text-secondary); font-size: 1.05rem;">
+                    <strong>"Every 100ms of added latency costs Amazon 1% in sales revenue."</strong><br>
+                    <a href="https://www.gigaspaces.com/blog/amazon-found-every-100ms-of-latency-cost-them-1-in-sales/" target="_blank" style="color: var(--accent-primary);">Source: GigaSpaces</a> &mdash; That's millions of dollars per millisecond.
+                </p>
+            </div>
+
+            <!-- Request journey diagram -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">What Contributes to Latency?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Follow a single API request's journey:</p>
+
+            <div class="visual-diagram">
+                <div class="diagram-label">A Request's Journey &mdash; Time at Each Step</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box blue">&#128100; User<small>Sends request</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">&#127760; Network<small>20-200ms</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box purple">&#9881;&#65039; Server<small>5-50ms</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">&#128451;&#65039; Database<small>5-100ms</small></div>
+                </div>
+                <div class="diagram-row">
+                    <div class="diagram-box danger">&#128451;&#65039; DB Result<small>returned</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box purple">&#128230; Serialize<small>2-10ms</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">&#127760; Network<small>20-200ms</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box blue">&#128100; User<small>Gets response</small></div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">The database query is often the biggest bottleneck we can control.</p>
+            </div>
+
+            <!-- Jeff Dean's Latency Numbers -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">How Fast is Fast? &mdash; Latency Numbers Every Dev Should Know</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                Based on <a href="https://gist.github.com/jboner/2841832" target="_blank" style="color: var(--accent-primary);">Jeff Dean's famous latency numbers</a>. Here are the key ones, simplified:
+            </p>
+
+            <div class="visual-diagram" style="text-align: left;">
+                <div class="diagram-label" style="text-align: center; margin-bottom: 25px;">Speed of Different Storage &mdash; From Fastest to Slowest</div>
+
+                <!-- L1 Cache -->
+                <div style="display: flex; align-items: center; gap: 20px; margin: 12px 0;">
+                    <div class="diagram-box success" style="min-width: 200px; flex-shrink: 0;">
+                        <strong>L1 Cache</strong><small>0.5 nanoseconds</small>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        &#128218; <strong>Grabbing a book from your desk.</strong> Instant.
+                    </div>
+                </div>
+
+                <!-- RAM -->
+                <div style="display: flex; align-items: center; gap: 20px; margin: 12px 0;">
+                    <div class="diagram-box primary" style="min-width: 200px; flex-shrink: 0;">
+                        <strong>RAM</strong><small>100 nanoseconds</small>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        &#128218; Walking to the bookshelf in your room. <strong style="color: var(--accent-primary);">200x slower than L1.</strong>
+                    </div>
+                </div>
+
+                <!-- SSD -->
+                <div style="display: flex; align-items: center; gap: 20px; margin: 12px 0;">
+                    <div class="diagram-box warning" style="min-width: 200px; flex-shrink: 0;">
+                        <strong>SSD Read</strong><small>150,000 ns (0.15ms)</small>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        &#128663; Driving to the library. <strong style="color: var(--accent-warning);">300,000x slower than L1.</strong>
+                    </div>
+                </div>
+
+                <!-- HDD -->
+                <div style="display: flex; align-items: center; gap: 20px; margin: 12px 0;">
+                    <div class="diagram-box danger" style="min-width: 200px; flex-shrink: 0;">
+                        <strong>HDD Seek</strong><small>10,000,000 ns (10ms)</small>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        &#128230; Ordering a book from another city. <strong style="color: var(--accent-danger);">20 million x slower than L1.</strong>
+                    </div>
+                </div>
+
+                <!-- Network -->
+                <div style="display: flex; align-items: center; gap: 20px; margin: 12px 0;">
+                    <div class="diagram-box purple" style="min-width: 200px; flex-shrink: 0;">
+                        <strong>Network Roundtrip</strong><small>500,000,000 ns (500ms)</small>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        &#127758; Ordering from another country. <strong style="color: #a855f7;">1 billion x slower than L1.</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 25px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 8px;">Key Takeaway</h4>
+                <p style="color: var(--text-secondary); font-size: 1.05rem;">
+                    <strong>RAM is 300,000x faster than disk.</strong> Redis stores data in RAM. That's why caching works.
+                </p>
+            </div>
+
+            <!-- What matters for backend devs -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">What Matters for Us as Backend Devs</h3>
+            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 2.2; margin-bottom: 20px;">
+                <div style="margin-bottom: 8px;">&#10060; We <strong>can't control</strong> network latency (user's internet speed, geographic distance)</div>
+                <div style="margin-bottom: 8px;">&#9989; We <strong>CAN control:</strong> database queries (biggest win), serialization, external API calls</div>
+                <div>&#9889; <strong>"Caching moves data from DISK (database) to RAM (Redis) &mdash; that's the 300,000x speedup."</strong></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: What is Caching? -->
+    <section id="caching">
+        <div class="section-container">
+            <span class="section-label">Core Concept</span>
+            <h2 class="section-title">Caching &mdash; The Idea</h2>
+            <p class="section-subtitle">Store frequently-read data closer to where it's needed.</p>
+
+            <!-- Without cache diagram -->
+            <div class="visual-diagram">
+                <div class="diagram-label">Without Cache &mdash; Every Request Hits the Database</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box blue">&#128100; User 1<small>GET /menu/items/</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">&#128187; Server</div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">&#128451;&#65039; Database<small>45ms each time</small></div>
+                </div>
+                <div class="diagram-row">
+                    <div class="diagram-box blue">&#128100; User 2<small>Same request</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">&#128187; Server</div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">&#128451;&#65039; Database<small>45ms again!</small></div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">... 1000 users = 1000 identical DB queries</p>
+
+                <hr class="diagram-divider">
+
+                <div class="diagram-label">With Cache &mdash; DB Hit Only on First Request</div>
+                <div class="diagram-row">
+                    <div class="diagram-box blue">&#128100; User 1<small>Cache MISS</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box primary">&#9889; Cache<small>miss &rarr; DB</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">&#128451;&#65039; DB<small>45ms (once)</small></div>
+                </div>
+                <div class="diagram-row">
+                    <div class="diagram-box blue">&#128100; User 2-1000<small>Cache HIT</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">&#9889; Cache<small>2ms &mdash; instant!</small></div>
+                </div>
+            </div>
+
+            <!-- Comparison cards -->
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 12px;">&#10060; Without Cache</h4>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--text-secondary); line-height: 2;">
+                        1000 requests/hour<br>
+                        &times; 45ms each<br>
+                        = <strong style="color: var(--accent-danger);">1000 DB queries</strong><br>
+                        = <strong style="color: var(--accent-danger);">45 seconds of DB time</strong>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 12px;">&#9989; With Cache</h4>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--text-secondary); line-height: 2;">
+                        1 DB query (45ms)<br>
+                        + 999 cache hits (2ms each)<br>
+                        = <strong style="color: var(--accent-success);">2 seconds total</strong><br>
+                        = <strong style="color: var(--accent-success);">93% faster</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Where can cache live -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">Where Can Cache Live?</h3>
+            <div class="visual-diagram">
+                <div class="diagram-label">Cache Layers &mdash; From Closest to User to Closest to Data</div>
+                <div style="margin-top: 15px;">
+                    <div class="diagram-box blue" style="display: inline-block; margin: 8px auto;">&#127760; Browser Cache<small>Closest to user</small></div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div>
+                    <div class="diagram-box purple" style="display: inline-block; margin: 8px auto;">&#9889; CDN Cache<small>Cloudflare, CloudFront</small></div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div>
+                    <div class="diagram-box primary" style="display: inline-block; margin: 8px auto; border-width: 3px;">&#128293; Application-Level Cache<small>What we're building today</small></div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div>
+                    <div class="diagram-box muted" style="display: inline-block; margin: 8px auto;">&#128451;&#65039; Database Query Cache<small>Built into PostgreSQL</small></div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">Today we're adding application-level caching &mdash; the most impactful layer we control.</p>
+            </div>
+
+            <!-- What to cache table - click to reveal -->
+            <h3 style="margin-top: 40px; margin-bottom: 10px;">What to Cache vs What NOT to Cache</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">&#128073; Click cells to reveal answers</p>
+            <div class="table-container">
+                <table>
+                    <tr><th>Data</th><th>Cache it?</th><th>Why</th></tr>
+                    <tr>
+                        <td><strong>Menu items list</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Changes rarely, read 1000x/hour</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Payment status</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; No</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Must be real-time, stale = wrong</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Category list</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Almost static</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shopping cart</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; No</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Changes per user per second</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Popular search results</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Same queries repeat</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>User-specific dashboard</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; No</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Different for every user</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 20px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 8px;">Rule of Thumb</h4>
+                <p style="color: var(--text-secondary); font-size: 1.05rem;">Cache data that is <strong>READ OFTEN</strong> and <strong>WRITTEN RARELY</strong>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Cache Solutions -->
+    <section id="cache-solutions">
+        <div class="section-container">
+            <span class="section-label purple">Options</span>
+            <h2 class="section-title">Where to Store Your Cache?</h2>
+            <p class="section-subtitle">Three options, each with trade-offs.</p>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-success);">
+                    <div class="card-icon">&#128220;</div>
+                    <div class="card-title">1. Application Memory</div>
+                    <div class="card-desc" style="line-height: 1.9;">
+                        Python dict / Django <code>LocMemCache</code>.<br>
+                        <strong>Simplest:</strong> just a dictionary in your app's RAM.<br>
+                        <strong style="color: var(--accent-danger);">Problem:</strong> dies when app restarts, not shared across multiple servers.<br>
+                        <strong>Good for:</strong> single-server apps, development.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-icon">&#128025;</div>
+                    <div class="card-title">2. Memcached</div>
+                    <div class="card-desc" style="line-height: 1.9;">
+                        Dedicated cache server, key-value only, strings only.<br>
+                        Simple, fast, battle-tested.<br>
+                        No persistence, no data types beyond strings.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-danger);">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title">3. Redis</div>
+                    <div class="card-desc" style="line-height: 1.9;">
+                        Dedicated cache server, <strong>multiple data types</strong> (strings, lists, sets, sorted sets, hashes).<br>
+                        Optional persistence (RDB snapshots, AOF logs).<br>
+                        Pub/sub, Lua scripting, transactions.<br>
+                        <strong>Most popular choice today.</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison table -->
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Comparison</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Feature</th><th>App Memory</th><th>Memcached</th><th>Redis</th></tr>
+                    <tr><td><strong>Shared across servers?</strong></td><td style="color: var(--accent-danger);">No</td><td style="color: var(--accent-success);">Yes</td><td style="color: var(--accent-success);">Yes</td></tr>
+                    <tr><td><strong>Survives restart?</strong></td><td style="color: var(--accent-danger);">No</td><td style="color: var(--accent-danger);">No</td><td>Optional</td></tr>
+                    <tr><td><strong>Data types</strong></td><td>Any Python object</td><td>Strings only</td><td>Strings, Lists, Sets, Hashes, Sorted Sets</td></tr>
+                    <tr><td><strong>Speed</strong></td><td style="color: var(--accent-success);">Fastest (same process)</td><td>Very fast</td><td>Very fast</td></tr>
+                    <tr><td><strong>Best for</strong></td><td>Dev / single server</td><td>Simple caching</td><td>Everything (caching, sessions, queues, pub/sub)</td></tr>
+                </table>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 8px;">Why Redis Won</h4>
+                <p style="color: var(--text-secondary); font-size: 1.05rem;">
+                    Redis won because it does caching <strong>AND</strong> more. Sessions, rate limiting, leaderboards, pub/sub, job queues &mdash; all in one tool. That's why <strong>90%+ of companies choose Redis over Memcached</strong>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Redis Deep Dive -->
+    <section id="redis">
+        <div class="section-container">
+            <span class="section-label">The Tool</span>
+            <h2 class="section-title">Redis &mdash; Remote Dictionary Server</h2>
+            <p class="section-subtitle">An in-memory key-value store. Think of it as a giant Python dictionary that lives outside your app.</p>
+
+            <div class="highlight-box blue">
+                <h4 style="color: #38bdf8; margin-bottom: 10px;">Redis in One Sentence</h4>
+                <p style="color: var(--text-secondary); font-size: 1.05rem;">
+                    A <strong>dictionary in RAM</strong>, shared across servers, that auto-deletes old entries. 100,000+ operations/second.
+                </p>
+            </div>
+
+            <!-- Install & Run Redis -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Installing & Running Redis</h3>
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>macOS</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Install</span>
+brew install redis
+
+<span class="comment"># Start as background service (survives reboots)</span>
+brew services start redis
+
+<span class="comment"># OR start manually (foreground, stops when terminal closes)</span>
+redis-server
+
+<span class="comment"># Verify</span>
+redis-cli ping
+<span class="comment"># → PONG</span>
+
+<span class="comment"># Useful commands</span>
+brew services list            <span class="comment"># check status</span>
+brew services stop redis      <span class="comment"># stop</span>
+brew services restart redis   <span class="comment"># restart</span></pre>
+                </div>
+            </div>
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Windows (WSL or Docker)</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Option 1: WSL (recommended) — inside Ubuntu terminal</span>
+sudo apt update
+sudo apt install redis-server
+sudo service redis-server start
+redis-cli ping   <span class="comment"># → PONG</span>
+
+<span class="comment"># Option 2: Docker (works everywhere)</span>
+docker run -d --name redis -p <span class="number">6379</span>:<span class="number">6379</span> redis:latest
+docker exec -it redis redis-cli ping   <span class="comment"># → PONG</span>
+
+<span class="comment"># Option 3: Memurai (Windows-native Redis alternative)</span>
+<span class="comment"># Download from https://www.memurai.com/ — free for dev</span></pre>
+                </div>
+            </div>
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Linux (Ubuntu/Debian)</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>sudo apt update
+sudo apt install redis-server
+sudo systemctl start redis-server
+sudo systemctl enable redis-server   <span class="comment"># start on boot</span>
+
+redis-cli ping   <span class="comment"># → PONG</span></pre>
+                </div>
+            </div>
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Key Redis Config for Caching (redis.conf)</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Config file locations:</span>
+<span class="comment"># Mac (Apple Silicon): /opt/homebrew/etc/redis.conf</span>
+<span class="comment"># Mac (Intel):         /usr/local/etc/redis.conf</span>
+<span class="comment"># Linux:               /etc/redis/redis.conf</span>
+
+<span class="comment"># Key settings for caching use case:</span>
+maxmemory <span class="number">256</span>mb                  <span class="comment"># Cap memory — don't let Redis eat all RAM</span>
+maxmemory-policy allkeys-lru     <span class="comment"># When full, evict least-recently-used keys</span>
+
+<span class="comment"># Other eviction policies:</span>
+<span class="comment"># noeviction      — return error when full (default)</span>
+<span class="comment"># volatile-lru    — only evict keys that have a TTL set</span>
+<span class="comment"># allkeys-random  — evict random keys</span>
+
+<span class="comment"># Verify config is applied:</span>
+<span class="comment"># redis-cli CONFIG GET maxmemory</span>
+<span class="comment"># redis-cli CONFIG GET maxmemory-policy</span></pre>
+                </div>
+            </div>
+
+            <!-- Redis GUI -->
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 8px;">&#128421;&#65039; Redis GUI &mdash; RedisInsight</h4>
+                <p style="color: var(--text-secondary);">
+                    Don't want to use CLI? Install <strong>RedisInsight</strong> &mdash; a free GUI from Redis Labs. Shows all keys, values, TTLs, memory usage in a browser-like interface.
+                </p>
+                <div style="margin-top: 10px; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--text-secondary);">
+                    <code>brew install --cask redisinsight</code> &nbsp;(Mac)<br>
+                    Or download from <a href="https://redis.io/insight/" target="_blank" style="color: var(--accent-primary);">redis.io/insight</a> &nbsp;(all platforms)
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">Open it &rarr; "Add Database" &rarr; localhost:6379 &rarr; you'll see all your keys visually.</p>
+            </div>
+
+            <!-- Your First Redis Commands -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">Your First Redis Commands (before Django)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">After installing and starting Redis, open a terminal and try these:</p>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>redis-cli &mdash; Basic GET/SET</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Open Redis CLI (connects to localhost:6379 by default)</span>
+redis-cli
+
+<span class="comment"># ── Store a value ──</span>
+SET name <span class="string">"Prateek"</span>
+<span class="comment"># → OK</span>
+
+GET name
+<span class="comment"># → "Prateek"</span>
+
+<span class="comment"># ── Store with expiry (TTL) ──</span>
+SET otp <span class="string">"482910"</span> EX <span class="number">30</span>        <span class="comment"># expires in 30 seconds</span>
+
+TTL otp                           <span class="comment"># → 27 (seconds remaining)</span>
+GET otp                           <span class="comment"># → "482910"</span>
+
+<span class="comment"># ... wait 30 seconds ...</span>
+GET otp                           <span class="comment"># → (nil) — gone automatically!</span>
+
+<span class="comment"># ── Numbers ──</span>
+SET visitors <span class="number">0</span>
+INCR visitors                     <span class="comment"># → 1</span>
+INCR visitors                     <span class="comment"># → 2</span>
+INCRBY visitors <span class="number">10</span>               <span class="comment"># → 12</span>
+
+<span class="comment"># ── Multiple keys at once ──</span>
+MSET city <span class="string">"Mumbai"</span> country <span class="string">"India"</span>
+MGET city country                 <span class="comment"># → "Mumbai", "India"</span>
+
+<span class="comment"># ── Check if key exists ──</span>
+EXISTS name                       <span class="comment"># → 1 (true)</span>
+EXISTS nonexistent                <span class="comment"># → 0 (false)</span>
+
+<span class="comment"># ── Delete ──</span>
+DEL name                          <span class="comment"># → 1 (deleted)</span>
+GET name                          <span class="comment"># → (nil)</span>
+
+<span class="comment"># ── See all keys ──</span>
+KEYS *                            <span class="comment"># → lists everything</span>
+
+quit</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>redis-cli flags explained</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Default — connects to localhost:6379, database 0</span>
+redis-cli
+
+<span class="comment"># -n 1 — use database number 1 (Redis has 16 DBs: 0-15)</span>
+redis-cli -n <span class="number">1</span>
+<span class="comment"># Django uses DB 1 because our LOCATION is redis://127.0.0.1:6379/1</span>
+<span class="comment">#                                                              ↑ this</span>
+
+<span class="comment"># -h and -p — connect to a remote Redis</span>
+redis-cli -h <span class="number">192.168.1.100</span> -p <span class="number">6379</span>
+
+<span class="comment"># Common commands once connected:</span>
+KEYS *                <span class="comment"># List all keys in current DB</span>
+KEYS *menu*           <span class="comment"># Keys matching pattern (only with manual cache)</span>
+DBSIZE                <span class="comment"># How many keys exist</span>
+TTL <span class="string">"some_key"</span>        <span class="comment"># Seconds until key expires (-1 = no expiry, -2 = doesn't exist)</span>
+TYPE <span class="string">"some_key"</span>       <span class="comment"># What data type is this key (string, list, hash, etc.)</span>
+FLUSHDB               <span class="comment"># Delete ALL keys in current DB (careful!)</span>
+INFO memory           <span class="comment"># How much RAM Redis is using</span>
+INFO stats            <span class="comment"># Hit/miss ratio, total commands processed</span></pre>
+                </div>
+            </div>
+
+            <div class="comparison-grid" style="margin-top: 25px;">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">PostgreSQL</h4>
+                    <p style="color: var(--text-secondary);">Data on <strong>disk</strong><br>Read = disk seek<br><strong>~5-45ms</strong> per query</p>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Redis</h4>
+                    <p style="color: var(--text-secondary);">Data in <strong>RAM</strong><br>Read = memory lookup<br><strong>~0.1-2ms</strong> per read</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Redis Data Types &mdash; Syntax + What's Stored</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Redis isn't just key-value strings. It has 5 core data types, each stored differently in memory. Here's how each one works:</p>
+
+            <!-- STRING -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--accent-success);">
+                <h4 style="color: var(--accent-success); margin-bottom: 12px;">1. String &mdash; The simplest. One key = one value.</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">COMMANDS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;">SET menu:items <span style="color: #c3e88d;">'[{"id":1,"name":"Butter Chicken"}]'</span>
+GET menu:items
+SET visitor_count <span style="color: #f78c6c;">0</span>
+INCR visitor_count    <span style="color: #6b7280;"># → 1</span>
+INCR visitor_count    <span style="color: #6b7280;"># → 2</span></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">WHAT'S STORED IN REDIS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;"><span style="color: #6b7280;">key</span>               <span style="color: #6b7280;">→ value</span>
+<span style="color: #fbbf24;">"menu:items"</span>      → <span style="color: #c3e88d;">"[{\"id\":1,...}]"</span>
+<span style="color: #fbbf24;">"visitor_count"</span>   → <span style="color: #f78c6c;">"2"</span></pre>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 6px;">Think of it as a <strong>Python variable</strong>: <code>menu_items = "[...]"</code></p>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;"><strong>Use for:</strong> Caching API responses, counters, simple flags, OTP storage</p>
+            </div>
+
+            <!-- HASH -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--accent-primary);">
+                <h4 style="color: var(--accent-primary); margin-bottom: 12px;">2. Hash &mdash; A dictionary inside a key. Like a Python dict.</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">COMMANDS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;">HSET user:42 name <span style="color: #c3e88d;">"Prateek"</span> email <span style="color: #c3e88d;">"p@x.com"</span> age <span style="color: #f78c6c;">28</span>
+HGET user:42 name         <span style="color: #6b7280;"># → "Prateek"</span>
+HGETALL user:42           <span style="color: #6b7280;"># → all fields</span>
+HINCRBY user:42 age <span style="color: #f78c6c;">1</span>    <span style="color: #6b7280;"># → 29</span></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">WHAT'S STORED IN REDIS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;"><span style="color: #fbbf24;">"user:42"</span> → {
+    <span style="color: #c3e88d;">"name"</span>:  <span style="color: #c3e88d;">"Prateek"</span>
+    <span style="color: #c3e88d;">"email"</span>: <span style="color: #c3e88d;">"p@x.com"</span>
+    <span style="color: #c3e88d;">"age"</span>:   <span style="color: #f78c6c;">"29"</span>
+}</pre>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 6px;">Like <code>user_42 = {"name": "Prateek", "email": "p@x.com"}</code></p>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;"><strong>Use for:</strong> Cache user profiles, product details, session data &mdash; read/update individual fields without fetching the whole object</p>
+            </div>
+
+            <!-- LIST -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--accent-purple);">
+                <h4 style="color: var(--accent-purple); margin-bottom: 12px;">3. List &mdash; An ordered sequence. Like a Python list. Push/pop from both ends.</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">COMMANDS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;">LPUSH recent:orders <span style="color: #c3e88d;">"ord_003"</span>  <span style="color: #6b7280;"># push left</span>
+LPUSH recent:orders <span style="color: #c3e88d;">"ord_004"</span>
+LPUSH recent:orders <span style="color: #c3e88d;">"ord_005"</span>
+LRANGE recent:orders <span style="color: #f78c6c;">0</span> <span style="color: #f78c6c;">-1</span>     <span style="color: #6b7280;"># all items</span>
+LLEN recent:orders              <span style="color: #6b7280;"># → 3</span>
+RPOP recent:orders              <span style="color: #6b7280;"># remove oldest</span></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">WHAT'S STORED IN REDIS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;"><span style="color: #fbbf24;">"recent:orders"</span> → [
+    <span style="color: #c3e88d;">"ord_005"</span>    <span style="color: #6b7280;">← newest (left)</span>
+    <span style="color: #c3e88d;">"ord_004"</span>
+    <span style="color: #c3e88d;">"ord_003"</span>    <span style="color: #6b7280;">← oldest (right)</span>
+]</pre>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 6px;">Like <code>recent_orders = ["ord_005", "ord_004", "ord_003"]</code></p>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;"><strong>Use for:</strong> Recent activity feeds, notification queues, "last 10 orders" widgets, message queues (Celery uses this!)</p>
+            </div>
+
+            <!-- SET -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid #ef4444;">
+                <h4 style="color: var(--accent-danger); margin-bottom: 12px;">4. Set &mdash; Unordered, unique values. Like a Python set. No duplicates.</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">COMMANDS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;">SADD online:users <span style="color: #c3e88d;">"user_1"</span> <span style="color: #c3e88d;">"user_2"</span> <span style="color: #c3e88d;">"user_3"</span>
+SADD online:users <span style="color: #c3e88d;">"user_1"</span>            <span style="color: #6b7280;"># ignored! already exists</span>
+SMEMBERS online:users               <span style="color: #6b7280;"># → all members</span>
+SCARD online:users                  <span style="color: #6b7280;"># → 3 (count)</span>
+SISMEMBER online:users <span style="color: #c3e88d;">"user_1"</span>    <span style="color: #6b7280;"># → 1 (true)</span>
+SREM online:users <span style="color: #c3e88d;">"user_2"</span>         <span style="color: #6b7280;"># remove</span></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">WHAT'S STORED IN REDIS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;"><span style="color: #fbbf24;">"online:users"</span> → {
+    <span style="color: #c3e88d;">"user_1"</span>
+    <span style="color: #c3e88d;">"user_2"</span>    <span style="color: #6b7280;">← no order</span>
+    <span style="color: #c3e88d;">"user_3"</span>    <span style="color: #6b7280;">← no duplicates</span>
+}</pre>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 6px;">Like <code>online_users = {"user_1", "user_2", "user_3"}</code></p>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;"><strong>Use for:</strong> Track unique visitors, "who's online" features, tags, unique IP tracking, "has this user already voted?"</p>
+            </div>
+
+            <!-- SORTED SET -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid #0ea5e9;">
+                <h4 style="color: #38bdf8; margin-bottom: 12px;">5. Sorted Set &mdash; Like a Set, but each member has a score. Auto-sorted by score.</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">COMMANDS</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;">ZADD leaderboard <span style="color: #f78c6c;">100</span> <span style="color: #c3e88d;">"Prateek"</span>
+ZADD leaderboard <span style="color: #f78c6c;">250</span> <span style="color: #c3e88d;">"Ananya"</span>
+ZADD leaderboard <span style="color: #f78c6c;">80</span>  <span style="color: #c3e88d;">"Rahul"</span>
+ZRANGE leaderboard <span style="color: #f78c6c;">0</span> <span style="color: #f78c6c;">-1</span> WITHSCORES  <span style="color: #6b7280;"># asc</span>
+ZREVRANGE leaderboard <span style="color: #f78c6c;">0</span> <span style="color: #f78c6c;">2</span>            <span style="color: #6b7280;"># top 3</span>
+ZINCRBY leaderboard <span style="color: #f78c6c;">50</span> <span style="color: #c3e88d;">"Rahul"</span>       <span style="color: #6b7280;"># → 130</span>
+ZRANK leaderboard <span style="color: #c3e88d;">"Prateek"</span>          <span style="color: #6b7280;"># → 1 (rank)</span></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">WHAT'S STORED IN REDIS (auto-sorted by score)</p>
+                        <div style="background: #1e1e2e; border-radius: 8px; padding: 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #e2e8f0; line-height: 1.8;">
+<pre style="margin: 0;"><span style="color: #fbbf24;">"leaderboard"</span> → {
+    <span style="color: #f78c6c;">80</span>:  <span style="color: #c3e88d;">"Rahul"</span>      <span style="color: #6b7280;">← lowest score</span>
+    <span style="color: #f78c6c;">100</span>: <span style="color: #c3e88d;">"Prateek"</span>
+    <span style="color: #f78c6c;">250</span>: <span style="color: #c3e88d;">"Ananya"</span>     <span style="color: #6b7280;">← highest score</span>
+}
+<span style="color: #6b7280;">After ZINCRBY Rahul 50:</span>
+{
+    <span style="color: #f78c6c;">100</span>: <span style="color: #c3e88d;">"Prateek"</span>
+    <span style="color: #f78c6c;">130</span>: <span style="color: #c3e88d;">"Rahul"</span>      <span style="color: #6b7280;">← moved up!</span>
+    <span style="color: #f78c6c;">250</span>: <span style="color: #c3e88d;">"Ananya"</span>
+}</pre>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 6px;">No Python equivalent &mdash; closest is a dict sorted by values, but Redis does it automatically on every insert.</p>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;"><strong>Use for:</strong> Leaderboards, "top trending dishes", priority queues, rate limiting (sorted by timestamp)</p>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 10px;">
+                <h4 style="margin-bottom: 8px;">Quick Reference</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>String</strong> = single value (like a Python variable) &nbsp;|&nbsp;
+                    <strong>Hash</strong> = dict inside a key &nbsp;|&nbsp;
+                    <strong>List</strong> = ordered, allows duplicates &nbsp;|&nbsp;
+                    <strong>Set</strong> = unordered, no duplicates &nbsp;|&nbsp;
+                    <strong>Sorted Set</strong> = scored + auto-sorted
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">For API caching, you'll use <strong>Strings</strong> 90% of the time. The others shine for real-time features (leaderboards, online users, feeds).</p>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">TTL &mdash; Time To Live</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Every cached value has an expiry time. After TTL expires, Redis deletes it automatically.</p>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Redis TTL Demo</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>SET menu:items "[{...}]" EX <span class="number">300</span>    <span class="comment"># Expires in 300 seconds (5 min)</span>
+
+GET menu:items                       <span class="comment"># &rarr; "[{...}]"</span>
+TTL menu:items                       <span class="comment"># &rarr; 287 (seconds remaining)</span>
+
+<span class="comment"># After 5 minutes...</span>
+GET menu:items                       <span class="comment"># &rarr; (nil) &mdash; gone!</span></pre>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <tr><th>Data</th><th>Suggested TTL</th><th>Why</th></tr>
+                    <tr><td>Menu items</td><td>5-15 minutes</td><td>Rarely changes, ok to be slightly stale</td></tr>
+                    <tr><td>Categories</td><td>1 hour</td><td>Almost never changes</td></tr>
+                    <tr><td>Search results</td><td>2-5 minutes</td><td>New items should appear reasonably fast</td></tr>
+                    <tr><td>User session</td><td>30 minutes</td><td>Security &mdash; force re-auth</td></tr>
+                    <tr><td style="color: var(--accent-danger);">Payment status</td><td style="color: var(--accent-danger);"><strong>DON'T CACHE</strong></td><td>Must be real-time, stale = wrong</td></tr>
+                </table>
+            </div>
+
+            <!-- Redis Interview Questions -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">Important Redis Interview Questions</h3>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128073; What happens when Redis runs out of memory?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); line-height: 1.9;">
+                            Redis uses <strong>eviction policies</strong>. Default: <code>noeviction</code> (returns error on new writes). Common production setting: <code>allkeys-lru</code> (removes least recently used keys to make room). Configure via <code>maxmemory</code> and <code>maxmemory-policy</code> in redis.conf.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128073; Is Redis single-threaded? How is it so fast?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); line-height: 1.9;">
+                            Yes, Redis is <strong>single-threaded for command execution</strong>. It's fast because: (1) all data in RAM, (2) no context switching overhead, (3) non-blocking I/O (epoll/kqueue), (4) simple data structures optimized for speed. Single thread avoids lock contention.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128073; Redis vs Memcached &mdash; when to use which?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); line-height: 1.9;">
+                            <strong>Redis for:</strong> multiple data types, persistence, pub/sub, sorted sets (leaderboards).<br>
+                            <strong>Memcached for:</strong> pure simple caching with slightly better multi-threaded performance for simple GET/SET at massive scale.<br>
+                            <strong>In practice:</strong> Redis for almost everything.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128073; How does Redis persist data?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); line-height: 1.9;">
+                            Two options: <strong>RDB</strong> (periodic snapshots to disk) and <strong>AOF</strong> (append-only file logging every write). RDB is faster recovery, AOF is more durable. You can use both. For caching, persistence is optional &mdash; data can be rebuilt from the database.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">Resources for Going Deeper</h3>
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-title"><a href="https://app.codecrafters.io/courses/redis/overview" target="_blank" style="color: var(--accent-primary); text-decoration: none;">Build Your Own Redis</a></div>
+                    <div class="card-desc">Understand Redis internals by implementing it yourself.</div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="card-title"><a href="https://arpitbhayani.me/redis-internals/" target="_blank" style="color: var(--accent-purple); text-decoration: none;">Redis Internals by Arpit Bhayani</a></div>
+                    <div class="card-desc">Deep dive for advanced learners (optional).</div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);">
+                    <div class="card-title"><a href="https://github.com/redis/redis" target="_blank" style="color: var(--accent-success); text-decoration: none;">Redis Source Code</a></div>
+                    <div class="card-desc">The actual C code, surprisingly readable.</div>
+                </div>
+                <div class="card" style="border-left: 3px solid #0ea5e9;">
+                    <div class="card-title"><a href="https://www.youtube.com/watch?v=h30k7YixrMo" target="_blank" style="color: #38bdf8; text-decoration: none;">Redis Interview Questions</a></div>
+                    <div class="card-desc">Common interview questions explained (video).</div>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Redis stores data in RAM. If the server crashes, is all cached data lost?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Yes &mdash; and that's fine.</strong> Redis is a <strong>cache</strong>, not a database. The source of truth is your PostgreSQL/SQLite DB. When Redis restarts, the cache is empty. The next request hits the DB, rebuilds the cache, and life goes on. This is by design.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 6: Caching Strategies -->
+    <section id="strategies">
+        <div class="section-container">
+            <span class="section-label purple">Patterns</span>
+            <h2 class="section-title">Caching Strategies</h2>
+            <p class="section-subtitle">Three patterns for how and when to populate the cache.</p>
+
+            <!-- Cache-Aside -->
+            <h3 style="margin-bottom: 20px;"><span class="step-number">1</span> Cache-Aside (Lazy Loading)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">The most common pattern. Check cache first &mdash; if miss, query DB and store result.</p>
+
+            <div class="visual-diagram">
+                <div class="diagram-label">Cache-Aside Flow</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box blue">&#128100; Request</div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box primary">&#9889; Check Cache</div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">HIT? Return!<small>~2ms</small></div>
+                </div>
+                <div class="diagram-arrow down">&#8595; MISS</div>
+                <div class="diagram-row">
+                    <div class="diagram-box danger">&#128451;&#65039; Query DB<small>~45ms</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box primary">&#9889; Store in Cache<small>SET + TTL</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">Return Data</div>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Cache-Aside in Python</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.core.cache <span class="keyword">import</span> cache
+
+<span class="keyword">def</span> <span class="function">get_menu_items</span>():
+    <span class="comment"># 1. Check cache</span>
+    cached = cache.get(<span class="string">'menu_items'</span>)
+    <span class="keyword">if</span> cached:
+        <span class="keyword">return</span> cached              <span class="comment"># Cache HIT &mdash; 2ms</span>
+
+    <span class="comment"># 2. Cache MISS &mdash; query DB</span>
+    items = MenuItem.objects.all()
+    data = serialize(items)
+
+    <span class="comment"># 3. Store in cache for 5 minutes</span>
+    cache.set(<span class="string">'menu_items'</span>, data, timeout=<span class="number">300</span>)
+
+    <span class="keyword">return</span> data</pre>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-success); font-size: 0.9rem; margin-bottom: 8px;">&#9989; Pros</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;"><li>Simple to implement</li><li>Only caches what's actually requested</li></ul>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 8px;">&#10060; Cons</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;"><li>First request always slow (miss)</li><li>Possible stale data until TTL expires</li></ul>
+                </div>
+            </div>
+
+            <!-- Write-Through -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;"><span class="step-number">2</span> Write-Through</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When data changes, immediately update the cache too.</p>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Write-Through Pattern</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">update_menu_item</span>(item_id, new_data):
+    <span class="comment"># 1. Write to DB</span>
+    item = MenuItem.objects.get(id=item_id)
+    item.name = new_data[<span class="string">'name'</span>]
+    item.save()
+
+    <span class="comment"># 2. Immediately invalidate cache</span>
+    cache.delete(<span class="string">'menu_items'</span>)
+    <span class="comment"># Next read will rebuild the cache (cache-aside kicks in)</span></pre>
+                </div>
+            </div>
+
+            <!-- Write-Around -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;"><span class="step-number">3</span> Write-Around</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Write goes <strong>only to DB</strong>, skipping the cache entirely. Cache gets populated only when someone reads the data (via cache-aside).</p>
+
+            <div class="visual-diagram" style="padding: 25px;">
+                <div class="diagram-label">Write-Around Flow</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box primary">&#9999;&#65039; Write Request<small>"Update price"</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">&#128451;&#65039; DB Only<small>Cache untouched</small></div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div class="diagram-row">
+                    <div class="diagram-box blue">&#128100; Next Read<small>Cache MISS</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">&#128451;&#65039; DB</div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">&#9889; Cache Updated<small>Fresh data now cached</small></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-success); font-size: 0.9rem; margin-bottom: 8px;">&#9989; Pros</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;"><li>Cache doesn't get polluted with rarely-read data</li><li>Writes are fast (only DB, no cache overhead)</li></ul>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 8px;">&#10060; Cons</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;"><li>First read after a write is always slow (cache miss)</li><li>Stale data if someone reads before cache rebuilds</li></ul>
+                </div>
+            </div>
+
+            <!-- Write-Back (Write-Behind) -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;"><span class="step-number">4</span> Write-Back (Write-Behind)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Write goes to <strong>cache first</strong>, then asynchronously flushed to DB later. Fastest writes, but risky.</p>
+
+            <div class="visual-diagram" style="padding: 25px;">
+                <div class="diagram-label">Write-Back Flow</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box primary">&#9999;&#65039; Write Request<small>"Update price"</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">&#9889; Cache Updated<small>Instant! User gets 200 OK</small></div>
+                </div>
+                <div class="diagram-arrow down">&#8595; later (async)</div>
+                <div class="diagram-row">
+                    <div class="diagram-box muted">&#9200; Background Job<small>Celery / cron</small></div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">&#128451;&#65039; DB Updated<small>Eventually consistent</small></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-success); font-size: 0.9rem; margin-bottom: 8px;">&#9989; Pros</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;"><li>Fastest writes (user doesn't wait for DB)</li><li>Reduces DB write load (batch writes)</li></ul>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 8px;">&#10060; Cons</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;"><li><strong>Data loss risk</strong> &mdash; if Redis crashes before flushing to DB, writes are lost</li><li>Complex &mdash; need async workers, retry logic, conflict resolution</li></ul>
+                </div>
+            </div>
+
+            <!-- Comparison Table with Real Use Cases -->
+            <h3 style="margin-top: 50px; margin-bottom: 15px;">When to Use Which? &mdash; Real-World Use Cases</h3>
+
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>How It Works</th>
+                        <th>Real Use Case</th>
+                        <th>Use When</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Cache-Aside</strong></td>
+                        <td>Read: check cache &rarr; miss &rarr; DB &rarr; store in cache</td>
+                        <td>
+                            <strong>Swiggy menu page</strong> &mdash; first user loads from DB, next 10,000 get cached version. Menu changes? TTL handles it.<br>
+                            <strong>GitHub profile page</strong> &mdash; repo count, stars are cached. Not real-time but good enough.
+                        </td>
+                        <td>Read-heavy, occasional writes, slight staleness OK</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Write-Through</strong></td>
+                        <td>Write: update DB + update cache simultaneously</td>
+                        <td>
+                            <strong>User profile update</strong> &mdash; user changes their name, both DB and cache update so the next page load shows the new name instantly.<br>
+                            <strong>Inventory count</strong> &mdash; item sold, DB and cache both decremented. No stale "10 items left" when there's actually 0.
+                        </td>
+                        <td>Data MUST be consistent immediately after write, reads are frequent</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Write-Around</strong></td>
+                        <td>Write: DB only, cache populated on next read</td>
+                        <td>
+                            <strong>Log ingestion</strong> &mdash; you write millions of log entries. Most are never read. Caching them would waste RAM.<br>
+                            <strong>Bulk CSV import</strong> &mdash; admin uploads 5000 new menu items. No point caching all of them &mdash; only cache what users actually search for.
+                        </td>
+                        <td>Write-heavy, most written data is rarely read</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Write-Back</strong></td>
+                        <td>Write: cache only, flush to DB later (async)</td>
+                        <td>
+                            <strong>Like/view counters</strong> &mdash; YouTube video gets 10,000 views/second. Writing each to DB would kill it. Cache accumulates counts, flushes to DB every 30 seconds.<br>
+                            <strong>Gaming leaderboards</strong> &mdash; scores update in Redis sorted set instantly, synced to DB periodically.
+                        </td>
+                        <td>Ultra-high write throughput, eventual consistency OK, can tolerate data loss</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Your restaurant app tracks "number of times each dish was viewed" for analytics. You get 50,000 view events per hour. Which caching pattern should you use?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Write-Back.</strong> Use <code>INCR dish:views:42</code> in Redis (instant, handles 50K/hour easily). Then a background job flushes counts to PostgreSQL every 5 minutes. If Redis crashes, you lose at most 5 minutes of view counts &mdash; acceptable for analytics. Writing 50K rows/hour directly to DB would be wasteful.
+                    </p>
+                </details>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 20px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 8px;">Our Restaurant API Uses: Cache-Aside</h4>
+                <p style="color: var(--text-secondary);">
+                    Menu data is read 1000x more than it's written. Cache-aside with TTL is perfect &mdash; simple, effective, and the slight staleness (up to 5 minutes) is acceptable. For the "dish views" counter, we'd use write-back. <strong>Most apps use cache-aside for 90% of their caching needs.</strong>
+                </p>
+            </div>
+
+            <!-- Cache Invalidation -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;"><span class="step-number">5</span> Cache Invalidation</h3>
+
+            <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(245, 158, 11, 0.1)); border: 2px solid var(--accent-purple); border-radius: 16px; padding: 30px; text-align: center; margin: 20px 0;">
+                <p style="font-size: 1.2rem; font-style: italic; color: var(--text-secondary);">
+                    "There are only two hard things in Computer Science:<br>
+                    <strong style="color: var(--accent-purple);">cache invalidation</strong> and <strong style="color: var(--accent-purple);">naming things</strong>."
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">&mdash; Phil Karlton</p>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 15px 0;">When underlying data changes, you must either:</p>
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-danger);"><div class="card-title">Delete the key</div><div class="card-desc">Next read rebuilds from DB. Simple &amp; safe.</div></div>
+                <div class="card" style="border-left: 3px solid var(--accent-primary);"><div class="card-title">Update the cache</div><div class="card-desc">Write-through. Cache always fresh, writes slower.</div></div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);"><div class="card-title">Let TTL expire</div><div class="card-desc">Lazy. Stale for up to TTL seconds. Simplest.</div></div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 8px;">Our Strategy</h4>
+                <p style="color: var(--text-secondary);">For the restaurant API: <strong>delete on write + TTL as safety net</strong>. Admin updates a dish? Delete cache key. Even if we forget, TTL ensures stale data disappears in 5 minutes.</p>
+            </div>
+
+            <!-- Why cache invalidation is HARD -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">These solutions look simple. So why is cache invalidation one of the hardest problems?</h3>
+
+            <div class="highlight-box danger" style="margin-top: 20px;">
+                <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Real Incident: Facebook Outage (2021)</h4>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.9;">
+                    A configuration change triggered a cascade of cache invalidations across their global CDN. Billions of requests that were normally served from cache suddenly hit the origin servers. The servers couldn't handle the load and crashed &mdash; taking down <strong>Facebook, Instagram, and WhatsApp for 6+ hours</strong>.
+                </p>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.9; margin-top: 10px;">
+                    The root cause wasn't that caching is hard to implement &mdash; it's that <strong>caching creates invisible dependencies</strong>. When cache works, you forget it exists. When it breaks, everything behind it was never built to handle the real load.
+                </p>
+            </div>
+
+            <h4 style="margin-top: 25px; margin-bottom: 15px;">Why It's Actually Hard:</h4>
+            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 2.2;">
+                <div style="margin-bottom: 10px;">&#128165; <strong>Multiple copies:</strong> The same data lives in browser cache, CDN, Redis, and DB query cache &mdash; which one do you invalidate?</div>
+                <div style="margin-bottom: 10px;">&#128165; <strong>Distributed systems:</strong> 10 servers, each with their own local cache. You update on server 1 &mdash; servers 2-10 still have stale data.</div>
+                <div style="margin-bottom: 10px;">&#128165; <strong>Race conditions:</strong> Two requests arrive simultaneously. One reads stale cache while the other is updating it.</div>
+                <div>&#128165; <strong>The delete vs update dilemma:</strong> If you delete the cache key, 1000 users hit the DB simultaneously (stampede). If you update it, the update might fail, leaving stale data.</div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Admin updates the price of Butter Chicken. Customers still see the old price for 5 minutes. Is this acceptable?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>For a restaurant menu? Yes.</strong> 5 minutes of stale prices is fine &mdash; the order system uses the DB price anyway, not the cached display price. For a stock trading app? <strong>Absolutely not.</strong> TTL depends on how stale your data is allowed to be.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 7: Django + Redis -->
+    <section id="django-redis">
+        <div class="section-container">
+            <span class="section-label success">Implementation</span>
+            <h2 class="section-title">Redis Caching in Django</h2>
+            <p class="section-subtitle">From <code>pip install</code> to a 93% faster API in 10 minutes.</p>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Install &amp; Configure</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Terminal</span>
+pip install django-redis redis
+
+<span class="comment"># settings.py</span>
+CACHES = {
+    <span class="string">'default'</span>: {
+        <span class="string">'BACKEND'</span>: <span class="string">'django.core.cache.backends.redis.RedisCache'</span>,
+        <span class="string">'LOCATION'</span>: <span class="string">'redis://127.0.0.1:6379/1'</span>,
+        <span class="string">'TIMEOUT'</span>: <span class="number">300</span>,  <span class="comment"># Default TTL: 5 minutes</span>
+    }
+}</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Level 1: Per-View Cache (Easiest)</h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>cache_page decorator</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.utils.decorators <span class="keyword">import</span> method_decorator
+<span class="keyword">from</span> django.views.decorators.cache <span class="keyword">import</span> cache_page
+
+<span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    <span class="comment"># ... existing queryset, serializer, pagination ...</span>
+
+    <span class="decorator">@method_decorator</span>(cache_page(<span class="number">60</span> * <span class="number">5</span>))  <span class="comment"># Cache for 5 minutes</span>
+    <span class="keyword">def</span> <span class="function">list</span>(self, request, *args, **kwargs):
+        <span class="keyword">return</span> <span class="keyword">super</span>().list(request, *args, **kwargs)
+
+<span class="comment"># Each unique URL gets its own cache entry</span>
+<span class="comment"># /menu/items/?page=1  &rarr; cached separately from</span>
+<span class="comment"># /menu/items/?page=2  &rarr; cached separately from</span>
+<span class="comment"># /menu/items/?search=chicken  &rarr; each is independent</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Level 2: Manual Cache (Most Control)</h3>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Manual cache.get / cache.set</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.core.cache <span class="keyword">import</span> cache
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+
+<span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    <span class="comment"># ... existing config ...</span>
+
+    <span class="keyword">def</span> <span class="function">list</span>(self, request, *args, **kwargs):
+        <span class="comment"># Build unique key from query params</span>
+        cache_key = <span class="string">f"menu_items:</span>{request.GET.urlencode()}<span class="string">"</span>
+
+        <span class="comment"># Check cache</span>
+        cached_data = cache.get(cache_key)
+        <span class="keyword">if</span> cached_data <span class="keyword">is not</span> <span class="keyword">None</span>:
+            <span class="keyword">return</span> Response(cached_data)  <span class="comment"># HIT &mdash; 2ms</span>
+
+        <span class="comment"># MISS &mdash; get from DB</span>
+        response = <span class="keyword">super</span>().list(request, *args, **kwargs)
+
+        <span class="comment"># Store for 5 minutes</span>
+        cache.set(cache_key, response.data, timeout=<span class="number">300</span>)
+        <span class="keyword">return</span> response</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Measure the Impact</h3>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Before Cache</h4>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--text-secondary);">
+                        <code>curl /menu/items/</code><br><br>
+                        Response time: <strong style="color: var(--accent-danger);">~45ms</strong><br>
+                        Every. Single. Request.
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">After Cache</h4>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--text-secondary);">
+                        <code>curl /menu/items/</code><br><br>
+                        1st request: 45ms (miss)<br>
+                        2nd request: <strong style="color: var(--accent-success);">~3ms</strong> (hit)<br>
+                        <strong style="color: var(--accent-success);">93% improvement</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Verify in Redis CLI</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>redis-cli -n <span class="number">1</span>
+
+KEYS *                   <span class="comment"># See ALL cached keys (cache_page uses hash-based names)</span>
+KEYS *menu*              <span class="comment"># Only works with manual cache approach</span>
+DBSIZE                   <span class="comment"># Count of cached entries</span>
+TTL ":1:menu_items:"     <span class="comment"># Seconds until expiry</span>
+FLUSHDB                  <span class="comment"># Clear all cache (nuclear option)</span></pre>
+                </div>
+            </div>
+
+            <!-- All Django Cache Options -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">Beyond Views &mdash; Everything Django Can Cache</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">We cached a view. But Django's cache framework can do much more:</p>
+
+            <div class="table-container">
+                <table>
+                    <tr><th style="width: 180px;">What</th><th>How</th><th>Best For</th></tr>
+                    <tr>
+                        <td><strong>Per-View Cache</strong></td>
+                        <td><code>@cache_page(300)</code> decorator</td>
+                        <td>What we just built &mdash; cache the entire API response</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Low-Level API</strong></td>
+                        <td><code>cache.get()</code> / <code>cache.set()</code></td>
+                        <td>Cache anything &mdash; query results, computed values, API responses from external services</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Per-Object Cache</strong></td>
+                        <td><code>cache.get(f"item:{id}")</code></td>
+                        <td>Cache individual DB objects &mdash; great for detail views (<code>/menu/items/42/</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Template Fragment</strong></td>
+                        <td><code>{% cache 300 sidebar %}</code></td>
+                        <td>Cache expensive HTML fragments (server-rendered pages, not APIs)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session Backend</strong></td>
+                        <td><code>SESSION_ENGINE = '...cache'</code></td>
+                        <td>Store user sessions in Redis instead of DB &mdash; faster login checks</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cache Middleware</strong></td>
+                        <td><code>UpdateCacheMiddleware</code> + <code>FetchFromCacheMiddleware</code></td>
+                        <td>
+                            Caches <strong>every page</strong> on your entire site automatically. <code>UpdateCacheMiddleware</code> (first in MIDDLEWARE) saves responses to cache on the way out. <code>FetchFromCacheMiddleware</code> (last in MIDDLEWARE) checks cache on the way in &mdash; if cached, the request <strong>never reaches your views at all</strong>. Rarely used for APIs because it ignores auth headers, query params can get tricky, and you lose fine-grained control. Good for static content sites.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cache-Control Header</strong></td>
+                        <td><code>@cache_control(max_age=300)</code></td>
+                        <td>Tell the browser/CDN to cache the response &mdash; no server hit at all</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>Code examples for each</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># 1. Per-View (what we did)</span>
+<span class="decorator">@method_decorator</span>(cache_page(<span class="number">300</span>))
+<span class="keyword">def</span> <span class="function">list</span>(self, request, *args, **kwargs): ...
+
+<span class="comment"># 2. Low-Level API (cache anything)</span>
+cache.set(<span class="string">'key'</span>, value, timeout=<span class="number">300</span>)
+cache.get(<span class="string">'key'</span>)
+cache.delete(<span class="string">'key'</span>)
+cache.get_or_set(<span class="string">'key'</span>, expensive_function, timeout=<span class="number">300</span>)  <span class="comment"># atomic</span>
+
+<span class="comment"># 3. Per-Object Cache</span>
+<span class="keyword">def</span> <span class="function">get_menu_item</span>(item_id):
+    cache_key = <span class="string">f"menu_item:</span>{item_id}<span class="string">"</span>
+    item = cache.get(cache_key)
+    <span class="keyword">if</span> item <span class="keyword">is</span> <span class="keyword">None</span>:
+        item = MenuItem.objects.get(id=item_id)
+        cache.set(cache_key, item, timeout=<span class="number">300</span>)
+    <span class="keyword">return</span> item
+
+<span class="comment"># 4. Session Backend (settings.py)</span>
+SESSION_ENGINE = <span class="string">'django.contrib.sessions.backends.cache'</span>
+SESSION_CACHE_ALIAS = <span class="string">'default'</span>
+
+<span class="comment"># 5. Cache-Control Header (browser/CDN caching)</span>
+<span class="keyword">from</span> django.views.decorators.cache <span class="keyword">import</span> cache_control
+
+<span class="decorator">@cache_control</span>(max_age=<span class="number">300</span>, public=<span class="keyword">True</span>)
+<span class="keyword">def</span> <span class="function">my_view</span>(request): ...
+<span class="comment"># Sets HTTP header: Cache-Control: max-age=300, public</span>
+<span class="comment"># Browser won't even hit your server for 5 minutes!</span>
+
+<span class="comment"># 6. Cache Middleware (cache ENTIRE site — nuclear option)</span>
+MIDDLEWARE = [
+    <span class="string">'django.middleware.cache.UpdateCacheMiddleware'</span>,    <span class="comment"># first</span>
+    <span class="comment"># ... other middleware ...</span>
+    <span class="string">'django.middleware.cache.FetchFromCacheMiddleware'</span>,  <span class="comment"># last</span>
+]
+CACHE_MIDDLEWARE_SECONDS = <span class="number">300</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 8px;">Which One Should You Use?</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>For APIs:</strong> Start with per-view cache (<code>cache_page</code>) or manual cache (<code>cache.get/set</code>). Add <code>cache_control</code> header if you want CDN/browser caching too.<br>
+                    <strong>For sessions:</strong> Switch to Redis session backend &mdash; it's faster than DB sessions and you already have Redis running.<br>
+                    <strong>For everything else:</strong> Low-level API (<code>cache.get/set</code>) gives you full control.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 8: Pitfalls -->
+    <section id="pitfalls">
+        <div class="section-container">
+            <span class="section-label danger">Watch Out</span>
+            <h2 class="section-title">Common Caching Pitfalls</h2>
+            <p class="section-subtitle">Caching is simple to add, tricky to get right.</p>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-danger);">
+                    <div class="card-icon">&#128165;</div>
+                    <div class="card-title">Cache Stampede</div>
+                    <div class="card-desc">Cache expires, 1000 users hit DB simultaneously. Fix: cache lock, staggered TTL, or pre-warm cache before expiry.</div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-warning);">
+                    <div class="card-icon">&#128164;</div>
+                    <div class="card-title">Stale Data</div>
+                    <div class="card-desc">Price updated but cache shows old price for 5 minutes. Fix: invalidate on write, or accept staleness if business allows it.</div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="card-icon">&#128171;</div>
+                    <div class="card-title">Redis Goes Down</div>
+                    <div class="card-desc">App crashes because it can't reach cache. Fix: <code>try/except</code> around cache calls, fallback to DB query.</div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-danger);">
+                    <div class="card-icon">&#128200;</div>
+                    <div class="card-title">No TTL</div>
+                    <div class="card-desc">Cached data lives forever, never refreshes. Redis fills up. Fix: <strong>always set TTL</strong>, set <code>maxmemory</code> policy.</div>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Your cache TTL is 5 minutes. At exactly 5:00 PM, the cache expires. 500 users are on the site. What happens?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Cache stampede.</strong> All 500 users hit the DB simultaneously because the cache is empty. The DB gets 500 identical queries at once. Fix: use a <strong>cache lock</strong> (only one request rebuilds cache, others wait) or <strong>staggered TTL</strong> (add random jitter: <code>TTL = 300 + random(0, 60)</code>).
+                    </p>
+                </details>
+            </div>
+            <!-- Cache Poisoning -->
+            <h3 style="margin-top: 50px; margin-bottom: 15px;">&#128274; Further Reading: Web Cache Poisoning</h3>
+
+            <div class="highlight-box danger">
+                <h4 style="color: var(--accent-danger); margin-bottom: 10px;">What is Cache Poisoning?</h4>
+                <p style="color: var(--text-secondary);">
+                    An attacker tricks your cache into storing a <strong>malicious response</strong> &mdash; and then every subsequent user gets served that poisoned version.
+                </p>
+                <p style="color: var(--text-secondary); margin-top: 12px;"><strong>Simple example:</strong></p>
+                <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; margin: 10px 0; font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.8; color: #e2e8f0; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #6b7280;"># Normal request — server returns menu page</span>
+GET /menu/items/
+Host: restaurant.com
+<span style="color: #10b981;">→ Cache stores: {"items": [...]}</span>
+
+<span style="color: #6b7280;"># Attacker sends a request with a sneaky header</span>
+GET /menu/items/
+Host: restaurant.com
+<span style="color: #ef4444;">X-Forwarded-Host: evil.com</span>
+<span style="color: #6b7280;"># If the server blindly uses this header in the response</span>
+<span style="color: #6b7280;"># (e.g., generating links), the cache now stores a response</span>
+<span style="color: #6b7280;"># with links pointing to evil.com</span>
+<span style="color: #ef4444;">→ Cache stores: {"links": "https://evil.com/..."}</span>
+
+<span style="color: #6b7280;"># Now EVERY user who hits /menu/items/ gets the</span>
+<span style="color: #6b7280;"># poisoned response from cache — redirected to evil.com</span></pre>
+                </div>
+                <p style="color: var(--text-secondary); margin-top: 12px;">
+                    <strong>Why it matters:</strong> The attacker only needs to send <strong>one malicious request</strong>. The cache does the rest &mdash; serving the poisoned response to thousands of users until TTL expires. It's like poisoning a water tank instead of individual glasses.
+                </p>
+                <p style="color: var(--text-secondary); margin-top: 10px;">
+                    <strong>Prevention:</strong> Only cache based on URL + known query params. Never let unvalidated headers (like <code>X-Forwarded-Host</code>) influence cached responses. Use <code>Vary</code> headers carefully.
+                </p>
+                <p style="margin-top: 12px;">
+                    <a href="https://portswigger.net/web-security/web-cache-poisoning" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Deep dive: PortSwigger &mdash; Web Cache Poisoning &rarr;</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 9: Resume -->
+    <section id="resume">
+        <div class="section-container">
+            <span class="section-label blue">Career</span>
+            <h2 class="section-title">Mentioning Your Project on a Resume</h2>
+            <p class="section-subtitle">You built real systems. Now learn to describe them so interviewers actually care.</p>
+
+            <!-- Beginner vs Experienced advice -->
+            <div class="highlight-box" style="margin-bottom: 30px;">
+                <h4 style="margin-bottom: 12px;">Who Needs What</h4>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 2;">
+                    <strong>For beginners (0-2 years):</strong> Projects are ESSENTIAL. They're often the only thing that proves you can actually build something. A strong project section can get you the interview even without brand-name experience.<br><br>
+                    <strong>For experienced engineers (3+ years):</strong> Your company experience matters more. Projects become supplementary. But even then, a side project that shows you explored something NEW (a new language, a system design concept, a performance optimization) stands out.
+                </p>
+            </div>
+
+            <h4 style="margin-bottom: 15px;">What Grabs Attention Over Toy Projects:</h4>
+            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 2.2; margin-bottom: 30px;">
+                <div>&#8226; Projects that solve a <strong>REAL problem</strong> (not just a tutorial clone)</div>
+                <div>&#8226; Projects with <strong>measurable impact</strong> (response time improvements, query optimizations)</div>
+                <div>&#8226; Projects that demonstrate understanding of <strong>trade-offs</strong> (why Redis over Memcached, why webhooks over polling)</div>
+                <div>&#8226; <strong>Open-source contributions</strong> (even small ones) show you can read and navigate real codebases</div>
+            </div>
+
+            <!-- The Wrong Way -->
+            <h3 style="margin-bottom: 20px;">&#10060; The Wrong Way</h3>
+            <div style="background: rgba(239, 68, 68, 0.08); border: 2px solid var(--accent-danger); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+                <div style="font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--text-secondary); line-height: 2.2;">
+                    <strong style="color: var(--text-primary);">Restaurant Management System</strong><br>
+                    - Built a Django REST API<br>
+                    - Used PostgreSQL database<br>
+                    - Implemented CRUD operations<br>
+                    - Added pagination and search
+                </div>
+                <p style="color: var(--accent-danger); font-size: 0.85rem; margin-top: 15px;"><strong>Problem:</strong> Reads like a tutorial checklist. Describes tools, not skills or impact. Every CS student has this.</p>
+            </div>
+
+            <!-- The Right Way -->
+            <h3 style="margin-bottom: 20px;">&#9989; The Right Way</h3>
+            <div style="background: rgba(16, 185, 129, 0.08); border: 2px solid var(--accent-success); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+                <div style="font-size: 1rem; margin-bottom: 15px;">
+                    <strong style="color: var(--text-primary); font-size: 1.1rem;">Restaurant Order Management Platform</strong>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;"> &mdash; Django REST Framework, PostgreSQL, Redis, Razorpay</span>
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 2.2;">
+                    &#8226; Designed REST APIs for menu management, order processing, and payment integration &mdash; handling <strong>150+ menu items</strong> across 10 categories with paginated, searchable, and sortable endpoints<br>
+                    &#8226; Integrated Razorpay Payment Links API with <strong>webhook-based confirmation, signature verification, and idempotent event processing</strong> to prevent duplicate charges<br>
+                    &#8226; Built automated <strong>reconciliation cron</strong> that catches missed webhooks by comparing local records with Razorpay's API<br>
+                    &#8226; Implemented <strong>Redis caching (cache-aside pattern)</strong>, reducing API response time from <strong>~45ms to ~3ms</strong> for cached requests<br>
+                    &#8226; Prevented <strong>N+1 query problems</strong> using select_related/prefetch_related, reducing DB queries from <strong>21 to 1</strong>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">What Makes It Better?</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th style="color: var(--accent-danger);">Weak</th><th style="color: var(--accent-success);">Strong</th><th>Why</th></tr>
+                    <tr><td>"Built a Django API"</td><td>"REST APIs for menu, orders, payments"</td><td><strong>Specificity</strong> &mdash; tells WHAT the API does</td></tr>
+                    <tr><td>"Used PostgreSQL"</td><td>"Reduced queries from 21 to 1 with select_related"</td><td><strong>Shows performance understanding</strong></td></tr>
+                    <tr><td>"Added caching"</td><td>"Redis cache-aside, response time 45ms &rarr; 3ms"</td><td><strong>Quantified + named the pattern</strong></td></tr>
+                    <tr><td>"Integrated payments"</td><td>"Razorpay webhooks with signature verification"</td><td><strong>Shows security awareness</strong></td></tr>
+                    <tr><td>"Added pagination"</td><td>"Paginated, searchable, sortable endpoints for 150+ items"</td><td><strong>Production features, not tutorial steps</strong></td></tr>
+                </table>
+            </div>
+
+            <!-- Resume Rules -->
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Five Resume Rules</h3>
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-primary);"><div class="card-title">1. Lead with Impact</div><div class="card-desc">"Reduced response time by 93%" > "Used Redis"</div></div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);"><div class="card-title">2. Name the Patterns</div><div class="card-desc">"cache-aside", "idempotent processing", "reconciliation" show you understand WHY</div></div>
+                <div class="card" style="border-left: 3px solid var(--accent-purple);"><div class="card-title">3. Quantify Everything</div><div class="card-desc">45ms&rarr;3ms, 21&rarr;1 queries, 150+ items</div></div>
+                <div class="card" style="border-left: 3px solid #0ea5e9;"><div class="card-title">4. Show Decisions</div><div class="card-desc">"webhook over polling" shows you chose deliberately</div></div>
+                <div class="card" style="border-left: 3px solid var(--accent-danger);"><div class="card-title">5. No Tutorial Language</div><div class="card-desc">"Implemented" not "Learned". "Designed" not "Used".</div></div>
+            </div>
+
+            <!-- Interviewer Follow-ups -->
+            <h3 style="margin-top: 40px; margin-bottom: 10px;">What Interviewers Will Ask</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">&#128073; Click to reveal their follow-up question</p>
+            <div class="table-container">
+                <table>
+                    <tr><th>Your Resume Bullet</th><th>Their Follow-up</th></tr>
+                    <tr>
+                        <td><strong>"Redis caching (cache-aside)"</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">"Cache invalidation strategy? TTL? What if Redis goes down?"</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>"Razorpay webhooks"</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">"What if webhook fails? How prevent double processing?"</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>"Reconciliation cron"</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">"How often? Dry run? What edge cases did you handle?"</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>"N+1 prevention"</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">"What's N+1? How does select_related work vs prefetch_related?"</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>"Paginated endpoints"</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">"Offset vs cursor pagination? When would you use each?"</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 30px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 10px;">You Can Answer All of These</h4>
+                <p style="color: var(--text-secondary);">
+                    That's the point of this project &mdash; not just code, but <strong>interview ammunition</strong>. Every bullet on your resume is something you can talk about for 5 minutes because you actually built it.
+                </p>
+            </div>
+
+            <!-- Action Verbs -->
+            <div style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-success); font-size: 0.9rem; margin-bottom: 8px;">&#9989; Strong Verbs</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Designed, Built, Implemented, Integrated, Optimized, Reduced, Automated, Architected</p>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 8px;">&#10060; Weak Verbs</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Used, Worked on, Helped with, Learned, Studied, Familiar with</p>
+                </div>
+            </div>
+
+            <!-- Project Ideas That Stand Out -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">&#128161; Project Ideas That Actually Stand Out</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                Toy CRUD apps don't impress. Projects that combine Django with <strong>modern AI/agent tooling</strong> immediately signal you're ahead of the curve.
+            </p>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="card-icon">&#129302;</div>
+                    <div class="card-title">AI-Powered Customer Support Bot</div>
+                    <div class="card-desc">
+                        Django backend + <strong>MCP (Model Context Protocol)</strong> server that lets an LLM query your DB, check order status, and process refunds through tool calls. Shows: API design, auth, agentic engineering.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-icon">&#128269;</div>
+                    <div class="card-title">Semantic Menu Search</div>
+                    <div class="card-desc">
+                        Django API + <strong>OpenAI embeddings</strong> stored in <strong>pgvector</strong>. User searches "something spicy for a cold day" and gets relevant results. Shows: vector DBs, embeddings, search beyond LIKE.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);">
+                    <div class="card-icon">&#128200;</div>
+                    <div class="card-title">Agentic Data Pipeline</div>
+                    <div class="card-desc">
+                        Django + <strong>Celery</strong> + LLM agent that monitors your API logs, detects anomalies (sudden traffic spikes, error rate increases), and auto-creates Slack alerts with root cause analysis.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid #0ea5e9;">
+                    <div class="card-icon">&#128172;</div>
+                    <div class="card-title">MCP Server for Your Restaurant API</div>
+                    <div class="card-desc">
+                        Build an <strong>MCP server</strong> that exposes your restaurant API as tools for Claude/ChatGPT. The LLM can list menu items, place orders, check payment status &mdash; all through your Django backend.
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">Concrete Tips to Make Your Project Stand Out</h4>
+                <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 2.2;">
+                    <li><strong>Deploy it</strong> &mdash; a live URL beats a GitHub repo. Use Railway, Render, or AWS free tier. Interviewers click links.</li>
+                    <li><strong>Write a README that explains WHY</strong> &mdash; not just "how to install" but "I chose Redis over Memcached because..." and "webhook over polling because..."</li>
+                    <li><strong>Include a performance comparison</strong> &mdash; screenshot of before/after response times. Numbers are proof.</li>
+                    <li><strong>Add one thing beyond the tutorial</strong> &mdash; if everyone builds a REST API, add caching. If everyone adds caching, add an MCP server. The delta is what gets noticed.</li>
+                    <li><strong>Contribute to open source</strong> &mdash; even a small PR to <code>djangorestframework</code> or <code>django-redis</code> shows you can read and navigate real codebases</li>
+                    <li><strong>Record a 2-minute demo video</strong> &mdash; show the API working, show Redis keys appearing, show response time dropping. Embed in README. Most reviewers won't clone and run your project.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            Class 15 &bull; Optimizing APIs with Redis & Resume Writing<br>
+            <span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span>
+        </p>
+    </footer>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (winScroll / height) * 100 + '%';
+        });
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.textContent = '\u{1F319}';
+                text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.textContent = '\u{2600}\u{FE0F}';
+                text.textContent = 'Light';
+            }
+        }
+
+        function toggleCollapsible(header) {
+            header.parentElement.classList.toggle('open');
+        }
+
+        function toggleCode(header) {
+            header.parentElement.classList.toggle('collapsed');
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'e' && e.altKey) {
+                document.querySelectorAll('.code-block.collapsed').forEach(block => block.classList.remove('collapsed'));
+            }
+            if (e.key === 'c' && e.altKey) {
+                document.querySelectorAll('.code-block:not(.collapsed)').forEach(block => block.classList.add('collapsed'));
+            }
+        });
+    </script>
+</body>
+</html>

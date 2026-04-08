@@ -211,11 +211,12 @@
         footer p { color: var(--text-muted); font-size: 0.9rem; }
 
         /* Reveal-on-click cells */
-        .reveal-cell .hidden-answer { visibility: hidden; }
-        .reveal-cell::after { content: '?'; color: var(--text-muted); font-weight: 700; font-size: 1.1rem; }
-        .reveal-cell.revealed .hidden-answer { visibility: visible; }
-        .reveal-cell.revealed::after { content: ''; }
-        .reveal-cell:hover:not(.revealed) { background: var(--bg-tertiary); }
+        .reveal-cell { position: relative; text-align: center; cursor: pointer; min-height: 40px; }
+        .reveal-cell .hidden-answer { display: none; }
+        .reveal-cell::before { content: '?'; color: var(--text-muted); font-weight: 700; font-size: 1.2rem; background: var(--bg-tertiary); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .reveal-cell.revealed .hidden-answer { display: inline; }
+        .reveal-cell.revealed::before { display: none; }
+        .reveal-cell:hover:not(.revealed) { background: rgba(14, 165, 233, 0.05); }
 
         @media (max-width: 768px) {
             section { padding: 100px 20px 60px; }
@@ -584,27 +585,27 @@ REST_FRAMEWORK = {
                     </tr>
                     <tr>
                         <td><strong>Jump to page N?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; No</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; No</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
                     </tr>
                     <tr>
                         <td><strong>Performance at depth</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">Degrades</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">Constant</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">Degrades</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">Degrades</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">Constant</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">Degrades</span></td>
                     </tr>
                     <tr>
                         <td><strong>Consistent results?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">No (items shift)</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">Yes</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">No</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">No (items shift)</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">No</span></td>
                     </tr>
                     <tr>
                         <td><strong>Best for</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">Admin pages</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">Feeds, mobile</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">Flexible APIs</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Admin pages</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Feeds, mobile</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Flexible APIs</span></td>
                     </tr>
                 </table>
             </div>
@@ -867,48 +868,48 @@ REST_FRAMEWORK = {
                     </tr>
                     <tr>
                         <td><strong>Example</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer"><code>?search=chicken&amp;price_max=300</code></span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer"><code>{"query":"chicken","filters":{...}}</code></span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer"><code>?search=chicken&amp;price_max=300</code></span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer"><code>{"query":"chicken","filters":{...}}</code></span></td>
                     </tr>
                     <tr>
                         <td><strong>Cacheable?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Browsers &amp; CDNs cache GET</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; POST is never cached</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Browsers &amp; CDNs cache GET</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; POST is never cached</span></td>
                     </tr>
                     <tr>
                         <td><strong>Bookmarkable?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Full URL with params</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; Body isn't in the URL</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Full URL with params</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; Body isn't in the URL</span></td>
                     </tr>
                     <tr>
                         <td><strong>Shareable?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Copy-paste the URL</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; Need to share the body too</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Copy-paste the URL</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; Need to share the body too</span></td>
                     </tr>
                     <tr>
                         <td><strong>URL length limit?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; ~2000 chars (browser limit)</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Body can be any size</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; ~2000 chars (browser limit)</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Body can be any size</span></td>
                     </tr>
                     <tr>
                         <td><strong>Complex queries?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-danger);">Hard &mdash; nested filters get messy</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; JSON supports any structure</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">Hard &mdash; nested filters get messy</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; JSON supports any structure</span></td>
                     </tr>
                     <tr>
                         <td><strong>RESTful?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Reading data = GET</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer" style="color: var(--accent-warning);">&#9888; Debatable &mdash; it's a "read"</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Reading data = GET</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-warning);">&#9888; Debatable &mdash; it's a "read"</span></td>
                     </tr>
                     <tr>
                         <td><strong>Who uses it?</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">GitHub, Shopify, Razorpay</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">Elasticsearch, GraphQL, Algolia</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">GitHub, Shopify, Razorpay</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Elasticsearch, GraphQL, Algolia</span></td>
                     </tr>
                     <tr>
                         <td><strong>Use when</strong></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">Simple text search, few filters</span></td>
-                        <td class="reveal-cell" onclick="this.classList.add('revealed')" style="cursor:pointer;"><span class="hidden-answer">Complex boolean queries, aggregations</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Simple text search, few filters</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Complex boolean queries, aggregations</span></td>
                     </tr>
                 </table>
             </div>
