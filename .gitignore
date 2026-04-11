@@ -17,9 +17,14 @@
 
 # IDE
 .idea/
+**/.idea/
 .vscode/
+**/.vscode/
 *.swp
 *.swo
+
+# Standalone scripts (not part of course material)
+main.py
 
 # Node (if using any build tools)
 node_modules/
@@ -44,6 +49,7 @@ INSTRUCTOR.md
 INSTRUCTOR-GUIDE.md
 **/INSTRUCTOR.md
 **/INSTRUCTOR-GUIDE.md
+**/instructor.md
 
 # Django
 *.sqlite3
@@ -54,6 +60,9 @@ media/
 
 # Claude Code
 .claude/
+
+# Instructor reference files
+UI-ELEMENTS-REFERENCE.html
 
 # Migrations (optional - some teams commit these, some don't)
 # **/migrations/*.py

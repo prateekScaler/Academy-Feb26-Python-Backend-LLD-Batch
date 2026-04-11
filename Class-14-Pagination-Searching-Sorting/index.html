@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 14: Pagination, Searching & Sorting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #0ea5e9;
+            --accent-secondary: #0284c7;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-purple: #a855f7;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(14, 165, 233, 0.2);
+        }
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(14, 165, 233, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #38bdf8, #0ea5e9); z-index: 1001; }
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #38bdf8; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+        }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label {
+            display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(14, 165, 233, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9, #0284c7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #38bdf8; }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 25px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; user-select: none;
+        }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; }
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .function { color: #82aaff; }
+        .number { color: #f78c6c; }
+        .decorator { color: #f59e0b; }
+
+        .highlight-box { background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(168, 85, 247, 0.08));
+            border: 2px dashed var(--accent-primary);
+            border-radius: 12px; padding: 25px; margin: 40px 0;
+            position: relative;
+        }
+        .question-box::before {
+            content: 'Think About It';
+            position: absolute; top: -12px; left: 20px;
+            background: var(--accent-primary); color: white;
+            padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+
+        .visual-diagram {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 40px 30px; margin: 25px 0; text-align: center;
+        }
+        .diagram-row {
+            display: flex; justify-content: center; align-items: center;
+            gap: 15px; margin: 15px 0; flex-wrap: wrap;
+        }
+        .diagram-box {
+            padding: 14px 22px; border-radius: 10px; font-weight: 600;
+            font-size: 0.9rem; min-width: 120px; text-align: center;
+            border: 2px solid transparent;
+        }
+        .diagram-box.primary { background: rgba(14, 165, 233, 0.15); border-color: var(--accent-primary); color: #38bdf8; }
+        .diagram-box.success { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); color: #10b981; }
+        .diagram-box.warning { background: rgba(245, 158, 11, 0.15); border-color: var(--accent-warning); color: #f59e0b; }
+        .diagram-box.danger { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .diagram-box.purple { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #a855f7; }
+        .diagram-box.muted { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-secondary); }
+        .diagram-box small { display: block; font-weight: 400; font-size: 0.75rem; margin-top: 4px; opacity: 0.8; }
+        .diagram-arrow { color: var(--text-muted); font-size: 1.3rem; font-weight: 700; }
+        .diagram-arrow.down { display: block; text-align: center; margin: 8px 0; }
+        .diagram-label { font-size: 0.8rem; color: var(--text-muted); margin: 8px 0; font-weight: 500; }
+
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+
+        .step-number {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; background: var(--accent-primary);
+            color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px;
+        }
+
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+
+        /* API demo box */
+        .api-demo {
+            background: var(--bg-secondary); border: 2px solid var(--border-color);
+            border-radius: 12px; padding: 20px; margin: 15px 0; font-family: 'Fira Code', monospace;
+        }
+        .api-url { color: #38bdf8; font-size: 0.9rem; margin-bottom: 8px; }
+        .api-params span { display: inline-block; background: rgba(14, 165, 233, 0.15); color: #38bdf8; padding: 3px 10px; border-radius: 6px; margin: 3px 4px 3px 0; font-size: 0.8rem; }
+        .api-params span.search { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .api-params span.sort { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .api-params span.page { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Reveal-on-click cells */
+        .reveal-cell { position: relative; text-align: center; cursor: pointer; min-height: 40px; }
+        .reveal-cell .hidden-answer { display: none; }
+        .reveal-cell::before { content: '?'; color: var(--text-muted); font-weight: 700; font-size: 1.2rem; background: var(--bg-tertiary); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .reveal-cell.revealed .hidden-answer { display: inline; }
+        .reveal-cell.revealed::before { display: none; }
+        .reveal-cell:hover:not(.revealed) { background: rgba(14, 165, 233, 0.05); }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .diagram-row { flex-direction: column; }
+            .diagram-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 14: Pagination, Searching & Sorting</div>
+        <ul class="nav-links">
+            <li><a href="#pagination">Pagination</a></li>
+            <li><a href="#search">Search</a></li>
+            <li><a href="#sorting">Sorting</a></li>
+            <li><a href="#together">All Together</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;&#65039;</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#128220;</div>
+        <h1>Pagination, Searching & Sorting</h1>
+        <p class="hero-meta">Class 14 &bull; Building Production-Ready APIs</p>
+        <p class="hero-tagline">
+            Your API returns 10,000 items. The app takes 8 seconds to load. <strong>Users leave.</strong>
+        </p>
+    </section>
+
+    <!-- Section 2: Pagination -->
+    <section id="pagination">
+        <div class="section-container">
+            <span class="section-label">Core Concept</span>
+            <h2 class="section-title">Pagination</h2>
+            <p class="section-subtitle">Return data in chunks, not all at once.</p>
+
+            <!-- Part A: The Problem -->
+            <h3 style="margin-bottom: 20px;">
+                <span class="step-number">A</span> The Problem
+            </h3>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 15px;">&#10060; Without Pagination</h4>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                        <code>GET /menu/items/</code><br><br>
+                        Response size: <strong style="color: var(--accent-danger);">5.2 MB</strong><br>
+                        Response time: <strong style="color: var(--accent-danger);">4.3 seconds</strong><br>
+                        Server memory: <strong style="color: var(--accent-danger);">180 MB</strong><br>
+                        SQL: <code>SELECT * FROM items</code><br>
+                        <small>(loads ALL 50,000 rows)</small>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 15px;">&#9989; With Pagination</h4>
+                    <div style="font-family: 'Fira Code', monospace; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                        <code>GET /menu/items/?page=1</code><br><br>
+                        Response size: <strong style="color: var(--accent-success);">4.8 KB</strong><br>
+                        Response time: <strong style="color: var(--accent-success);">45 ms</strong><br>
+                        Server memory: <strong style="color: var(--accent-success);">2 MB</strong><br>
+                        SQL: <code>SELECT * FROM items LIMIT 20</code><br>
+                        <small>(loads only 20 rows)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 10px;">Everyone Uses Pagination</h4>
+                <div class="table-container">
+                    <table>
+                        <tr><th>API</th><th>Items Per Page</th><th>Style</th></tr>
+                        <tr><td>Google Search</td><td>10</td><td>Page numbers</td></tr>
+                        <tr><td>Twitter/X Feed</td><td>20</td><td>Cursor (infinite scroll)</td></tr>
+                        <tr><td>Amazon Products</td><td>48</td><td>Page numbers</td></tr>
+                        <tr><td>GitHub Repos</td><td>30</td><td>Page numbers</td></tr>
+                        <tr><td>Stripe Payments</td><td>10</td><td>Cursor</td></tr>
+                        <tr><td>Instagram Feed</td><td>12</td><td>Cursor (infinite scroll)</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Part B: Offset / Page Number -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">B</span> Classic Implementation &mdash; Offset / Page Number
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                The most common approach. Client sends a page number, server calculates the offset.
+            </p>
+
+            <div class="api-demo">
+                <div class="api-url">GET /menu/items/?<span class="api-params"><span class="page">page=1</span></span></div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">
+                    <code>?page=1</code> &rarr; LIMIT 20 OFFSET 0 &nbsp;|&nbsp;
+                    <code>?page=2</code> &rarr; LIMIT 20 OFFSET 20 &nbsp;|&nbsp;
+                    <code>?page=3</code> &rarr; LIMIT 20 OFFSET 40
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>SQL Under the Hood</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment">-- Page 1</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> menu_items <span class="keyword">LIMIT</span> <span class="number">20</span> <span class="keyword">OFFSET</span> <span class="number">0</span>;
+
+<span class="comment">-- Page 2</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> menu_items <span class="keyword">LIMIT</span> <span class="number">20</span> <span class="keyword">OFFSET</span> <span class="number">20</span>;
+
+<span class="comment">-- Page 5000 (PROBLEM: DB must scan &amp; skip 100,000 rows!)</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> menu_items <span class="keyword">LIMIT</span> <span class="number">20</span> <span class="keyword">OFFSET</span> <span class="number">100000</span>;</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>settings.py &mdash; Global Pagination</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># This paginates EVERY list view automatically</span>
+REST_FRAMEWORK = {
+    <span class="string">'DEFAULT_PAGINATION_CLASS'</span>: <span class="string">'rest_framework.pagination.PageNumberPagination'</span>,
+    <span class="string">'PAGE_SIZE'</span>: <span class="number">20</span>,
+}</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Custom PageNumberPagination Class</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> rest_framework.pagination <span class="keyword">import</span> PageNumberPagination
+
+<span class="keyword">class</span> <span class="function">MenuPagination</span>(PageNumberPagination):
+    page_size = <span class="number">10</span>                    <span class="comment"># Default items per page</span>
+    page_size_query_param = <span class="string">'size'</span>    <span class="comment"># Client can override: ?size=50</span>
+    max_page_size = <span class="number">100</span>               <span class="comment"># Cap &mdash; never more than 100</span>
+
+<span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    queryset = MenuItem.objects.select_related(<span class="string">'category'</span>).all()
+    serializer_class = MenuItemSerializer
+    pagination_class = MenuPagination</pre>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Paginated Response Format</span>
+                    </div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>{
+    <span class="string">"count"</span>: <span class="number">152</span>,
+    <span class="string">"next"</span>: <span class="string">"http://localhost:8000/menu/items/?page=2"</span>,
+    <span class="string">"previous"</span>: <span class="keyword">null</span>,
+    <span class="string">"results"</span>: [
+        {<span class="string">"id"</span>: <span class="number">1</span>, <span class="string">"name"</span>: <span class="string">"Butter Chicken"</span>, <span class="string">"price"</span>: <span class="number">350</span>},
+        {<span class="string">"id"</span>: <span class="number">2</span>, <span class="string">"name"</span>: <span class="string">"Paneer Tikka"</span>, <span class="string">"price"</span>: <span class="number">280</span>},
+        ...
+    ]
+}</pre>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-success); font-size: 0.9rem; margin-bottom: 8px;">&#9989; Pros</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;">
+                        <li>Simple to implement</li>
+                        <li>User can jump to any page</li>
+                        <li>Easy to show page numbers</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 8px;">&#10060; Cons</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;">
+                        <li>Slow on large offsets (page 5000)</li>
+                        <li>Inconsistent &mdash; inserts shift results</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Part C: Why OFFSET Degrades -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">C</span> Why OFFSET Degrades &mdash; Prove It Live
+            </h3>
+
+            <div class="visual-diagram">
+                <div class="diagram-label">What Happens Inside the Database</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box success">
+                        Page 1
+                        <small>Skip 0 rows</small>
+                        <small style="color: #10b981;">~2ms</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box warning">
+                        Page 100
+                        <small>Skip 2,000 rows</small>
+                        <small style="color: #f59e0b;">~50ms</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">
+                        Page 5000
+                        <small>Skip 100,000 rows</small>
+                        <small style="color: #ef4444;">~3-5 seconds</small>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                    The DB literally reads and <strong>throws away</strong> all the skipped rows. More skipping = more wasted work.
+                </p>
+            </div>
+
+            <div class="highlight-box warning">
+                <h4 style="color: var(--accent-warning); margin-bottom: 10px;">The Core Problem</h4>
+                <p style="color: var(--text-secondary);">
+                    With <strong>1M+ rows</strong>, page 5000 can take <strong>3-5 seconds</strong> while page 1 takes <strong>2ms</strong>. The DB literally reads and throws away 100,000 rows just to find the 20 you want.
+                </p>
+                <p style="margin-top: 10px;">
+                    <a href="https://use-the-index-luke.com/no-offset" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Deep dive: "Use The Index, Luke" &mdash; No Offset &rarr;</a>
+                </p>
+            </div>
+
+            <!-- Part D: Cursor-Based Pagination -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">D</span> Advanced &mdash; Cursor-Based Pagination
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Instead of page numbers, use the last item's ID as a "cursor". <strong>This is how Instagram, Twitter, and Stripe work.</strong>
+            </p>
+
+            <div class="api-demo">
+                <div class="api-url">GET /menu/items/?<span class="api-params"><span class="page">cursor=eyJpZCI6MjB9</span></span></div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">
+                    "Give me items AFTER item #20" &rarr; No skipping, just a WHERE clause
+                </div>
+            </div>
+
+            <div class="comparison-grid" style="margin-top: 20px;">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 12px;">OFFSET 100000</h4>
+                    <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: #e2e8f0; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #c792ea;">SELECT</span> * <span style="color: #c792ea;">FROM</span> items
+<span style="color: #c792ea;">LIMIT</span> <span style="color: #f78c6c;">20</span> <span style="color: #c792ea;">OFFSET</span> <span style="color: #f78c6c;">100000</span>;
+
+<span style="color: #6b7280;">-- Scans 100,000 rows</span>
+<span style="color: #6b7280;">-- Throws them all away</span>
+<span style="color: #6b7280;">-- Returns 20</span></pre>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 12px;">WHERE id > 100000</h4>
+                    <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: #e2e8f0; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #c792ea;">SELECT</span> * <span style="color: #c792ea;">FROM</span> items
+<span style="color: #c792ea;">WHERE</span> id > <span style="color: #f78c6c;">100000</span>
+<span style="color: #c792ea;">ORDER BY</span> id <span style="color: #c792ea;">LIMIT</span> <span style="color: #f78c6c;">20</span>;
+
+<span style="color: #6b7280;">-- Index lookup: O(1)</span>
+<span style="color: #6b7280;">-- Jumps straight to id 100001</span>
+<span style="color: #6b7280;">-- Returns 20</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>DRF CursorPagination</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> rest_framework.pagination <span class="keyword">import</span> CursorPagination
+
+<span class="keyword">class</span> <span class="function">FeedCursorPagination</span>(CursorPagination):
+    page_size = <span class="number">20</span>
+    ordering = <span class="string">'-created_at'</span>      <span class="comment"># Must be an orderable field</span>
+    cursor_query_param = <span class="string">'cursor'</span>  <span class="comment"># ?cursor=cD0yMDI0LTA...</span>
+
+<span class="keyword">class</span> <span class="function">FeedView</span>(generics.ListAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    pagination_class = FeedCursorPagination
+
+<span class="comment"># Response includes next/previous cursor URLs</span>
+<span class="comment"># Client just follows the "next" link &mdash; no page numbers needed</span></pre>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-success); font-size: 0.9rem; margin-bottom: 8px;">&#9989; Pros</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;">
+                        <li><strong>Fast at any depth</strong> &mdash; no scanning</li>
+                        <li>Consistent results &mdash; no duplicates</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 15px;">
+                    <h4 style="color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 8px;">&#10060; Cons</h4>
+                    <ul style="margin-left: 18px; color: var(--text-secondary); font-size: 0.85rem;">
+                        <li>Can't jump to page 50</li>
+                        <li>Must scroll sequentially</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Best for: <strong>Infinite scroll feeds (Instagram, Twitter), mobile apps</strong></p>
+
+            <!-- Part E: Comparison Table -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">E</span> Comparison
+            </h3>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">&#128073; Click any cell to reveal the answer</p>
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th></th>
+                        <th>Offset (Page Number)</th>
+                        <th>Cursor-Based</th>
+                        <th>Limit-Offset</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Jump to page N?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; No</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Yes</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance at depth</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">Degrades</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">Constant</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">Degrades</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Consistent results?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">No (items shift)</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">Yes</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">No</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best for</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Admin pages</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Feeds, mobile</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Flexible APIs</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>You're building a social media feed (like Instagram). Should you use page numbers or cursor pagination? Why?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Cursor.</strong> New posts are being added constantly. With page numbers, scrolling to page 2 might show duplicates from page 1 (because new posts pushed everything down). Cursor says "show me everything AFTER the last post I saw" &mdash; no duplicates, consistent experience.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Search -->
+    <section id="search">
+        <div class="section-container">
+            <span class="section-label purple">Deep Dive</span>
+            <h2 class="section-title">Searching &mdash; From LIKE to Semantic</h2>
+            <p class="section-subtitle">Five levels of search, from basic SQL to AI-powered semantic matching.</p>
+
+            <!-- Pre-search MCQs on indexing -->
+            <div class="question-box">
+                <p><strong>MCQ: You have a <code>name</code> column with a B-tree index. Which query can use the index?</strong></p>
+                <p style="margin-top: 10px; color: var(--text-secondary);">
+                    A) <code>WHERE name LIKE '%chicken%'</code><br>
+                    B) <code>WHERE name LIKE 'chicken%'</code><br>
+                    C) <code>WHERE name LIKE '%chicken'</code><br>
+                    D) Both B and C
+                </p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>B) <code>LIKE 'chicken%'</code></strong> &mdash; Only a prefix search (no leading wildcard) can use a B-tree index. The index is sorted alphabetically, so the DB can binary-search to "chicken" and scan forward. A leading <code>%</code> means "could start with anything" &mdash; the index is useless, full table scan.
+                    </p>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>MCQ: You add <code>db_index=True</code> to the <code>name</code> field. Your search query is <code>WHERE LOWER(name) LIKE 'chicken%'</code>. Will the index be used?</strong></p>
+                <p style="margin-top: 10px; color: var(--text-secondary);">
+                    A) Yes &mdash; it's a prefix search, indexes always help<br>
+                    B) No &mdash; <code>LOWER()</code> wraps the column, so the index is bypassed<br>
+                    C) Only on PostgreSQL, not on MySQL<br>
+                    D) Only if the column is <code>VARCHAR</code>, not <code>TEXT</code>
+                </p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>B) No.</strong> Wrapping a column in a function like <code>LOWER(name)</code> means the DB can't use the regular B-tree index on <code>name</code> &mdash; it would need to compute <code>LOWER()</code> for every row first. This is why Django's <code>icontains</code> (case-insensitive) is slower than <code>contains</code> (case-sensitive). Fix: create a <strong>functional index</strong> on <code>LOWER(name)</code> in PostgreSQL, or use a <strong>case-insensitive collation</strong>.
+                    </p>
+                </details>
+            </div>
+
+            <!-- Part A: Classic LIKE Search -->
+            <h3 style="margin-bottom: 20px;">
+                <span class="step-number">A</span> Classic Search &mdash; LIKE '%query%'
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                How it works in Django ORM: <code>filter(name__icontains='chicken')</code><br>
+                SQL generated: <code>WHERE LOWER(name) LIKE '%chicken%'</code>
+            </p>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>DRF SearchFilter &mdash; The Easy Way</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> filters
+
+<span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    queryset = MenuItem.objects.select_related(<span class="string">'category'</span>).all()
+    serializer_class = MenuItemSerializer
+    pagination_class = MenuPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = [<span class="string">'name'</span>, <span class="string">'description'</span>, <span class="string">'category__name'</span>]
+
+<span class="comment"># Now clients can search:</span>
+<span class="comment"># GET /menu/items/?search=chicken</span>
+<span class="comment"># GET /menu/items/?search=butter chicken  (matches "butter" OR "chicken")</span></pre>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 25px; margin-bottom: 15px;">Search Field Prefixes</h4>
+            <div class="table-container">
+                <table style="min-width: 700px;">
+                    <tr>
+                        <th style="width: 90px;">Prefix</th>
+                        <th style="width: 130px;">SQL Lookup</th>
+                        <th>URL Example</th>
+                        <th>What It Matches</th>
+                    </tr>
+                    <tr>
+                        <td><code style="font-size: 1rem; color: var(--accent-primary);">(none)</code></td>
+                        <td><code>icontains</code><br><span style="font-size: 0.75rem; color: var(--text-muted);">LIKE '%x%'</span></td>
+                        <td><code style="color: var(--accent-primary); font-size: 0.8rem;">/menu/items/?search=chicken</code></td>
+                        <td>"chicken" matches "Butter <strong>Chicken</strong>", "Chicken Biryani", "Grilled Chicken Salad"</td>
+                    </tr>
+                    <tr>
+                        <td><code style="font-size: 1rem; color: var(--accent-success);">^</code></td>
+                        <td><code>istartswith</code><br><span style="font-size: 0.75rem; color: var(--text-muted);">LIKE 'x%'</span></td>
+                        <td><code style="color: var(--accent-primary); font-size: 0.8rem;">/menu/items/?search=butter</code></td>
+                        <td>"butter" matches "<strong>Butter</strong> Chicken", "<strong>Butter</strong> Naan" &mdash; NOT "Paneer <strong>Butter</strong> Masala"</td>
+                    </tr>
+                    <tr>
+                        <td><code style="font-size: 1rem; color: var(--accent-warning);">=</code></td>
+                        <td><code>iexact</code><br><span style="font-size: 0.75rem; color: var(--text-muted);">= 'x'</span></td>
+                        <td><code style="color: var(--accent-primary); font-size: 0.8rem;">/menu/items/?search=butter+chicken</code></td>
+                        <td>Only exact "Butter Chicken" &mdash; not "Butter Naan", not "Chicken Tikka"</td>
+                    </tr>
+                    <tr>
+                        <td><code style="font-size: 1rem; color: var(--accent-purple);">@</code></td>
+                        <td>Full-text<br><span style="font-size: 0.75rem; color: var(--text-muted);">to_tsvector</span></td>
+                        <td><code style="color: var(--accent-primary); font-size: 0.8rem;">/menu/items/?search=spicy+creamy</code></td>
+                        <td>Uses PostgreSQL full-text index &mdash; understands word stems, smarter</td>
+                    </tr>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">
+                <strong>The URL is always the same</strong> (<code>?search=...</code>) &mdash; the prefix in <code>search_fields</code> changes how DRF interprets it on the backend.
+            </p>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>Mixing prefixes &mdash; real-world example</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    queryset = MenuItem.objects.select_related(<span class="string">'category'</span>).all()
+    serializer_class = MenuItemSerializer
+    filter_backends = [filters.SearchFilter]
+
+    search_fields = [
+        <span class="string">'^name'</span>,             <span class="comment"># startswith — fast, uses index</span>
+                              <span class="comment"># "butter" → finds "Butter Chicken", "Butter Naan"</span>
+                              <span class="comment"># but NOT "Paneer Butter Masala"</span>
+
+        <span class="string">'description'</span>,       <span class="comment"># icontains (default) — slower, full scan</span>
+                              <span class="comment"># "spicy" → finds anything with "spicy" anywhere</span>
+
+        <span class="string">'=category__name'</span>,  <span class="comment"># exact match on category</span>
+                              <span class="comment"># "Desserts" → only Desserts category, not "Dessert Pizza"</span>
+    ]
+
+<span class="comment"># When to use what:</span>
+<span class="comment">#</span>
+<span class="comment"># ^  (startswith)  → Use on name/title fields. FASTEST — can use DB index.</span>
+<span class="comment">#                    Best for: autocomplete-style "type and match" UX.</span>
+<span class="comment">#                    Example: Amazon product name search.</span>
+<span class="comment">#</span>
+<span class="comment"># (none) icontains → Use on description/body fields where match can be anywhere.</span>
+<span class="comment">#                    SLOWEST — full table scan, but most flexible.</span>
+<span class="comment">#                    Example: searching blog post content.</span>
+<span class="comment">#</span>
+<span class="comment"># =  (exact)       → Use on category/status/type fields with known values.</span>
+<span class="comment">#                    FASTEST — simple equality check, always uses index.</span>
+<span class="comment">#                    Example: filtering by exact category name.</span>
+<span class="comment">#</span>
+<span class="comment"># @  (full-text)   → Use on large text fields in PostgreSQL.</span>
+<span class="comment">#                    FAST — uses GIN/GiST index, understands word stems.</span>
+<span class="comment">#                    Example: searching articles, product descriptions at scale.</span>
+<span class="comment">#</span>
+<span class="comment"># Performance ranking:  =  &gt;  ^  &gt;  @  &gt;  (none/icontains)</span>
+<span class="comment">#                      fastest              slowest</span></pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">This works great for <strong>&lt; 10K items</strong>.</p>
+
+            <!-- Part B: Why LIKE Doesn't Scale -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">B</span> Why LIKE Doesn't Scale
+            </h3>
+
+            <div class="visual-diagram">
+                <div class="diagram-label">How LIKE '%chicken%' Works</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box danger">
+                        %chicken%
+                        <small>Contains &mdash; wildcard at start</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box danger">
+                        FULL TABLE SCAN
+                        <small>Checks every single row</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box muted">
+                        Cannot use index
+                        <small>O(n) &mdash; 1M rows = 1M checks</small>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <div class="diagram-row">
+                        <div class="diagram-box success">
+                            chicken%
+                            <small>Starts with &mdash; no leading wildcard</small>
+                        </div>
+                        <span class="diagram-arrow">&#10132;</span>
+                        <div class="diagram-box success">
+                            CAN use B-tree index
+                            <small>O(log n) &mdash; much faster</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <tr><th>Data Size</th><th>Recommendation</th></tr>
+                    <tr><td>&lt; 10K items</td><td><code>icontains</code> is perfectly fine</td></tr>
+                    <tr><td>10K &ndash; 100K items</td><td>PostgreSQL full-text search (<code>SearchVector</code>)</td></tr>
+                    <tr><td>100K &ndash; 1M items</td><td>Consider Elasticsearch or Meilisearch</td></tr>
+                    <tr><td>&gt; 1M items</td><td>You definitely need a dedicated search engine</td></tr>
+                </table>
+            </div>
+
+            <!-- Part B2: GET vs POST Search -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">But Wait &mdash; Should Search Be GET or POST?</h3>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                Our DRF search uses <code>GET /menu/items/?search=chicken</code>. But Elasticsearch uses <code>POST /_search</code> with a JSON body. Why?
+            </p>
+
+            <div class="highlight-box" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px;">The Intuition</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Simple search fits in a URL:</strong> <code>?search=chicken&price_max=300</code> &mdash; easy.<br>
+                    <strong>Complex search doesn't:</strong> Imagine a query with 5 boolean conditions, 3 nested filters, geo-distance, aggregations, and custom scoring. That JSON body could be <strong>500+ characters</strong> &mdash; browser URLs cap at ~2000 chars and get unreadable fast. So Elasticsearch, GraphQL, and Algolia use <strong>POST</strong> &mdash; not because it's "better", but because the query body <strong>simply doesn't fit in a URL</strong>.
+                </p>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">&#128073; Click any cell to reveal</p>
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Aspect</th>
+                        <th style="color: var(--accent-success);">GET Search</th>
+                        <th style="color: var(--accent-danger);">POST Search</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Example</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer"><code>?search=chicken&amp;price_max=300</code></span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer"><code>{"query":"chicken","filters":{...}}</code></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cacheable?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Browsers &amp; CDNs cache GET</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; POST is never cached</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bookmarkable?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Full URL with params</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; Body isn't in the URL</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shareable?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Copy-paste the URL</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; Need to share the body too</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL length limit?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">&#10008; ~2000 chars (browser limit)</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Body can be any size</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Complex queries?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-danger);">Hard &mdash; nested filters get messy</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; JSON supports any structure</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RESTful?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-success);">&#10004; Reading data = GET</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer" style="color: var(--accent-warning);">&#9888; Debatable &mdash; it's a "read"</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Who uses it?</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">GitHub, Shopify, Razorpay</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Elasticsearch, GraphQL, Algolia</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Use when</strong></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Simple text search, few filters</span></td>
+                        <td class="reveal-cell" onclick="this.classList.add('revealed')"><span class="hidden-answer">Complex boolean queries, aggregations</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Part C: Elasticsearch / Inverted Index -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">C</span> Enter Elasticsearch &mdash; The Inverted Index
+            </h3>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 15px;">&#128451;&#65039; Regular Database Index</h4>
+                    <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: #e2e8f0; line-height: 1.8; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #6b7280;">Document ID  &rarr;  Content</span>
+<span style="color: #6b7280;">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span style="color: #f78c6c;">1</span>  &rarr;  <span style="color: #c3e88d;">"Butter Chicken with cream"</span>
+<span style="color: #f78c6c;">2</span>  &rarr;  <span style="color: #c3e88d;">"Chicken Biryani with rice"</span>
+<span style="color: #f78c6c;">3</span>  &rarr;  <span style="color: #c3e88d;">"Paneer Butter Masala"</span>
+<span style="color: #f78c6c;">4</span>  &rarr;  <span style="color: #c3e88d;">"Chicken Tikka dry"</span>
+
+<span style="color: #6b7280;">Search: "chicken"</span>
+<span style="color: #ef4444;">&rarr; Must scan EVERY row</span>
+<span style="color: #ef4444;">&rarr; Check if it contains "chicken"</span>
+<span style="color: #ef4444;">&rarr; O(n) &mdash; slow on millions of rows</span></pre>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 15px;">&#128218; Inverted Index (Elasticsearch)</h4>
+                    <div style="background: #1e1e2e; border-radius: 8px; padding: 14px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: #e2e8f0; line-height: 1.8; overflow-x: auto;">
+<pre style="margin: 0;"><span style="color: #6b7280;">Word       &rarr;  Document IDs</span>
+<span style="color: #6b7280;">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span style="color: #c3e88d;">"butter"</span>   &rarr;  [<span style="color: #f78c6c;">1, 3</span>]
+<span style="color: #c3e88d;">"chicken"</span>  &rarr;  [<span style="color: #f78c6c;">1, 2, 4</span>]
+<span style="color: #c3e88d;">"paneer"</span>   &rarr;  [<span style="color: #f78c6c;">3</span>]
+<span style="color: #c3e88d;">"biryani"</span>  &rarr;  [<span style="color: #f78c6c;">2</span>]
+<span style="color: #c3e88d;">"tikka"</span>    &rarr;  [<span style="color: #f78c6c;">4</span>]
+
+<span style="color: #6b7280;">Search: "chicken"</span>
+<span style="color: #10b981;">&rarr; Look up "chicken" &rarr; [1, 2, 4]</span>
+<span style="color: #10b981;">&rarr; O(1) &mdash; instant on billions!</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-diagram" style="margin-top: 25px;">
+                <div class="diagram-label">How Elasticsearch Indexes Your Data</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box primary">
+                        &#128196; Your Data
+                        <small>"Butter Chicken..."</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box warning">
+                        &#9881;&#65039; Analyzer
+                        <small>Tokenize + lowercase</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#128218; Inverted Index
+                        <small>word &rarr; [doc IDs]</small>
+                    </div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div class="diagram-row">
+                    <div class="diagram-box purple">
+                        &#128269; Search Query
+                        <small>"chicken"</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#128218; Index Lookup
+                        <small>O(1) &mdash; instant</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box primary">
+                        &#128203; Results
+                        <small>Docs [1, 2, 4]</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 10px;">Elasticsearch Uses POST for Search</h4>
+                <p style="color: var(--text-secondary);">
+                    ES's <code>_search</code> endpoint uses <strong>POST</strong> with a JSON body because queries can be deeply nested.
+                    <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html" target="_blank" style="color: var(--accent-primary);">Official docs &rarr;</a>
+                </p>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                <strong>Note:</strong> ES also has drawbacks &mdash; operational complexity, another system to maintain, and eventual consistency (writes aren't immediately searchable).
+            </p>
+
+            <!-- Part D: Lexical Search Limitation -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">D</span> The Limitation &mdash; Lexical Search Only
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                Everything above &mdash; LIKE, full-text search, Elasticsearch &mdash; is <strong>lexical search</strong>. It matches exact words and tokens.
+            </p>
+            <div class="highlight-box danger">
+                <h4 style="color: var(--accent-danger); margin-bottom: 10px;">The Problems with Lexical Search</h4>
+                <ul style="margin-left: 20px; color: var(--text-secondary);">
+                    <li><strong>"laptop"</strong> won't match <strong>"notebook computer"</strong> even though they mean the same thing</li>
+                    <li><strong>"best chicken"</strong> won't rank <strong>"Butter Chicken (most popular)"</strong> higher than <strong>"Chicken Salad"</strong></li>
+                    <li>No understanding of meaning, synonyms, or intent</li>
+                </ul>
+            </div>
+
+            <!-- Part E: Prashant-Croissant Problem -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">E</span> The Prashant-Croissant Problem &mdash; Phonetic Search
+            </h3>
+
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.12)); border: 2px solid var(--accent-warning); border-radius: 16px; padding: 40px; text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">&#128270; &#129360;</div>
+                <h3 style="color: var(--accent-warning); margin-bottom: 15px; font-size: 1.5rem;">"Prashant" &#8596; "Croissant"</h3>
+                <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+                    You type <strong>"prashant"</strong> into Google. It suggests <strong>"croissant"</strong>.<br>
+                    You type <strong>"chiken tikka"</strong> on Swiggy. It shows <strong>"Chicken Tikka"</strong>.<br>
+                </p>
+                <p style="color: var(--text-primary); font-size: 1rem; margin-top: 20px; font-weight: 600;">
+                    How? Phonetic matching + fuzzy search.
+                </p>
+                <p style="color: var(--accent-danger); font-size: 0.95rem; margin-top: 10px;">
+                    Our <code>LIKE '%query%'</code> returns <strong>ZERO results</strong> for "chiken" (misspelled).
+                </p>
+                <a href="https://www.youtube.com/watch?v=rfs5dVnj5Q4" target="_blank" style="display: inline-block; margin-top: 20px; color: var(--accent-primary); font-weight: 600; font-size: 1rem; text-decoration: none; border: 1px solid var(--accent-primary); padding: 10px 20px; border-radius: 8px;">
+                    Watch: The Prashant-Croissant Controversy &rarr;
+                </a>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                <strong>Phonetic search</strong> converts words to phonetic codes and matches words that <strong>SOUND similar</strong>, regardless of spelling.
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>How It Works</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Soundex</strong></td>
+                        <td>Maps to a 4-character code based on consonant sounds</td>
+                        <td>Prashant &rarr; P623, Croissant &rarr; C625</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Metaphone</strong></td>
+                        <td>Better English phonetics, handles silent letters</td>
+                        <td>Smith &rarr; SM0, Schmidt &rarr; XMT</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Double Metaphone</strong></td>
+                        <td>Handles multiple pronunciations per word</td>
+                        <td>Returns primary + alternate code</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Caverphone</strong></td>
+                        <td>Optimized for matching names</td>
+                        <td>Used in NZ electoral rolls</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Beider-Morse</strong></td>
+                        <td>Multi-language phonetic matching</td>
+                        <td>Handles names across languages</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                Used in: spell checkers, "Did you mean...?" suggestions, name matching in databases, Elasticsearch phonetic plugin.
+            </p>
+
+            <!-- Part F: Semantic Search -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">F</span> Semantic Search &mdash; The Future
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Beyond matching words &mdash; understanding <strong>MEANING</strong>. "laptop" matches "notebook computer" because they mean the same thing.
+            </p>
+
+            <div class="visual-diagram">
+                <div class="diagram-label">How Semantic Search Works</div>
+                <div class="diagram-row" style="margin-top: 15px;">
+                    <div class="diagram-box primary">
+                        &#128269; Query
+                        <small>"spicy chicken"</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box warning">
+                        &#129504; Embedding Model
+                        <small>ML transforms text to vector</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box purple">
+                        &#128290; Vector
+                        <small>[0.8, 0.2, 0.1, ...]</small>
+                    </div>
+                </div>
+                <div class="diagram-arrow down">&#8595;</div>
+                <div class="diagram-row">
+                    <div class="diagram-box purple">
+                        &#128290; Compare Vectors
+                        <small>Cosine similarity</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box success">
+                        &#127942; Rank by Similarity
+                        <small>Most semantically similar first</small>
+                    </div>
+                    <span class="diagram-arrow">&#10132;</span>
+                    <div class="diagram-box primary">
+                        &#128203; Results
+                        <small>Meaning-based matches</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">Where Semantic Search is Used</h4>
+                <ul style="margin-left: 20px; color: var(--text-secondary);">
+                    <li><strong>ChatGPT retrieval</strong> &mdash; finds relevant documents to answer your question</li>
+                    <li><strong>Google Search (BERT)</strong> &mdash; understands search intent, not just keywords</li>
+                    <li><strong>Amazon product search</strong> &mdash; "something to keep me warm" matches "woolen sweater"</li>
+                </ul>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">
+                    Tools: OpenAI Embeddings, Sentence-BERT, Pinecone, Weaviate, pgvector
+                </p>
+            </div>
+
+            <!-- Part G: Search Quiz -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">
+                <span class="step-number">G</span> Search Quiz
+            </h3>
+
+            <div class="question-box">
+                <p><strong>Q1: A user searches for "chiken tikka" (misspelled). Which search approach finds the right result?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Phonetic search</strong> (Soundex/Metaphone) or <strong>fuzzy search</strong> (Levenshtein distance). Lexical search (LIKE or Elasticsearch exact match) would return nothing because "chiken" doesn't match "chicken".
+                    </p>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q2: A user searches for "something to keep me warm in winter". Your store has "woolen sweaters". Which approach matches this?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Semantic search.</strong> The query has no words in common with "woolen sweaters", but the MEANING is related. Only embedding-based search catches this.
+                    </p>
+                </details>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Q3: A user searches for "paneer" in a restaurant menu with 500 items. Which approach is sufficient?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Simple LIKE / icontains.</strong> 500 items is tiny &mdash; no need for Elasticsearch or embeddings. DRF's <code>SearchFilter</code> is more than enough.
+                    </p>
+                </details>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Section 4: Sorting -->
+    <section id="sorting">
+        <div class="section-container">
+            <span class="section-label success">Sort</span>
+            <h2 class="section-title">Sorting</h2>
+            <p class="section-subtitle">Let users control the order of results &mdash; cheapest first, newest first, A-Z.</p>
+
+            <div class="api-demo">
+                <div class="api-url">GET /menu/items/?<span class="api-params"><span class="sort">ordering=-price</span></span></div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">
+                    <code>ordering=price</code> &rarr; cheapest first &nbsp;|&nbsp;
+                    <code>ordering=-price</code> &rarr; most expensive first &nbsp;|&nbsp;
+                    <code>-</code> means descending
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>views.py &mdash; Add Sorting with OrderingFilter</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> filters
+
+<span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    queryset = MenuItem.objects.select_related(<span class="string">'category'</span>).all()
+    serializer_class = MenuItemSerializer
+    pagination_class = MenuPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = [<span class="string">'name'</span>, <span class="string">'description'</span>, <span class="string">'category__name'</span>]
+    ordering_fields = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'created_at'</span>]  <span class="comment"># Whitelist!</span>
+    ordering = [<span class="string">'-created_at'</span>]   <span class="comment"># Default sort</span></pre>
+                </div>
+            </div>
+
+            <div class="api-demo" style="margin-top: 20px;">
+                <div style="color: var(--text-secondary); font-size: 0.85rem; line-height: 2;">
+                    <code>GET /menu/items/</code> &rarr; Default: newest first<br>
+                    <code>GET /menu/items/?ordering=price</code> &rarr; Cheapest first<br>
+                    <code>GET /menu/items/?ordering=-price</code> &rarr; Most expensive first<br>
+                    <code>GET /menu/items/?ordering=name</code> &rarr; A-Z<br>
+                    <code>GET /menu/items/?ordering=category__name,price</code> &rarr; By category, then price
+                </div>
+            </div>
+
+            <div class="highlight-box warning" style="margin-top: 25px;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">&#9888;&#65039; Always Whitelist ordering_fields</h4>
+                <p style="color: var(--text-secondary);">
+                    Without <code>ordering_fields</code>, DRF allows sorting by <em>any</em> field &mdash; including sensitive ones. A malicious user could probe for field names. Always explicitly list which fields are sortable.
+                </p>
+            </div>
+
+            <div class="question-box" style="margin-top: 40px;">
+                <p><strong>Your menu has 1 million items. <code>GET /menu/items/?ordering=price</code> takes 3 seconds. What's wrong and how do you fix it?</strong></p>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent-primary); font-weight: 600;">Reveal Answer</summary>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <p>The <code>price</code> column has <strong>no database index</strong>. Without an index, the DB must sort ALL 1 million rows before returning the first 20.</p>
+                        <p style="margin-top: 8px;"><strong>Fix:</strong> Add a database index:</p>
+                        <div style="background: #1e1e2e; padding: 10px; border-radius: 6px; margin-top: 8px;">
+                            <code style="color: #e2e8f0; font-size: 0.85rem;">price = models.DecimalField(..., <span style="color: #c3e88d;">db_index=True</span>)</code>
+                        </div>
+                        <p style="margin-top: 8px;">With the index, the DB reads the already-sorted index and returns 20 items in <strong>2ms</strong> instead of 3s.</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Putting It All Together -->
+    <section id="together">
+        <div class="section-container">
+            <span class="section-label success">Complete</span>
+            <h2 class="section-title">Putting It All Together</h2>
+            <p class="section-subtitle">Search + Sort + Pagination &mdash; one powerful query.</p>
+
+            <div class="api-demo" style="padding: 25px; border-width: 2px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">THE ULTIMATE QUERY</div>
+                <div class="api-url" style="font-size: 1rem;">
+                    GET /menu/food/?<span class="api-params">
+                        <span class="search">search=paneer</span>
+                        <span class="sort">ordering=price</span>
+                        <span class="page">page=1</span>
+                        <span class="page">size=5</span>
+                    </span>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">
+                    Search for "paneer" &rarr; sort by price (cheapest) &rarr; first page &rarr; 5 per page
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span>The Complete View &mdash; 10 Lines</span>
+                    </div>
+                    <div class="code-toggle">
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> rest_framework <span class="keyword">import</span> filters, generics
+<span class="keyword">from</span> rest_framework.pagination <span class="keyword">import</span> PageNumberPagination
+
+<span class="keyword">class</span> <span class="function">MenuPagination</span>(PageNumberPagination):
+    page_size = <span class="number">20</span>
+    page_size_query_param = <span class="string">'size'</span>
+    max_page_size = <span class="number">100</span>
+
+<span class="keyword">class</span> <span class="function">MenuItemListView</span>(generics.ListAPIView):
+    queryset = MenuItem.objects.select_related(<span class="string">'category'</span>).all()
+    serializer_class = MenuItemSerializer
+    pagination_class = MenuPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = [<span class="string">'name'</span>, <span class="string">'description'</span>, <span class="string">'category__name'</span>]
+    ordering_fields = [<span class="string">'name'</span>, <span class="string">'price'</span>, <span class="string">'created_at'</span>]
+    ordering = [<span class="string">'-created_at'</span>]
+
+<span class="comment"># That's it. 10 lines. DRF handles everything.</span></pre>
+                </div>
+            </div>
+
+            <!-- How real APIs look -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">How Real APIs Do It</h3>
+
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>API</th>
+                        <th>Pagination</th>
+                        <th>Search</th>
+                        <th>Sort</th>
+                    </tr>
+                    <tr>
+                        <td><strong>GitHub</strong></td>
+                        <td><code>?page=2&amp;per_page=30</code></td>
+                        <td><code>?q=django+language:python</code></td>
+                        <td><code>?sort=stars&amp;order=desc</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stripe</strong></td>
+                        <td><code>?starting_after=ch_xxx</code></td>
+                        <td><code>?query=email@example.com</code></td>
+                        <td><code>?created[gte]=timestamp</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shopify</strong></td>
+                        <td>Cursor (<code>?page_info=xxx</code>)</td>
+                        <td>Title, vendor, type</td>
+                        <td><code>?sort_key=PRICE</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Razorpay</strong></td>
+                        <td><code>?skip=10&amp;count=10</code></td>
+                        <td>Filter by status</td>
+                        <td><code>?from=ts&amp;to=ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Our API &#128170;</strong></td>
+                        <td><code>?page=1&amp;size=10</code></td>
+                        <td><code>?search=chicken</code></td>
+                        <td><code>?ordering=-price</code></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Performance Tips -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">Performance Tips</h3>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-icon">&#128451;&#65039;</div>
+                    <div class="card-title">Database Indexes</div>
+                    <div class="card-desc">
+                        Add <code>db_index=True</code> on columns you sort or filter by. Without indexes, sorting 1M rows is a full table scan.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);">
+                    <div class="card-icon">&#128279;</div>
+                    <div class="card-title">select_related</div>
+                    <div class="card-desc">
+                        Pagination doesn't fix N+1. Always use <code>select_related('category')</code> for ForeignKey joins in paginated views.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-warning);">
+                    <div class="card-icon">&#128290;</div>
+                    <div class="card-title">COUNT(*) is Expensive</div>
+                    <div class="card-desc">
+                        Offset pagination needs total count. On huge tables, consider cursor pagination or caching the count.
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">max_page_size</div>
+                    <div class="card-desc">
+                        Always cap page size. Without <code>max_page_size</code>, a client can request <code>?size=1000000</code> and crash your server.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Takeaways -->
+            <div class="highlight-box success" style="margin-top: 30px;">
+                <h4 style="color: var(--accent-success); margin-bottom: 10px;">Key Takeaways</h4>
+                <ul style="margin-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Always paginate</strong> list endpoints &mdash; never return unbounded results</li>
+                    <li><strong>Offset pagination</strong> for admin/dashboards, <strong>cursor</strong> for feeds/mobile</li>
+                    <li><strong>SearchFilter + OrderingFilter</strong> &mdash; both built into DRF, 3 lines each</li>
+                    <li><strong>Whitelist fields</strong> &mdash; always specify <code>search_fields</code> and <code>ordering_fields</code></li>
+                    <li><strong>Add indexes</strong> on columns you search, sort, or filter by</li>
+                    <li><strong>select_related</strong> &mdash; pagination doesn't fix N+1</li>
+                    <li><strong>Cap page size</strong> with <code>max_page_size</code></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 6: Video References -->
+    <section id="videos">
+        <div class="section-container">
+            <span class="section-label purple">Learn More</span>
+            <h2 class="section-title">Videos Worth Watching</h2>
+            <p class="section-subtitle">Deepen your understanding with these curated videos.</p>
+
+            <div class="card-grid">
+                <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                    <div class="card-icon">&#128269;</div>
+                    <div class="card-title">How Search Works at Scale</div>
+                    <div class="card-desc">
+                        How Google indexes the web, inverted indexes, crawling, and why search is a distributed systems problem.
+                        <br><br>
+                        <a href="https://www.youtube.com/watch?v=iHHqnyThrqE&t=3s" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Watch on YouTube &rarr;</a>
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-warning);">
+                    <div class="card-icon">&#128172;</div>
+                    <div class="card-title">Autocomplete / Fuzzy Search</div>
+                    <div class="card-desc">
+                        How typeahead works &mdash; tries, edit distance (Levenshtein), debouncing, and phonetic algorithms. The "prashant &rarr; croissant" problem explained.
+                        <br><br>
+                        <a href="https://www.youtube.com/watch?v=gZIVHSFgkvk" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Watch on YouTube &rarr;</a>
+                    </div>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-success);">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title">Elasticsearch Explained</div>
+                    <div class="card-desc">
+                        Practical intro to Elasticsearch &mdash; inverted indexes, documents, shards, basic queries, and when to use ES vs when SQL is enough.
+                        <br><br>
+                        <a href="https://www.youtube.com/watch?v=8S4k7k_f9Sk" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Watch on YouTube &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            Class 14 &bull; Pagination, Searching & Sorting<br>
+            <span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span>
+        </p>
+    </footer>
+
+    <script>
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (winScroll / height) * 100 + '%';
+        });
+
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.textContent = '\u{1F319}';
+                text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.textContent = '\u{2600}\u{FE0F}';
+                text.textContent = 'Light';
+            }
+        }
+
+        // Collapsible sections
+        function toggleCollapsible(header) {
+            const collapsible = header.parentElement;
+            collapsible.classList.toggle('open');
+        }
+
+        // Toggle code blocks
+        function toggleCode(header) {
+            const codeBlock = header.parentElement;
+            codeBlock.classList.toggle('collapsed');
+        }
+
+        // Copy code
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Keyboard shortcuts: Alt+E expand all, Alt+C collapse all
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'e' && e.altKey) {
+                document.querySelectorAll('.code-block.collapsed').forEach(block => block.classList.remove('collapsed'));
+            }
+            if (e.key === 'c' && e.altKey) {
+                document.querySelectorAll('.code-block:not(.collapsed)').forEach(block => block.classList.add('collapsed'));
+            }
+        });
+    </script>
+</body>
+</html>

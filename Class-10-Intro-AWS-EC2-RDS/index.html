@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 10: Intro to AWS, EC2 & RDS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --accent-primary: #ff9900;
+            --accent-secondary: #146eb4;
+            --accent-aws: #232f3e;
+            --accent-ec2: #ff9900;
+            --accent-rds: #3b48cc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 153, 0, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 153, 0, 0.25);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-ec2), var(--accent-rds)); z-index: 1001; transition: width 0.1s; }
+
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-primary); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.cloud { background: linear-gradient(135deg, #232f3e, #485769); }
+        .section-label.ec2 { background: linear-gradient(135deg, #ff9900, #ffb84d); color: #232f3e; }
+        .section-label.rds { background: linear-gradient(135deg, #3b48cc, #6b7cff); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(255, 153, 0, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #ff9900 0%, #146eb4 50%, #3b48cc 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+
+        .question-block {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; margin: 30px 0;
+        }
+        .question-label {
+            display: inline-block; background: var(--accent-primary);
+            color: #232f3e; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 15px;
+        }
+        .question-text { font-size: 1.2rem; font-weight: 600; margin-bottom: 20px; color: var(--text-primary); }
+        .question-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .question-option {
+            background: var(--bg-tertiary); border: 2px solid var(--border-color);
+            padding: 15px 20px; border-radius: 10px; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .question-option:hover { border-color: var(--accent-primary); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(255, 153, 0, 0.1); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        .option-marker {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--bg-secondary); border: 2px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 0.85rem;
+        }
+        .question-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; border: none; padding: 12px 30px; border-radius: 8px;
+            font-weight: 600; cursor: pointer; transition: all 0.3s;
+        }
+        .question-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 153, 0, 0.3); }
+        .question-result { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .question-explanation {
+            margin-top: 20px; padding: 20px; background: var(--bg-tertiary);
+            border-radius: 10px; display: none; font-size: 1.05rem;
+        }
+        .question-explanation.show { display: block; }
+        .question-explanation h4 { margin-bottom: 10px; color: var(--accent-primary); }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .comparison-table th, .comparison-table td { padding: 15px; text-align: left; border: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 600; }
+        .comparison-table tr:nth-child(even) { background: var(--bg-secondary); }
+
+        .story-box {
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.1), rgba(20, 110, 180, 0.1));
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px; padding: 25px; margin: 25px 0;
+        }
+        .story-box h4 { color: var(--accent-primary); margin-bottom: 10px; }
+
+        .info-box {
+            background: rgba(59, 72, 204, 0.1); border: 1px solid var(--accent-rds);
+            border-radius: 10px; padding: 20px; margin: 20px 0;
+        }
+        .info-box h4 { color: var(--accent-rds); margin-bottom: 10px; }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger);
+            border-radius: 10px; padding: 20px; margin: 20px 0;
+        }
+        .warning-box h4 { color: var(--danger); margin-bottom: 10px; }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success);
+            border-radius: 10px; padding: 20px; margin: 20px 0;
+        }
+        .success-box h4 { color: var(--success); margin-bottom: 10px; }
+
+        .aws-box {
+            background: rgba(35, 47, 62, 0.1); border: 1px solid var(--accent-aws);
+            border-radius: 10px; padding: 20px; margin: 20px 0;
+        }
+        .aws-box h4 { color: var(--accent-primary); margin-bottom: 10px; }
+
+        .resource-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; text-decoration: none;
+            color: var(--accent-rds); font-size: 0.9rem; margin: 5px 5px 5px 0;
+            transition: all 0.3s;
+        }
+        .resource-link:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+        .mt-40 { margin-top: 40px; }
+
+        .flow-diagram {
+            display: flex; align-items: center; justify-content: center;
+            gap: 15px; flex-wrap: wrap; margin: 30px 0; padding: 30px;
+            background: var(--bg-tertiary); border-radius: 12px;
+        }
+        .flow-box {
+            background: var(--bg-secondary); border: 2px solid var(--border-color);
+            padding: 15px 25px; border-radius: 10px; font-weight: 600;
+            text-align: center; min-width: 120px;
+        }
+        .flow-box.aws { border-color: var(--accent-primary); background: rgba(255, 153, 0, 0.1); }
+        .flow-box.ec2 { border-color: var(--accent-ec2); background: rgba(255, 153, 0, 0.15); }
+        .flow-box.rds { border-color: var(--accent-rds); background: rgba(59, 72, 204, 0.1); }
+        .flow-arrow { font-size: 1.5rem; color: var(--text-muted); }
+
+        .icon-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px; margin: 30px 0;
+        }
+        .icon-item {
+            text-align: center; padding: 20px;
+            background: var(--bg-secondary); border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .icon-item span { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+
+        /* Click-to-reveal table rows */
+        .reveal-row { cursor: pointer; transition: background 0.2s; }
+        .reveal-row:hover { background: var(--bg-tertiary); }
+        .reveal-row .reveal-answer { color: transparent; background: var(--bg-tertiary); border-radius: 4px; user-select: none; }
+        .reveal-row .reveal-answer .reveal-text { opacity: 0; transition: opacity 0.3s; }
+        .reveal-row.revealed .reveal-answer { color: inherit; background: transparent; }
+        .reveal-row.revealed .reveal-answer .reveal-text { opacity: 1; }
+        .reveal-row td:first-child::before { content: "👆 "; opacity: 0.5; }
+        .reveal-row.revealed td:first-child::before { content: ""; }
+
+        .step-list { counter-reset: step; list-style: none; padding: 0; }
+        .step-list li {
+            counter-increment: step; position: relative;
+            padding-left: 50px; margin-bottom: 20px;
+        }
+        .step-list li::before {
+            content: counter(step); position: absolute; left: 0; top: 0;
+            width: 35px; height: 35px; background: var(--accent-primary);
+            color: #232f3e; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .flow-diagram { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 10</div>
+        <ul class="nav-links">
+            <li><a href="#cloud">Cloud</a></li>
+            <li><a href="#ec2">EC2</a></li>
+            <li><a href="#rds">RDS</a></li>
+            <li><a href="#deploy">Deploy</a></li>
+            <li><a href="#summary">Summary</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-icon">☁️</div>
+        <h1>AWS, EC2 & RDS</h1>
+        <p class="hero-meta">Class 10 • Python Backend LLD</p>
+        <p class="hero-tagline">
+            Deploy your Django app to the cloud! Learn AWS fundamentals, launch EC2 instances, and set up managed databases with RDS.
+        </p>
+        <div class="card-grid" style="max-width: 900px;">
+            <div class="card">
+                <div class="card-icon">☁️</div>
+                <h3 class="card-title">Cloud Computing</h3>
+                <p class="card-desc">What is the cloud? Why AWS?</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🖥️</div>
+                <h3 class="card-title">EC2</h3>
+                <p class="card-desc">Virtual servers in the cloud</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🗄️</div>
+                <h3 class="card-title">RDS</h3>
+                <p class="card-desc">Managed databases</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Part 1: Cloud Computing Basics -->
+    <section id="cloud">
+        <div class="section-container">
+            <span class="section-label cloud">Part 1</span>
+            <h2 class="section-title">What is Cloud Computing?</h2>
+            <p class="section-subtitle">
+                Before we dive into AWS, let's understand why companies moved from physical servers to the cloud.
+            </p>
+
+            <!-- Q1: Start with a question -->
+            <div class="question-block" id="q1">
+                <div class="question-label">💡 Question 1</div>
+                <div class="question-text">
+                    Your startup just got funding. You need servers for your Django app. What do you do?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Buy physical servers, set up a data center
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Rent servers from AWS/Azure/GCP
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Run everything on your laptop
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Ask users to host the app themselves
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>Why Rent Instead of Buy?</h4>
+                    <table class="comparison-table">
+                        <tr>
+                            <th>Factor</th>
+                            <th>Buy Servers (On-Premise)</th>
+                            <th>Rent (Cloud)</th>
+                        </tr>
+                        <tr>
+                            <td>Upfront Cost</td>
+                            <td>$50,000+ for servers</td>
+                            <td>$0 - pay as you go</td>
+                        </tr>
+                        <tr>
+                            <td>Time to Start</td>
+                            <td>Weeks/months</td>
+                            <td>Minutes</td>
+                        </tr>
+                        <tr>
+                            <td>Scaling</td>
+                            <td>Buy more hardware</td>
+                            <td>Click a button</td>
+                        </tr>
+                        <tr>
+                            <td>Maintenance</td>
+                            <td>You fix everything</td>
+                            <td>AWS handles hardware</td>
+                        </tr>
+                        <tr>
+                            <td>If startup fails</td>
+                            <td>Stuck with servers</td>
+                            <td>Stop paying, walk away</td>
+                        </tr>
+                    </table>
+
+                    <div class="story-box mt-20">
+                        <h4>🦈 The Shark Tank Effect</h4>
+                        <p>Imagine your startup appears on Shark Tank India. The episode airs and suddenly 10 lakh users hit your website in 30 minutes!</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>On-Premise:</strong> Your 2 servers crash. Users see errors. You lose sales. You can't buy new servers at 10 PM.</li>
+                            <li><strong>Cloud (AWS):</strong> Auto-scaling spins up 20 more servers automatically. Traffic handled. Money made. Scales down after the spike.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q0: Companies on-prem -->
+            <div class="question-block" id="q0">
+                <div class="question-label">💡 Question 2</div>
+                <div class="question-text">
+                    What percentage of companies still run their servers on-premise (own data centers) today?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Less than 10% - almost everyone is on cloud
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        About 25%
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        About 40-50% still on-premise or hybrid
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Over 70% - cloud is still new
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q0')">Check Answer</button>
+                <div class="question-result" id="q0-result"></div>
+                <div class="question-explanation" id="q0-explanation">
+                    <h4>Surprising Reality: On-Premise is Still Huge!</h4>
+                    <p>Despite the cloud hype, ~40-50% of enterprise workloads still run on-premise. Many large enterprises use <strong>hybrid</strong> setups.</p>
+
+                    <!-- Downsides of Cloud -->
+                    <div class="warning-box mt-20">
+                        <h4>⚠️ Cloud Has Downsides Too!</h4>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Cost at scale:</strong> At massive scale, cloud can be 2-3x more expensive than owning hardware</li>
+                            <li><strong>Vendor lock-in:</strong> Moving away from AWS later is painful</li>
+                            <li><strong>Data sovereignty:</strong> Your data is on someone else's servers</li>
+                            <li><strong>Outages:</strong> When AWS goes down, so does half the internet</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box mt-20">
+                        <h4>When On-Premise Makes Sense</h4>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Banks/Government:</strong> Strict data regulations, security requirements</li>
+                            <li><strong>Predictable high load:</strong> If you always need 100 servers, owning is cheaper</li>
+                            <li><strong>Dukaan's approach:</strong> Running on bare metal for cost efficiency</li>
+                        </ul>
+                        <div class="mt-10">
+                            <a href="https://www.youtube.com/watch?v=vFxQyZX84Ro&t=4s" target="_blank" class="resource-link">📺 Watch: How Dukaan runs infrastructure</a>
+                        </div>
+                    </div>
+
+                    <div class="story-box mt-20">
+                        <h4>🔧 The "Cloud Repatriation" Movement</h4>
+                        <p>Companies like <strong>Oxide Computer</strong> are building modern on-premise servers that feel like cloud. 37signals (Basecamp) famously <a href="https://newsletter.pragmaticengineer.com/p/the-history-of-servers-the-cloud" target="_blank" style="color: var(--accent-primary);">saved $7M by leaving AWS</a>.</p>
+                        <div class="mt-10">
+                            <a href="https://newsletter.pragmaticengineer.com/p/the-history-of-servers-the-cloud" target="_blank" class="resource-link">📖 Read: The History of Servers & Cloud</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Cloud Concept -->
+            <div class="card mt-30">
+                <h3>☁️ "The Cloud" = Someone Else's Computers</h3>
+                <p class="mt-10">
+                    Cloud computing means using servers, storage, and services over the internet instead of owning physical hardware.
+                </p>
+
+                <div class="flow-diagram mt-20">
+                    <div class="flow-box">Your Code</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">Internet</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">AWS Data Center</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box ec2">Your Server (EC2)</div>
+                </div>
+
+                <div class="story-box mt-20">
+                    <h4>Real-World Analogy</h4>
+                    <p>
+                        <strong>Buying servers</strong> = Buying a car (pay upfront, you maintain it)<br>
+                        <strong>Cloud computing</strong> = Using Uber (pay per ride, no maintenance)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Cloud Providers Market Share -->
+            <div class="card mt-30">
+                <h3>🌍 Cloud Provider Market Share (2024)</h3>
+
+                <div class="icon-grid mt-20">
+                    <div class="icon-item">
+                        <span>🟠</span>
+                        <strong>AWS</strong>
+                        <p style="font-size: 1.2rem; font-weight: 700; color: var(--accent-primary);">~32%</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🔵</span>
+                        <strong>Azure</strong>
+                        <p style="font-size: 1.2rem; font-weight: 700; color: #0078d4;">~23%</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🔴</span>
+                        <strong>Google Cloud</strong>
+                        <p style="font-size: 1.2rem; font-weight: 700; color: #4285f4;">~10%</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🏢</span>
+                        <strong>Others/On-Prem</strong>
+                        <p style="font-size: 1.2rem; font-weight: 700; color: var(--text-muted);">~35%</p>
+                    </div>
+                </div>
+
+                <div class="info-box mt-20">
+                    <h4>Why We're Learning AWS</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Market leader</strong> - most job postings mention AWS</li>
+                        <li><strong>200+ services</strong> - compute, DB, AI, storage, etc.</li>
+                        <li><strong>Best documentation</strong> - easier to learn</li>
+                        <li><strong>Transferable skills</strong> - Azure/GCP concepts are similar</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Q2: Service Models -->
+            <div class="question-block" id="q2">
+                <div class="question-label">💡 Question 3</div>
+                <div class="question-text">
+                    What does "IaaS" mean in cloud computing?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Internet as a Service
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Infrastructure as a Service
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Integration as a Service
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Installation as a Service
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>Cloud Service Models</h4>
+                    <table class="comparison-table mt-10">
+                        <tr>
+                            <th>Model</th>
+                            <th>What You Get</th>
+                            <th>You Manage</th>
+                            <th>Example</th>
+                        </tr>
+                        <tr>
+                            <td><strong>IaaS</strong><br>(Infrastructure)</td>
+                            <td>Virtual machines, storage, networking</td>
+                            <td>OS, runtime, app, data</td>
+                            <td>AWS EC2, Azure VMs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PaaS</strong><br>(Platform)</td>
+                            <td>Runtime environment</td>
+                            <td>App and data only</td>
+                            <td>Heroku, AWS Elastic Beanstalk</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SaaS</strong><br>(Software)</td>
+                            <td>Complete application</td>
+                            <td>Nothing (just use it)</td>
+                            <td>Gmail, Slack, Salesforce</td>
+                        </tr>
+                    </table>
+
+                    <div class="story-box mt-20">
+                        <h4>Pizza Analogy 🍕</h4>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>IaaS</strong> = Buy ingredients, make your own pizza</li>
+                            <li><strong>PaaS</strong> = Buy pre-made dough, add toppings</li>
+                            <li><strong>SaaS</strong> = Order Domino's delivery</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regions & AZs -->
+            <div class="card mt-30">
+                <h3>🌍 Regions and Availability Zones</h3>
+
+                <div class="mt-20">
+                    <p><strong>Region</strong> = Geographic location (e.g., Mumbai, Oregon, Frankfurt)</p>
+                    <p class="mt-10"><strong>Availability Zone (AZ)</strong> = Independent data center within a region</p>
+                </div>
+
+                <div class="flow-diagram mt-20">
+                    <div class="flow-box aws" style="padding: 20px 40px;">
+                        <strong>ap-south-1 (Mumbai)</strong><br>
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">Region</span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px;">
+                    <div class="flow-box" style="font-size: 0.9rem;">ap-south-1a<br><small>AZ 1</small></div>
+                    <div class="flow-box" style="font-size: 0.9rem;">ap-south-1b<br><small>AZ 2</small></div>
+                    <div class="flow-box" style="font-size: 0.9rem;">ap-south-1c<br><small>AZ 3</small></div>
+                </div>
+
+                <div class="warning-box mt-20">
+                    <h4>⚡ Real Event: Iran-Israel Conflict (2026)</h4>
+                    <p>When tensions escalated, there were concerns about attacks on data centers in the Middle East. Companies with workloads only in one region scrambled to set up backups in other regions. <strong>This is why multi-AZ and multi-region deployments matter.</strong></p>
+                </div>
+
+                <div class="success-box mt-20">
+                    <h4>Choosing a Region - Real Examples</h4>
+                    <table class="comparison-table mt-10">
+                        <tr>
+                            <th>Factor</th>
+                            <th>Example</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Latency</strong></td>
+                            <td>Hotstar streams IPL from Mumbai region - 20ms to Indian users vs 200ms if served from US. During IPL finals, even 50ms extra matters!</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cost</strong></td>
+                            <td>Mumbai is ~10% cheaper than Singapore for the same instance</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Compliance</strong></td>
+                            <td>RBI mandates Indian financial data must stay in India</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Services</strong></td>
+                            <td>Some new AWS services launch in US first, then other regions</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Part 2: EC2 -->
+    <section id="ec2">
+        <div class="section-container">
+            <span class="section-label ec2">Part 2</span>
+            <h2 class="section-title">EC2 - Elastic Compute Cloud</h2>
+            <p class="section-subtitle">
+                EC2 is AWS's virtual server service. It's like renting a computer in the cloud.
+            </p>
+
+            <!-- What is EC2 -->
+            <div class="card">
+                <h3>🖥️ What is EC2?</h3>
+                <p class="mt-10">
+                    EC2 = Virtual servers (called "instances") that you can launch in minutes.
+                </p>
+
+                <div class="flow-diagram mt-20">
+                    <div class="flow-box">You</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">AWS Console</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box ec2">Launch Instance</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box" style="border-color: var(--success);">Running Server!</div>
+                </div>
+
+                <div class="story-box mt-20">
+                    <h4>What Can You Do With EC2?</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>Run your Django/Flask web application</li>
+                        <li>Host APIs and backend services</li>
+                        <li>Run background jobs and scripts</li>
+                        <li>Machine learning training</li>
+                        <li>Gaming servers</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Instance Types Introduction -->
+            <div class="card mt-30">
+                <h3>📊 EC2 Instance Types</h3>
+                <p class="mt-10">Instance types are named like: <code>t2.medium</code></p>
+
+                <div class="flow-diagram mt-20" style="gap: 30px;">
+                    <div class="flow-box">
+                        <strong>t</strong><br>
+                        <small>Family</small>
+                    </div>
+                    <div class="flow-box">
+                        <strong>2</strong><br>
+                        <small>Generation</small>
+                    </div>
+                    <div class="flow-box">
+                        <strong>medium</strong><br>
+                        <small>Size</small>
+                    </div>
+                </div>
+
+                <table class="comparison-table mt-20">
+                    <tr>
+                        <th>Family</th>
+                        <th>Optimized For</th>
+                        <th>Use Case</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td><strong>T</strong> (t2, t3)</td>
+                        <td>General purpose, burstable</td>
+                        <td>Web servers, small apps</td>
+                        <td>t3.micro: 2 vCPU, 1GB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>M</strong> (m5, m6i)</td>
+                        <td>Balanced compute/memory</td>
+                        <td>Production apps</td>
+                        <td>m5.large: 2 vCPU, 8GB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>C</strong> (c5, c6i)</td>
+                        <td>CPU intensive</td>
+                        <td>Video encoding, ML inference</td>
+                        <td>c5.xlarge: 4 vCPU, 8GB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>R</strong> (r5, r6i)</td>
+                        <td>Memory intensive</td>
+                        <td>In-memory databases, caching</td>
+                        <td>r5.large: 2 vCPU, 16GB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P/G</strong> (p3, g4)</td>
+                        <td>GPU</td>
+                        <td>ML training, graphics</td>
+                        <td>p3.2xlarge: 8 vCPU + GPU</td>
+                    </tr>
+                </table>
+
+                <div class="info-box mt-20">
+                    <h4>Size Scale (smallest → largest)</h4>
+                    <p><code>nano → micro → small → medium → large → xlarge → 2xlarge → 4xlarge → ...</code></p>
+                </div>
+            </div>
+
+            <!-- Q3: Instance Types with Scenario -->
+            <div class="question-block" id="q3">
+                <div class="question-label">💡 Question 4</div>
+                <div class="question-text">
+                    <strong>Scenario:</strong> You're building a Django app for a restaurant. Expected traffic: 100 concurrent users, 10 requests/second. Database is on RDS (separate). What instance would you start with?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        t2.nano (1 vCPU, 0.5GB) - $4/month
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        t2.micro/t3.micro (1-2 vCPU, 1GB) - Free tier!
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        m5.large (2 vCPU, 8GB) - $70/month
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        c5.xlarge (4 vCPU, 8GB) - $120/month
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>Start Small, Scale When Needed</h4>
+                    <p>For a small restaurant app with 100 users, t2.micro is more than enough!</p>
+
+                    <div class="story-box mt-20">
+                        <h4>💡 Rule of Thumb for Django Apps</h4>
+                        <table class="comparison-table mt-10">
+                            <tr>
+                                <th>Use Case</th>
+                                <th>Instance</th>
+                                <th>Monthly Cost</th>
+                            </tr>
+                            <tr>
+                                <td>Learning / Dev / Testing</td>
+                                <td>t3.micro (1GB RAM)</td>
+                                <td>Free tier / ~$8</td>
+                            </tr>
+                            <tr>
+                                <td>Small app (few hundred users)</td>
+                                <td>t3.small (2GB RAM)</td>
+                                <td>~$15</td>
+                            </tr>
+                            <tr>
+                                <td>Growing app (few thousand users)</td>
+                                <td>t3.medium (4GB RAM)</td>
+                                <td>~$30</td>
+                            </tr>
+                            <tr>
+                                <td>Large scale</td>
+                                <td>Multiple instances + Load Balancer</td>
+                                <td>Depends on traffic</td>
+                            </tr>
+                        </table>
+                        <p class="mt-10" style="color: var(--text-muted);"><em>Start with the smallest. AWS makes it easy to upgrade later - just a few clicks!</em></p>
+                    </div>
+
+                    <div class="success-box mt-20">
+                        <h4>💡 For Learning/Development</h4>
+                        <p>Use <strong>t2.micro</strong> or <strong>t3.micro</strong> - they're in the AWS Free Tier (750 hours/month for 12 months)!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AMI Section -->
+            <div class="card mt-30">
+                <h3>💿 AMI - Amazon Machine Image</h3>
+                <p class="mt-10">An AMI is a template containing the OS and software. Think of it as a "snapshot" you launch instances from.</p>
+
+                <table class="comparison-table mt-20">
+                    <tr>
+                        <th>AMI</th>
+                        <th>Based On</th>
+                        <th>Package Manager</th>
+                        <th>Best For</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Amazon Linux 2023</strong></td>
+                        <td>RHEL/Fedora</td>
+                        <td><code>yum</code> / <code>dnf</code></td>
+                        <td>AWS-native apps, best integration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ubuntu 22.04 LTS</strong></td>
+                        <td>Debian</td>
+                        <td><code>apt</code></td>
+                        <td>Most tutorials, Python/Django dev</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Debian 12</strong></td>
+                        <td>Debian</td>
+                        <td><code>apt</code></td>
+                        <td>Stability, minimal bloat</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Red Hat Enterprise</strong></td>
+                        <td>RHEL</td>
+                        <td><code>yum</code></td>
+                        <td>Enterprise, paid support</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Windows Server</strong></td>
+                        <td>Windows</td>
+                        <td>N/A</td>
+                        <td>.NET apps, Windows-only software</td>
+                    </tr>
+                </table>
+
+                <div class="success-box mt-20">
+                    <h4>💡 Our Choice: Ubuntu 22.04 LTS</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>Most tutorials and Stack Overflow answers use Ubuntu</li>
+                        <li><code>apt</code> is beginner-friendly</li>
+                        <li>LTS = Long Term Support (5 years of updates)</li>
+                        <li>Free tier eligible</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Key Concepts -->
+            <div class="card mt-30">
+                <h3>🔑 Key EC2 Concepts</h3>
+
+                <div class="card-grid mt-20">
+                    <div class="card">
+                        <div class="card-icon">🔐</div>
+                        <h4 class="card-title">Key Pair</h4>
+                        <p class="card-desc">
+                            SSH key to securely connect to your instance. Download the .pem file - you can't get it again!
+                        </p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🛡️</div>
+                        <h4 class="card-title">Security Group</h4>
+                        <p class="card-desc">
+                            Virtual firewall. Controls what traffic can reach your instance (ports, IPs).
+                        </p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">💾</div>
+                        <h4 class="card-title">EBS (Elastic Block Store)</h4>
+                        <p class="card-desc">
+                            Hard drive for your instance. Persists even if instance stops.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🌐</div>
+                        <h4 class="card-title">Elastic IP</h4>
+                        <p class="card-desc">
+                            Static public IP that stays with your instance even after restart.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SSH Explanation -->
+            <div class="card mt-30">
+                <h3>🔐 What is SSH?</h3>
+                <p class="mt-10"><strong>SSH (Secure Shell)</strong> is a protocol to securely connect to remote computers over an insecure network (internet).</p>
+
+                <div class="story-box mt-20">
+                    <h4>Why SSH Exists</h4>
+                    <p>Before SSH, people used <strong>Telnet</strong> which sent passwords in plain text. Anyone sniffing the network could see your password! SSH encrypts everything.</p>
+                </div>
+
+                <div class="info-box mt-20">
+                    <h4>How Public/Private Keys Work</h4>
+                    <div class="flow-diagram" style="flex-direction: column; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="flow-box">🔑 Private Key<br><small>(my-key.pem - stays on YOUR laptop)</small></div>
+                            <div class="flow-arrow">+</div>
+                            <div class="flow-box ec2">🔓 Public Key<br><small>(stored on EC2 instance)</small></div>
+                        </div>
+                    </div>
+                    <ul style="margin: 15px 0 0 20px;">
+                        <li><strong>Private key:</strong> Only you have it. Never share. Like your house key.</li>
+                        <li><strong>Public key:</strong> AWS puts this on the server. Like the lock on your door.</li>
+                        <li>When you connect, they verify mathematically without sending the private key!</li>
+                    </ul>
+                </div>
+
+                <div class="mt-20">
+                    <a href="https://www.youtube.com/watch?v=aoag03mSuXQ&t=2579s" target="_blank" class="resource-link">📺 Deep Dive: SSH Explained (YouTube)</a>
+                </div>
+            </div>
+
+            <!-- Security Groups Deep Dive -->
+            <div class="card mt-30">
+                <h3>🛡️ Security Groups - Your Firewall</h3>
+                <p class="mt-10">Security groups control what traffic can come IN and go OUT of your instance.</p>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            Example Security Group Rules
+                        </div>
+                    </div>
+                    <div class="code-content">
+<pre>
+<span class="comment"># INBOUND RULES (traffic coming IN)</span>
+┌──────────┬──────────┬─────────────────┬──────────────────────┐
+│ Type     │ Port     │ Source          │ Description          │
+├──────────┼──────────┼─────────────────┼──────────────────────┤
+│ SSH      │ 22       │ My IP           │ Your SSH access      │
+│ HTTP     │ 80       │ 0.0.0.0/0       │ Web traffic (anyone) │
+│ HTTPS    │ 443      │ 0.0.0.0/0       │ Secure web traffic   │
+└──────────┴──────────┴─────────────────┴──────────────────────┘
+</pre>
+                    </div>
+                </div>
+
+                <div class="info-box mt-20">
+                    <h4>Why These Specific Ports?</h4>
+                    <table class="comparison-table mt-10">
+                        <tr>
+                            <th>Port</th>
+                            <th>Protocol</th>
+                            <th>Why This Number?</th>
+                            <th>Can You Change It?</th>
+                        </tr>
+                        <tr>
+                            <td>22</td>
+                            <td>SSH</td>
+                            <td>Standard since 1995, everyone knows it</td>
+                            <td>Yes, but then specify: <code>ssh -p 2222 ...</code></td>
+                        </tr>
+                        <tr>
+                            <td>80</td>
+                            <td>HTTP</td>
+                            <td>Browsers default to port 80 for http://</td>
+                            <td>Yes, but users must type :8080 in URL</td>
+                        </tr>
+                        <tr>
+                            <td>443</td>
+                            <td>HTTPS</td>
+                            <td>Browsers default to 443 for https://</td>
+                            <td>Yes, but users must type :8443 in URL</td>
+                        </tr>
+                    </table>
+                    <p class="mt-10"><strong>0.0.0.0/0</strong> = "anywhere in the world" (all IPs). But what does this notation mean?</p>
+
+                    <div class="info-box mt-20">
+                        <h4>Understanding IP Addresses & CIDR Notation</h4>
+
+                        <p class="mt-10"><strong>IPv4 Address</strong></p>
+                        <p>An IP address like <code>192.168.1.5</code> is just a 32-bit number written in 4 groups of 8 bits each:</p>
+                        <pre style="background: var(--bg-tertiary); padding: 10px; border-radius: 8px; margin: 10px 0;">
+192      .  168      .  1        .  5
+11000000    10101000    00000001    00000101
+(8 bits)    (8 bits)    (8 bits)    (8 bits) = 32 bits total</pre>
+
+                        <p class="mt-10"><strong>CIDR Notation (the /number)</strong></p>
+                        <p>The <code>/24</code> in <code>192.168.1.0/24</code> means "first 24 bits are the network, remaining 8 bits are for hosts".</p>
+
+                        <table class="styled-table mt-10" style="font-size: 0.9em;">
+                            <tr>
+                                <th>CIDR</th>
+                                <th>Meaning</th>
+                                <th>Available IPs</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>/32</code></td>
+                                <td>All 32 bits fixed</td>
+                                <td>1 (exact IP)</td>
+                                <td><code>192.168.1.5/32</code> = only 192.168.1.5</td>
+                            </tr>
+                            <tr>
+                                <td><code>/24</code></td>
+                                <td>First 24 bits fixed</td>
+                                <td>256 (last octet varies)</td>
+                                <td><code>192.168.1.0/24</code> = 192.168.1.0 to .255</td>
+                            </tr>
+                            <tr>
+                                <td><code>/16</code></td>
+                                <td>First 16 bits fixed</td>
+                                <td>65,536</td>
+                                <td><code>192.168.0.0/16</code> = 192.168.x.x</td>
+                            </tr>
+                            <tr>
+                                <td><code>/0</code></td>
+                                <td>No bits fixed</td>
+                                <td>All ~4.3 billion IPs</td>
+                                <td><code>0.0.0.0/0</code> = anywhere!</td>
+                            </tr>
+                        </table>
+
+                        <p class="mt-15"><strong>Why IPv6 exists</strong></p>
+                        <p>IPv4's 32 bits = ~4.3 billion addresses. That's not enough for 8 billion people with multiple devices!</p>
+                        <p>IPv6 uses <strong>128 bits</strong> = 340 undecillion addresses (340 followed by 36 zeros).</p>
+                        <p>IPv6 looks like: <code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code></p>
+
+                        <p class="mt-15"><strong>In AWS Security Groups</strong></p>
+                        <p>You'll often see both:</p>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><code>0.0.0.0/0</code> - Allow from any IPv4 address</li>
+                            <li><code>::/0</code> - Allow from any IPv6 address</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="warning-box mt-20">
+                    <h4>⚠️ Security Best Practices</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Never</strong> open SSH (port 22) to 0.0.0.0/0 (everyone)</li>
+                        <li>Restrict SSH to "My IP" or your office IP range</li>
+                        <li>Only open ports you actually need</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Launching EC2 Steps -->
+            <div class="card mt-30">
+                <h3>🚀 Steps to Launch an EC2 Instance</h3>
+
+                <ol class="step-list mt-20">
+                    <li>
+                        <strong>Choose AMI</strong><br>
+                        Select Ubuntu 22.04 LTS (Free tier eligible)
+                    </li>
+                    <li>
+                        <strong>Choose Instance Type</strong><br>
+                        Select t2.micro (Free tier: 750 hours/month)
+                    </li>
+                    <li>
+                        <strong>Configure Security Group</strong><br>
+                        Allow SSH (port 22) from your IP, HTTP (80)
+                    </li>
+                    <li>
+                        <strong>Create/Select Key Pair</strong><br>
+                        Download the .pem file and keep it safe!
+                    </li>
+                    <li>
+                        <strong>Launch!</strong><br>
+                        Wait ~30 seconds for the instance to start
+                    </li>
+                </ol>
+            </div>
+
+            <!-- SSH Connection -->
+            <div class="card mt-30">
+                <h3>🔌 Connecting to Your Instance</h3>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            Terminal
+                        </div>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<pre><span class="comment"># 1. Set correct permissions on your key file</span>
+chmod 400 my-key.pem
+
+<span class="comment"># 2. SSH into your instance</span>
+ssh -i my-key.pem ubuntu@<span class="variable">your-ec2-public-ip</span>
+
+<span class="comment"># Example:</span>
+ssh -i my-key.pem ubuntu@13.232.45.123
+
+<span class="comment"># You're now inside your EC2 instance!</span>
+ubuntu@ip-172-31-0-1:~$</pre>
+                    </div>
+                </div>
+
+                <div class="info-box mt-20">
+                    <h4>Understanding the SSH Command</h4>
+                    <pre style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-top: 10px;">
+ssh     -i my-key.pem    ubuntu@13.232.45.123
+│       │                │      │
+│       │                │      └── EC2 public IP
+│       │                └── Username (ubuntu for Ubuntu AMI)
+│       └── Identity file (your private key)
+└── SSH command</pre>
+                    <p class="mt-10">
+                        <a href="https://explainshell.com/explain?cmd=ssh+-i+my-key.pem+ubuntu%4013.232.45.123" target="_blank" class="resource-link">🔍 See detailed breakdown on explainshell.com</a>
+                    </p>
+                </div>
+
+                <div class="story-box mt-20">
+                    <h4>Understanding <code>chmod</code> - File Permissions</h4>
+                    <p><code>chmod</code> = "change mode" - sets who can read/write/execute a file.</p>
+
+                    <p class="mt-10"><strong>Three types of permissions:</strong></p>
+                    <ul style="margin: 5px 0 10px 20px;">
+                        <li><strong>r</strong> (read) = 4</li>
+                        <li><strong>w</strong> (write) = 2</li>
+                        <li><strong>x</strong> (execute) = 1</li>
+                    </ul>
+
+                    <p><strong>Three categories of users:</strong> Owner | Group | Others</p>
+
+                    <table class="comparison-table mt-10" style="font-size: 0.9rem;">
+                        <tr>
+                            <th>Command</th>
+                            <th>Meaning</th>
+                            <th>Owner</th>
+                            <th>Group</th>
+                            <th>Others</th>
+                        </tr>
+                        <tr>
+                            <td><code>chmod 400</code></td>
+                            <td>r-- --- ---</td>
+                            <td>Read only</td>
+                            <td>Nothing</td>
+                            <td>Nothing</td>
+                        </tr>
+                        <tr>
+                            <td><code>chmod 755</code></td>
+                            <td>rwx r-x r-x</td>
+                            <td>All</td>
+                            <td>Read+Execute</td>
+                            <td>Read+Execute</td>
+                        </tr>
+                        <tr>
+                            <td><code>chmod 644</code></td>
+                            <td>rw- r-- r--</td>
+                            <td>Read+Write</td>
+                            <td>Read only</td>
+                            <td>Read only</td>
+                        </tr>
+                    </table>
+                    <p class="mt-10"><strong>Why 400 for SSH keys?</strong> SSH refuses to use private keys if anyone else can read them - it's a security requirement!</p>
+                </div>
+            </div>
+
+            <!-- Install Django on EC2 -->
+            <div class="card mt-30">
+                <h3>🐍 Setting Up Django on EC2</h3>
+
+                <div class="info-box">
+                    <h4>What is Gunicorn?</h4>
+                    <p><strong>Gunicorn</strong> (Green Unicorn) is a production-grade WSGI server for Python apps.</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li><strong>Django's runserver:</strong> Single-threaded, for development only</li>
+                        <li><strong>Gunicorn:</strong> Multiple worker processes, handles concurrent requests</li>
+                    </ul>
+                    <p class="mt-10">We didn't use Gunicorn locally because <code>runserver</code> is fine for development. In production, you NEED Gunicorn (or uWSGI).</p>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            Run on EC2 (after SSH)
+                        </div>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<pre><span class="comment"># Update system packages</span>
+sudo apt update && sudo apt upgrade -y
+
+<span class="comment"># Install Python and pip</span>
+sudo apt install python3 python3-pip python3-venv -y
+
+<span class="comment"># Create project directory</span>
+mkdir ~/myproject && cd ~/myproject
+
+<span class="comment"># Create virtual environment</span>
+python3 -m venv venv
+source venv/bin/activate
+
+<span class="comment"># Install Django and Gunicorn</span>
+pip install django gunicorn
+
+<span class="comment"># Create Django project</span>
+django-admin startproject mysite .
+
+<span class="comment"># Add EC2 IP to ALLOWED_HOSTS (replace YOUR_EC2_IP)</span>
+sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ['YOUR_EC2_IP', 'localhost']/" mysite/settings.py
+
+<span class="comment"># Run on port 80 (requires sudo for ports below 1024)</span>
+sudo /home/ubuntu/myproject/venv/bin/python manage.py runserver 0.0.0.0:80</pre>
+                    </div>
+                </div>
+
+                <div class="success-box mt-20">
+                    <h4>✅ Test It!</h4>
+                    <p>Visit <code>http://your-ec2-ip</code> in your browser (no port needed - 80 is default). You should see the Django welcome page!</p>
+                </div>
+
+                <div class="warning-box mt-20">
+                    <h4>🏭 In Production: Use Nginx + Gunicorn</h4>
+                    <p>The setup above is for learning. In production, you'd use:</p>
+                    <div class="flow-diagram mt-10" style="padding: 20px;">
+                        <div class="flow-box">Users</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="border-color: #10b981;">Nginx<br><small>:80/:443</small></div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box ec2">Gunicorn<br><small>:8000</small></div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box">Django</div>
+                    </div>
+                    <p class="mt-10"><strong>Nginx handles:</strong> SSL termination, static files, load balancing, caching. Gunicorn handles: Python/Django requests.</p>
+                </div>
+            </div>
+
+            <!-- Getting Code to EC2 -->
+            <div class="card mt-30">
+                <h3>📦 Getting Your Code to EC2 (Production)</h3>
+                <p class="mt-10">Above we created a new project. In reality, you'll deploy existing code:</p>
+
+                <div class="flow-diagram mt-20" style="flex-direction: column; gap: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                        <div class="flow-box">Your Laptop</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="border-color: #333;">GitHub</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box ec2">EC2</div>
+                    </div>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">On EC2 - Clone and Deploy</div>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<pre><span class="comment"># Clone your repo</span>
+git clone https://github.com/yourusername/yourproject.git
+cd yourproject
+
+<span class="comment"># Create venv and install dependencies</span>
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+<span class="comment"># Run migrations</span>
+python manage.py migrate
+
+<span class="comment"># Collect static files</span>
+python manage.py collectstatic --noinput
+
+<span class="comment"># Run with Gunicorn</span>
+gunicorn mysite.wsgi:application --bind 0.0.0.0:8000</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Part 3: RDS -->
+    <section id="rds">
+        <div class="section-container">
+            <span class="section-label rds">Part 3</span>
+            <h2 class="section-title">RDS - Relational Database Service</h2>
+            <p class="section-subtitle">
+                A managed database service. AWS handles backups, updates, and scaling - you just use the database.
+            </p>
+
+            <!-- Q4: Why RDS -->
+            <div class="question-block" id="q4">
+                <div class="question-label">💡 Question 5</div>
+                <div class="question-text">
+                    Why use RDS instead of installing PostgreSQL on your EC2 instance?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        RDS is faster than PostgreSQL on EC2
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        RDS is free, EC2 database costs money
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        AWS handles backups, updates, and failover automatically
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        EC2 doesn't support databases
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>RDS vs Self-Managed Database</h4>
+                    <table class="comparison-table mt-10">
+                        <tr>
+                            <th>Task</th>
+                            <th>Self-Managed (on EC2)</th>
+                            <th>RDS (Managed)</th>
+                        </tr>
+                        <tr>
+                            <td>Install database</td>
+                            <td>You do it</td>
+                            <td>AWS does it</td>
+                        </tr>
+                        <tr>
+                            <td>Security patches</td>
+                            <td>You do it</td>
+                            <td>AWS does it</td>
+                        </tr>
+                        <tr>
+                            <td>Backups</td>
+                            <td>You set up cron jobs</td>
+                            <td>Automatic daily backups</td>
+                        </tr>
+                        <tr>
+                            <td>Failover</td>
+                            <td>You build it</td>
+                            <td>Multi-AZ option</td>
+                        </tr>
+                        <tr>
+                            <td>Scaling</td>
+                            <td>Migration headache</td>
+                            <td>Few clicks</td>
+                        </tr>
+                        <tr>
+                            <td>3 AM crash</td>
+                            <td>You wake up</td>
+                            <td>AWS handles it</td>
+                        </tr>
+                    </table>
+
+                    <div class="story-box mt-20">
+                        <h4>When to Self-Manage?</h4>
+                        <ul style="margin-left: 20px;">
+                            <li>You need a database not supported by RDS</li>
+                            <li>You need fine-grained control over configuration</li>
+                            <li>Cost optimization at massive scale</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supported Databases -->
+            <div class="card mt-30">
+                <h3>🗄️ Databases Supported by RDS</h3>
+
+                <div class="icon-grid mt-20">
+                    <div class="icon-item">
+                        <span>🐘</span>
+                        <strong>PostgreSQL</strong>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Most popular for Django</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🐬</span>
+                        <strong>MySQL</strong>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Classic choice</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🟠</span>
+                        <strong>MariaDB</strong>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">MySQL fork</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🔶</span>
+                        <strong>Oracle</strong>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Enterprise</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>🔷</span>
+                        <strong>SQL Server</strong>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Microsoft</p>
+                    </div>
+                    <div class="icon-item">
+                        <span>⚡</span>
+                        <strong>Aurora</strong>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">AWS's own (5x faster)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Creating RDS Instance -->
+            <div class="card mt-30">
+                <h3>🚀 Steps to Create RDS Instance</h3>
+
+                <ol class="step-list mt-20">
+                    <li>
+                        <strong>Choose Database Engine</strong><br>
+                        Select PostgreSQL (most common with Django)
+                    </li>
+                    <li>
+                        <strong>Choose Template</strong><br>
+                        Select "Free tier" for learning
+                    </li>
+                    <li>
+                        <strong>Configure Settings</strong><br>
+                        DB name, master username, master password
+                    </li>
+                    <li>
+                        <strong>Instance Size</strong><br>
+                        db.t3.micro (Free tier eligible)
+                    </li>
+                    <li>
+                        <strong>Connectivity</strong><br>
+                        VPC, Security Group (allow port 5432 from EC2)
+                    </li>
+                    <li>
+                        <strong>Create Database</strong><br>
+                        Takes 5-10 minutes to provision
+                    </li>
+                </ol>
+            </div>
+
+            <!-- Security Group for RDS -->
+            <div class="card mt-30">
+                <h3>🛡️ RDS Security Group</h3>
+                <p class="mt-10">Your RDS database should ONLY accept connections from your EC2 instance, not the public internet.</p>
+
+                <div class="flow-diagram mt-20">
+                    <div class="flow-box">Internet</div>
+                    <div class="flow-arrow" style="color: var(--danger);">✗</div>
+                    <div class="flow-box rds">RDS</div>
+                </div>
+                <div class="flow-diagram">
+                    <div class="flow-box ec2">EC2</div>
+                    <div class="flow-arrow" style="color: var(--success);">✓</div>
+                    <div class="flow-box rds">RDS</div>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            RDS Security Group - Inbound Rule
+                        </div>
+                    </div>
+                    <div class="code-content">
+<pre>
+┌──────────────┬──────────┬─────────────────────────┬─────────────────┐
+│ Type         │ Port     │ Source                  │ Description     │
+├──────────────┼──────────┼─────────────────────────┼─────────────────┤
+│ PostgreSQL   │ 5432     │ sg-xxxxx (EC2 SG)       │ Allow from EC2  │
+└──────────────┴──────────┴─────────────────────────┴─────────────────┘
+
+<span class="comment"># Note: Source is the Security Group ID of your EC2 instance</span>
+<span class="comment"># NOT 0.0.0.0/0 (that would expose your DB to the internet!)</span>
+</pre>
+                    </div>
+                </div>
+
+                <div class="warning-box mt-20">
+                    <h4>⚠️ Critical Security Rule</h4>
+                    <p><strong>Never</strong> make your RDS publicly accessible or allow connections from 0.0.0.0/0. Your database should only be reachable from your application servers.</p>
+                </div>
+            </div>
+
+            <!-- Connect Django to RDS -->
+            <div class="card mt-30">
+                <h3>🔗 Connect Django to RDS</h3>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            settings.py
+                        </div>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<pre><span class="comment"># Install psycopg2 for PostgreSQL support</span>
+<span class="comment"># pip install psycopg2-binary</span>
+
+<span class="variable">DATABASES</span> = {
+    <span class="string">'default'</span>: {
+        <span class="string">'ENGINE'</span>: <span class="string">'django.db.backends.postgresql'</span>,
+        <span class="string">'NAME'</span>: <span class="string">'mydb'</span>,           <span class="comment"># Your DB name</span>
+        <span class="string">'USER'</span>: <span class="string">'admin'</span>,          <span class="comment"># Master username</span>
+        <span class="string">'PASSWORD'</span>: <span class="string">'your-password'</span>,  <span class="comment"># Master password</span>
+        <span class="string">'HOST'</span>: <span class="string">'mydb.xxxxx.ap-south-1.rds.amazonaws.com'</span>,  <span class="comment"># RDS endpoint</span>
+        <span class="string">'PORT'</span>: <span class="string">'5432'</span>,
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="info-box mt-20">
+                    <h4>Finding Your RDS Endpoint</h4>
+                    <p>AWS Console → RDS → Databases → Select your DB → "Endpoint & port"</p>
+                    <p class="mt-10">It looks like: <code>mydb.abcdefg12345.ap-south-1.rds.amazonaws.com</code></p>
+                </div>
+
+                <div class="code-block mt-20">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="code-dot red"></span>
+                            <span class="code-dot yellow"></span>
+                            <span class="code-dot green"></span>
+                            Test Connection (on EC2)
+                        </div>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<pre><span class="comment"># Test from EC2 instance</span>
+pip install psycopg2-binary
+
+python manage.py migrate
+
+<span class="comment"># If it works, you'll see:</span>
+<span class="comment"># Operations to perform:</span>
+<span class="comment">#   Apply all migrations: admin, auth, contenttypes, sessions</span>
+<span class="comment"># Running migrations:</span>
+<span class="comment">#   Applying contenttypes.0001_initial... OK</span>
+<span class="comment">#   ...</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q5: RDS Quiz -->
+            <div class="question-block" id="q5">
+                <div class="question-label">💡 Question 6</div>
+                <div class="question-text">
+                    Your Django app on EC2 can't connect to RDS. What's the most likely cause?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        RDS doesn't support Django
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Security Group not allowing EC2 to connect to RDS
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Wrong Python version
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        RDS is in a different AWS account
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
+                <div class="question-result" id="q5-result"></div>
+                <div class="question-explanation" id="q5-explanation">
+                    <h4>Common Connection Issues</h4>
+                    <ol style="margin-left: 20px;">
+                        <li><strong>Security Group:</strong> RDS SG must allow inbound on port 5432 from EC2's Security Group</li>
+                        <li><strong>Wrong endpoint:</strong> Copy the exact endpoint from RDS console</li>
+                        <li><strong>Wrong credentials:</strong> Username/password must match what you set during RDS creation</li>
+                        <li><strong>Database name:</strong> Make sure the database exists (create it manually or via Django)</li>
+                        <li><strong>psycopg2 not installed:</strong> Run <code>pip install psycopg2-binary</code></li>
+                    </ol>
+
+                    <div class="code-block mt-20">
+                        <div class="code-header">
+                            <div class="code-title">Debug Connection</div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment"># Test connectivity from EC2</span>
+telnet your-rds-endpoint 5432
+
+<span class="comment"># If connected, you'll see:</span>
+<span class="comment"># Trying 10.0.1.123...</span>
+<span class="comment"># Connected to your-rds-endpoint</span>
+
+<span class="comment"># If not connected, check Security Group!</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Part 4: Deployment Architecture -->
+    <section id="deploy">
+        <div class="section-container">
+            <span class="section-label">Part 4</span>
+            <h2 class="section-title">Putting It All Together</h2>
+            <p class="section-subtitle">
+                A typical Django deployment architecture on AWS.
+            </p>
+
+            <!-- Architecture Diagram -->
+            <div class="card">
+                <h3>🏗️ Typical Django AWS Architecture</h3>
+
+                <div class="flow-diagram mt-20" style="flex-direction: column; gap: 30px;">
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                        <div class="flow-box">👤 Users</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box aws" style="border-color: #7c3aed;">Route 53<br><small>DNS</small></div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box aws" style="border-color: #22d3ee;">Load Balancer<br><small>ALB</small></div>
+                    </div>
+                    <div class="flow-arrow" style="transform: rotate(90deg);">↓</div>
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                        <div class="flow-box ec2">EC2 #1<br><small>Nginx + Gunicorn</small></div>
+                        <div class="flow-box ec2">EC2 #2<br><small>Nginx + Gunicorn</small></div>
+                    </div>
+                    <div class="flow-arrow" style="transform: rotate(90deg);">↓</div>
+                    <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap; justify-content: center;">
+                        <div class="flow-box rds">RDS<br><small>PostgreSQL</small></div>
+                        <div class="flow-box" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.1);">ElastiCache<br><small>Redis</small></div>
+                        <div class="flow-box" style="border-color: #10b981; background: rgba(16, 185, 129, 0.1);">S3<br><small>Static Files</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simple Deploy -->
+            <div class="card mt-30">
+                <h3>🎯 For This Class: Simplified Setup</h3>
+
+                <div class="flow-diagram mt-20">
+                    <div class="flow-box">👤 Users</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box ec2">EC2<br><small>Django</small></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box rds">RDS<br><small>PostgreSQL</small></div>
+                </div>
+
+                <div class="success-box mt-20">
+                    <h4>This is Enough For:</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>Personal projects</li>
+                        <li>Learning and experimentation</li>
+                        <li>Low-traffic websites</li>
+                        <li>MVPs and prototypes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="card mt-30">
+                <h3>✅ Deployment Checklist</h3>
+
+                <div class="mt-20">
+                    <table class="comparison-table">
+                        <tr>
+                            <th style="width: 40px;">✓</th>
+                            <th>Step</th>
+                            <th>Details</th>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Launch EC2 instance</td>
+                            <td>Ubuntu, t2.micro, Security Group configured</td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Create RDS database</td>
+                            <td>PostgreSQL, db.t3.micro, Security Group allows EC2</td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>SSH into EC2</td>
+                            <td>Install Python, Django, psycopg2</td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Clone your repo</td>
+                            <td><code>git clone</code> from GitHub</td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Configure Django settings</td>
+                            <td>DATABASES, ALLOWED_HOSTS</td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Run migrations</td>
+                            <td><code>python manage.py migrate</code></td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Collect static files</td>
+                            <td><code>python manage.py collectstatic</code></td>
+                        </tr>
+                        <tr>
+                            <td>☐</td>
+                            <td>Run with Gunicorn</td>
+                            <td><code>gunicorn mysite.wsgi:application</code></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Q6: Architecture -->
+            <div class="question-block" id="q6">
+                <div class="question-label">💡 Question 7</div>
+                <div class="question-text">
+                    Which AWS service would you use to store user-uploaded images?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        EC2
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        RDS
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        S3
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Route 53
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q6')">Check Answer</button>
+                <div class="question-result" id="q6-result"></div>
+                <div class="question-explanation" id="q6-explanation">
+                    <h4>AWS Services Overview</h4>
+                    <table class="comparison-table mt-10">
+                        <tr>
+                            <th>Service</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td><strong>EC2</strong></td>
+                            <td>Virtual servers (compute)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RDS</strong></td>
+                            <td>Managed databases</td>
+                        </tr>
+                        <tr>
+                            <td><strong>S3</strong></td>
+                            <td>Object storage (files, images, backups)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Route 53</strong></td>
+                            <td>DNS service (domain names)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CloudFront</strong></td>
+                            <td>CDN (fast content delivery)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ElastiCache</strong></td>
+                            <td>In-memory cache (Redis/Memcached)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ALB</strong></td>
+                            <td>Load balancer</td>
+                        </tr>
+                    </table>
+
+                    <div class="info-box mt-20">
+                        <h4>S3 for Django Static/Media Files</h4>
+                        <p>Use <code>django-storages</code> package to store media files in S3 instead of EC2 disk.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost -->
+            <div class="card mt-30">
+                <h3>💰 AWS Free Tier</h3>
+                <p class="mt-10">AWS offers a free tier for 12 months after signup:</p>
+
+                <table class="comparison-table mt-20">
+                    <tr>
+                        <th>Service</th>
+                        <th>Free Tier Limit</th>
+                    </tr>
+                    <tr>
+                        <td>EC2</td>
+                        <td>750 hours/month of t2.micro or t3.micro</td>
+                    </tr>
+                    <tr>
+                        <td>RDS</td>
+                        <td>750 hours/month of db.t2.micro or db.t3.micro</td>
+                    </tr>
+                    <tr>
+                        <td>S3</td>
+                        <td>5 GB storage</td>
+                    </tr>
+                    <tr>
+                        <td>Data Transfer</td>
+                        <td>15 GB/month outbound</td>
+                    </tr>
+                </table>
+
+                <div class="warning-box mt-20">
+                    <h4>⚠️ Avoid Surprise Bills</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>Set up billing alerts in AWS Console</li>
+                        <li>Stop instances when not using them</li>
+                        <li>Delete RDS instances you don't need (they cost even when stopped after 7 days)</li>
+                        <li>Check your bill weekly when learning</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">What We Covered</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">☁️</div>
+                    <h3 class="card-title">Cloud Computing</h3>
+                    <p class="card-desc">Rent vs buy, IaaS/PaaS/SaaS, regions and availability zones, why AWS.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🖥️</div>
+                    <h3 class="card-title">EC2</h3>
+                    <p class="card-desc">Instance types, AMIs, security groups, SSH, key pairs, launching and connecting.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🗄️</div>
+                    <h3 class="card-title">RDS</h3>
+                    <p class="card-desc">Managed databases, PostgreSQL setup, security groups, connecting Django.</p>
+                </div>
+            </div>
+
+            <div class="story-box mt-40">
+                <h4>Next Class Preview: VPC, Security & Route 53</h4>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>VPC (Virtual Private Cloud) - your own private network</li>
+                    <li>Subnets, public vs private</li>
+                    <li>IAM - users, roles, and permissions</li>
+                    <li>Route 53 - custom domain for your app</li>
+                </ul>
+            </div>
+
+            <!-- Quick Decision Guide -->
+            <div class="card mt-40">
+                <h3>🎯 Quick Decision Guide</h3>
+                <p class="mt-10">Click each scenario to reveal the best choice:</p>
+
+                <table class="comparison-table mt-20">
+                    <tr>
+                        <th style="width: 50%;">Scenario</th>
+                        <th style="width: 25%;">Best Choice</th>
+                        <th style="width: 25%;">Why?</th>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Need a virtual server to run Django</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #ff9900;">EC2</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Compute service</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Need a PostgreSQL database</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #3b48cc;">RDS</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Managed database</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Need to store user profile pictures</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #10b981;">S3</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Object storage</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Need a custom domain like myapp.com</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #7c3aed;">Route 53</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">DNS service</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Need to cache frequent DB queries</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #ef4444;">ElastiCache</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Redis/Memcached</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Further Reading -->
+            <div class="card mt-40">
+                <h3>📚 Further Reading</h3>
+                <div class="mt-20">
+                    <a href="https://newsletter.pragmaticengineer.com/p/the-history-of-servers-the-cloud" target="_blank" class="resource-link">📖 The History of Servers & Cloud - Pragmatic Engineer</a>
+                    <a href="https://www.youtube.com/watch?v=vFxQyZX84Ro&t=4s" target="_blank" class="resource-link">📺 How Dukaan Runs Infrastructure</a>
+                    <a href="https://www.youtube.com/watch?v=aoag03mSuXQ&t=2579s" target="_blank" class="resource-link">📺 SSH Explained In Depth</a>
+                    <a href="https://explainshell.com/" target="_blank" class="resource-link">🔍 ExplainShell - Understand Any Command</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.textContent = '🌙';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.textContent = '☀️';
+            }
+        }
+
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('progressBar').style.width = scrolled + '%';
+        });
+
+        // Quiz functions
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function revealRow(element) {
+            element.classList.toggle('revealed');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const options = block.querySelectorAll('.question-option');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            let selectedOption = null;
+            options.forEach(opt => {
+                if (opt.classList.contains('selected')) {
+                    selectedOption = opt;
+                }
+            });
+
+            if (!selectedOption) {
+                result.textContent = 'Please select an answer!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
+
+            options.forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+                if (opt.getAttribute('data-correct') === 'true') {
+                    opt.classList.add('correct');
+                } else if (opt === selectedOption) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                result.textContent = '✓ Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.textContent = '✗ Not quite. See the explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+
+            explanation.classList.add('show');
+        }
+
+        // Copy code
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

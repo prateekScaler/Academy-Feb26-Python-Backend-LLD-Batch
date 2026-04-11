@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 9: Exception Handling, Decorators & Middleware</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-django: #092e20;
+            --accent-django-light: #44b78b;
+            --accent-drf: #a30000;
+            --accent-drf-light: #ff6b6b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); z-index: 1001; transition: width 0.1s; }
+
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent-secondary); }
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+            color: var(--text-primary); transition: all 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--accent-primary); }
+
+        section {
+            min-height: 100vh; padding: 120px 60px 80px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.exception { background: linear-gradient(135deg, #dc2626, #f87171); }
+        .section-label.decorator { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+        .section-label.middleware { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .section-subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 50px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(124, 58, 237, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #ef4444 0%, #8b5cf6 50%, #22d3ee 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero-meta { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; }
+        .hero-tagline { font-size: 1.4rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 50px; }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-5px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 20px 0; border: 1px solid var(--border-color); }
+        .code-header {
+            background: #2d2d3d; padding: 12px 20px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .code-title { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.9rem; }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 6px 12px; border-radius: 6px; color: var(--text-secondary);
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s;
+        }
+        .copy-btn:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+        .code-content { padding: 20px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .function { color: #82aaff; }
+        .code-content .variable { color: #f78c6c; }
+        .code-content .decorator { color: #ffa657; }
+        .code-content .class-name { color: #ffcb6b; }
+
+        .question-block {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; margin: 30px 0;
+        }
+        .question-label {
+            display: inline-block; background: var(--accent-primary);
+            color: white; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 15px;
+        }
+        .question-text { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+        .question-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .question-option {
+            display: flex; align-items: center; gap: 15px;
+            padding: 15px 20px; background: var(--bg-tertiary);
+            border: 2px solid var(--border-color); border-radius: 12px;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .question-option:hover { border-color: var(--accent-primary); transform: translateX(5px); }
+        .question-option.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .question-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .question-option.incorrect { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        .option-marker {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--bg-primary); border: 2px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .question-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; border: none; padding: 12px 30px;
+            border-radius: 8px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; font-size: 1rem;
+        }
+        .question-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); }
+        .question-result { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+        .question-result.show { display: block; }
+        .question-result.correct { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); }
+        .question-result.incorrect { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); }
+        .question-explanation { margin-top: 20px; padding: 20px; background: var(--bg-tertiary); border-radius: 12px; display: none; font-size: 1.05rem; }
+        .question-explanation.show { display: block; }
+        .question-explanation pre { font-size: 0.95rem !important; }
+        .question-explanation h4 { font-size: 1.15rem; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .comparison-table th, .comparison-table td { padding: 15px; text-align: left; border: 1px solid var(--border-color); }
+        .comparison-table th { background: var(--bg-tertiary); font-weight: 600; }
+        .comparison-table tr:nth-child(even) { background: var(--bg-secondary); }
+
+        /* Click-to-reveal table rows */
+        .reveal-row { cursor: pointer; transition: background 0.2s; }
+        .reveal-row:hover { background: var(--bg-tertiary); }
+        .reveal-row .reveal-answer { color: transparent; background: var(--bg-tertiary); border-radius: 4px; user-select: none; }
+        .reveal-row .reveal-answer .reveal-text { opacity: 0; transition: opacity 0.3s; }
+        .reveal-row.revealed .reveal-answer { color: inherit; background: transparent; }
+        .reveal-row.revealed .reveal-answer .reveal-text { opacity: 1; }
+        .reveal-row td:first-child::before { content: "👆 "; opacity: 0.5; }
+        .reveal-row.revealed td:first-child::before { content: ""; }
+
+        .info-box {
+            background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent-primary);
+            border-radius: 12px; padding: 20px; margin: 20px 0;
+        }
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning);
+            border-radius: 12px; padding: 20px; margin: 20px 0;
+        }
+        .story-box {
+            background: var(--bg-tertiary); border-left: 4px solid var(--accent-primary);
+            border-radius: 0 12px 12px 0; padding: 20px; margin: 20px 0;
+        }
+        .diagram-box {
+            background: #1e1e2e; border-radius: 12px; padding: 30px;
+            margin: 20px 0; font-family: 'Fira Code', monospace;
+            white-space: pre; overflow-x: auto; line-height: 1.4;
+            color: #e2e8f0; font-size: 0.85rem;
+        }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-15 { margin-top: 15px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        .flow-diagram {
+            display: flex; align-items: center; justify-content: center;
+            flex-wrap: wrap; gap: 10px; margin: 30px 0; padding: 20px;
+            background: var(--bg-tertiary); border-radius: 12px;
+        }
+        .flow-box {
+            padding: 15px 25px; border-radius: 8px; font-weight: 600;
+            text-align: center; min-width: 120px;
+        }
+        .flow-arrow { font-size: 1.5rem; color: var(--text-muted); }
+        .flow-request { background: rgba(34, 211, 238, 0.2); border: 2px solid #22d3ee; }
+        .flow-middleware { background: rgba(139, 92, 246, 0.2); border: 2px solid #8b5cf6; }
+        .flow-view { background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; }
+        .flow-response { background: rgba(251, 146, 60, 0.2); border: 2px solid #fb923c; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 9</div>
+        <ul class="nav-links">
+            <li><a href="#exceptions">Exceptions</a></li>
+            <li><a href="#decorators">Decorators</a></li>
+            <li><a href="#middleware">Middleware</a></li>
+            <li><a href="#summary">Summary</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">&#9728;</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-icon">&#9889;</div>
+        <h1>Exception Handling, Decorators & Middleware</h1>
+        <div class="hero-meta">Class 9 | Python Backend LLD</div>
+        <p class="hero-tagline">
+            Master the art of handling errors gracefully, wrapping functions with decorators,
+            and intercepting every request with middleware.
+        </p>
+        <div class="card-grid" style="max-width: 900px;">
+            <div class="card">
+                <div class="card-icon">&#128680;</div>
+                <h3 class="card-title">Exception Handling</h3>
+                <p class="card-desc">try-except-finally, Django exceptions, get_object_or_404</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">&#127873;</div>
+                <h3 class="card-title">Decorators</h3>
+                <p class="card-desc">Function wrappers, @login_required, custom decorators</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">&#128737;</div>
+                <h3 class="card-title">Middleware</h3>
+                <p class="card-desc">Request/response pipeline, logging, authentication</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Exception Handling Section -->
+    <section id="exceptions">
+        <div class="section-container">
+            <span class="section-label exception">Part 1</span>
+            <h2 class="section-title">Exception Handling</h2>
+            <p class="section-subtitle">Gracefully handle errors instead of crashing your application.</p>
+
+            <!-- Q1: FIRST - Before any theory -->
+            <div class="question-block" id="q1">
+                <div class="question-label">&#129300; Let's Start with a Question</div>
+                <div class="question-text">
+                    What happens when you call <code>MenuItem.objects.get(id=99999)</code> and no item with that ID exists?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="comment"># In your Django view:</span>
+<span class="keyword">def</span> <span class="function">item_detail</span>(request, item_id):
+    item = MenuItem.objects.get(id=<span class="variable">99999</span>)  <span class="comment"># ID doesn't exist!</span>
+    <span class="keyword">return</span> HttpResponse(item.name)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Returns <code>None</code> silently
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Returns an empty QuerySet <code>[]</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Program crashes with an error and user sees a 500 page
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Returns <code>False</code>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q1')">Check Answer</button>
+                <div class="question-result" id="q1-result"></div>
+                <div class="question-explanation" id="q1-explanation">
+                    <h4>&#128165; The Program Crashes!</h4>
+                    <p>When <code>.get()</code> doesn't find a matching record, it raises a <code>MenuItem.DoesNotExist</code> error (called an <strong>exception</strong>). If you don't handle it, Django shows a 500 Internal Server Error to the user.</p>
+                    <p class="mt-10"><strong>This is the problem we'll solve in this class!</strong></p>
+                </div>
+            </div>
+
+            <!-- TEACHING: What is Exception Handling? - Now build from the question -->
+            <div class="story-box mt-30">
+                <h4>&#128218; So What is an Exception?</h4>
+                <p class="mt-10">An <strong>exception</strong> is Python's way of saying "something went wrong!" When code fails (database lookup finds nothing, file doesn't exist, network times out), Python <strong>raises</strong> an exception. If you don't <strong>handle</strong> it, your program crashes.</p>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; The Goal of Exception Handling:</strong>
+                <p class="mt-10">Catch these errors and respond gracefully instead of crashing. Show users a friendly message, log the error for debugging, and keep your app running.</p>
+            </div>
+
+            <!-- TEACHING: try-except basics -->
+            <h3 class="mt-30 mb-20">The Solution: try-except Block</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Catching the Error
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">try</span>:
+    <span class="comment"># Code that might fail</span>
+    item = MenuItem.objects.get(id=<span class="variable">99999</span>)
+<span class="keyword">except</span> MenuItem.DoesNotExist:
+    <span class="comment"># What to do if it fails - instead of crashing!</span>
+    item = <span class="variable">None</span>
+    print(<span class="string">"Item not found"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box mt-20">
+WITHOUT try-except:
+    .get(99999) → &#128165; CRASH! → User sees 500 error page
+
+WITH try-except:
+    .get(99999) → except catches it → Your code handles it gracefully
+            </div>
+
+            <!-- TEACHING: The Full Exception Flow -->
+            <h3 class="mt-40 mb-20">The Full Exception Flow: try-except-else-finally</h3>
+            <div class="diagram-box">try:
+    risky_operation()      # 1. Always runs first
+                           #    ↓
+except SomeError:          # 2. Runs ONLY if exception occurs
+    handle_error()         #    (skips else)
+                           #    ↓
+else:                      # 3. Runs ONLY if NO exception
+    success_action()       #    (skips except)
+                           #    ↓
+finally:                   # 4. ALWAYS runs (cleanup)
+    cleanup()              #    Even after return/break!
+            </div>
+
+            <table class="comparison-table mt-20">
+                <tr><th>Block</th><th>When it runs</th><th>Use case</th></tr>
+                <tr><td><code>try</code></td><td>Always (first)</td><td>Code that might fail</td></tr>
+                <tr><td><code>except</code></td><td>Only if exception occurs</td><td>Handle the error</td></tr>
+                <tr><td><code>else</code></td><td>Only if NO exception</td><td>Success-only code (see below)</td></tr>
+                <tr><td><code>finally</code></td><td>ALWAYS (even with return!)</td><td>Cleanup: close files, DB connections</td></tr>
+            </table>
+
+            <!-- Why else block? -->
+            <div class="info-box mt-20">
+                <strong>&#129300; Why do we need <code>else</code>? Can't we just write code after the except block?</strong>
+                <p class="mt-10">Code after the except block runs <strong>regardless</strong> of whether an exception occurred. The <code>else</code> block runs <strong>only when there was NO exception</strong>.</p>
+                <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 15px;"><span class="comment"># WITHOUT else - this runs even after exception!</span>
+<span class="keyword">try</span>:
+    file = open(<span class="string">"data.txt"</span>)
+<span class="keyword">except</span> FileNotFoundError:
+    print(<span class="string">"File not found"</span>)
+data = file.read()  <span style="color: #ef4444;"># CRASH! file was never opened!</span>
+
+<span class="comment"># WITH else - this only runs if file opened successfully</span>
+<span class="keyword">try</span>:
+    file = open(<span class="string">"data.txt"</span>)
+<span class="keyword">except</span> FileNotFoundError:
+    print(<span class="string">"File not found"</span>)
+<span class="keyword">else</span>:
+    data = file.read()  <span style="color: #10b981;"># Safe! Only runs if open() succeeded</span></pre>
+            </div>
+
+            <!-- finally use cases -->
+            <div class="warning-box mt-20">
+                <strong>&#128274; When to use <code>finally</code>?</strong>
+                <p class="mt-10">Use <code>finally</code> for cleanup code that MUST run - even if an exception occurs, even if there's a <code>return</code> statement!</p>
+            </div>
+
+            <!-- Resource Leak Explanation -->
+            <div class="info-box mt-20">
+                <strong>&#129300; What is a "Resource Leak"?</strong>
+                <p class="mt-10">Your computer has limited resources (memory, file handles, network connections). When you open a file or database connection, the OS reserves resources for it. If you don't close them:</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>File handles:</strong> OS limits how many files can be open simultaneously (often ~1000). If you keep opening without closing, eventually you can't open any more files!</li>
+                    <li><strong>Database connections:</strong> Databases have a "connection pool" (e.g., 20 connections). Each open connection uses one. If your code crashes without closing, that connection stays reserved until the database times it out (could be minutes!).</li>
+                </ul>
+            </div>
+
+            <table class="comparison-table mt-20">
+                <tr><th>Use <code>finally</code> for</th><th>Why it matters</th></tr>
+                <tr><td>Close files</td><td>Limited file handles; unclosed files may have unwritten data</td></tr>
+                <tr><td>Close DB connections</td><td>Connection pool exhaustion = app stops working</td></tr>
+                <tr><td>Release locks</td><td>Deadlocks = other requests hang forever</td></tr>
+                <tr><td>Delete temp files</td><td>Disk fills up over time</td></tr>
+            </table>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">finally runs even with return!</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">def</span> <span class="function">process_file</span>():
+    file = open(<span class="string">"data.txt"</span>)
+    <span class="keyword">try</span>:
+        <span class="keyword">if</span> error_condition:
+            <span class="keyword">return</span> <span class="variable">None</span>  <span class="comment"># Early return</span>
+        <span class="keyword">return</span> file.read()
+    <span class="keyword">finally</span>:
+        file.close()  <span style="color: #10b981;"># STILL RUNS! Even after return</span>
+
+<span class="comment"># Better: Use context managers (with statement)</span>
+<span class="keyword">with</span> open(<span class="string">"data.txt"</span>) <span class="keyword">as</span> file:
+    data = file.read()
+<span class="comment"># File is automatically closed when 'with' block ends</span></pre>
+                </div>
+            </div>
+
+            <!-- Q2: try-except-else-finally -->
+            <div class="question-block mt-30" id="q2">
+                <div class="question-label">&#128161; Question 2: try-except-else-finally</div>
+                <div class="question-text">
+                    Given this code, what is the correct behavior?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="keyword">try</span>:
+    result = risky_operation()
+<span class="keyword">except</span> SomeError:
+    handle_error()
+<span class="keyword">else</span>:
+    success_action()
+<span class="keyword">finally</span>:
+    cleanup()</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <code>else</code> runs if exception occurs, <code>finally</code> only on success
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <code>else</code> runs if NO exception, <code>finally</code> ALWAYS runs
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        <code>else</code> and <code>finally</code> are the same thing
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <code>finally</code> only runs if exception occurs
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q2')">Check Answer</button>
+                <div class="question-result" id="q2-result"></div>
+                <div class="question-explanation" id="q2-explanation">
+                    <h4>The Full Exception Flow</h4>
+                    <div class="diagram-box">try:
+    risky_operation()      # 1. Try this first
+                           #    ↓
+except SomeError:          # 2. If exception → run this
+    handle_error()         #    (skip else)
+                           #    ↓
+else:                      # 3. If NO exception → run this
+    success_action()       #    (skip except)
+                           #    ↓
+finally:                   # 4. ALWAYS run this
+    cleanup()              #    (even if return/break in try!)
+                    </div>
+                    <table class="comparison-table mt-20">
+                        <tr><th>Block</th><th>When it runs</th><th>Use case</th></tr>
+                        <tr><td><code>try</code></td><td>Always (first)</td><td>Code that might fail</td></tr>
+                        <tr><td><code>except</code></td><td>Only if exception occurs</td><td>Handle the error</td></tr>
+                        <tr><td><code>else</code></td><td>Only if NO exception</td><td>Success-only code</td></tr>
+                        <tr><td><code>finally</code></td><td>ALWAYS (even with return!)</td><td>Cleanup: close files, connections</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Q3: Multiple exceptions -->
+            <div class="question-block" id="q3">
+                <div class="question-label">&#128161; Question 3: Multiple Exceptions</div>
+                <div class="question-text">
+                    How do you handle different exceptions differently?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <code>except (Error1, Error2): handle()</code> - same handler for both
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Multiple <code>except</code> blocks, one per exception type
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Both A and B are valid approaches
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Python only allows one except block
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q3')">Check Answer</button>
+                <div class="question-result" id="q3-result"></div>
+                <div class="question-explanation" id="q3-explanation">
+                    <h4>Multiple Exception Handling Patterns</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="comment"># Pattern 1: Different handlers for different exceptions</span>
+<span class="keyword">try</span>:
+    item = MenuItem.objects.get(id=item_id)
+<span class="keyword">except</span> MenuItem.DoesNotExist:
+    <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"Item not found"</span>}, status=<span class="variable">404</span>)
+<span class="keyword">except</span> MenuItem.MultipleObjectsReturned:
+    <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"Multiple items found"</span>}, status=<span class="variable">400</span>)
+
+<span class="comment"># Pattern 2: Same handler for multiple exceptions</span>
+<span class="keyword">try</span>:
+    process_data()
+<span class="keyword">except</span> (ValueError, TypeError, KeyError) <span class="keyword">as</span> e:
+    logger.error(f<span class="string">"Data error: {e}"</span>)
+    <span class="keyword">return</span> <span class="variable">None</span>
+
+<span class="comment"># Pattern 3: Catch-all (use sparingly!)</span>
+<span class="keyword">try</span>:
+    external_api_call()
+<span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+    logger.error(f<span class="string">"Unexpected error: {e}"</span>)
+    <span class="keyword">raise</span>  <span class="comment"># Re-raise after logging</span></pre>
+                    <div class="warning-box mt-15">
+                        <strong>&#9888; Avoid bare <code>except:</code></strong>
+                        <p class="mt-10">Never use <code>except:</code> without specifying an exception type. It catches everything including <code>KeyboardInterrupt</code> and <code>SystemExit</code>!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Re-raising Exceptions -->
+            <h3 class="mt-40 mb-20">Re-raising Exceptions</h3>
+            <div class="info-box">
+                <strong>&#128260; When to re-raise an exception?</strong>
+                <p class="mt-10">Sometimes you want to catch an exception, do something (like logging), but still let the exception propagate up. Use <code>raise</code> without arguments.</p>
+            </div>
+
+            <!-- Concrete Scenarios -->
+            <div class="warning-box mt-20">
+                <strong>&#127919; Practical Scenarios: When to Re-raise</strong>
+                <table class="comparison-table mt-15">
+                    <tr><th>Scenario</th><th>Why re-raise?</th></tr>
+                    <tr>
+                        <td><strong>Payment processing fails</strong><br><small>Stripe/Razorpay returns error</small></td>
+                        <td>Log the payment ID and error for debugging, but let the view handle user-facing message and order status update</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Third-party API timeout</strong><br><small>SMS service, email provider</small></td>
+                        <td>Record the failure for retry later, but let caller decide: fail the request or continue without the notification?</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database integrity error</strong><br><small>Duplicate key, constraint violation</small></td>
+                        <td>Log which constraint failed for debugging, but let the view return appropriate error (400 vs 500)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">Re-raising after logging</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> logging
+logger = logging.getLogger(__name__)
+
+<span class="keyword">def</span> <span class="function">process_payment</span>(order):
+    <span class="keyword">try</span>:
+        payment_gateway.charge(order.total)
+    <span class="keyword">except</span> PaymentError <span class="keyword">as</span> e:
+        <span class="comment"># Log for debugging (you'll need this when debugging at 2am!)</span>
+        logger.error(f<span class="string">"Payment failed for order {order.id}: {e}"</span>)
+
+        <span class="comment"># Re-raise - let the VIEW decide what to show the user</span>
+        <span class="keyword">raise</span>  <span style="color: #10b981;"><span class="comment"># ← No arguments = re-raise current exception</span></span>
+
+<span class="comment"># In the view:</span>
+<span class="keyword">try</span>:
+    process_payment(order)
+<span class="keyword">except</span> PaymentError:
+    <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"Payment failed. Please try again."</span>}, status=<span class="variable">400</span>)</pre>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE SCENARIO: Imagine the Exceptions -->
+            <h3 class="mt-40 mb-20">&#127919; Interactive Exercise: Spot the Exceptions</h3>
+            <div class="story-box">
+                <h4>Scenario: User places an order</h4>
+                <p class="mt-10">Look at this order flow. <strong>What exceptions might occur at each step?</strong> Click to reveal!</p>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">Order Flow - What could go wrong?</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">def</span> <span class="function">create_order</span>(request):
+    user = request.user                          <span class="comment"># Step 1</span>
+    item_id = request.data[<span class="string">'item_id'</span>]             <span class="comment"># Step 2</span>
+    quantity = <span class="keyword">int</span>(request.data[<span class="string">'quantity'</span>])     <span class="comment"># Step 3</span>
+    item = MenuItem.objects.get(id=item_id)      <span class="comment"># Step 4</span>
+    <span class="keyword">if</span> item.stock < quantity:                    <span class="comment"># Step 5</span>
+        <span class="keyword">raise</span> InsufficientStockError()
+    order = Order.objects.create(user=user, item=item, qty=quantity)
+    <span class="keyword">return</span> Response(OrderSerializer(order).data)</pre>
+                </div>
+            </div>
+
+            <div class="card-grid mt-20">
+                <div class="card" onclick="this.querySelector('.reveal').style.display='block'" style="cursor: pointer;">
+                    <div class="card-title">Step 1: request.user</div>
+                    <div class="card-desc">What if user is not logged in?</div>
+                    <div class="reveal mt-10" style="display:none; color: var(--danger);">
+                        &#9888; <code>NotAuthenticated</code> - DRF returns 401 if auth required
+                    </div>
+                </div>
+                <div class="card" onclick="this.querySelector('.reveal').style.display='block'" style="cursor: pointer;">
+                    <div class="card-title">Step 2: request.data['item_id']</div>
+                    <div class="card-desc">What if item_id is missing?</div>
+                    <div class="reveal mt-10" style="display:none; color: var(--danger);">
+                        &#9888; <code>KeyError</code> - Key doesn't exist in dict
+                    </div>
+                </div>
+                <div class="card" onclick="this.querySelector('.reveal').style.display='block'" style="cursor: pointer;">
+                    <div class="card-title">Step 3: int(quantity)</div>
+                    <div class="card-desc">What if quantity = "abc"?</div>
+                    <div class="reveal mt-10" style="display:none; color: var(--danger);">
+                        &#9888; <code>ValueError</code> - Can't convert string to int
+                    </div>
+                </div>
+                <div class="card" onclick="this.querySelector('.reveal').style.display='block'" style="cursor: pointer;">
+                    <div class="card-title">Step 4: .get(id=item_id)</div>
+                    <div class="card-desc">What if item doesn't exist?</div>
+                    <div class="reveal mt-10" style="display:none; color: var(--danger);">
+                        &#9888; <code>MenuItem.DoesNotExist</code> - No matching record
+                    </div>
+                </div>
+                <div class="card" onclick="this.querySelector('.reveal').style.display='block'" style="cursor: pointer;">
+                    <div class="card-title">Step 5: Insufficient stock</div>
+                    <div class="card-desc">Business logic failure</div>
+                    <div class="reveal mt-10" style="display:none; color: var(--danger);">
+                        &#9888; <code>InsufficientStockError</code> - Custom exception we raise
+                    </div>
+                </div>
+                <div class="card" onclick="this.querySelector('.reveal').style.display='block'" style="cursor: pointer;">
+                    <div class="card-title">Database create</div>
+                    <div class="card-desc">What if DB connection fails?</div>
+                    <div class="reveal mt-10" style="display:none; color: var(--danger);">
+                        &#9888; <code>IntegrityError</code> / <code>OperationalError</code> - DB issues
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Takeaway:</strong> Every line of code can potentially fail! Good developers anticipate these failures and handle them gracefully.
+            </div>
+
+            <!-- Production Solution -->
+            <h4 class="mt-30">How would we handle this in production?</h4>
+            <div class="code-block mt-15">
+                <div class="code-header">
+                    <div class="code-title" style="color: #10b981;">&#10004; Production-Ready Code</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.db <span class="keyword">import</span> transaction
+
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    <span class="comment"># 1. Validate input first (before any DB operations)</span>
+    item_id = request.data.get(<span class="string">'item_id'</span>)  <span class="comment"># .get() returns None, no KeyError</span>
+    quantity = request.data.get(<span class="string">'quantity'</span>)
+
+    <span class="keyword">if not</span> item_id <span class="keyword">or not</span> quantity:
+        <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"item_id and quantity required"</span>}, status=<span class="variable">400</span>)
+
+    <span class="keyword">try</span>:
+        quantity = <span class="keyword">int</span>(quantity)
+    <span class="keyword">except</span> (ValueError, TypeError):
+        <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"quantity must be a number"</span>}, status=<span class="variable">400</span>)
+
+    <span class="comment"># 2. Database operations with proper error handling</span>
+    <span class="keyword">try</span>:
+        item = MenuItem.objects.get(id=item_id)
+    <span class="keyword">except</span> MenuItem.DoesNotExist:
+        <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"Item not found"</span>}, status=<span class="variable">404</span>)
+
+    <span class="comment"># 3. Business logic validation</span>
+    <span class="keyword">if</span> item.stock < quantity:
+        <span class="keyword">return</span> Response({<span class="string">"error"</span>: f<span class="string">"Only {item.stock} available"</span>}, status=<span class="variable">400</span>)
+
+    <span class="comment"># 4. Create order in a transaction</span>
+    <span class="keyword">with</span> transaction.atomic():
+        order = Order.objects.create(user=request.user, item=item, qty=quantity)
+        item.stock -= quantity
+        item.save()
+
+    <span class="keyword">return</span> Response(OrderSerializer(order).data, status=<span class="variable">201</span>)</pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>Key patterns:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Use <code>.get()</code> instead of <code>[]</code> to avoid KeyError</li>
+                    <li>Validate input types before using them</li>
+                    <li>Handle specific exceptions with appropriate error messages</li>
+                    <li>Use transactions for operations that must succeed together</li>
+                </ul>
+            </div>
+
+            <!-- Alternative: Using Serializers -->
+            <h4 class="mt-30">Alternative: Let Serializers Handle Validation</h4>
+            <div class="code-block mt-15">
+                <div class="code-header">
+                    <div class="code-title" style="color: #8b5cf6;">&#128296; With DRF Serializers (Cleaner!)</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># serializers.py</span>
+<span class="keyword">class</span> <span class="class-name">OrderCreateSerializer</span>(serializers.Serializer):
+    item_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=<span class="variable">1</span>)
+
+    <span class="keyword">def</span> <span class="function">validate_item_id</span>(self, value):
+        <span class="keyword">try</span>:
+            self.item = MenuItem.objects.get(id=value)
+        <span class="keyword">except</span> MenuItem.DoesNotExist:
+            <span class="keyword">raise</span> serializers.ValidationError(<span class="string">"Item not found"</span>)
+        <span class="keyword">return</span> value
+
+    <span class="keyword">def</span> <span class="function">validate</span>(self, data):
+        <span class="keyword">if</span> self.item.stock < data[<span class="string">'quantity'</span>]:
+            <span class="keyword">raise</span> serializers.ValidationError(
+                f<span class="string">"Only {self.item.stock} available"</span>
+            )
+        <span class="keyword">return</span> data
+
+<span class="comment"># views.py - Much cleaner!</span>
+<span class="decorator">@api_view(['POST'])</span>
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    serializer = OrderCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=<span class="variable">True</span>)  <span class="comment"># Auto 400 on error</span>
+
+    <span class="keyword">with</span> transaction.atomic():
+        order = Order.objects.create(
+            user=request.user,
+            item=serializer.item,
+            qty=serializer.validated_data[<span class="string">'quantity'</span>]
+        )
+    <span class="keyword">return</span> Response(OrderSerializer(order).data, status=<span class="variable">201</span>)</pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Why serializers?</strong> They handle type conversion, validation, and error responses automatically. Your view stays clean and focused on business logic.
+            </div>
+
+            <!-- SECURITY QUIZ -->
+            <h3 class="mt-40 mb-20">&#128274; Security & Exception Handling</h3>
+
+            <!-- Security Question 1 -->
+            <div class="question-block" id="q4">
+                <div class="question-label">&#128274; Question 4: Spot the Security Issue</div>
+                <div class="question-text">
+                    What's wrong with this password reset code?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="keyword">def</span> <span class="function">reset_password</span>(request):
+    email = request.data[<span class="string">'email'</span>]
+    <span class="keyword">try</span>:
+        user = User.objects.get(email=email)
+        send_reset_email(user)
+        <span class="keyword">return</span> Response({<span class="string">"message"</span>: <span class="string">"Reset email sent"</span>})
+    <span class="keyword">except</span> User.DoesNotExist:
+        <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"User not found"</span>}, status=<span class="variable">404</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Should use <code>filter().first()</code> instead of <code>get()</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Reveals whether an email is registered (user enumeration)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Missing <code>finally</code> block
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Should return 500 instead of 404
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q4')">Check Answer</button>
+                <div class="question-result" id="q4-result"></div>
+                <div class="question-explanation" id="q4-explanation">
+                    <h4>User Enumeration Vulnerability</h4>
+                    <p>An attacker can determine which emails are registered by observing different responses:</p>
+                    <div class="diagram-box mt-15">
+<span style="color: #ef4444;">test@victim.com → "User not found" (404) = NOT registered</span>
+<span style="color: #ef4444;">john@victim.com → "Reset email sent" (200) = IS registered!</span>
+                    </div>
+                    <h4 class="mt-20">The Fix:</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">def</span> <span class="function">reset_password</span>(request):
+    email = request.data[<span class="string">'email'</span>]
+    <span class="keyword">try</span>:
+        user = User.objects.get(email=email)
+        send_reset_email(user)
+    <span class="keyword">except</span> User.DoesNotExist:
+        <span class="keyword">pass</span>  <span class="comment"># Silently ignore</span>
+
+    <span class="comment"># ALWAYS return same message</span>
+    <span class="keyword">return</span> Response({
+        <span class="string">"message"</span>: <span class="string">"If this email is registered, you'll receive a reset link."</span>
+    })</pre>
+                </div>
+            </div>
+
+            <!-- Security Question 2 -->
+            <div class="question-block" id="q5">
+                <div class="question-label">&#128274; Question 5: Database Error Handling</div>
+                <div class="question-text">
+                    What's the security risk in this error handling?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="keyword">try</span>:
+    user = User.objects.get(id=user_id)
+<span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+    <span class="keyword">return</span> Response({<span class="string">"error"</span>: str(e)}, status=<span class="variable">500</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Should use 404 status code
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Exposes internal error details (database structure, paths)
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Should catch specific exception types
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        No security risk here
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q5')">Check Answer</button>
+                <div class="question-result" id="q5-result"></div>
+                <div class="question-explanation" id="q5-explanation">
+                    <h4>Information Disclosure Risk</h4>
+                    <p><code>str(e)</code> can expose:</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>Database table/column names</li>
+                        <li>File system paths</li>
+                        <li>SQL queries (in SQL errors)</li>
+                        <li>Internal library versions</li>
+                    </ul>
+                    <h4 class="mt-20">The Fix:</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">import</span> logging
+logger = logging.getLogger(__name__)
+
+<span class="keyword">try</span>:
+    user = User.objects.get(id=user_id)
+<span class="keyword">except</span> User.DoesNotExist:
+    <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"User not found"</span>}, status=<span class="variable">404</span>)
+<span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+    logger.error(f<span class="string">"Unexpected error: {e}"</span>)  <span class="comment"># Log internally</span>
+    <span class="keyword">return</span> Response({<span class="string">"error"</span>: <span class="string">"An error occurred"</span>}, status=<span class="variable">500</span>)</pre>
+                </div>
+            </div>
+
+            <div class="warning-box mt-20">
+                <strong>&#128274; Security Rules for Exception Handling:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Never expose internal error details to users</li>
+                    <li>Log detailed errors internally, return generic messages externally</li>
+                    <li>Return consistent responses to prevent information leakage</li>
+                    <li>Catch specific exceptions, not bare <code>except:</code></li>
+                </ul>
+            </div>
+
+            <!-- Custom Exception -->
+            <h3 class="mt-40 mb-20">Creating Custom Exceptions</h3>
+
+            <div class="info-box">
+                <strong>&#129300; When to create custom exceptions?</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Business logic errors specific to your domain (InsufficientStock, RestaurantClosed)</li>
+                    <li>When you need custom error codes for API clients</li>
+                    <li>When built-in exceptions don't express the error clearly</li>
+                </ul>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        myapp/exceptions.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Where to put this file: myapp/exceptions.py</span>
+<span class="comment"># Keep exceptions close to the app that uses them</span>
+
+<span class="keyword">class</span> <span class="class-name">InsufficientStockError</span>(Exception):
+    <span class="string">"""Raised when order quantity exceeds available stock."""</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, available, requested):
+        self.available = available
+        self.requested = requested
+        self.message = f<span class="string">"Only {available} available, {requested} requested"</span>
+        <span class="keyword">super</span>().__init__(self.message)
+
+<span class="keyword">class</span> <span class="class-name">RestaurantClosedError</span>(Exception):
+    <span class="string">"""Raised when attempting to order outside business hours."""</span>
+    <span class="keyword">pass</span>
+
+<span class="comment"># Usage in views:</span>
+<span class="keyword">from</span> myapp.exceptions <span class="keyword">import</span> InsufficientStockError
+
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    <span class="keyword">if</span> item.stock < quantity:
+        <span class="keyword">raise</span> InsufficientStockError(item.stock, quantity)</pre>
+                </div>
+            </div>
+
+            <div class="warning-box mt-20">
+                <strong>&#128204; Best Practices for Custom Exceptions:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>Location:</strong> Create <code>exceptions.py</code> in your app folder</li>
+                    <li><strong>Naming:</strong> Always end with <code>Error</code> (e.g., <code>InsufficientStockError</code>)</li>
+                    <li><strong>Inherit from <code>Exception</code></strong> (or more specific built-in exceptions)</li>
+                    <li><strong>Add context:</strong> Store relevant data as attributes</li>
+                    <li><strong>Document:</strong> Add a docstring explaining when it's raised</li>
+                </ul>
+            </div>
+
+            <!-- Exception Handling Summary -->
+            <h3 class="mt-40 mb-20">&#128203; Exception Handling Summary</h3>
+            <div class="story-box">
+                <h4>Key Takeaways</h4>
+                <table class="comparison-table mt-15">
+                    <tr><th>What</th><th>How</th></tr>
+                    <tr><td>Handle missing records</td><td><code>try-except Model.DoesNotExist</code> or <code>.filter().first()</code></td></tr>
+                    <tr><td>Cleanup resources</td><td>Use <code>finally</code> block</td></tr>
+                    <tr><td>Success-only code</td><td>Use <code>else</code> block</td></tr>
+                    <tr><td>Log and re-raise</td><td><code>raise</code> without arguments</td></tr>
+                    <tr><td>Business logic errors</td><td>Create custom exceptions</td></tr>
+                    <tr><td>Security</td><td>Never expose internal error details</td></tr>
+                </table>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Remember:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>Be specific:</strong> Catch specific exceptions, not bare <code>except:</code></li>
+                    <li><strong>Fail gracefully:</strong> Return user-friendly error messages</li>
+                    <li><strong>Log internally:</strong> Keep detailed logs for debugging</li>
+                    <li><strong>Don't swallow errors silently:</strong> At minimum, log them</li>
+                </ul>
+            </div>
+
+            <!-- DRF Exceptions Reference -->
+            <h3 class="mt-40 mb-20">&#128218; Further Reading: DRF Exceptions</h3>
+            <div class="story-box">
+                <p>When building REST APIs with Django REST Framework, you'll use DRF's built-in exceptions instead of Django's. They automatically return proper JSON responses.</p>
+            </div>
+
+            <table class="comparison-table mt-20">
+                <tr><th>DRF Exception</th><th>Status</th><th>When to use</th></tr>
+                <tr><td><code>NotFound</code></td><td>404</td><td>Resource doesn't exist</td></tr>
+                <tr><td><code>ValidationError</code></td><td>400</td><td>Invalid input data</td></tr>
+                <tr><td><code>PermissionDenied</code></td><td>403</td><td>User lacks permission</td></tr>
+                <tr><td><code>NotAuthenticated</code></td><td>401</td><td>Login required</td></tr>
+                <tr><td><code>MethodNotAllowed</code></td><td>405</td><td>Wrong HTTP method (GET vs POST)</td></tr>
+                <tr><td><code>Throttled</code></td><td>429</td><td>Rate limit exceeded</td></tr>
+            </table>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">Quick Example</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> rest_framework.exceptions <span class="keyword">import</span> NotFound, ValidationError
+
+<span class="keyword">def</span> <span class="function">get_item</span>(request, item_id):
+    <span class="keyword">try</span>:
+        item = MenuItem.objects.get(id=item_id)
+    <span class="keyword">except</span> MenuItem.DoesNotExist:
+        <span class="keyword">raise</span> NotFound(detail=<span class="string">"Item not found"</span>)  <span class="comment"># Returns JSON 404</span>
+    <span class="keyword">return</span> Response(ItemSerializer(item).data)</pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128279; Learn More:</strong> <a href="https://www.django-rest-framework.org/api-guide/exceptions/" target="_blank" style="color: var(--accent-primary);">DRF Exceptions Documentation</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Decorators Section -->
+    <section id="decorators">
+        <div class="section-container">
+            <span class="section-label decorator">Part 2</span>
+            <h2 class="section-title">Decorators</h2>
+            <p class="section-subtitle">Functions that wrap other functions to add behavior without modifying the original.</p>
+
+            <!-- Prerequisites: *args and **kwargs -->
+            <h3 class="mb-20">Prerequisite: Understanding *args and **kwargs</h3>
+            <div class="story-box">
+                <p>Before learning decorators, you need to understand <code>*args</code> and <code>**kwargs</code> - they allow functions to accept any number of arguments.</p>
+            </div>
+
+            <!-- Q: *args -->
+            <div class="question-block mt-20" id="q-args">
+                <div class="question-label">&#128161; Quick Check: *args</div>
+                <div class="question-text">
+                    What does <code>*args</code> do in a function definition?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="keyword">def</span> <span class="function">add_all</span>(*args):
+    <span class="keyword">return</span> sum(args)
+
+add_all(<span class="variable">1</span>, <span class="variable">2</span>, <span class="variable">3</span>, <span class="variable">4</span>)  <span class="comment"># What does this return?</span></pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Creates a list named "args"
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Collects all positional arguments into a tuple
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Makes all arguments required
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Only accepts exactly 4 arguments
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-args')">Check Answer</button>
+                <div class="question-result" id="q-args-result"></div>
+                <div class="question-explanation" id="q-args-explanation">
+                    <h4>*args = Variable Positional Arguments</h4>
+                    <p><code>*args</code> collects ALL extra positional arguments into a <strong>tuple</strong>.</p>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">def</span> <span class="function">add_all</span>(*args):
+    print(args)         <span class="comment"># (1, 2, 3, 4) - it's a tuple!</span>
+    print(type(args))   <span class="comment"># &lt;class 'tuple'&gt;</span>
+    <span class="keyword">return</span> sum(args)    <span class="comment"># 10</span>
+
+add_all(<span class="variable">1</span>, <span class="variable">2</span>, <span class="variable">3</span>, <span class="variable">4</span>)   <span class="comment"># Returns 10</span>
+add_all(<span class="variable">5</span>)              <span class="comment"># Returns 5</span>
+add_all()               <span class="comment"># Returns 0 (empty tuple)</span></pre>
+                </div>
+            </div>
+
+            <!-- Q: **kwargs -->
+            <div class="question-block" id="q-kwargs">
+                <div class="question-label">&#128161; Quick Check: **kwargs</div>
+                <div class="question-text">
+                    What does <code>**kwargs</code> do in a function definition?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="keyword">def</span> <span class="function">print_info</span>(**kwargs):
+    <span class="keyword">for</span> key, value <span class="keyword">in</span> kwargs.items():
+        print(f<span class="string">"{key}: {value}"</span>)
+
+print_info(name=<span class="string">"Alice"</span>, age=<span class="variable">25</span>)</pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Creates keyword-only arguments
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Collects all keyword arguments into a dictionary
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Makes "kwargs" a global variable
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Requires exactly 2 keyword arguments
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q-kwargs')">Check Answer</button>
+                <div class="question-result" id="q-kwargs-result"></div>
+                <div class="question-explanation" id="q-kwargs-explanation">
+                    <h4>**kwargs = Variable Keyword Arguments</h4>
+                    <p><code>**kwargs</code> collects ALL extra keyword arguments into a <strong>dictionary</strong>.</p>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">def</span> <span class="function">print_info</span>(**kwargs):
+    print(kwargs)       <span class="comment"># {'name': 'Alice', 'age': 25}</span>
+    print(type(kwargs)) <span class="comment"># &lt;class 'dict'&gt;</span>
+
+print_info(name=<span class="string">"Alice"</span>, age=<span class="variable">25</span>, city=<span class="string">"NYC"</span>)
+<span class="comment"># Output:</span>
+<span class="comment"># name: Alice</span>
+<span class="comment"># age: 25</span>
+<span class="comment"># city: NYC</span></pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Why are *args and **kwargs important for decorators?</strong>
+                <p class="mt-10">A decorator's wrapper function needs to accept ANY arguments that the original function might receive. Using <code>*args, **kwargs</code> lets the wrapper forward all arguments to the original function.</p>
+                <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+    <span class="comment"># Now this wrapper can accept ANY function's arguments!</span>
+    result = original_func(*args, **kwargs)
+    <span class="keyword">return</span> result</pre>
+            </div>
+
+            <!-- TEACHING: What is a Decorator? -->
+            <h3 class="mt-40 mb-20">What is a Decorator?</h3>
+            <div class="story-box">
+                <h4>&#128218; Decorators in One Sentence</h4>
+                <p class="mt-10">A decorator is a function that takes another function and extends its behavior without modifying the original function's code. Think of it like wrapping a gift - the gift stays the same, but you add something extra around it.</p>
+            </div>
+
+            <h3 class="mt-30 mb-20">Understanding the @ Syntax</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        The @ syntax is just shorthand
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># This decorator syntax:</span>
+<span class="decorator">@my_decorator</span>
+<span class="keyword">def</span> <span class="function">my_function</span>():
+    <span class="keyword">pass</span>
+
+<span class="comment"># Is EXACTLY the same as:</span>
+<span class="keyword">def</span> <span class="function">my_function</span>():
+    <span class="keyword">pass</span>
+my_function = my_decorator(my_function)
+
+<span class="comment"># The decorator receives your function</span>
+<span class="comment"># and returns a NEW function that wraps it</span></pre>
+                </div>
+            </div>
+
+            <!-- TEACHING: How to Write a Decorator -->
+            <h3 class="mt-40 mb-20">How to Write a Decorator</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        The Decorator Template (memorize this!)
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> functools
+
+<span class="keyword">def</span> <span class="function">my_decorator</span>(func):
+    <span class="decorator">@functools.wraps(func)</span>  <span class="comment"># Preserves function name/docstring</span>
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        <span class="comment"># Code to run BEFORE the function</span>
+        print(<span class="string">"Before function call"</span>)
+
+        <span class="comment"># Call the original function</span>
+        result = func(*args, **kwargs)
+
+        <span class="comment"># Code to run AFTER the function</span>
+        print(<span class="string">"After function call"</span>)
+
+        <span class="keyword">return</span> result
+    <span class="keyword">return</span> wrapper
+
+<span class="comment"># Usage:</span>
+<span class="decorator">@my_decorator</span>
+<span class="keyword">def</span> <span class="function">greet</span>(name):
+    print(f<span class="string">"Hello, {name}!"</span>)
+
+greet(<span class="string">"Alice"</span>)
+<span class="comment"># Output:</span>
+<span class="comment"># Before function call</span>
+<span class="comment"># Hello, Alice!</span>
+<span class="comment"># After function call</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box mt-20">
+Original Function          Decorator            Wrapped Function
+      │                       │                       │
+      ▼                       ▼                       ▼
+  my_func()      →      wrapper(my_func)      →    new_func()
+                              │
+                    ┌─────────┴─────────┐
+                    │  - Add logging    │
+                    │  - Check auth     │
+                    │  - Time execution │
+                    │  - Cache result   │
+                    └───────────────────┘
+            </div>
+
+            <!-- Detailed functools.wraps explanation -->
+            <div class="warning-box mt-20">
+                <strong>&#128270; What is <code>@functools.wraps(func)</code> and why do we need it?</strong>
+            </div>
+
+            <p class="mt-20">Every Python function has hidden attributes that describe it:</p>
+
+            <div class="code-block mt-15">
+                <div class="code-header">
+                    <div class="code-title">Function Metadata</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="string">"""Say hello to someone."""</span>   <span class="comment"># ← This is a DOCSTRING (documentation)</span>
+    <span class="keyword">return</span> f<span class="string">"Hello, {name}!"</span>
+
+<span class="comment"># Every function has these hidden attributes:</span>
+print(greet.__name__)    <span class="comment"># "greet"         - the function's name</span>
+print(greet.__doc__)     <span class="comment"># "Say hello..."  - the docstring (help text)</span></pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128221; What's a docstring?</strong>
+                <p class="mt-10">The triple-quoted string right after <code>def</code> is called a <strong>docstring</strong>. It's documentation that explains what the function does. You see it when you type <code>help(greet)</code> or hover over a function in your IDE.</p>
+            </div>
+
+            <h4 class="mt-30">The Problem: Decorators Hide the Original Function</h4>
+
+            <div class="code-block mt-15">
+                <div class="code-header">
+                    <div class="code-title" style="color: #ef4444;">WITHOUT @functools.wraps</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">def</span> <span class="function">my_decorator</span>(func):
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        <span class="keyword">return</span> func(*args, **kwargs)
+    <span class="keyword">return</span> wrapper
+
+<span class="decorator">@my_decorator</span>
+<span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="string">"""Say hello to someone."""</span>
+    <span class="keyword">return</span> f<span class="string">"Hello, {name}!"</span>
+
+print(greet.__name__)    <span style="color: #ef4444;"><span class="comment"># "wrapper"  ← WRONG! Should be "greet"</span></span>
+print(greet.__doc__)     <span style="color: #ef4444;"><span class="comment"># None       ← WRONG! Lost the docstring</span></span></pre>
+                </div>
+            </div>
+
+            <p class="mt-20">After decoration, <code>greet</code> is actually <code>wrapper</code>, so it has wrapper's name and no docstring!</p>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title" style="color: #10b981;">WITH @functools.wraps - Fixed!</div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> functools
+
+<span class="keyword">def</span> <span class="function">my_decorator</span>(func):
+    <span class="decorator">@functools.wraps(func)</span>   <span class="comment"># ← Copies metadata from func to wrapper</span>
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        <span class="keyword">return</span> func(*args, **kwargs)
+    <span class="keyword">return</span> wrapper
+
+<span class="decorator">@my_decorator</span>
+<span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="string">"""Say hello to someone."""</span>
+    <span class="keyword">return</span> f<span class="string">"Hello, {name}!"</span>
+
+print(greet.__name__)    <span style="color: #10b981;"><span class="comment"># "greet"         ← Correct!</span></span>
+print(greet.__doc__)     <span style="color: #10b981;"><span class="comment"># "Say hello..."  ← Preserved!</span></span></pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Why does this matter?</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>Debugging:</strong> Error messages show "wrapper" instead of actual function name</li>
+                    <li><strong>IDE help:</strong> Hover tooltips won't show the docstring</li>
+                    <li><strong>Logging:</strong> <code>func.__name__</code> in logs shows wrong name</li>
+                    <li><strong>Testing:</strong> Some test frameworks rely on function names</li>
+                </ul>
+                <p class="mt-15"><strong>Rule:</strong> Always use <code>@functools.wraps(func)</code> in your decorators!</p>
+            </div>
+
+            <!-- Q6: What is a decorator -->
+            <div class="question-block" id="q6">
+                <div class="question-label">&#128161; Question 6: What is a Decorator?</div>
+                <div class="question-text">
+                    What does the <code>@decorator</code> syntax actually do?
+                </div>
+                <div class="code-block">
+                    <div class="code-content">
+                        <pre><span class="decorator">@my_decorator</span>
+<span class="keyword">def</span> <span class="function">my_function</span>():
+    <span class="keyword">pass</span></pre>
+                    </div>
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Creates a new function called <code>my_decorator</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Equivalent to <code>my_function = my_decorator(my_function)</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Runs <code>my_decorator</code> after <code>my_function</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Adds <code>my_decorator</code> as an argument to <code>my_function</code>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q6')">Check Answer</button>
+                <div class="question-result" id="q6-result"></div>
+                <div class="question-explanation" id="q6-explanation">
+                    <h4>&#10004; Correct!</h4>
+                    <p class="mt-10">The <code>@decorator</code> syntax is just syntactic sugar. It takes your function, passes it to the decorator, and replaces it with whatever the decorator returns (usually a wrapper function).</p>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 15px;"><span class="comment"># When Python sees this:</span>
+<span class="decorator">@my_decorator</span>
+<span class="keyword">def</span> <span class="function">my_function</span>():
+    <span class="keyword">pass</span>
+
+<span class="comment"># It executes this:</span>
+my_function = my_decorator(my_function)</pre>
+                </div>
+            </div>
+
+            <!-- Q7: Writing a decorator -->
+            <div class="question-block" id="q7">
+                <div class="question-label">&#128161; Question 7: Writing a Decorator</div>
+                <div class="question-text">
+                    Which is the correct structure for a basic decorator?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <div>
+                            <pre style="margin: 0; background: transparent; font-size: 0.85rem;"><code>def decorator(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper</code></pre>
+                        </div>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <div>
+                            <pre style="margin: 0; background: transparent; font-size: 0.85rem;"><code>def decorator(func):
+    return func()</code></pre>
+                        </div>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        <div>
+                            <pre style="margin: 0; background: transparent; font-size: 0.85rem;"><code>def decorator():
+    def func():
+        pass
+    return func</code></pre>
+                        </div>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <div>
+                            <pre style="margin: 0; background: transparent; font-size: 0.85rem;"><code>def decorator(*args):
+    return args</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q7')">Check Answer</button>
+                <div class="question-result" id="q7-result"></div>
+                <div class="question-explanation" id="q7-explanation">
+                    <h4>Why A is Correct</h4>
+                    <p class="mt-10">A decorator must:</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>Take a function as argument (<code>func</code>)</li>
+                        <li>Define an inner <code>wrapper</code> function</li>
+                        <li>Call the original function inside wrapper</li>
+                        <li>Return the wrapper function</li>
+                    </ul>
+
+                    <h4 class="mt-20">Why Others are Wrong</h4>
+                    <table class="comparison-table mt-10">
+                        <tr><th>Option</th><th>Problem</th></tr>
+                        <tr><td>B</td><td>Calls <code>func()</code> immediately instead of returning a wrapper</td></tr>
+                        <tr><td>C</td><td>Doesn't take <code>func</code> as argument - can't wrap anything!</td></tr>
+                        <tr><td>D</td><td>Just returns arguments - doesn't wrap a function</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Practical Example: Timing Decorator -->
+            <h3 class="mt-40 mb-20">Practical Example: Timing Decorator</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        decorators.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> time
+<span class="keyword">import</span> functools
+<span class="keyword">import</span> logging
+
+logger = logging.getLogger(__name__)
+
+<span class="keyword">def</span> <span class="function">timing_decorator</span>(func):
+    <span class="string">"""Log how long a function takes to execute."""</span>
+    <span class="decorator">@functools.wraps(func)</span>
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+
+        duration = end_time - start_time
+        logger.info(f<span class="string">"{func.__name__} took {duration:.4f} seconds"</span>)
+
+        <span class="keyword">return</span> result
+    <span class="keyword">return</span> wrapper
+
+<span class="comment"># Usage:</span>
+<span class="decorator">@timing_decorator</span>
+<span class="keyword">def</span> <span class="function">slow_query</span>():
+    items = MenuItem.objects.select_related(<span class="string">'category'</span>).all()
+    <span class="keyword">return</span> list(items)
+
+<span class="comment"># Log output: slow_query took 0.0234 seconds</span></pre>
+                </div>
+            </div>
+
+            <!-- Q8: Django decorators -->
+            <div class="question-block" id="q8">
+                <div class="question-label">&#128161; Question 8: Django View Decorators</div>
+                <div class="question-text">
+                    What does <code>@login_required</code> do?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Logs in the user automatically
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Redirects to login page if user is not authenticated
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Creates a new user account
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Returns 500 error if not logged in
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q8')">Check Answer</button>
+                <div class="question-result" id="q8-result"></div>
+                <div class="question-explanation" id="q8-explanation">
+                    <h4>Common Django View Decorators</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">from</span> django.contrib.auth.decorators <span class="keyword">import</span> login_required, permission_required
+<span class="keyword">from</span> django.views.decorators.http <span class="keyword">import</span> require_http_methods, require_POST
+<span class="keyword">from</span> django.views.decorators.cache <span class="keyword">import</span> cache_page
+
+<span class="comment"># Require authentication</span>
+<span class="decorator">@login_required</span>
+<span class="keyword">def</span> <span class="function">dashboard</span>(request):
+    <span class="keyword">return</span> render(request, <span class="string">'dashboard.html'</span>)
+
+<span class="comment"># Require specific permission</span>
+<span class="decorator">@permission_required('menu.add_menuitem')</span>
+<span class="keyword">def</span> <span class="function">create_item</span>(request):
+    <span class="keyword">pass</span>
+
+<span class="comment"># Restrict HTTP methods</span>
+<span class="decorator">@require_http_methods(["GET", "POST"])</span>
+<span class="keyword">def</span> <span class="function">contact</span>(request):
+    <span class="keyword">pass</span>
+
+<span class="comment"># POST only shortcut</span>
+<span class="decorator">@require_POST</span>
+<span class="keyword">def</span> <span class="function">submit_form</span>(request):
+    <span class="keyword">pass</span>
+
+<span class="comment"># Cache the response for 15 minutes</span>
+<span class="decorator">@cache_page(60 * 15)</span>
+<span class="keyword">def</span> <span class="function">menu_list</span>(request):
+    <span class="keyword">return</span> render(request, <span class="string">'menu.html'</span>)</pre>
+                </div>
+            </div>
+
+            <!-- Q9: DRF Decorators -->
+            <div class="question-block" id="q9">
+                <div class="question-label">&#128161; Question 9: DRF Decorators</div>
+                <div class="question-text">
+                    How do you create a simple API endpoint using function-based views in DRF?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Use <code>@api_view(['GET', 'POST'])</code> decorator
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Just return a dictionary from the function
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        Use <code>@rest_api</code> decorator
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        No decorator needed for DRF
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q9')">Check Answer</button>
+                <div class="question-result" id="q9-result"></div>
+                <div class="question-explanation" id="q9-explanation">
+                    <h4>DRF Function-Based View Decorators</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">from</span> rest_framework.decorators <span class="keyword">import</span> (
+    api_view,
+    permission_classes,
+    authentication_classes,
+    throttle_classes
+)
+<span class="keyword">from</span> rest_framework.permissions <span class="keyword">import</span> IsAuthenticated
+<span class="keyword">from</span> rest_framework.response <span class="keyword">import</span> Response
+
+<span class="decorator">@api_view(['GET', 'POST'])</span>
+<span class="keyword">def</span> <span class="function">menu_items</span>(request):
+    <span class="keyword">if</span> request.method == <span class="string">'GET'</span>:
+        items = MenuItem.objects.all()
+        serializer = MenuItemSerializer(items, many=<span class="variable">True</span>)
+        <span class="keyword">return</span> Response(serializer.data)
+
+    <span class="keyword">elif</span> request.method == <span class="string">'POST'</span>:
+        serializer = MenuItemSerializer(data=request.data)
+        <span class="keyword">if</span> serializer.is_valid():
+            serializer.save()
+            <span class="keyword">return</span> Response(serializer.data, status=<span class="variable">201</span>)
+        <span class="keyword">return</span> Response(serializer.errors, status=<span class="variable">400</span>)
+
+<span class="comment"># Stack multiple decorators:</span>
+<span class="decorator">@api_view(['GET'])</span>
+<span class="decorator">@permission_classes([IsAuthenticated])</span>
+<span class="keyword">def</span> <span class="function">protected_endpoint</span>(request):
+    <span class="keyword">return</span> Response({<span class="string">"message"</span>: <span class="string">"You are authenticated!"</span>})</pre>
+                </div>
+            </div>
+
+            <!-- Decorators with Arguments -->
+            <h3 class="mt-40 mb-20">Decorators with Arguments</h3>
+            <div class="story-box">
+                <p>What if you want <code>@rate_limit(max_calls=5)</code> instead of just <code>@rate_limit</code>? You need <strong>3 levels of nesting</strong>.</p>
+            </div>
+
+            <div class="diagram-box mt-20">
+<span style="color: #6b7280;"># WITHOUT arguments (2 levels):</span>
+@timing_decorator       →   timing_decorator(my_view)   →   wrapper
+def my_view():                     ↑                          ↑
+                            takes function            returns wrapper
+
+<span style="color: #6b7280;"># WITH arguments (3 levels):</span>
+@rate_limit(max_calls=5)  →  rate_limit(5)  →  decorator(my_view)  →  wrapper
+def my_view():                    ↑                    ↑                 ↑
+                           takes config         takes function    returns wrapper
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="code-title">The 3-Level Pattern</div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> functools
+
+<span class="keyword">def</span> <span class="function">repeat</span>(times=<span class="variable">1</span>):                     <span class="comment"># Level 1: Takes the CONFIG</span>
+    <span class="keyword">def</span> <span class="function">decorator</span>(func):                  <span class="comment"># Level 2: Takes the FUNCTION</span>
+        <span class="decorator">@functools.wraps(func)</span>
+        <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):     <span class="comment"># Level 3: Takes the ARGUMENTS</span>
+            <span class="keyword">for</span> _ <span class="keyword">in</span> range(times):
+                result = func(*args, **kwargs)
+            <span class="keyword">return</span> result
+        <span class="keyword">return</span> wrapper                    <span class="comment"># Level 2 returns Level 3</span>
+    <span class="keyword">return</span> decorator                      <span class="comment"># Level 1 returns Level 2</span>
+
+<span class="comment"># Usage:</span>
+<span class="decorator">@repeat(times=3)</span>
+<span class="keyword">def</span> <span class="function">say_hello</span>():
+    print(<span class="string">"Hello!"</span>)
+
+say_hello()
+<span class="comment"># Output: Hello! Hello! Hello!</span></pre>
+                </div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; How to remember:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>No arguments:</strong> <code>@decorator</code> → 2 levels (decorator → wrapper)</li>
+                    <li><strong>With arguments:</strong> <code>@decorator(arg)</code> → 3 levels (config → decorator → wrapper)</li>
+                </ul>
+                <p class="mt-10">The outer function "configures" the decorator, then returns the actual decorator.</p>
+            </div>
+
+            <!-- Practical: Rate Limiting Decorator -->
+            <h3 class="mt-40 mb-20">Practical Example: Rate Limiting Decorator</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        decorators.py - Rate Limiting
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> time
+<span class="keyword">import</span> functools
+<span class="keyword">from</span> django.core.cache <span class="keyword">import</span> cache
+<span class="keyword">from</span> rest_framework.exceptions <span class="keyword">import</span> Throttled
+
+<span class="keyword">def</span> <span class="function">rate_limit</span>(max_calls=<span class="variable">10</span>, period=<span class="variable">60</span>):
+    <span class="string">"""
+    Limit function calls per user.
+    max_calls: Maximum calls allowed
+    period: Time period in seconds
+    """</span>
+    <span class="keyword">def</span> <span class="function">decorator</span>(func):
+        <span class="decorator">@functools.wraps(func)</span>
+        <span class="keyword">def</span> <span class="function">wrapper</span>(request, *args, **kwargs):
+            <span class="comment"># Create unique key per user</span>
+            user_id = request.user.id <span class="keyword">or</span> request.META.get(<span class="string">'REMOTE_ADDR'</span>)
+            cache_key = f<span class="string">"rate_limit:{func.__name__}:{user_id}"</span>
+
+            <span class="comment"># Get current call count</span>
+            calls = cache.get(cache_key, <span class="variable">0</span>)
+
+            <span class="keyword">if</span> calls >= max_calls:
+                <span class="keyword">raise</span> Throttled(detail=f<span class="string">"Rate limit exceeded. Try again later."</span>)
+
+            <span class="comment"># Increment counter</span>
+            cache.set(cache_key, calls + <span class="variable">1</span>, timeout=period)
+
+            <span class="keyword">return</span> func(request, *args, **kwargs)
+        <span class="keyword">return</span> wrapper
+    <span class="keyword">return</span> decorator
+
+<span class="comment"># Usage:</span>
+<span class="decorator">@api_view(['POST'])</span>
+<span class="decorator">@rate_limit(max_calls=5, period=60)</span>  <span class="comment"># 5 calls per minute</span>
+<span class="keyword">def</span> <span class="function">create_order</span>(request):
+    <span class="comment"># ... create order logic</span>
+    <span class="keyword">pass</span></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Middleware Section -->
+    <section id="middleware">
+        <div class="section-container">
+            <span class="section-label middleware">Part 3</span>
+            <h2 class="section-title">Middleware</h2>
+            <p class="section-subtitle">Hooks into Django's request/response processing - runs on EVERY request!</p>
+
+            <!-- TEACHING: What is Middleware? -->
+            <div class="story-box">
+                <h4>&#128218; What is Middleware?</h4>
+                <p class="mt-10">Middleware is a framework of hooks that sits between the web server and your views. Every request passes through ALL middleware (top to bottom), and every response passes back through (bottom to top). Think of it like airport security - everyone goes through it, no exceptions.</p>
+            </div>
+
+            <h3 class="mt-30 mb-20">The Request/Response Pipeline</h3>
+            <div class="flow-diagram">
+                <div class="flow-box flow-request">Client Request</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-middleware">Middleware 1</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-middleware">Middleware 2</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-middleware">Middleware 3</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-view">Your View</div>
+            </div>
+            <div class="flow-diagram">
+                <div class="flow-box flow-view">Your View</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-middleware">Middleware 3</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-middleware">Middleware 2</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-middleware">Middleware 1</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box flow-response">Client Response</div>
+            </div>
+
+            <div class="info-box mt-20">
+                <strong>&#128161; Key Point:</strong> Request goes top-to-bottom, response goes bottom-to-top (like an onion - LIFO). The last middleware to touch the request is the first to touch the response.
+            </div>
+
+            <!-- TEACHING: Middleware Template -->
+            <h3 class="mt-40 mb-20">How to Write a Middleware</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        The Middleware Template (memorize this!)
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">class</span> <span class="class-name">MyMiddleware</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, get_response):
+        <span class="string">"""
+        Called ONCE when server starts.
+        get_response is the next middleware or view.
+        """</span>
+        self.get_response = get_response
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(self, request):
+        <span class="string">"""Called on EVERY request."""</span>
+
+        <span class="comment"># === BEFORE VIEW ===</span>
+        <span class="comment"># Code here runs before your view</span>
+        print(f<span class="string">"Incoming: {request.method} {request.path}"</span>)
+
+        <span class="comment"># Call the next middleware/view</span>
+        response = self.get_response(request)
+
+        <span class="comment"># === AFTER VIEW ===</span>
+        <span class="comment"># Code here runs after your view</span>
+        print(f<span class="string">"Response: {response.status_code}"</span>)
+
+        <span class="keyword">return</span> response</pre>
+                </div>
+            </div>
+
+            <!-- Explain get_response -->
+            <div class="info-box mt-20">
+                <strong>&#129300; What is <code>get_response</code>?</strong>
+                <p class="mt-10"><code>get_response</code> is a callable that Django passes to your middleware. When you call <code>self.get_response(request)</code>, it either:</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Calls the <strong>next middleware</strong> in the chain, OR</li>
+                    <li>Calls the <strong>actual view</strong> (if this is the last middleware)</li>
+                </ul>
+                <p class="mt-10">Think of it as "continue with the request" - everything before the call is "pre-processing", everything after is "post-processing".</p>
+            </div>
+
+            <!-- Where to put middleware -->
+            <div class="warning-box mt-20">
+                <strong>&#128204; Where to keep custom middleware?</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Create <code>myapp/middleware.py</code> in your app folder</li>
+                    <li>Or create a shared <code>core/middleware.py</code> for project-wide middleware</li>
+                    <li>Register in <code>settings.py</code> using the dotted path</li>
+                </ul>
+            </div>
+
+            <div class="diagram-box mt-20">
+<span style="color: #6b7280;"># File: myapp/middleware.py</span>
+<span style="color: #6b7280;"># In settings.py, add your middleware:</span>
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    ...
+    'myapp.middleware.MyMiddleware',  <span style="color: #10b981;">← dotted path to your class</span>
+]
+            </div>
+
+            <!-- Q11: What is Middleware -->
+            <div class="question-block" id="q11">
+                <div class="question-label">&#128161; Question 11: What is Middleware?</div>
+                <div class="question-text">
+                    When does middleware code run?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        Only when explicitly called in views
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        Only for API endpoints
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        On EVERY request/response automatically
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Only on the first request
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q11')">Check Answer</button>
+                <div class="question-result" id="q11-result"></div>
+                <div class="question-explanation" id="q11-explanation">
+                    <h4>&#10004; Correct!</h4>
+                    <p>Unlike decorators which only run on specific views, middleware runs on <strong>every single request</strong> that hits your Django application. This makes it perfect for cross-cutting concerns like logging, authentication, or security headers.</p>
+
+                    <div class="info-box mt-20">
+                        <strong>Compare to Decorators:</strong>
+                        <ul style="margin: 10px 0 0 20px;">
+                            <li><strong>Decorator:</strong> You choose which views to apply it to</li>
+                            <li><strong>Middleware:</strong> Automatically applies to ALL requests</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middleware Order Diagram -->
+            <h3 class="mt-40 mb-20">Middleware Execution Order</h3>
+            <div class="diagram-box">
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',        # 1st in, last out
+    'django.contrib.sessions.middleware.SessionMiddleware', # 2nd in, 2nd-last out
+    'django.middleware.common.CommonMiddleware',            # ...
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'myapp.middleware.CustomMiddleware',                    # Last in, first out
+]
+
+REQUEST FLOW:
+┌─────────────────────────────────────────────────────────────┐
+│  Client Request                                              │
+└──────────────────────────────┬──────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│ SecurityMiddleware.process_request()                         │
+└──────────────────────────────┬───────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│ SessionMiddleware.process_request()  → adds request.session  │
+└──────────────────────────────┬───────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│ AuthenticationMiddleware.process_request() → adds request.user│
+└──────────────────────────────┬───────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                         YOUR VIEW                            │
+└──────────────────────────────┬───────────────────────────────┘
+                               ▼
+                    (Response travels back UP)
+            </div>
+
+            <!-- Q12: Built-in Middleware -->
+            <div class="question-block" id="q12">
+                <div class="question-label">&#128161; Question 12: Built-in Middleware</div>
+                <div class="question-text">
+                    Where does <code>request.user</code> come from in Django views?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        It's built into the request object automatically
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <code>AuthenticationMiddleware</code> adds it to the request
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        The view has to fetch it manually
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        Django settings configures it
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q12')">Check Answer</button>
+                <div class="question-result" id="q12-result"></div>
+                <div class="question-explanation" id="q12-explanation">
+                    <h4>What Each Built-in Middleware Does</h4>
+                    <table class="comparison-table mt-10">
+                        <tr><th>Middleware</th><th>What it does</th></tr>
+                        <tr>
+                            <td><code>SecurityMiddleware</code></td>
+                            <td>HTTPS redirect, security headers (X-Content-Type-Options, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td><code>SessionMiddleware</code></td>
+                            <td>Adds <code>request.session</code> - enables sessions</td>
+                        </tr>
+                        <tr>
+                            <td><code>CommonMiddleware</code></td>
+                            <td>URL normalization (trailing slashes), Content-Length header</td>
+                        </tr>
+                        <tr>
+                            <td><code>CsrfViewMiddleware</code></td>
+                            <td>CSRF protection for POST/PUT/DELETE requests</td>
+                        </tr>
+                        <tr>
+                            <td><code>AuthenticationMiddleware</code></td>
+                            <td>Adds <code>request.user</code> from session</td>
+                        </tr>
+                        <tr>
+                            <td><code>MessageMiddleware</code></td>
+                            <td>Flash messages support (<code>messages.success()</code>)</td>
+                        </tr>
+                    </table>
+
+                    <div class="warning-box mt-20">
+                        <strong>&#9888; Middleware Order Matters!</strong>
+                        <p class="mt-10"><code>AuthenticationMiddleware</code> depends on <code>SessionMiddleware</code>. If you put Auth before Session, <code>request.user</code> won't work!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q13: Custom Middleware -->
+            <div class="question-block" id="q13">
+                <div class="question-label">&#128161; Question 13: Custom Middleware Structure</div>
+                <div class="question-text">
+                    What are the key methods in a middleware class?
+                </div>
+                <div class="question-options">
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">A</span>
+                        <code>before_request()</code> and <code>after_response()</code>
+                    </div>
+                    <div class="question-option" data-correct="true" onclick="selectOption(this)">
+                        <span class="option-marker">B</span>
+                        <code>__init__()</code>, <code>__call__()</code>, and optionally <code>process_view()</code>, <code>process_exception()</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">C</span>
+                        <code>handle_request()</code> and <code>handle_response()</code>
+                    </div>
+                    <div class="question-option" data-correct="false" onclick="selectOption(this)">
+                        <span class="option-marker">D</span>
+                        <code>get()</code> and <code>post()</code>
+                    </div>
+                </div>
+                <button class="question-btn" onclick="checkAnswer('q13')">Check Answer</button>
+                <div class="question-result" id="q13-result"></div>
+                <div class="question-explanation" id="q13-explanation">
+                    <h4>Middleware Class Structure</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">class</span> <span class="class-name">SimpleMiddleware</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, get_response):
+        <span class="string">"""
+        One-time configuration when server starts.
+        get_response is the next middleware or view.
+        """</span>
+        self.get_response = get_response
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(self, request):
+        <span class="string">"""Called on every request."""</span>
+
+        <span class="comment"># Code BEFORE view (and later middleware)</span>
+        print(<span class="string">"Before view"</span>)
+
+        <span class="comment"># Call the next middleware/view</span>
+        response = self.get_response(request)
+
+        <span class="comment"># Code AFTER view (and earlier middleware)</span>
+        print(<span class="string">"After view"</span>)
+
+        <span class="keyword">return</span> response</pre>
+
+                    <h4 class="mt-20">Optional Hook Methods</h4>
+                    <pre style="background: #1e1e2e; padding: 15px; border-radius: 8px; color: #e2e8f0; margin-top: 10px;"><span class="keyword">class</span> <span class="class-name">AdvancedMiddleware</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, get_response):
+        self.get_response = get_response
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(self, request):
+        response = self.get_response(request)
+        <span class="keyword">return</span> response
+
+    <span class="keyword">def</span> <span class="function">process_view</span>(self, request, view_func, view_args, view_kwargs):
+        <span class="string">"""Called just before the view function."""</span>
+        print(f<span class="string">"About to call: {view_func.__name__}"</span>)
+        <span class="keyword">return</span> <span class="variable">None</span>  <span class="comment"># Continue normally</span>
+
+    <span class="keyword">def</span> <span class="function">process_exception</span>(self, request, exception):
+        <span class="string">"""Called if view raises an exception."""</span>
+        print(f<span class="string">"Exception: {exception}"</span>)
+        <span class="keyword">return</span> <span class="variable">None</span>  <span class="comment"># Let Django handle it</span></pre>
+                </div>
+            </div>
+
+            <!-- Practical: Logging Middleware -->
+            <h3 class="mt-40 mb-20">Practical Example: Request Logging Middleware</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        middleware.py
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">import</span> time
+<span class="keyword">import</span> logging
+
+logger = logging.getLogger(__name__)
+
+<span class="keyword">class</span> <span class="class-name">RequestLoggingMiddleware</span>:
+    <span class="string">"""Log every request with timing information."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, get_response):
+        self.get_response = get_response
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(self, request):
+        <span class="comment"># Start timer</span>
+        start_time = time.time()
+
+        <span class="comment"># Get response from view</span>
+        response = self.get_response(request)
+
+        <span class="comment"># Calculate duration</span>
+        duration = time.time() - start_time
+
+        <span class="comment"># Log the request</span>
+        logger.info(
+            f<span class="string">"{request.method} {request.path} "</span>
+            f<span class="string">"{response.status_code} "</span>
+            f<span class="string">"{duration:.3f}s "</span>
+            f<span class="string">"user={request.user}"</span>
+        )
+
+        <span class="keyword">return</span> response
+
+<span class="comment"># Add to settings.py:</span>
+<span class="comment"># MIDDLEWARE = [</span>
+<span class="comment">#     ...</span>
+<span class="comment">#     'myapp.middleware.RequestLoggingMiddleware',</span>
+<span class="comment"># ]</span>
+
+<span class="comment"># Log output:</span>
+<span class="comment"># INFO: GET /api/menu/ 200 0.045s user=john</span>
+<span class="comment"># INFO: POST /api/orders/ 201 0.123s user=jane</span></pre>
+                </div>
+            </div>
+
+            <!-- Practical: Maintenance Mode -->
+            <h3 class="mt-40 mb-20">Practical Example: Maintenance Mode Middleware</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        middleware.py - Maintenance Mode
+                    </div>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+                    <pre><span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse
+<span class="keyword">from</span> django.conf <span class="keyword">import</span> settings
+
+<span class="keyword">class</span> <span class="class-name">MaintenanceModeMiddleware</span>:
+    <span class="string">"""Return 503 for all requests when in maintenance mode."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, get_response):
+        self.get_response = get_response
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(self, request):
+        <span class="comment"># Check if maintenance mode is enabled</span>
+        <span class="keyword">if</span> getattr(settings, <span class="string">'MAINTENANCE_MODE'</span>, <span class="variable">False</span>):
+            <span class="comment"># Allow admin access</span>
+            <span class="keyword">if</span> request.path.startswith(<span class="string">'/admin/'</span>):
+                <span class="keyword">return</span> self.get_response(request)
+
+            <span class="comment"># Allow staff users</span>
+            <span class="keyword">if</span> hasattr(request, <span class="string">'user'</span>) <span class="keyword">and</span> request.user.is_staff:
+                <span class="keyword">return</span> self.get_response(request)
+
+            <span class="comment"># Return 503 for everyone else</span>
+            <span class="keyword">return</span> JsonResponse(
+                {<span class="string">"error"</span>: <span class="string">"Site is under maintenance. Please try again later."</span>},
+                status=<span class="variable">503</span>
+            )
+
+        <span class="keyword">return</span> self.get_response(request)
+
+<span class="comment"># In settings.py:</span>
+<span class="comment"># MAINTENANCE_MODE = True  # Enable maintenance</span>
+<span class="comment"># MAINTENANCE_MODE = False # Disable maintenance</span></pre>
+                </div>
+            </div>
+
+            <!-- Middleware vs Decorator: Click-to-Reveal Table -->
+            <div class="card mt-30">
+                <h3>&#128161; Middleware vs Decorator - When to Use Each?</h3>
+                <p class="mt-10" style="opacity: 0.8;">Click each scenario to reveal the best choice:</p>
+
+                <table class="comparison-table mt-20" id="reveal-table">
+                    <tr>
+                        <th style="width: 50%;">Scenario</th>
+                        <th style="width: 25%;">Best Choice</th>
+                        <th style="width: 25%;">Why?</th>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Log ALL incoming requests</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #10b981;">&#10004; Middleware</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Applies to every request automatically</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Auth check on 5 specific views</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #3b82f6;">&#10004; Decorator</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">@login_required on just those views</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Add security headers to all responses</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #10b981;">&#10004; Middleware</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Global, don't want to miss any</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Rate limit one API endpoint</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #3b82f6;">&#10004; Decorator</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">@rate_limit on just that view</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Site-wide maintenance mode</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #10b981;">&#10004; Middleware</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">Block all requests at once</span></td>
+                    </tr>
+                    <tr class="reveal-row" onclick="revealRow(this)">
+                        <td>Cache a specific page for 15 minutes</td>
+                        <td class="reveal-answer"><span class="reveal-text" style="color: #3b82f6;">&#10004; Decorator</span></td>
+                        <td class="reveal-answer"><span class="reveal-text">@cache_page(60 * 15)</span></td>
+                    </tr>
+                </table>
+
+                <div class="story-box mt-20">
+                    <h4>Rule of Thumb:</h4>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li><strong style="color: #10b981;">Middleware:</strong> Global behavior (every request)</li>
+                        <li><strong style="color: #3b82f6;">Decorator:</strong> Selective behavior (specific views)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">What We Covered</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128680;</div>
+                    <h3 class="card-title">Exception Handling</h3>
+                    <p class="card-desc">try-except-else-finally, Django exceptions, get_object_or_404, DRF exceptions, custom exceptions.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127873;</div>
+                    <h3 class="card-title">Decorators</h3>
+                    <p class="card-desc">Function wrappers, @login_required, @api_view, custom decorators, decorators with arguments.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128737;</div>
+                    <h3 class="card-title">Middleware</h3>
+                    <p class="card-desc">Request/response pipeline, built-in middleware, custom middleware, logging, maintenance mode.</p>
+                </div>
+            </div>
+
+            <!-- Quick Reference -->
+            <h3 class="mt-40 mb-20">Quick Reference</h3>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-title">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        Cheat Sheet
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre><span class="comment"># Exception Handling</span>
+<span class="keyword">try</span>:
+    item = MenuItem.objects.get(id=<span class="variable">99</span>)
+<span class="keyword">except</span> MenuItem.DoesNotExist:
+    item = <span class="variable">None</span>
+<span class="keyword">finally</span>:
+    cleanup()
+
+<span class="comment"># Shortcut in views</span>
+item = get_object_or_404(MenuItem, id=<span class="variable">99</span>)
+
+<span class="comment"># DRF exception</span>
+<span class="keyword">raise</span> NotFound(detail=<span class="string">"Item not found"</span>)
+
+<span class="comment"># ─────────────────────────────────────</span>
+
+<span class="comment"># Basic Decorator</span>
+<span class="keyword">def</span> <span class="function">my_decorator</span>(func):
+    <span class="decorator">@functools.wraps(func)</span>
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        <span class="comment"># before</span>
+        result = func(*args, **kwargs)
+        <span class="comment"># after</span>
+        <span class="keyword">return</span> result
+    <span class="keyword">return</span> wrapper
+
+<span class="comment"># ─────────────────────────────────────</span>
+
+<span class="comment"># Basic Middleware</span>
+<span class="keyword">class</span> <span class="class-name">MyMiddleware</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, get_response):
+        self.get_response = get_response
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(self, request):
+        <span class="comment"># before view</span>
+        response = self.get_response(request)
+        <span class="comment"># after view</span>
+        <span class="keyword">return</span> response</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Theme toggle (default is light)
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.innerHTML = '&#9728;';  // Sun for light mode
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.innerHTML = '&#127769;';  // Moon for dark mode
+            }
+        }
+
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('progressBar').style.width = scrolled + '%';
+        });
+
+        // Quiz functions
+        function selectOption(element) {
+            const options = element.parentElement.querySelectorAll('.question-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function revealRow(element) {
+            element.classList.toggle('revealed');
+        }
+
+        function checkAnswer(questionId) {
+            const block = document.getElementById(questionId);
+            const options = block.querySelectorAll('.question-option');
+            const result = document.getElementById(questionId + '-result');
+            const explanation = document.getElementById(questionId + '-explanation');
+
+            let selectedOption = null;
+            options.forEach(opt => {
+                if (opt.classList.contains('selected')) {
+                    selectedOption = opt;
+                }
+            });
+
+            if (!selectedOption) {
+                result.innerHTML = 'Please select an option!';
+                result.className = 'question-result show incorrect';
+                return;
+            }
+
+            const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
+
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-correct') === 'true') {
+                    opt.classList.add('correct');
+                } else if (opt === selectedOption && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                result.innerHTML = '&#10004; Correct!';
+                result.className = 'question-result show correct';
+            } else {
+                result.innerHTML = '&#10008; Incorrect. See explanation below.';
+                result.className = 'question-result show incorrect';
+            }
+
+            explanation.classList.add('show');
+        }
+
+        // Copy code
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        }
+    </script>
+</body>
+</html>

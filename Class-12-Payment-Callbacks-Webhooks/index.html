@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 12: Payment Integration, Callbacks & Webhooks</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-section: #0f0f15;
+            --accent-primary: #10b981;
+            --accent-secondary: #059669;
+            --accent-stripe: #635bff;
+            --accent-razorpay: #2d8cff;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(16, 185, 129, 0.2);
+        }
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-section: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: rgba(16, 185, 129, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav {
+            position: fixed; top: 3px; left: 0; right: 0;
+            background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
+            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+        }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label {
+            display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; padding: 6px 16px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding-top: 80px;
+            background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
+        }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900;
+            background: linear-gradient(135deg, #34d399, #10b981, #059669);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 650px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 25px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent-primary); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.5; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; }
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .function { color: #82aaff; }
+        .number { color: #f78c6c; }
+
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+
+        /* Interactive table with row click */
+        .interactive-table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; }
+        .interactive-table th, .interactive-table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .interactive-table th { background: var(--bg-tertiary); font-weight: 600; }
+        .interactive-table td { color: var(--text-secondary); }
+        .interactive-table tbody tr { cursor: pointer; transition: background 0.2s; }
+        .interactive-table tbody tr:hover { background: var(--bg-tertiary); }
+        .hidden-value { background: var(--bg-tertiary); color: transparent; border-radius: 4px; padding: 2px 8px; transition: all 0.3s; user-select: none; }
+        .hidden-value.danger-hidden { background: rgba(239, 68, 68, 0.2); color: transparent; }
+        .hidden-value.success-hidden { background: rgba(16, 185, 129, 0.2); color: transparent; }
+        tr.revealed .hidden-value { background: transparent !important; color: var(--text-primary) !important; }
+        tr.revealed .hidden-value.danger-hidden { background: transparent !important; color: var(--accent-danger) !important; }
+        tr.revealed .hidden-value.success-hidden { background: transparent !important; color: var(--accent-primary) !important; }
+        .reveal-all-btn { background: var(--accent-primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; }
+
+        .sequence-diagram { background: var(--bg-secondary); border-radius: 12px; padding: 30px; margin: 20px 0; overflow-x: auto; }
+        .sequence-number { background: var(--accent-primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; margin-right: 10px; flex-shrink: 0; }
+
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge.easy { background: rgba(16, 185, 129, 0.2); color: var(--accent-primary); }
+        .badge.medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .badge.hard { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .vs-container { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: start; margin: 30px 0; }
+        .vs-divider { display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: var(--text-muted); padding-top: 40px; }
+        .vs-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; }
+
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--accent-primary); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .quiz-box h4 { color: var(--accent-primary); margin-bottom: 15px; }
+        .quiz-options { margin-top: 15px; }
+        .quiz-option { padding: 10px 15px; margin: 5px 0; background: var(--bg-tertiary); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .quiz-option:hover { background: var(--accent-primary); color: white; }
+        .quiz-option.correct { background: #22c55e; color: white; }
+        .quiz-option.incorrect { background: #ef4444; color: white; }
+
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+
+        @media (max-width: 768px) {
+            section { padding: 100px 20px 60px; }
+            .nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .vs-container { grid-template-columns: 1fr; }
+            .vs-divider { padding: 15px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav class="nav">
+        <div class="nav-brand">Class 12: Payments</div>
+        <ul class="nav-links">
+            <li><a href="#fundamentals">Fundamentals</a></li>
+            <li><a href="#who-calls">Frontend vs Backend</a></li>
+            <li><a href="#card-patterns">Patterns</a></li>
+            <li><a href="#webhooks">Webhooks</a></li>
+            <li><a href="#idempotency">Idempotency</a></li>
+            <li><a href="#tools">Tools</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()">
+            <span id="themeIcon">☀️</span>
+            <span id="themeText">Light</span>
+        </button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">💳</div>
+        <h1>Payment Integration</h1>
+        <p class="hero-meta">Class 12 • Callbacks & Webhooks</p>
+        <p class="hero-tagline">
+            Understand <strong>why</strong> payment systems are built the way they are,
+            <strong>how</strong> money flows through the system, and <strong>what</strong> makes them secure.
+        </p>
+    </section>
+
+    <!-- Section 1: Fundamentals -->
+    <section id="fundamentals">
+        <div class="section-container">
+            <span class="section-label">Fundamentals</span>
+            <h2 class="section-title">Why Payments Are Different</h2>
+            <p class="section-subtitle">
+                Payment integration isn't like regular CRUD. Three fundamental challenges make it complex.
+            </p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">🌐</div>
+                    <div class="card-title">External Systems</div>
+                    <div class="card-desc">
+                        You don't control payment gateways or banks. They can be slow, have outages, or return unexpected errors.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⏳</div>
+                    <div class="card-title">Asynchronous</div>
+                    <div class="card-desc">
+                        Payment status can change minutes or hours later. Bank verifications, fraud checks happen in background.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💰</div>
+                    <div class="card-title">Real Money</div>
+                    <div class="card-desc">
+                        Bugs mean financial loss. Double-charging, missing payments, or security breaches have serious consequences.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible" style="margin-top: 40px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>🤔 Why can't we build our own payment system?</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                            Three major barriers prevent most companies from handling payments directly:
+                        </p>
+
+                        <div class="card" style="margin-bottom: 15px; border-left: 3px solid var(--accent-danger);">
+                            <h4 style="color: var(--accent-danger);">1. PCI DSS Compliance</h4>
+                            <p style="color: var(--text-secondary); margin-top: 10px;">
+                                <strong>Payment Card Industry Data Security Standard</strong> — a set of 300+ security requirements
+                                you must follow to handle card data. Created after massive breaches at Target, Home Depot, etc.
+                            </p>
+                            <ul style="margin: 15px 0 0 20px; color: var(--text-secondary);">
+                                <li><strong>Level 1</strong> (handling card data): Annual audit ($50K-$200K), quarterly pen tests, dedicated security team</li>
+                                <li><strong>SAQ A</strong> (using Stripe/Razorpay): Just fill a questionnaire, no audit needed</li>
+                            </ul>
+                        </div>
+
+                        <div class="card" style="margin-bottom: 15px; border-left: 3px solid var(--accent-warning);">
+                            <h4 style="color: var(--accent-warning);">2. Banking Relationships</h4>
+                            <p style="color: var(--text-secondary); margin-top: 10px;">
+                                You need direct contracts with Visa, Mastercard, RuPay, and acquiring banks.
+                                This takes months of negotiation, large deposits, and ongoing compliance.
+                            </p>
+                        </div>
+
+                        <div class="card" style="border-left: 3px solid var(--accent-primary);">
+                            <h4 style="color: var(--accent-primary);">3. Fraud Prevention</h4>
+                            <p style="color: var(--text-secondary); margin-top: 10px;">
+                                Stripe/Razorpay have ML models trained on billions of transactions.
+                                Building this from scratch would take years and massive datasets.
+                            </p>
+                        </div>
+
+                        <div class="highlight-box" style="margin-top: 20px;">
+                            <strong>Bottom line:</strong> Using Stripe/Razorpay costs 2-3% per transaction.
+                            Building your own would cost $500K+ per year in compliance alone, plus engineering.
+                            Only Amazon/Netflix scale justifies it.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Async mechanisms section -->
+            <div style="margin-top: 50px;">
+                <h3 style="margin-bottom: 20px;">⏳ How Do We Handle Asynchronous Operations?</h3>
+
+                <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                    <strong>The core problem:</strong> Payments are asynchronous — the result isn't instant.
+                    Bank verifications, fraud checks, and OTP verification take time.
+                </p>
+
+                <!-- Why not just wait? -->
+                <div class="highlight-box warning" style="margin-bottom: 25px;">
+                    <h4 style="color: #f59e0b; margin-bottom: 10px;">💡 "Why not just make an API call and wait for the response?"</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                        A common first thought. Here's why it fails:
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                            <strong style="color: var(--accent-danger);">⏱️ Timeouts</strong><br>
+                            <span style="font-size: 0.85rem;">Bank verification: 30+ sec. HTTP timeout: 30 sec.</span>
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                            <strong style="color: var(--accent-danger);">📱 OTP/3D Secure</strong><br>
+                            <span style="font-size: 0.85rem;">User takes 2+ min to enter OTP. Can't hold connection.</span>
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                            <strong style="color: var(--accent-danger);">🔌 Network Drop</strong><br>
+                            <span style="font-size: 0.85rem;">Payment succeeds, response lost. Money charged, DB not updated.</span>
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                            <strong style="color: var(--accent-danger);">💥 Server Crash</strong><br>
+                            <span style="font-size: 0.85rem;">Your server dies mid-request. No retry mechanism.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-bottom: 25px; color: var(--text-secondary);">
+                    So how does <strong>My Site</strong> know when the <strong>Payment Gateway (PG)</strong> is done processing?
+                    Here are 4 patterns — each with trade-offs:
+                </p>
+
+                        <!-- Pattern 1: Polling -->
+                        <div class="card" style="margin-bottom: 15px; border-left: 3px solid #60a5fa;">
+                            <h4 style="color: #60a5fa;">1. Polling (My Site asks PG repeatedly)</h4>
+                            <p style="color: var(--text-secondary); margin: 10px 0;">
+                                My Site keeps asking the Payment Gateway "Is the payment done yet?" every few seconds.
+                            </p>
+
+                            <!-- Polling Diagram -->
+                            <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin: 15px 0; font-family: 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto;">
+<pre style="color: var(--text-primary); margin: 0; line-height: 1.8;">
+    <span style="color: #60a5fa; font-weight: bold;">My Site</span>                                      <span style="color: #f59e0b; font-weight: bold;">Payment Gateway</span>
+       │                                                │
+       │─────── GET /status/pay_123 ──────────────────▶│
+       │◀────────── { status: "pending" } ─────────────│
+       │                                                │
+       │  <span style="color: var(--text-muted);">⏳ wait 2 seconds...</span>                         │
+       │                                                │
+       │─────── GET /status/pay_123 ──────────────────▶│
+       │◀────────── { status: "pending" } ─────────────│
+       │                                                │
+       │  <span style="color: var(--text-muted);">⏳ wait 2 seconds...</span>                         │
+       │                                                │
+       │─────── GET /status/pay_123 ──────────────────▶│
+       │◀────────── { status: "pending" } ─────────────│
+       │                                                │
+       │  <span style="color: var(--text-muted);">⏳ wait 2 seconds...</span>                         │
+       │                                                │
+       │─────── GET /status/pay_123 ──────────────────▶│
+       │◀────────── <span style="color: #10b981;">{ status: "completed" }</span> ───────────│
+       │                                                │
+</pre>
+                            </div>
+
+                            <div class="code-block" style="margin: 10px 0;">
+                                <div class="code-header">
+                                    <div class="code-title">
+                                        <span class="code-dot red"></span>
+                                        <span class="code-dot yellow"></span>
+                                        <span class="code-dot green"></span>
+                                        <span>my_site/payment_checker.py</span>
+                                    </div>
+                                </div>
+                                <div class="code-content">
+<pre><span class="comment"># My Site polls the Payment Gateway every 2 seconds</span>
+<span class="keyword">import</span> time, requests
+
+<span class="keyword">def</span> <span class="function">check_payment_status</span>(payment_id):
+    <span class="keyword">while</span> <span class="keyword">True</span>:
+        response = requests.get(
+            <span class="string">f"https://api.razorpay.com/v1/payments/{payment_id}"</span>,
+            auth=(RAZORPAY_KEY, RAZORPAY_SECRET)
+        )
+        <span class="keyword">if</span> response.json()[<span class="string">'status'</span>] == <span class="string">'captured'</span>:
+            <span class="keyword">return</span> <span class="string">"Payment successful!"</span>
+        time.sleep(<span class="number">2</span>)  <span class="comment"># Ask again in 2 seconds</span></pre>
+                                </div>
+                            </div>
+                            <p style="color: var(--accent-danger); font-size: 0.85rem;">
+                                ❌ <strong>Problem:</strong> Wasteful. 100,000 payments = 3 million requests/minute to Payment Gateway API. Rate limits will block you!
+                            </p>
+                        </div>
+
+                        <!-- Pattern 2: Long Polling -->
+                        <div class="card" style="margin-bottom: 15px; border-left: 3px solid #f59e0b;">
+                            <h4 style="color: #f59e0b;">2. Long Polling (My Site holds connection to PG)</h4>
+                            <p style="color: var(--text-secondary); margin: 10px 0;">
+                                My Site makes a request to PG, and PG holds the connection open until payment status changes (or timeout).
+                            </p>
+
+                            <!-- Long Polling Diagram -->
+                            <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin: 15px 0; font-family: 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto;">
+<pre style="color: var(--text-primary); margin: 0; line-height: 1.8;">
+    <span style="color: #60a5fa; font-weight: bold;">My Site</span>                                      <span style="color: #f59e0b; font-weight: bold;">Payment Gateway</span>
+       │                                                │
+       │─────── GET /status/pay_123?wait=true ────────▶│
+       │                                                │  <span style="color: var(--text-muted);">PG holds connection open...</span>
+       │                   <span style="color: var(--text-muted);">⏳ 5 sec...</span>                  │  <span style="color: var(--text-muted);">waiting for bank response</span>
+       │                   <span style="color: var(--text-muted);">⏳ 10 sec...</span>                 │
+       │                   <span style="color: var(--text-muted);">⏳ 15 sec...</span>                 │  <span style="color: #10b981;">Bank confirms!</span>
+       │◀────────── <span style="color: #10b981;">{ status: "completed" }</span> ───────────│
+       │                                                │
+</pre>
+                            </div>
+
+                            <div class="code-block" style="margin: 10px 0;">
+                                <div class="code-header">
+                                    <div class="code-title">
+                                        <span class="code-dot red"></span>
+                                        <span class="code-dot yellow"></span>
+                                        <span class="code-dot green"></span>
+                                        <span>my_site/payment_checker.py</span>
+                                    </div>
+                                </div>
+                                <div class="code-content">
+<pre><span class="comment"># My Site makes a blocking request to PG</span>
+<span class="keyword">def</span> <span class="function">wait_for_payment</span>(payment_id):
+    <span class="keyword">while</span> <span class="keyword">True</span>:
+        <span class="comment"># PG holds this request for up to 30 seconds</span>
+        response = requests.get(
+            <span class="string">f"https://api.gateway.com/payments/{payment_id}/wait"</span>,
+            timeout=<span class="number">35</span>  <span class="comment"># Slightly longer than PG's hold time</span>
+        )
+        <span class="keyword">if</span> response.json()[<span class="string">'status'</span>] == <span class="string">'completed'</span>:
+            <span class="keyword">return</span> <span class="string">"Payment successful!"</span>
+        <span class="comment"># If timeout, loop again</span></pre>
+                                </div>
+                            </div>
+                            <p style="color: var(--accent-warning); font-size: 0.85rem;">
+                                ⚠️ <strong>Problem:</strong> Ties up a server thread/connection per payment. If My Site has 10,000 pending payments, that's 10,000 open connections!
+                            </p>
+                        </div>
+
+                        <!-- Pattern 3: WebSockets -->
+                        <div class="card" style="margin-bottom: 15px; border-left: 3px solid #8b5cf6;">
+                            <h4 style="color: #8b5cf6;">3. WebSockets (Persistent connection between My Site & PG)</h4>
+                            <p style="color: var(--text-secondary); margin: 10px 0;">
+                                My Site maintains a persistent bidirectional connection with PG. PG pushes updates as they happen.
+                            </p>
+
+                            <!-- WebSocket Diagram -->
+                            <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin: 15px 0; font-family: 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto;">
+<pre style="color: var(--text-primary); margin: 0; line-height: 1.8;">
+    <span style="color: #60a5fa; font-weight: bold;">My Site</span>                                      <span style="color: #f59e0b; font-weight: bold;">Payment Gateway</span>
+       │                                                │
+       │═══════ WebSocket Connection Established ══════│
+       │◀═══════════════════════════════════════════════│
+       │                                                │
+       │─────── { "subscribe": "pay_123" } ───────────▶│
+       │                                                │
+       │               <span style="color: var(--text-muted);">⏳ time passes...</span>               │
+       │                                                │
+       │◀────── <span style="color: #f59e0b;">{ status: "processing" }</span> ──────────────│  <span style="color: var(--text-muted);">PG pushes update</span>
+       │                                                │
+       │               <span style="color: var(--text-muted);">⏳ more time...</span>                 │
+       │                                                │
+       │◀────── <span style="color: #10b981;">{ status: "completed" }</span> ───────────────│  <span style="color: var(--text-muted);">PG pushes final status</span>
+       │                                                │
+       │═══════════════ Connection Open ════════════════│
+</pre>
+                            </div>
+
+                            <div class="code-block" style="margin: 10px 0;">
+                                <div class="code-header">
+                                    <div class="code-title">
+                                        <span class="code-dot red"></span>
+                                        <span class="code-dot yellow"></span>
+                                        <span class="code-dot green"></span>
+                                        <span>my_site/payment_listener.py</span>
+                                    </div>
+                                </div>
+                                <div class="code-content">
+<pre><span class="comment"># My Site maintains persistent WebSocket to PG</span>
+<span class="keyword">import</span> websockets
+
+<span class="keyword">async def</span> <span class="function">listen_for_payments</span>():
+    <span class="keyword">async with</span> websockets.connect(<span class="string">"wss://gateway.com/ws"</span>) <span class="keyword">as</span> ws:
+        <span class="keyword">await</span> ws.send(<span class="string">'{"subscribe": "pay_123"}'</span>)
+        <span class="keyword">async for</span> message <span class="keyword">in</span> ws:
+            data = json.loads(message)
+            <span class="keyword">if</span> data[<span class="string">'status'</span>] == <span class="string">'completed'</span>:
+                update_order_in_db(data[<span class="string">'payment_id'</span>])</pre>
+                                </div>
+                            </div>
+                            <p style="color: var(--accent-warning); font-size: 0.85rem;">
+                                ⚠️ <strong>Problem:</strong> Complex to manage. What if My Site restarts? Connection drops? Need reconnection logic, heartbeats, etc.
+                            </p>
+                        </div>
+
+                        <!-- Pattern 4: Webhooks -->
+                        <div class="card" style="margin-bottom: 15px; border-left: 3px solid var(--accent-primary);">
+                            <h4 style="color: var(--accent-primary);">4. Webhooks (PG calls My Site when ready)</h4>
+                            <p style="color: var(--text-secondary); margin: 10px 0;">
+                                My Site gives PG a URL. When payment status changes, <strong>PG initiates</strong> a POST request to My Site.
+                            </p>
+
+                            <!-- Webhook Diagram -->
+                            <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin: 15px 0; font-family: 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto;">
+<pre style="color: var(--text-primary); margin: 0; line-height: 1.8;">
+    <span style="color: #60a5fa; font-weight: bold;">My Site</span>                                      <span style="color: #f59e0b; font-weight: bold;">Payment Gateway</span>
+       │                                                │
+       │  <span style="color: var(--text-muted);">(during initial setup)</span>                        │
+       │─────── "My webhook URL is /webhooks/pg" ─────▶│
+       │                                                │
+       │                                                │
+       │  <span style="color: var(--text-muted);">⏳ Payment processing happens...</span>             │
+       │  <span style="color: var(--text-muted);">   My Site does other work</span>                   │
+       │  <span style="color: var(--text-muted);">   No polling, no waiting!</span>                   │
+       │                                                │
+       │                                                │  <span style="color: #10b981;">Bank confirms payment!</span>
+       │                                                │
+       │◀══════ <span style="color: #10b981; font-weight: bold;">POST /webhooks/pg</span> ═══════════════════│  <span style="color: var(--text-muted);">PG initiates call</span>
+       │        <span style="color: #10b981;">{ event: "payment.success",</span>           │
+       │        <span style="color: #10b981;">  payment_id: "pay_123" }</span>             │
+       │                                                │
+       │─────────── 200 OK ───────────────────────────▶│
+       │                                                │
+</pre>
+                            </div>
+
+                            <div class="code-block" style="margin: 10px 0;">
+                                <div class="code-header">
+                                    <div class="code-title">
+                                        <span class="code-dot red"></span>
+                                        <span class="code-dot yellow"></span>
+                                        <span class="code-dot green"></span>
+                                        <span>my_site/views.py</span>
+                                    </div>
+                                </div>
+                                <div class="code-content">
+<pre><span class="comment"># PG calls this endpoint when payment status changes</span>
+<span class="keyword">@csrf_exempt</span>
+<span class="keyword">def</span> <span class="function">razorpay_webhook</span>(request):
+    payload = json.loads(request.body)
+    signature = request.headers.get(<span class="string">'X-Razorpay-Signature'</span>)
+
+    <span class="comment"># Verify it's really from Razorpay (not a hacker)</span>
+    <span class="keyword">if</span> verify_signature(payload, signature, WEBHOOK_SECRET):
+        payment_id = payload[<span class="string">'payload'</span>][<span class="string">'payment'</span>][<span class="string">'entity'</span>][<span class="string">'id'</span>]
+        Order.objects.filter(payment_id=payment_id).update(status=<span class="string">'paid'</span>)
+        <span class="keyword">return</span> HttpResponse(status=<span class="number">200</span>)
+    <span class="keyword">return</span> HttpResponse(status=<span class="number">400</span>)</pre>
+                                </div>
+                            </div>
+                            <p style="color: var(--accent-primary); font-size: 0.85rem;">
+                                ✅ <strong>Best for payments:</strong> No open connections, no polling. PG retries automatically if My Site is temporarily down!
+                            </p>
+                        </div>
+
+                        <!-- Comparison table with hideable rows -->
+                        <h4 style="margin-top: 30px; margin-bottom: 15px;">Comparison: My Site ↔ Payment Gateway Communication</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9rem;">
+                            Click any row to reveal the details, or use the button to reveal all.
+                        </p>
+
+                        <button class="reveal-all-btn" onclick="revealAllAsync()">Reveal All Values</button>
+
+                <table class="interactive-table" id="async-comparison-table" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th style="color: #60a5fa;">Polling</th>
+                            <th style="color: #f59e0b;">Long Polling</th>
+                            <th style="color: #8b5cf6;">WebSockets</th>
+                            <th style="color: var(--accent-primary);">Webhooks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>Who initiates?</strong></td>
+                            <td><span class="hidden-value">My Site</span></td>
+                            <td><span class="hidden-value">My Site</span></td>
+                            <td><span class="hidden-value">Either</span></td>
+                            <td><span class="hidden-value success-hidden">Payment Gateway</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>Connection type</strong></td>
+                            <td><span class="hidden-value">Many short requests</span></td>
+                            <td><span class="hidden-value">Single long request</span></td>
+                            <td><span class="hidden-value">Persistent socket</span></td>
+                            <td><span class="hidden-value success-hidden">Single callback</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>Server resources</strong></td>
+                            <td><span class="hidden-value danger-hidden">High (many requests)</span></td>
+                            <td><span class="hidden-value danger-hidden">High (held threads)</span></td>
+                            <td><span class="hidden-value danger-hidden">Medium (open sockets)</span></td>
+                            <td><span class="hidden-value success-hidden">Low (on-demand)</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>If My Site restarts?</strong></td>
+                            <td><span class="hidden-value">Must resume polling</span></td>
+                            <td><span class="hidden-value">Connection lost</span></td>
+                            <td><span class="hidden-value danger-hidden">Must reconnect</span></td>
+                            <td><span class="hidden-value success-hidden">PG retries later!</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>If My Site is down?</strong></td>
+                            <td><span class="hidden-value danger-hidden">Updates missed forever</span></td>
+                            <td><span class="hidden-value danger-hidden">Updates missed forever</span></td>
+                            <td><span class="hidden-value danger-hidden">Updates missed forever</span></td>
+                            <td><span class="hidden-value success-hidden">PG retries for hours!</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>Rate limit risk?</strong></td>
+                            <td><span class="hidden-value danger-hidden">Very high</span></td>
+                            <td><span class="hidden-value">Low</span></td>
+                            <td><span class="hidden-value">Low</span></td>
+                            <td><span class="hidden-value success-hidden">None</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)">
+                            <td><strong>Implementation</strong></td>
+                            <td><span class="hidden-value">Simple</span></td>
+                            <td><span class="hidden-value">Medium</span></td>
+                            <td><span class="hidden-value danger-hidden">Complex</span></td>
+                            <td><span class="hidden-value success-hidden">Simple</span></td>
+                        </tr>
+                        <tr onclick="revealRow(this)" style="background: rgba(16, 185, 129, 0.05);">
+                            <td><strong>Best for?</strong></td>
+                            <td><span class="hidden-value">Chat apps, dashboards</span></td>
+                            <td><span class="hidden-value">Notifications</span></td>
+                            <td><span class="hidden-value">Real-time games, live data</span></td>
+                            <td><span class="hidden-value success-hidden">Payments, async events</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="highlight-box" style="margin-top: 25px;">
+                    <strong>Why webhooks win for payments:</strong>
+                    <ol style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                        <li><strong>Decoupled systems</strong> — My Site doesn't need to maintain connections to PG</li>
+                        <li><strong>Guaranteed delivery</strong> — PG retries for hours (even days!) until My Site responds 200 OK</li>
+                        <li><strong>Efficient</strong> — One request only when status actually changes</li>
+                        <li><strong>Resilient</strong> — Works even if My Site has temporary downtime</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Who Calls the Payment Gateway -->
+    <section id="who-calls">
+        <div class="section-container">
+            <span class="section-label">Architecture</span>
+            <h2 class="section-title">Who Calls the Payment Gateway?</h2>
+            <p class="section-subtitle">
+                A common confusion: Does the frontend or backend talk to Razorpay/Stripe? Answer: <strong>Both!</strong> But for different things.
+            </p>
+
+            <div class="vs-container">
+                <div class="vs-card" style="border-color: #f59e0b;">
+                    <h4 style="color: #f59e0b; margin-bottom: 15px;">🖥️ Frontend (JavaScript)</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <li>Loads Razorpay/Stripe SDK</li>
+                        <li>Creates secure iframe for card input</li>
+                        <li>Sends card data <strong>directly to gateway</strong></li>
+                        <li>Receives payment confirmation</li>
+                    </ul>
+                    <div class="code-block" style="margin-top: 15px;">
+                        <div class="code-content">
+<pre><span class="comment">// Frontend: Opens Razorpay popup</span>
+<span class="keyword">const</span> rzp = <span class="keyword">new</span> Razorpay(options);
+rzp.open();</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vs-divider">&</div>
+
+                <div class="vs-card" style="border-color: #10b981;">
+                    <h4 style="color: #10b981; margin-bottom: 15px;">⚙️ Backend (Python/Django)</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <li>Creates orders (with amount, currency)</li>
+                        <li>Uses <strong>secret API key</strong> (never exposed)</li>
+                        <li>Receives webhooks</li>
+                        <li>Verifies signatures</li>
+                    </ul>
+                    <div class="code-block" style="margin-top: 15px;">
+                        <div class="code-content">
+<pre><span class="comment"># Backend: Creates order</span>
+razorpay_client.order.create({
+    <span class="string">'amount'</span>: <span class="number">10000</span>,
+    <span class="string">'currency'</span>: <span class="string">'INR'</span>
+})</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flow diagram -->
+            <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 25px; margin-top: 30px; font-family: 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto;">
+<pre style="color: var(--text-primary); margin: 0; line-height: 2;">
+<span style="color: #60a5fa; font-weight: bold;">Frontend</span>                    <span style="color: #10b981; font-weight: bold;">Backend</span>                     <span style="color: #8b5cf6; font-weight: bold;">Razorpay</span>
+    │                            │                             │
+    │──── "Create Order" ───────▶│                             │
+    │                            │──── POST /orders ──────────▶│
+    │                            │◀─── { order_id: "..." } ────│
+    │◀─── { order_id } ──────────│                             │
+    │                            │                             │
+    │════════ Card Data (iframe) ══════════════════════════════▶│
+    │                            │                             │
+    │◀═══════ { payment_id, signature } ═══════════════════════│
+    │                            │                             │
+    │──── "Verify Payment" ─────▶│                             │
+    │                            │◀──── Webhook POST ──────────│
+    │                            │───── 200 OK ───────────────▶│
+</pre>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 25px;">
+                <strong>Why this split?</strong>
+                <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                    <li><strong>Security:</strong> Backend holds the secret key — never expose it to JavaScript</li>
+                    <li><strong>PCI Compliance:</strong> Card data goes directly to gateway — never touches your servers</li>
+                    <li><strong>Trust:</strong> Backend verifies webhook signatures — frontend can be manipulated</li>
+                </ul>
+            </div>
+
+            <!-- Python SDK -->
+            <div class="collapsible" style="margin-top: 25px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>📦 Installing the Razorpay Python SDK</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <!-- What is an SDK? -->
+                        <div class="highlight-box" style="margin-bottom: 20px;">
+                            <h4 style="color: var(--accent-primary); margin-bottom: 10px;">🤔 What is an SDK?</h4>
+                            <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                                <strong>SDK = Software Development Kit</strong> — a package of pre-written code that makes it easy to use someone's API.
+                            </p>
+                            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                                Think of it like this:
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px;">
+                                    <strong style="color: var(--accent-danger);">❌ Without SDK:</strong>
+                                    <p style="font-size: 0.85rem; margin-top: 5px;">You manually write HTTP requests, handle authentication, parse responses, verify signatures...</p>
+                                </div>
+                                <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px;">
+                                    <strong style="color: var(--accent-primary);">✅ With SDK:</strong>
+                                    <p style="font-size: 0.85rem; margin-top: 5px;">Just call <code>client.order.create()</code> — the SDK handles all the messy details!</p>
+                                </div>
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                                <strong>Analogy:</strong> An SDK is like a TV remote — you press "Volume Up" instead of manually adjusting circuits inside the TV.
+                            </p>
+                        </div>
+
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            Your Django backend needs the Razorpay SDK to create orders and verify webhooks:
+                        </p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <div class="code-title">Terminal</div>
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-content">
+<pre>pip install razorpay</pre>
+                            </div>
+                        </div>
+                        <div class="code-block" style="margin-top: 15px;">
+                            <div class="code-header">
+                                <div class="code-title">views.py</div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">import</span> razorpay
+
+<span class="comment"># Initialize with your keys</span>
+razorpay_client = razorpay.Client(
+    auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)
+)
+
+<span class="comment"># Create an order — SDK handles the HTTP request!</span>
+order = razorpay_client.order.create({
+    <span class="string">'amount'</span>: <span class="number">10000</span>,  <span class="comment"># ₹100 in paise</span>
+    <span class="string">'currency'</span>: <span class="string">'INR'</span>,
+    <span class="string">'payment_capture'</span>: <span class="number">1</span>
+})
+
+<span class="comment"># Verify webhook signature — SDK handles the HMAC math!</span>
+razorpay_client.utility.verify_webhook_signature(
+    body, signature, webhook_secret
+)</pre>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-top: 15px;">
+                            <a href="https://github.com/razorpay/razorpay-python" target="_blank" style="color: var(--accent-primary);">
+                                Razorpay Python SDK on GitHub →
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Card Input Patterns -->
+    <section id="card-patterns">
+        <div class="section-container">
+            <span class="section-label">Patterns</span>
+            <h2 class="section-title">Where Does the User Enter Card Details?</h2>
+            <p class="section-subtitle">
+                Three patterns exist in production. Click each card to see an interactive demo.
+            </p>
+
+            <div class="card-grid">
+                <div class="card" style="cursor: pointer;" onclick="window.open('demos/pattern1-redirect.html', '_blank')">
+                    <div class="card-icon">🔄</div>
+                    <div class="card-title">Pattern 1: Full Redirect</div>
+                    <div class="card-desc">
+                        User goes to checkout.stripe.com or razorpay.com to enter card.
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-primary);">
+                            Used by: Small D2C brands
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="cursor: pointer;" onclick="window.open('demos/pattern2-embedded.html', '_blank')">
+                    <div class="card-icon">📦</div>
+                    <div class="card-title">Pattern 2: Embedded iframe</div>
+                    <div class="card-desc">
+                        Card field is a Stripe/Razorpay iframe on your page. Looks native, but data goes directly to gateway.
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-primary);">
+                            Used by: Shopify, Frido, most modern sites
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="cursor: pointer;" onclick="window.open('demos/pattern3-direct.html', '_blank')">
+                    <div class="card-icon">🏢</div>
+                    <div class="card-title">Pattern 3: Direct API</div>
+                    <div class="card-desc">
+                        Company handles card data on their servers. Requires PCI Level 1 ($500K+/year).
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-danger);">
+                            Used by: Amazon, Netflix only
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sequence Diagram -->
+            <h3 style="margin-top: 50px; margin-bottom: 20px;">Sequence: Shopify Checkout with Discount Code</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                How does data flow when you apply a discount code AND enter card details on the same page?
+            </p>
+
+            <div class="sequence-diagram">
+                <div style="display: flex; justify-content: space-around; margin-bottom: 20px; font-weight: 600;">
+                    <span style="color: #60a5fa;">User</span>
+                    <span style="color: #f59e0b;">Merchant Frontend</span>
+                    <span style="color: #10b981;">Merchant Backend</span>
+                    <span style="color: #8b5cf6;">Stripe/Razorpay</span>
+                </div>
+
+                <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span class="sequence-number">1</span>
+                        <span style="color: var(--text-secondary);">User enters discount code "SAVE10" → Merchant's JavaScript validates → Shows updated price</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span class="sequence-number">2</span>
+                        <span style="color: var(--text-secondary);">User enters card in Stripe iframe → Keystrokes go directly to Stripe (merchant can't see)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span class="sequence-number">3</span>
+                        <span style="color: var(--text-secondary);">User clicks "Pay ₹450" → Merchant backend creates PaymentIntent with amount=450</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span class="sequence-number">4</span>
+                        <span style="color: var(--text-secondary);">Stripe confirms card + charges ₹450 → Sends webhook to merchant backend</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span class="sequence-number">5</span>
+                        <span style="color: var(--text-secondary);">Merchant backend updates order as "paid" → User sees success page</span>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>Key insight:</strong> The discount code logic runs on <em>merchant's server</em> (they control pricing).
+                    Card data goes to <em>Stripe's server</em> (merchant never sees it). They coordinate via PaymentIntent ID.
+                </div>
+            </div>
+
+            <!-- How to get SDK -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>🔗 How does the frontend get Stripe/Razorpay code?</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            Stripe and Razorpay provide JavaScript SDKs that you include in your page.
+                            These SDKs handle the secure iframe creation automatically.
+                        </p>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <div class="code-title">
+                                    <span class="code-dot red"></span>
+                                    <span class="code-dot yellow"></span>
+                                    <span class="code-dot green"></span>
+                                    <span>Step 1: Include the SDK</span>
+                                </div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="comment">&lt;!-- Stripe --&gt;</span>
+&lt;script src=<span class="string">"https://js.stripe.com/v3/"</span>&gt;&lt;/script&gt;
+
+<span class="comment">&lt;!-- Razorpay --&gt;</span>
+&lt;script src=<span class="string">"https://checkout.razorpay.com/v1/checkout.js"</span>&gt;&lt;/script&gt;</pre>
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <div class="code-title">
+                                    <span class="code-dot red"></span>
+                                    <span class="code-dot yellow"></span>
+                                    <span class="code-dot green"></span>
+                                    <span>Step 2: Initialize and mount</span>
+                                </div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="comment">// Your HTML has: &lt;div id="card-element"&gt;&lt;/div&gt;</span>
+
+<span class="keyword">const</span> stripe = Stripe(<span class="string">'pk_test_your_publishable_key'</span>);
+<span class="keyword">const</span> elements = stripe.elements();
+<span class="keyword">const</span> cardElement = elements.create(<span class="string">'card'</span>);
+
+<span class="comment">// This line creates an iframe inside the div!</span>
+cardElement.mount(<span class="string">'#card-element'</span>);</pre>
+                            </div>
+                        </div>
+
+                        <p style="color: var(--text-secondary); margin-top: 15px;">
+                            <strong>Documentation:</strong>
+                        </p>
+                        <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                            <li><a href="https://stripe.com/docs/js" target="_blank" style="color: var(--accent-primary);">Stripe.js Documentation</a> — Full integration guide</li>
+                            <li><a href="https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/" target="_blank" style="color: var(--accent-primary);">Razorpay Web Integration</a> — Standard checkout</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Pattern Comparison -->
+    <section id="comparison">
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">Card Input Pattern Comparison</h2>
+            <p class="section-subtitle">
+                Click anywhere on a row to reveal the values, or use the button to reveal all at once.
+            </p>
+
+            <button class="reveal-all-btn" onclick="revealAll()">Reveal All Values</button>
+
+            <table class="interactive-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Pattern 1: Redirect</th>
+                        <th>Pattern 2: iframe</th>
+                        <th>Pattern 3: Direct API</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr onclick="revealRow(this)">
+                        <td>Card data touches your servers?</td>
+                        <td><span class="hidden-value">No</span></td>
+                        <td><span class="hidden-value">No</span></td>
+                        <td><span class="hidden-value danger-hidden">Yes</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td>PCI Compliance</td>
+                        <td><span class="hidden-value">Minimal (SAQ A)</span></td>
+                        <td><span class="hidden-value">Minimal (SAQ A)</span></td>
+                        <td><span class="hidden-value danger-hidden">Full Level 1</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td>Annual Cost</td>
+                        <td><span class="hidden-value">~$0</span></td>
+                        <td><span class="hidden-value">~$0</span></td>
+                        <td><span class="hidden-value danger-hidden">$500K+</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td>User Experience</td>
+                        <td><span class="hidden-value">Redirect friction</span></td>
+                        <td><span class="hidden-value">Seamless</span></td>
+                        <td><span class="hidden-value">Full control</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td>Setup Complexity</td>
+                        <td><span class="hidden-value">Easy</span></td>
+                        <td><span class="hidden-value">Medium</span></td>
+                        <td><span class="hidden-value danger-hidden">Very Hard</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td>Best For</td>
+                        <td><span class="hidden-value">Small merchants</span></td>
+                        <td><span class="hidden-value">Most companies</span></td>
+                        <td><span class="hidden-value">Enterprise only</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 5: Webhooks -->
+    <section id="webhooks">
+        <div class="section-container">
+            <span class="section-label">Core Concept</span>
+            <h2 class="section-title">Callback AND Webhook — Both Happen!</h2>
+            <p class="section-subtitle">
+                They're not alternatives. They happen simultaneously but serve different purposes.
+            </p>
+
+            <div class="vs-container">
+                <div class="vs-card" style="border-color: #f59e0b;">
+                    <h4 style="color: #f59e0b; margin-bottom: 15px;">📱 Callback (Browser Redirect)</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <li>User's browser redirects to /success</li>
+                        <li>Immediate (user sees it)</li>
+                        <li>Purpose: Show "Thank You" page</li>
+                        <li style="color: var(--accent-danger);"><strong>⚠️ Can be faked!</strong></li>
+                    </ul>
+                </div>
+
+                <div class="vs-divider">+</div>
+
+                <div class="vs-card" style="border-color: #8b5cf6;">
+                    <h4 style="color: #8b5cf6; margin-bottom: 15px;">🖥️ Webhook (Server POST)</h4>
+                    <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <li>Gateway POSTs to your /webhook</li>
+                        <li>May be delayed 2-30 seconds</li>
+                        <li>Purpose: Update your database</li>
+                        <li style="color: var(--accent-primary);"><strong>✅ Cryptographically signed</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="text-align: center; margin-top: 30px;">
+                <p style="font-size: 1.1rem;">
+                    <strong>Callback</strong> tells the <em>user</em> what happened.<br>
+                    <strong>Webhook</strong> tells your <em>server</em> what happened.<br><br>
+                    <span style="color: var(--accent-primary); font-size: 1.2rem; font-weight: 700;">Trust the webhook.</span>
+                </p>
+            </div>
+
+            <!-- Interactive Demo Link -->
+            <div class="collapsible" style="margin-top: 30px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>▶️ Interactive Demo: See both happening together</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            Open the interactive timeline to see callback and webhook happen simultaneously:
+                        </p>
+                        <a href="demos/callback-webhook.html" target="_blank"
+                           style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #8b5cf6);
+                                  color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            Open Callback + Webhook Demo →
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz questions (moved from callback-webhook.html) -->
+            <div class="quiz-box" style="margin-top: 30px;">
+                <h4>🧠 Quick Quiz</h4>
+                <p style="color: var(--text-secondary);">
+                    A user types <code>/success?order_id=12345</code> directly in their browser without paying. What should happen?
+                </p>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Show "Thank you for your order!"</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">B) Mark order as paid in database</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)">C) Check payment status, show "Payment pending" if not confirmed</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Redirect to payment gateway</div>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>🧠 Timing Question</h4>
+                <p style="color: var(--text-secondary);">
+                    The webhook arrives <em>after</em> the user lands on the success page. What's the best UX?
+                </p>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Show "Payment Successful!" immediately</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)">B) Show "Verifying payment..." with a spinner, poll for webhook confirmation</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) Wait 30 seconds before showing anything</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Ignore the webhook, trust the callback</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 7: Idempotency -->
+    <section id="idempotency">
+        <div class="section-container">
+            <span class="section-label warning">Critical Concept</span>
+            <h2 class="section-title">Idempotency — Handle Duplicate Webhooks</h2>
+            <p class="section-subtitle">
+                Payment gateways <strong>retry webhooks</strong> if they don't get a 200 OK.
+                Your code must handle the same webhook arriving multiple times.
+            </p>
+
+            <!-- Why it happens -->
+            <div class="highlight-box warning" style="margin-bottom: 25px;">
+                <h4 style="color: #f59e0b; margin-bottom: 10px;">🔁 When do duplicates happen?</h4>
+                <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                    <li><strong>Network timeout:</strong> Your server processed it but response was lost — gateway retries</li>
+                    <li><strong>Your server crashed:</strong> Mid-processing — gateway retries after recovery</li>
+                    <li><strong>Gateway hiccup:</strong> Their system sent it twice by mistake</li>
+                </ul>
+            </div>
+
+            <!-- Diagram -->
+            <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin: 20px 0; font-family: 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto;">
+<pre style="margin: 0; color: var(--text-primary); line-height: 1.8;">
+<span style="color: #f59e0b; font-weight: bold;">Razorpay</span>                                      <span style="color: #60a5fa; font-weight: bold;">Your Server</span>
+    │                                                │
+    │──── POST /webhook (payment.captured) ─────────▶│ <span style="color: #10b981;">✓ Processes, marks order as paid</span>
+    │                                                │
+    │        <span style="color: var(--text-muted);">⏳ network timeout, no 200 OK received</span>  │
+    │                                                │
+    │──── POST /webhook (payment.captured) ─────────▶│ <span style="color: var(--accent-danger);">❌ If not idempotent: charges twice!</span>
+    │                                                │ <span style="color: #10b981;">✓ If idempotent: "already processed"</span>
+</pre>
+            </div>
+
+            <!-- Solution -->
+            <h3 style="margin-top: 30px; margin-bottom: 20px;">How to Make Your Webhook Handler Idempotent</h3>
+
+            <div class="card" style="border-left: 3px solid var(--accent-primary); margin-bottom: 20px;">
+                <h4 style="color: var(--accent-primary);">Option 1: Check payment_id before processing</h4>
+                <div class="code-block" style="margin-top: 15px;">
+                    <div class="code-header">
+                        <div class="code-title">views.py</div>
+                    </div>
+                    <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">webhook_handler</span>(request):
+    payload = json.loads(request.body)
+    razorpay_payment_id = payload[<span class="string">'payload'</span>][<span class="string">'payment'</span>][<span class="string">'entity'</span>][<span class="string">'id'</span>]
+
+    <span class="comment"># Check if we already processed this payment</span>
+    payment = Payment.objects.filter(
+        razorpay_payment_id=razorpay_payment_id,
+        status=<span class="string">'completed'</span>
+    ).first()
+
+    <span class="keyword">if</span> payment:
+        <span class="comment"># Already processed — just return 200 OK</span>
+        <span class="keyword">return</span> HttpResponse(<span class="string">'Already processed'</span>, status=<span class="number">200</span>)
+
+    <span class="comment"># First time seeing this — process it</span>
+    process_payment(razorpay_payment_id)
+    <span class="keyword">return</span> HttpResponse(<span class="string">'OK'</span>, status=<span class="number">200</span>)</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 3px solid #8b5cf6; margin-bottom: 20px;">
+                <h4 style="color: #8b5cf6;">Option 2: Use a webhook log table</h4>
+                <div class="code-block" style="margin-top: 15px;">
+                    <div class="code-header">
+                        <div class="code-title">views.py</div>
+                    </div>
+                    <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">webhook_handler</span>(request):
+    payload = json.loads(request.body)
+    event_id = payload.get(<span class="string">'event_id'</span>)  <span class="comment"># Unique ID from gateway</span>
+
+    <span class="comment"># Try to create a log entry (unique constraint on event_id)</span>
+    <span class="keyword">try</span>:
+        WebhookLog.objects.create(event_id=event_id, payload=payload)
+    <span class="keyword">except</span> IntegrityError:
+        <span class="comment"># Duplicate! Already processed.</span>
+        <span class="keyword">return</span> HttpResponse(<span class="string">'Duplicate'</span>, status=<span class="number">200</span>)
+
+    <span class="comment"># First time — process it</span>
+    process_payment(payload)
+    <span class="keyword">return</span> HttpResponse(<span class="string">'OK'</span>, status=<span class="number">200</span>)</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 3px solid #f59e0b;">
+                <h4 style="color: #f59e0b;">Option 3: Database transaction with SELECT FOR UPDATE</h4>
+                <p style="color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                    For high-concurrency systems, use a database lock to prevent race conditions:
+                </p>
+                <div class="code-block" style="margin-top: 15px;">
+                    <div class="code-header">
+                        <div class="code-title">views.py</div>
+                    </div>
+                    <div class="code-content">
+<pre><span class="keyword">from</span> django.db <span class="keyword">import</span> transaction
+
+<span class="keyword">@transaction.atomic</span>
+<span class="keyword">def</span> <span class="function">process_webhook</span>(payment_id):
+    <span class="comment"># Lock the row to prevent concurrent processing</span>
+    payment = Payment.objects.select_for_update().get(
+        razorpay_payment_id=payment_id
+    )
+
+    <span class="keyword">if</span> payment.status == <span class="string">'completed'</span>:
+        <span class="keyword">return</span>  <span class="comment"># Already done</span>
+
+    payment.status = <span class="string">'completed'</span>
+    payment.save()</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz -->
+            <div class="quiz-box" style="margin-top: 30px;">
+                <h4>🧠 Idempotency Quiz</h4>
+                <p style="color: var(--text-secondary);">
+                    Your webhook handler has a bug: it charges the customer's credit card again each time it's called.
+                    Razorpay sends the same webhook 3 times due to network issues. What happens?
+                </p>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">A) Nothing — Razorpay handles duplicates</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)">B) Customer is charged 3 times (your bug!)</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">C) Only the first charge goes through</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)">D) Razorpay blocks the duplicates</div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>Rule of thumb:</strong> Webhooks are "at least once" delivery.
+                Your handler must be safe to run multiple times with the same data.
+                Always check if you've already processed this event before taking action.
+            </div>
+
+            <div class="card" style="margin-top: 25px; border-left: 3px solid #6366f1;">
+                <h4 style="color: #6366f1;">📺 Deep Dive: How Stripe Designs Idempotent APIs</h4>
+                <p style="color: var(--text-secondary); margin-top: 10px;">
+                    Want to see how idempotency works at scale? This talk from Stripe explains how they design
+                    idempotent API endpoints to prevent duplicate payments — the exact problem we just solved.
+                </p>
+                <a href="https://www.youtube.com/watch?v=J2IcD9FZvZU&t=7s" target="_blank"
+                   style="display: inline-block; margin-top: 12px; padding: 8px 16px; background: #6366f1; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                    ▶ Watch: Designing Idempotent API Endpoints for Payments at Stripe
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 8: Tools -->
+    <section id="tools">
+        <div class="section-container">
+            <span class="section-label">Hands-On</span>
+            <h2 class="section-title">Tools for Testing Webhooks</h2>
+            <p class="section-subtitle">
+                Webhooks are tricky to test locally because payment gateways need to reach your server over the internet.
+            </p>
+
+            <!-- Seeing webhooks locally -->
+            <div class="collapsible open" style="margin-bottom: 20px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>👀 Seeing Webhooks in Action — What does Razorpay actually send?</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            <strong>Problem:</strong> "I've never seen a webhook. How do I know what Razorpay sends?"
+                        </p>
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            <strong>Solution:</strong> Use ngrok + your Django server. You'll see everything in <em>two places</em>:
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                            <div class="card">
+                                <h4 style="color: var(--accent-primary); margin-bottom: 10px;">📊 ngrok Terminal</h4>
+                                <div style="background: #1e1e2e; border-radius: 8px; padding: 15px; font-family: 'Fira Code', monospace; font-size: 0.75rem;">
+<pre style="margin: 0; color: #e2e8f0;">
+<span style="color: #10b981;">POST</span> /payments/api/webhook/  <span style="color: #f59e0b;">200 OK</span>
+
+Request Headers:
+  Content-Type: application/json
+  <span style="color: #8b5cf6;">X-Razorpay-Signature: ...</span>
+
+Request Body: 1.2 KB
+</pre>
+                                </div>
+                                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">
+                                    Shows every incoming request in real-time
+                                </p>
+                            </div>
+                            <div class="card">
+                                <h4 style="color: var(--accent-warning); margin-bottom: 10px;">🖥️ Django Terminal</h4>
+                                <div style="background: #1e1e2e; border-radius: 8px; padding: 15px; font-family: 'Fira Code', monospace; font-size: 0.75rem;">
+<pre style="margin: 0; color: #e2e8f0;">
+<span style="color: #f59e0b;">[01/Apr/2026 10:30:45]</span>
+"POST /payments/api/webhook/"
+<span style="color: #10b981;">200</span> 2
+
+Webhook received: payment.captured
+Payment order_xxx → completed
+</pre>
+                                </div>
+                                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">
+                                    Shows your Django logs/prints
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>🔍 What to look for in a webhook:</strong>
+                            <ul style="margin-top: 10px; margin-left: 20px; color: var(--text-secondary);">
+                                <li><code>X-Razorpay-Signature</code> header — Used to verify it's really from Razorpay</li>
+                                <li><code>event</code> field — What happened? (<code>payment.captured</code>, <code>payment.failed</code>)</li>
+                                <li><code>payload.payment.entity.order_id</code> — Links webhook to your order</li>
+                                <li><code>payload.payment.entity.id</code> — The actual payment ID</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ngrok explanation -->
+            <div class="collapsible open" style="margin-bottom: 20px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>🚇 ngrok — Test webhooks against YOUR local Django server</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            <strong>Problem:</strong> Your Django runs on <code>localhost:8000</code>.
+                            Razorpay can't reach localhost — it's not on the internet!
+                        </p>
+
+                        <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin: 15px 0; font-family: 'Fira Code', monospace; font-size: 0.75rem; overflow-x: auto;">
+<pre style="margin: 0; color: var(--text-primary);">
+<span style="color: var(--accent-danger);">Without ngrok:</span>
+
+   Razorpay ──── POST webhook ────▶ localhost:8000  ❌
+                                    (Not reachable!)
+
+<span style="color: var(--accent-primary);">With ngrok:</span>
+
+   Razorpay ─▶ https://abc123.ngrok.io ─▶ ngrok tunnel ─▶ localhost:8000  ✅
+               (Public URL)                (Your laptop)
+</pre>
+                        </div>
+
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                            <strong>Solution:</strong> ngrok creates a <em>tunnel</em> — a public URL that forwards to your localhost.
+                        </p>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <div class="code-title">Terminal 1: Start ngrok</div>
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-content">
+<pre><span class="comment"># Install: https://ngrok.com/download</span>
+ngrok http 8000
+
+<span class="comment"># Output:</span>
+<span class="comment"># Forwarding https://abc123.ngrok-free.app -> localhost:8000</span></pre>
+                            </div>
+                        </div>
+
+                        <div class="code-block" style="margin-top: 10px;">
+                            <div class="code-header">
+                                <div class="code-title">Terminal 2: Django server</div>
+                            </div>
+                            <div class="code-content">
+<pre>python manage.py runserver</pre>
+                            </div>
+                        </div>
+
+                        <p style="color: var(--text-secondary); margin-top: 15px;">
+                            Now in Razorpay Dashboard, set webhook URL to:<br>
+                            <code>https://abc123.ngrok-free.app/payments/api/webhook/</code>
+                        </p>
+
+                        <div class="highlight-box" style="margin-top: 15px;">
+                            <strong>Use case:</strong> Actually test your webhook handler code!
+                            See if your Django view correctly processes the webhook and updates the database.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison -->
+            <table class="interactive-table" style="margin: 20px 0;">
+                <thead>
+                    <tr>
+                        <th>Where to look</th>
+                        <th>What you see</th>
+                        <th>Best for</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ngrok terminal</strong></td>
+                        <td>HTTP method, path, status code, headers</td>
+                        <td>Confirming webhook arrived</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Django terminal</strong></td>
+                        <td>Your print statements, logs, errors</td>
+                        <td>Debugging your handler code</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Razorpay Dashboard</strong></td>
+                        <td>Webhook delivery status, retries, payload</td>
+                        <td>Checking if Razorpay sent it successfully</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Django Admin (WebhookLog)</strong></td>
+                        <td>Stored payloads, signature validity</td>
+                        <td>Audit trail, replaying failed webhooks</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="collapsible" style="margin-top: 20px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>🔬 Quick Demo: See a webhook in action</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <ol style="color: var(--text-secondary); margin-left: 20px;">
+                            <li style="margin-bottom: 15px;">
+                                <strong>Terminal 1:</strong> Start ngrok
+                                <div class="code-block" style="margin-top: 8px;">
+                                    <div class="code-content">
+<pre>ngrok http 8000
+<span class="comment"># Copy the https URL, e.g., https://abc123.ngrok-free.app</span></pre>
+                                    </div>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>Terminal 2:</strong> Start Django
+                                <div class="code-block" style="margin-top: 8px;">
+                                    <div class="code-content">
+<pre>python manage.py runserver</pre>
+                                    </div>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>Razorpay Dashboard:</strong> Add webhook URL
+                                <p style="margin-top: 5px; color: var(--text-muted); font-size: 0.85rem;">
+                                    Settings → Webhooks → Add: <code>https://abc123.ngrok-free.app/payments/api/webhook/</code>
+                                </p>
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>Browser:</strong> Make a test payment at <code>localhost:8000/payments/</code>
+                            </li>
+                            <li style="margin-bottom: 10px;">
+                                <strong>Watch both terminals:</strong> You'll see the webhook arrive!
+                            </li>
+                        </ol>
+                        <div class="highlight-box" style="margin-top: 15px;">
+                            <strong>💡 Pro tip:</strong> Add <code>print()</code> statements in your webhook view to see the payload:
+                            <div class="code-block" style="margin-top: 10px; background: transparent;">
+                                <div class="code-content" style="padding: 10px;">
+<pre style="font-size: 0.8rem;"><span class="keyword">def</span> <span class="function">post</span>(self, request):
+    <span class="function">print</span>(<span class="string">"Webhook received!"</span>)
+    <span class="function">print</span>(<span class="string">"Headers:"</span>, request.headers)
+    <span class="function">print</span>(<span class="string">"Body:"</span>, request.body.decode())
+    ...</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible" style="margin-top: 15px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>🔑 Test Credentials (Stripe & Razorpay)</h4>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="card" style="border-color: var(--accent-stripe);">
+                                <h4 style="color: var(--accent-stripe);">Stripe Test Card</h4>
+                                <div class="code-block" style="margin-top: 10px;">
+                                    <div class="code-content">
+<pre>Card: <span class="string">4242 4242 4242 4242</span>
+Expiry: Any future date
+CVV: Any 3 digits</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card" style="border-color: var(--accent-razorpay);">
+                                <h4 style="color: var(--accent-razorpay);">Razorpay Test</h4>
+                                <div class="code-block" style="margin-top: 10px;">
+                                    <div class="code-content">
+<pre>Card: <span class="string">4111 1111 1111 1111</span>
+UPI: <span class="string">success@razorpay</span></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            Class 12 • Payment Integration, Callbacks & Webhooks<br>
+            <span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span>
+        </p>
+    </footer>
+
+    <script>
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (winScroll / height) * 100 + '%';
+        });
+
+        // Theme toggle (default is light now)
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            }
+        }
+
+        // Collapsible sections
+        function toggleCollapsible(header) {
+            const collapsible = header.parentElement;
+            collapsible.classList.toggle('open');
+        }
+
+        // Row click reveal
+        function revealRow(row) {
+            row.classList.add('revealed');
+        }
+
+        function revealAll() {
+            document.querySelectorAll('.interactive-table tbody tr').forEach(row => {
+                row.classList.add('revealed');
+            });
+        }
+
+        function revealAllAsync() {
+            document.querySelectorAll('#async-comparison-table tbody tr').forEach(row => {
+                row.classList.add('revealed');
+            });
+        }
+
+        // Quiz
+        function checkAnswer(option, isCorrect) {
+            const quizBox = option.closest('.quiz-box');
+            const options = quizBox.querySelectorAll('.quiz-option');
+
+            // Disable all options
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.cursor = 'default';
+            });
+
+            // Mark the clicked option
+            if (isCorrect) {
+                option.classList.add('correct');
+            } else {
+                option.classList.add('incorrect');
+                // Find and highlight the correct answer
+                options.forEach(opt => {
+                    // Check the onclick attribute for the correct answer
+                    const onclickAttr = opt.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes('true')) {
+                        opt.classList.add('correct');
+                    }
+                });
+            }
+        }
+
+        // Copy code
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+    </script>
+</body>
+</html>
