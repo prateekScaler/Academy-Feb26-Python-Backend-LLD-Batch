@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-02: OOP-1 — Intro to OOP, Access Modifiers, Constructors</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); color: #34d399; }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .reveal-table td.reveal-val { cursor: pointer; position: relative; transition: all 0.3s; }
+        .reveal-table td.reveal-val .val-text { display: none; }
+        .reveal-table td.reveal-val::after { content: 'click to reveal'; color: var(--text-muted); font-size: 0.75rem; font-style: italic; }
+        .reveal-table td.reveal-val:hover { background: rgba(16, 185, 129, 0.05); }
+        .reveal-table tr.revealed-row td.reveal-val .val-text { display: inline; }
+        .reveal-table tr.revealed-row td.reveal-val::after { display: none; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        /* Fix quiz answer contrast in light mode */
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-02: OOP-1</div>
+        <ul class="nav-links">
+            <li><a href="#why-oop">Why OOP</a></li>
+            <li><a href="#vocab">Vocabulary</a></li>
+            <li><a href="#paradigms">Paradigms</a></li>
+            <li><a href="#pillars">OOP Pillars</a></li>
+            <li><a href="#constructors">Constructors</a></li>
+            <li><a href="#access">Access</a></li>
+            <li><a href="#property">@property</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#9728;&#65039;</span> <span id="themeText">Light</span></button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#129529;</div>
+        <h1>OOP-1: Classes, Constructors &amp; Access</h1>
+        <p class="hero-meta">LLD-02 &bull; Object-Oriented Programming Foundations</p>
+        <p class="hero-tagline">Last class you learned WHY structure matters. Now learn the <strong>first tool for structuring code.</strong></p>
+    </section>
+
+    <!-- Why OOP -->
+    <section id="why-oop">
+        <div class="section-container">
+            <span class="section-label danger">The Problem</span>
+            <h2 class="section-title">Why OOP? What's Wrong Without It?</h2>
+            <p class="section-subtitle">Read this procedural code. Spot the problems.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>customer_service.py &mdash; procedural approach</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>customer1 = {<span class="string">"name"</span>: <span class="string">"Rahul"</span>, <span class="string">"email"</span>: <span class="string">"rahul@gmail.com"</span>, <span class="string">"balance"</span>: <span class="number">5000</span>}
+
+<span class="keyword">def</span> <span class="function">withdraw</span>(customer, amount):
+    <span class="keyword">if</span> amount > customer[<span class="string">"balance"</span>]:
+        <span class="keyword">return</span> <span class="string">"Insufficient funds"</span>
+    customer[<span class="string">"balance"</span>] -= amount
+
+<span class="comment"># Anyone can do this:</span>
+customer1[<span class="string">"balance"</span>] = -<span class="number">99999</span>    <span class="comment"># No protection!</span>
+customer1[<span class="string">"blance"</span>] = <span class="number">5000</span>      <span class="comment"># Typo &mdash; creates a NEW key silently</span>
+<span class="keyword">del</span> customer1[<span class="string">"email"</span>]          <span class="comment"># Now other functions crash</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What are the problems with using plain dicts for data?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It's slower than using classes</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No protection (balance = -99999), typos fail silently ("blance"), keys can be deleted breaking other functions, functions aren't tied to the data they operate on</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Dicts can't store complex data</button>
+                <div class="quiz-explanation">
+                    <strong>Data is unprotected and unstructured.</strong> OOP solves all four of these problems:
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>The OOP version &mdash; click to reveal</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Customer</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, email, balance):
+        self.name = name
+        self.email = email
+        self.__balance = balance  <span class="comment"># Private</span>
+
+    <span class="keyword">def</span> <span class="function">withdraw</span>(self, amount):
+        <span class="keyword">if</span> amount > self.__balance:
+            <span class="keyword">raise</span> ValueError(<span class="string">"Insufficient funds"</span>)
+        self.__balance -= amount
+
+    <span class="keyword">def</span> <span class="function">get_balance</span>(self):
+        <span class="keyword">return</span> self.__balance
+
+rahul = Customer(<span class="string">"Rahul"</span>, <span class="string">"rahul@gmail.com"</span>, <span class="number">5000</span>)
+rahul.withdraw(<span class="number">1000</span>)       <span class="comment"># Goes through validation</span>
+rahul.__balance = -<span class="number">99999</span>   <span class="comment"># Doesn't work &mdash; name mangling</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">What OOP gives you</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>1.</strong> Data and behavior bundled &mdash; <code>withdraw()</code> lives WITH the balance it modifies.<br>
+                    <strong>2.</strong> Protection &mdash; <code>__balance</code> can't be directly set from outside.<br>
+                    <strong>3.</strong> Validation enforced &mdash; must go through <code>withdraw()</code> which checks the amount.<br>
+                    <strong>4.</strong> Structure defined &mdash; <code>Customer</code> always has <code>name</code>, <code>email</code>, <code>balance</code>.
+                </p>
+            </div>
+
+            <div class="question-box">
+                <p>
+                    <strong>You have 50 functions that operate on customer dicts scattered across 10 files.</strong> A new developer joins and adds a field <code>"phone"</code> but spells it <code>"phne"</code> in 3 of those files. How long until you find the bug? How would you even find it?<br><br>
+                    With OOP, the class defines the structure. A typo in an attribute name is caught by the IDE immediately.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vocabulary -->
+    <section id="vocab">
+        <div class="section-container">
+            <span class="section-label">Vocabulary</span>
+            <h2 class="section-title">Attributes and Methods</h2>
+            <p class="section-subtitle">In OOP, we don't say "variables and functions." We have specific words.</p>
+
+            <div class="comparison-grid">
+                <div class="card">
+                    <div class="card-icon">&#128230;</div>
+                    <div class="card-title">Attribute = Data</div>
+                    <div class="card-desc">What an object <strong>knows</strong>. A dish knows its name, price, and whether it's vegetarian. These are its attributes.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9881;&#65039;</div>
+                    <div class="card-title">Method = Behavior</div>
+                    <div class="card-desc">What an object can <strong>do</strong>. A dish can describe itself, calculate its discounted price. These are its methods.</div>
+                </div>
+            </div>
+
+            <div class="code-block" style="margin-top: 25px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>dish.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dish</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name      <span class="comment"># &larr; Attribute (what it KNOWS)</span>
+        self.price = price    <span class="comment"># &larr; Attribute (what it KNOWS)</span>
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):       <span class="comment"># &larr; Method (what it can DO)</span>
+        <span class="keyword">return</span> <span class="string">f"{self.name} costs Rs.{self.price}"</span>
+
+biryani = Dish(<span class="string">"Biryani"</span>, <span class="number">300</span>)      <span class="comment"># &larr; Object (instance)</span>
+print(biryani.describe())              <span class="comment"># "Biryani costs Rs.300"</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">
+                    A <strong>class</strong> bundles related attributes and methods together. A Dish <em>knows</em> its name and price (attributes), and <em>can</em> describe itself (method). The data and behavior that belong together <strong>live together</strong>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Paradigms -->
+    <section id="paradigms">
+        <div class="section-container">
+            <span class="section-label blue">Context</span>
+            <h2 class="section-title">Programming Paradigms</h2>
+            <p class="section-subtitle">A paradigm is a style of organizing code. Same problem, very different approaches.</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Let's solve the same problem in 4 paradigms: <strong>"Calculate total price of vegetarian dishes."</strong></p>
+
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Procedural</div>
+                    <div class="card-desc"><strong>Step-by-step instructions.</strong> YOU tell the computer every step.<br><br><strong>Languages:</strong> C, Bash, early Python<br><strong>Best for:</strong> Scripts, automation</div>
+                    <div class="code-block" style="margin-top: 12px;">
+                        <div class="code-content" style="padding: 10px;">
+<pre style="font-size: 0.75rem;"><span class="comment"># YOU loop, YOU check, YOU add</span>
+total = <span class="number">0</span>
+<span class="keyword">for</span> dish <span class="keyword">in</span> dishes:
+    <span class="keyword">if</span> dish[<span class="string">"is_veg"</span>]:
+        total += dish[<span class="string">"price"</span>]</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="border-color: var(--accent-primary);">
+                    <div class="card-icon">&#129529;</div>
+                    <div class="card-title">Object-Oriented</div>
+                    <div class="card-desc"><strong>Objects with data + behavior.</strong> Ask the object to do it.<br><br><strong>Languages:</strong> Java, C++, Python, C#<br><strong>Best for:</strong> Modeling real entities</div>
+                    <div class="code-block" style="margin-top: 12px;">
+                        <div class="code-content" style="padding: 10px;">
+<pre style="font-size: 0.75rem;"><span class="comment"># Ask the MENU to do it</span>
+menu = Menu(dishes)
+total = menu.veg_total()</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title">Functional</div>
+                    <div class="card-desc"><strong>Transform data with functions.</strong> No loops, no variables changing.<br><br><strong>Languages:</strong> Haskell, Erlang, Elixir<br><strong>Best for:</strong> Data pipelines, concurrency</div>
+                    <div class="code-block" style="margin-top: 12px;">
+                        <div class="code-content" style="padding: 10px;">
+<pre style="font-size: 0.75rem;"><span class="comment"># Chain transformations</span>
+total = sum(map(
+    <span class="keyword">lambda</span> d: d[<span class="string">"price"</span>],
+    filter(<span class="keyword">lambda</span> d: d[<span class="string">"is_veg"</span>], dishes)
+))</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128269;</div>
+                    <div class="card-title">Declarative</div>
+                    <div class="card-desc"><strong>Describe WHAT, not HOW.</strong> The engine figures out the steps.<br><br><strong>Languages:</strong> SQL, HTML/CSS<br><strong>Best for:</strong> Database queries, UI</div>
+                    <div class="code-block" style="margin-top: 12px;">
+                        <div class="code-content" style="padding: 10px;">
+<pre style="font-size: 0.75rem;"><span class="comment">-- Just say what you want</span>
+<span class="keyword">SELECT</span> SUM(price)
+<span class="keyword">FROM</span> dishes
+<span class="keyword">WHERE</span> is_veg = <span class="keyword">TRUE</span>;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 8px;">How are they different?</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Procedural vs Functional:</strong> Both work with functions, but procedural MUTATES data (<code>total += price</code> changes <code>total</code>), while functional TRANSFORMS data without changing anything (<code>filter</code> and <code>map</code> create new data, the original is untouched).<br><br>
+                    <strong>Procedural vs Declarative:</strong> Procedural says "loop through each dish, check if veg, add price" (HOW). Declarative says "give me the sum of veg prices" (WHAT) and lets the engine figure out the loop.<br><br>
+                    <strong>Functional vs Declarative:</strong> Functional still describes transformations step by step (<code>filter</code> then <code>map</code> then <code>sum</code>). Declarative is even more abstract &mdash; one statement, no steps at all.
+                </p>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 25px;">
+                <h4>When you write <code>SELECT * FROM dishes WHERE price > 200</code>, which paradigm is that?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Procedural &mdash; it's processing data step by step</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Declarative &mdash; you describe WHAT you want, the database figures out HOW</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Functional &mdash; it's transforming data</button>
+                <div class="quiz-explanation">
+                    <strong>Declarative.</strong> You didn't tell the database to scan rows or compare prices. You said "I want this" and it decided HOW.
+                </div>
+            </div>
+
+            <div class="collapsible" style="margin-top: 25px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128640; Fun Trivia &amp; NASA's Coding Rules</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                            <div class="card">
+                                <div class="card-title" style="color: var(--accent-danger);">NASA &mdash; No OOP on Mars</div>
+                                <div class="card-desc">The Mars Curiosity Rover runs on ~2.5 million lines of <strong>C</strong>. Not a single class. NASA's <a href="https://en.wikipedia.org/wiki/The_Power_of_10:_Rules_for_Developing_Safety-Critical_Code" target="_blank" style="color: var(--accent-primary);">Power of 10 Rules</a> ban recursion and restrict variable scope. 225 million km away = PREDICTABLE code only.</div>
+                            </div>
+                            <div class="card">
+                                <div class="card-title" style="color: var(--accent-warning);">Erlang &mdash; 99.9999999% Uptime</div>
+                                <div class="card-desc">Ericsson built Erlang for phone switches &mdash; <strong>31ms</strong> downtime per YEAR. WhatsApp used Erlang to serve 2 billion users with just 50 engineers. <a href="https://www.wired.com/2015/09/whatsapp-serves-900-million-users-50-engineers/" target="_blank" style="color: var(--accent-primary);">Read: How WhatsApp served 900M users with 50 engineers &rarr;</a></div>
+                            </div>
+                            <div class="card">
+                                <div class="card-title" style="color: var(--accent-blue);">SQL &mdash; Older Than Your Parents</div>
+                                <div class="card-desc">Invented in <strong>1974</strong>. It outlived every OOP framework ever built. Still the most used declarative language on Earth. Battle-tested for 50 years.</div>
+                            </div>
+                        </div>
+                        <div class="highlight-box" style="margin-top: 15px;">
+                            <h4 style="margin-bottom: 8px;">NASA's Rule #6: Restrict variable scope as much as possible</h4>
+                            <p style="color: var(--text-secondary);">Sound familiar? That's encapsulation! Even procedural NASA code follows this principle.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Your company is building a food delivery app with users, restaurants, orders, dishes, payments, drivers. Which paradigm fits best?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Procedural &mdash; just write functions for each feature</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">OOP &mdash; each real-world entity (User, Order, Restaurant) naturally maps to a class with its own data and behavior</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Functional &mdash; everything should be immutable</button>
+                <div class="quiz-explanation">
+                    <strong>OOP.</strong> The problem has clear entities with their own data and behavior. But you'll still use SQL (declarative) for the database and functional patterns for data transformations!
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pillars of OOP -->
+    <section id="pillars">
+        <div class="section-container">
+            <span class="section-label purple">Foundations</span>
+            <h2 class="section-title">The Four Pillars of OOP</h2>
+            <p class="section-subtitle">Today: Abstraction and Encapsulation. Next class: Inheritance and Polymorphism.</p>
+
+            <!-- Abstraction -->
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">1</span> Abstraction &mdash; "Show only what matters"</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">The word "abstract" means to <strong>pull away details and focus on what's essential.</strong> It appears everywhere:</p>
+
+                        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                            <div class="card">
+                                <div class="card-icon">&#127912;</div>
+                                <div class="card-title">In Art</div>
+                                <div class="card-desc">An abstract painting shows the <strong>essence</strong>, not every detail. You recognize a cat without seeing every whisker.</div>
+                            </div>
+                            <div class="card">
+                                <div class="card-icon">&#128507;</div>
+                                <div class="card-title">In Maps</div>
+                                <div class="card-desc">A metro map hides real distances. It only shows which stations connect &mdash; that's ALL you need.</div>
+                            </div>
+                            <div class="card">
+                                <div class="card-icon">&#128663;</div>
+                                <div class="card-title">In Driving</div>
+                                <div class="card-desc">Press accelerator, car speeds up. You don't know about fuel injection or crankshaft rotation.</div>
+                            </div>
+                            <div class="card">
+                                <div class="card-icon">&#128013;</div>
+                                <div class="card-title">In Python</div>
+                                <div class="card-desc"><code>sorted([3, 1, 2])</code> &mdash; give it a list, get back a sorted list. The algorithm is <strong>hidden</strong>.</div>
+                            </div>
+                        </div>
+
+                        <div class="highlight-box" style="margin-top: 20px;">
+                            <h4 style="margin-bottom: 8px;">Abstraction in OOP</h4>
+                            <p style="color: var(--text-secondary);">Expose <strong>WHAT</strong> an object can do, hide <strong>HOW</strong> it does it. When you call <code>order.calculate_total()</code>, you don't care about discount logic or tax calculation inside. You just get the total.</p>
+                        </div>
+
+                        <div class="quiz-box" style="margin-top: 15px;">
+                            <h4>When you call <code>sorted([3, 1, 2])</code> in Python, what is abstracted away?</h4>
+                            <button class="quiz-option" onclick="checkQuiz(this, false)">Nothing &mdash; sorted() is just a simple function</button>
+                            <button class="quiz-option" onclick="checkQuiz(this, true)">The sorting algorithm (Timsort), memory allocation, comparison logic, optimization for partially sorted lists. You just say "sort this" and Python handles everything.</button>
+                            <button class="quiz-option" onclick="checkQuiz(this, false)">Only the loop that compares elements</button>
+                            <div class="quiz-explanation">
+                                <strong>Layers of abstraction.</strong> Python's <code>sorted()</code> uses Timsort (a hybrid of mergesort and insertion sort), handles memory, detects partially sorted sequences for optimization &mdash; you never see any of it. Same with <code>len()</code>, <code>print()</code>, <code>open()</code> &mdash; simple interface, complex internals.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encapsulation -->
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">2</span> Encapsulation &mdash; "Bundle and Protect"</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="highlight-box warning" style="margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 10px;">&#128138; The Capsule Analogy</h4>
+                            <p style="color: var(--text-secondary);">
+                                Think of a medicine capsule. Now see how each aspect maps to a Python class:<br><br>
+                                <strong>1. It holds things together</strong> &mdash; ingredients are bundled inside one shell.<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&#8594; In Python: a <code>class</code> holds <strong>attributes</strong> (data) and <strong>methods</strong> (behavior) together. <code>balance</code> and <code>withdraw()</code> live in the same <code>BankAccount</code> class, not scattered as global variables and loose functions.<br><br>
+                                <strong>2. It protects from outside</strong> &mdash; you can't tamper with contents.<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&#8594; In Python: <code>self.__balance</code> (private) can't be directly changed from outside. You can't do <code>account.__balance = -99999</code>.<br><br>
+                                <strong>3. It has a controlled interface</strong> &mdash; swallow the capsule, don't inject ingredients.<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&#8594; In Python: you interact through <strong>methods</strong> like <code>withdraw()</code> and <code>get_balance()</code>, which validate before modifying.
+                            </p>
+                        </div>
+
+                        <p style="color: var(--text-secondary); margin-bottom: 10px;">See it in code &mdash; arrows show each capsule aspect:</p>
+
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>encapsulation_mapped.py</span></div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">BankAccount</span>:          <span class="comment"># &larr; THE CAPSULE (holds everything together)</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, balance):
+        self.__balance = balance  <span class="comment"># &larr; PROTECTED INSIDE (can't tamper from outside)</span>
+
+    <span class="keyword">def</span> <span class="function">withdraw</span>(self, amount):  <span class="comment"># &larr; CONTROLLED INTERFACE</span>
+        <span class="keyword">if</span> amount > self.__balance:  <span class="comment">#    (validates before modifying)</span>
+            <span class="keyword">raise</span> ValueError(<span class="string">"Insufficient funds"</span>)
+        self.__balance -= amount
+
+    <span class="keyword">def</span> <span class="function">get_balance</span>(self):       <span class="comment"># &larr; CONTROLLED INTERFACE</span>
+        <span class="keyword">return</span> self.__balance     <span class="comment">#    (read-only access)</span>
+
+account = BankAccount(<span class="number">5000</span>)
+account.withdraw(<span class="number">1000</span>)          <span class="comment"># &larr; Must use the interface</span>
+<span class="comment"># account.__balance = -99999    &larr; BLOCKED (can't break into capsule)</span></pre>
+                            </div>
+                        </div>
+
+                        <div class="highlight-box success" style="margin-top: 15px;">
+                            <p style="color: var(--text-secondary);">
+                                <strong>Abstraction</strong> says: "You can withdraw money" (WHAT).<br>
+                                <strong>Encapsulation</strong> says: "But you MUST go through <code>withdraw()</code>, and I'll validate the amount" (HOW access is controlled).<br><br>
+                                They work together. Abstraction decides what's visible. Encapsulation enforces the boundary.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <p>
+                    <strong>Think of an ATM.</strong><br>
+                    The <strong>abstraction</strong> is: you see "Withdraw", "Check Balance", "Transfer" on the screen.<br>
+                    The <strong>encapsulation</strong> is: you can't open the ATM and grab cash directly. You MUST use the buttons.<br><br>
+                    What happens to a bank if ATMs had no encapsulation &mdash; if anyone could open them?
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Constructors (includes self explanation) -->
+    <section id="constructors">
+        <div class="section-container">
+            <span class="section-label purple">Core Concept</span>
+            <h2 class="section-title">Constructors &mdash; Building Objects Right</h2>
+            <p class="section-subtitle">The method that runs automatically when you create an object.</p>
+
+            <!-- self basics first -->
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">0</span> First &mdash; what is <code>self</code>?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">Every method inside a class gets <code>self</code> as its first parameter. It means <strong>"this specific object."</strong></p>
+
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>self_basics.py</span></div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Counter</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):       <span class="comment"># self = the object being created</span>
+        self.count = <span class="number">0</span>        <span class="comment"># attach 'count' to THIS object</span>
+
+    <span class="keyword">def</span> <span class="function">increment</span>(self):     <span class="comment"># self = the object calling this method</span>
+        self.count += <span class="number">1</span>      <span class="comment"># modify THIS object's count</span>
+
+c1 = Counter()              <span class="comment"># Python: Counter.__init__(c1)  &mdash; self = c1</span>
+c2 = Counter()              <span class="comment"># Python: Counter.__init__(c2)  &mdash; self = c2</span>
+c1.increment()              <span class="comment"># Python: Counter.increment(c1) &mdash; self = c1</span>
+c1.increment()
+print(c1.count)  <span class="comment"># 2</span>
+print(c2.count)  <span class="comment"># 0 &mdash; completely independent!</span></pre>
+                            </div>
+                        </div>
+
+                        <div class="quiz-box" style="margin-top: 15px;">
+                            <h4>What's the bug here?</h4>
+                            <div class="code-block" style="margin: 10px 0;">
+                                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">BrokenCounter</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.count = <span class="number">0</span>
+
+    <span class="keyword">def</span> <span class="function">increment</span>(self):
+        count += <span class="number">1</span>          <span class="comment"># Hmm...</span></pre>
+                                </div>
+                            </div>
+                            <button class="quiz-option" onclick="checkQuiz(this, false)">Nothing &mdash; it works fine</button>
+                            <button class="quiz-option" onclick="checkQuiz(this, true)"><code>count += 1</code> is a local variable that doesn't exist. It should be <code>self.count += 1</code>. Crashes with <code>UnboundLocalError</code>. Forgetting <code>self.</code> is the #1 Python OOP bug.</button>
+                            <button class="quiz-option" onclick="checkQuiz(this, false)">The <code>__init__</code> is wrong</button>
+                            <div class="quiz-explanation">
+                                <strong>Always use <code>self.</code> to access instance data.</strong> Without it, Python looks for a local variable named <code>count</code>, doesn't find one, and crashes.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Non-parameterized -->
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">1</span> Non-Parameterized Constructor</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>counter.py</span></div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Counter</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.count = <span class="number">0</span>
+
+c1 = Counter()  <span class="comment"># count = 0</span>
+c2 = Counter()  <span class="comment"># count = 0, independent from c1</span></pre>
+                            </div>
+                        </div>
+
+                        <div class="highlight-box" style="margin-top: 15px;">
+                            <h4 style="margin-bottom: 8px;">What does <code>__init__</code> actually do?</h4>
+                            <p style="color: var(--text-secondary);">
+                                When you write <code>c1 = Counter()</code>, Python does two things:<br>
+                                <strong>1.</strong> Creates an empty object in memory (allocates space) &mdash; this is done by <code>__new__</code> (you rarely touch this).<br>
+                                <strong>2.</strong> Calls <code>__init__(self)</code> on that empty object to <strong>initialize its attributes</strong> &mdash; this is YOUR setup code.<br><br>
+                                <strong>If you don't write <code>__init__</code> at all?</strong> Python provides a default empty one automatically. The object gets created, but with no attributes &mdash; it's a blank slate.
+                            </p>
+                        </div>
+
+                        <div class="code-block" style="margin-top: 15px;">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>no_init.py &mdash; what happens without __init__</span></div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Empty</span>:
+    <span class="keyword">pass</span>              <span class="comment"># No __init__ &mdash; Python uses a default empty one</span>
+
+e = Empty()           <span class="comment"># Works! Object is created, but has no attributes</span>
+print(e.__dict__)     <span class="comment"># {} &mdash; empty! No data attached</span>
+e.name = <span class="string">"added later"</span>  <span class="comment"># You CAN add attributes after, but this is messy</span></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameterized -->
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">2</span> Parameterized Constructor &mdash; Objects born ready</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <p style="color: var(--text-secondary); margin-bottom: 15px;">Read this code. Can you spot any problems?</p>
+
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>dish_v1.py &mdash; spot the problem</span></div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dish</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="keyword">pass</span>  <span class="comment"># Empty constructor</span>
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        <span class="keyword">return</span> <span class="string">f"{self.name} costs Rs.{self.price}"</span>
+
+dish = Dish()
+dish.name = <span class="string">"Biryani"</span>    <span class="comment"># Setting attributes AFTER creation</span>
+dish.price = <span class="number">300</span>
+dish.describe()          <span class="comment"># Works... this time</span>
+
+dish2 = Dish()
+dish2.name = <span class="string">"Dosa"</span>
+<span class="comment"># Forgot to set price!</span>
+dish2.describe()         <span class="comment"># CRASH: AttributeError: 'Dish' has no attribute 'price'</span></pre>
+                            </div>
+                        </div>
+
+                        <div class="quiz-box" style="margin-top: 15px;">
+                            <h4>What's the problem with this Dish class?</h4>
+                            <button class="quiz-option" onclick="checkQuiz(this, false)">The describe method is wrong</button>
+                            <button class="quiz-option" onclick="checkQuiz(this, true)">The object is created incomplete. Someone can forget to set <code>price</code> and the code crashes later. The constructor should REQUIRE name and price so the object is always complete.</button>
+                            <button class="quiz-option" onclick="checkQuiz(this, false)">You can't add attributes after creation</button>
+                            <div class="quiz-explanation">
+                                <strong>An object should be READY TO USE from birth.</strong> The fix:
+                            </div>
+                        </div>
+
+                        <div class="code-block collapsed" style="margin-top: 15px;">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>dish_v2.py &mdash; the fix &mdash; click to reveal</span></div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dish</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):   <span class="comment"># REQUIRE name and price</span>
+        self.name = name
+        self.price = price
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        <span class="keyword">return</span> <span class="string">f"{self.name} costs Rs.{self.price}"</span>
+
+dish = Dish(<span class="string">"Biryani"</span>, <span class="number">300</span>)    <span class="comment"># Can't forget name or price!</span>
+dish.describe()                 <span class="comment"># Always works</span>
+
+<span class="comment"># Dish()  &mdash; TypeError: missing required arguments</span>
+<span class="comment"># Dish("Dosa")  &mdash; TypeError: missing 'price'</span></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Defaults + Validation -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">3</span> Defaults + Validation &mdash; The complete picture</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>restaurant.py</span></div>
+                                <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Restaurant</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, cuisine, rating=<span class="number">0.0</span>, is_open=<span class="keyword">True</span>):
+        <span class="keyword">if not</span> name:
+            <span class="keyword">raise</span> ValueError(<span class="string">"Restaurant must have a name"</span>)
+        <span class="keyword">if not</span> <span class="number">0</span> <= rating <= <span class="number">5</span>:
+            <span class="keyword">raise</span> ValueError(<span class="string">f"Rating must be 0-5, got {rating}"</span>)
+        self.name = name           <span class="comment"># Required</span>
+        self.cuisine = cuisine     <span class="comment"># Required</span>
+        self.rating = rating       <span class="comment"># Optional, default 0.0</span>
+        self.is_open = is_open     <span class="comment"># Optional, default True</span>
+
+Restaurant(<span class="string">"Biryani House"</span>, <span class="string">"Indian"</span>)             <span class="comment"># rating=0.0, is_open=True</span>
+Restaurant(<span class="string">"Sushi Bar"</span>, <span class="string">"Japanese"</span>, rating=<span class="number">4.5</span>)   <span class="comment"># is_open=True</span>
+Restaurant(<span class="string">""</span>, <span class="string">"Indian"</span>)                            <span class="comment"># ValueError!</span>
+Restaurant(<span class="string">"Bad"</span>, <span class="string">"Indian"</span>, rating=<span class="number">7</span>)              <span class="comment"># ValueError!</span></pre>
+                            </div>
+                        </div>
+                        <div class="highlight-box" style="margin-top: 15px;">
+                            <h4 style="margin-bottom: 8px;">Good practice summary</h4>
+                            <p style="color: var(--text-secondary);">
+                                <strong>1.</strong> Required parameters for essential data &mdash; don't let incomplete objects exist<br>
+                                <strong>2.</strong> Default values for optional data &mdash; <code>rating=0.0</code><br>
+                                <strong>3.</strong> Validation in constructor &mdash; bad objects should never be created
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 20px;">
+                <h4>You're building a <code>PaymentTransaction</code>. Which approach is best?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Non-parameterized &mdash; <code>t = PaymentTransaction()</code> then set fields later</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Parameterized with validation &mdash; <code>t = PaymentTransaction(amount=500, currency="INR")</code>. Require amount and currency. Auto-set created_at and status="pending". Reject negative amounts.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Just use a dict &mdash; classes are overkill for this</button>
+                <div class="quiz-explanation">
+                    <strong>Validate at creation.</strong> A PaymentTransaction with amount = -500 should never exist. The constructor is your first line of defense.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Access Modifiers -->
+    <section id="access">
+        <div class="section-container">
+            <span class="section-label warning">Core Concept</span>
+            <h2 class="section-title">Access Modifiers &amp; Name Mangling</h2>
+            <p class="section-subtitle">Public, Protected, Private &mdash; and why Python's "private" isn't truly private.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>bank_account.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">BankAccount</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, owner, balance):
+        self.owner = owner              <span class="comment"># Public &mdash; anyone</span>
+        self._account_type = <span class="string">"savings"</span>  <span class="comment"># Protected &mdash; convention</span>
+        self.__balance = balance        <span class="comment"># Private &mdash; name mangling</span>
+
+account = BankAccount(<span class="string">"Rahul"</span>, <span class="number">5000</span>)
+
+print(account.owner)                    <span class="comment"># "Rahul" &mdash; works</span>
+print(account._account_type)            <span class="comment"># "savings" &mdash; works, linter warns</span>
+print(account.__balance)                <span class="comment"># AttributeError!</span>
+print(account._BankAccount__balance)    <span class="comment"># 5000 &mdash; name mangling!</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px; margin-bottom: 10px;">The Three Levels</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Click each row to reveal.</p>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th style="width: 18%;">Modifier</th><th style="width: 22%;">Syntax</th><th style="width: 28%;">Who Should Access</th><th style="width: 32%;">Enforcement</th></tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Public</strong></td>
+                        <td class="reveal-val"><span class="val-text"><code>self.name</code></span></td>
+                        <td class="reveal-val"><span class="val-text">Anyone</span></td>
+                        <td class="reveal-val"><span class="val-text">None &mdash; fully open</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Protected</strong></td>
+                        <td class="reveal-val"><span class="val-text"><code>self._name</code></span></td>
+                        <td class="reveal-val"><span class="val-text">Class + subclasses</span></td>
+                        <td class="reveal-val"><span class="val-text">Convention &mdash; linters warn</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Private</strong></td>
+                        <td class="reveal-val"><span class="val-text"><code>self.__name</code></span></td>
+                        <td class="reveal-val"><span class="val-text">Class only</span></td>
+                        <td class="reveal-val"><span class="val-text">Name mangling &mdash; <code>_ClassName__name</code></span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Name Mangling -->
+            <h3 style="margin-top: 35px; margin-bottom: 15px;">Wait &mdash; Python's "Private" Isn't Truly Private?</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>name_mangling_revealed.py</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Secret</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.__password = <span class="string">"hunter2"</span>
+
+s = Secret()
+print(s.__password)              <span class="comment"># AttributeError &#10007;</span>
+print(s._Secret__password)       <span class="comment"># "hunter2" &#10003;  &mdash; Wait, what?!</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>If Python's <code>__</code> isn't truly private, why bother using it?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It's useless &mdash; just use single underscore everywhere</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It's a security feature to prevent hackers</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">It prevents ACCIDENTS, not attacks. Nobody will accidentally type <code>account._BankAccount__balance</code>. But they might accidentally type <code>account.balance</code>. Name mangling makes accidental access nearly impossible while keeping intentional access available for debugging.</button>
+                <div class="quiz-explanation">
+                    <strong>Python's philosophy: "We're all consenting adults here."</strong> Name mangling prevents name collisions in inheritance, not security breaches. <a href="https://stackoverflow.com/questions/70528/why-are-pythons-private-methods-not-actually-private" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Read the classic StackOverflow discussion &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- @property -->
+    <section id="property">
+        <div class="section-container">
+            <span class="section-label success">Encapsulation in Practice</span>
+            <h2 class="section-title"><code>@property</code> &mdash; Pythonic Encapsulation</h2>
+            <p class="section-subtitle">A way to add validation to attributes without changing how they're used.</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><strong>The problem:</strong> You want to validate data when it's set (like "price can't be negative"). In Java, you'd write <code>getPrice()</code> and <code>setPrice()</code>. Python has a cleaner way.</p>
+
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">1</span> Step 1: The ugly Java way</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dish</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.__name = name
+        self.__price = price
+
+    <span class="keyword">def</span> <span class="function">get_price</span>(self):       <span class="comment"># Getter</span>
+        <span class="keyword">return</span> self.__price
+
+    <span class="keyword">def</span> <span class="function">set_price</span>(self, value):  <span class="comment"># Setter with validation</span>
+        <span class="keyword">if</span> value < <span class="number">0</span>:
+            <span class="keyword">raise</span> ValueError(<span class="string">"Price can't be negative"</span>)
+        self.__price = value
+
+dish = Dish(<span class="string">"Biryani"</span>, <span class="number">300</span>)
+print(dish.get_price())        <span class="comment"># 300 (verbose!)</span>
+dish.set_price(<span class="number">350</span>)            <span class="comment"># (verbose!)</span></pre>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-top: 10px;">It works, but <code>dish.get_price()</code> is ugly. You have to remember "is it <code>.price</code> or <code>.get_price()</code>?" everywhere.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">2</span> Step 2: The Pythonic way &mdash; <code>@property</code></h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>dish_property.py</span></div>
+                                <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dish</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price       <span class="comment"># This calls the @price.setter below!</span>
+
+    <span class="decorator">@property</span>                    <span class="comment"># Makes dish.price CALL this method</span>
+    <span class="keyword">def</span> <span class="function">price</span>(self):
+        <span class="keyword">return</span> self.__price
+
+    <span class="decorator">@price.setter</span>                <span class="comment"># Makes dish.price = X CALL this method</span>
+    <span class="keyword">def</span> <span class="function">price</span>(self, value):
+        <span class="keyword">if</span> value < <span class="number">0</span>:
+            <span class="keyword">raise</span> ValueError(<span class="string">"Price can't be negative"</span>)
+        self.__price = value
+
+dish = Dish(<span class="string">"Biryani"</span>, <span class="number">300</span>)
+print(dish.price)              <span class="comment"># 300 &mdash; looks like attribute, calls getter</span>
+dish.price = <span class="number">350</span>               <span class="comment"># looks like assignment, calls setter + validates</span>
+dish.price = -<span class="number">50</span>               <span class="comment"># ValueError: Price can't be negative</span></pre>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-top: 10px;"><strong>The magic:</strong> <code>dish.price</code> LOOKS like reading a simple attribute, but behind the scenes it calls your getter. <code>dish.price = 350</code> LOOKS like a simple assignment, but it calls your setter which validates. <strong>Clean syntax AND protection.</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">3</span> Real Example: Order Status</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>order_status.py</span></div>
+                                <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Order</span>:
+    VALID = [<span class="string">"pending"</span>, <span class="string">"confirmed"</span>, <span class="string">"preparing"</span>, <span class="string">"delivered"</span>, <span class="string">"cancelled"</span>]
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, customer, items):
+        self.customer = customer
+        self.items = items
+        self.__status = <span class="string">"pending"</span>
+
+    <span class="decorator">@property</span>
+    <span class="keyword">def</span> <span class="function">status</span>(self):
+        <span class="keyword">return</span> self.__status
+
+    <span class="decorator">@status.setter</span>
+    <span class="keyword">def</span> <span class="function">status</span>(self, new_status):
+        <span class="keyword">if</span> new_status <span class="keyword">not in</span> self.VALID:
+            <span class="keyword">raise</span> ValueError(<span class="string">f"Invalid status: {new_status}"</span>)
+        <span class="keyword">if</span> self.__status == <span class="string">"delivered"</span>:
+            <span class="keyword">raise</span> ValueError(<span class="string">"Cannot change delivered order"</span>)
+        self.__status = new_status
+
+order = Order(<span class="string">"Rahul"</span>, [<span class="string">"Butter Chicken"</span>])
+order.status = <span class="string">"confirmed"</span>     <span class="comment"># Validates &mdash; allowed</span>
+order.status = <span class="string">"delivered"</span>      <span class="comment"># Validates &mdash; allowed</span>
+order.status = <span class="string">"pending"</span>        <span class="comment"># ValueError: Cannot change delivered order</span>
+order.status = <span class="string">"delievered"</span>     <span class="comment"># ValueError: typo caught!</span></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 20px;">
+                <h4>Without <code>@property</code>, someone writes <code>order.status = "delievered"</code> (typo). What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">The order sits in a status no code recognizes. It's not "delivered" so it never gets marked complete. The order is stuck in limbo. You find out days later when a customer complains.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Python throws an error automatically</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Nothing bad &mdash; it's just a string</button>
+                <div class="quiz-explanation">
+                    <strong>Silent corruption is the worst kind of bug.</strong> With <code>@property</code>, the typo is caught the MOMENT it happens, not days later in production.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's Next -->
+    <section id="next">
+        <div class="section-container">
+            <span class="section-label">Looking Ahead</span>
+            <h2 class="section-title">What's Next</h2>
+            <p class="section-subtitle">Everything today is the foundation for the rest of the module.</p>
+            <div class="table-container">
+                <table>
+                    <tr><th>Today</th><th>Next Class (OOP-2)</th><th>Later in the Module</th></tr>
+                    <tr><td><strong>Classes &amp; Objects</strong></td><td>Inheritance &mdash; classes extending other classes</td><td>Factory Pattern creates objects</td></tr>
+                    <tr><td><strong>Constructors</strong></td><td><code>super().__init__()</code> &mdash; calling parent constructor</td><td>Builder Pattern for complex construction</td></tr>
+                    <tr><td><strong>Abstraction</strong></td><td>Abstract Base Classes &mdash; enforcing contracts</td><td>Strategy, Observer patterns</td></tr>
+                    <tr><td><strong>Encapsulation</strong></td><td>Protected members become key in inheritance</td><td>SOLID principles build on this</td></tr>
+                    <tr><td><strong>@property</strong></td><td>Polymorphism &mdash; same property, different behavior</td><td>Used in every design pattern</td></tr>
+                </table>
+            </div>
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 8px;">Next: OOP-2 &mdash; Inheritance and Polymorphism</h4>
+                <p style="color: var(--text-secondary);">You'll learn how <code>Food</code> extends <code>MenuItem</code>, how to override methods, and how to write code that works with ANY subclass. That's where OOP gets powerful.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label success">Resources</span>
+            <h2 class="section-title">Practice &amp; Learn More</h2>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#128013;</div>
+                    <div class="card-title">Scaler &mdash; Python OOP</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Classes, objects, constructors in Python.</div>
+                    <a href="https://www.scaler.com/topics/python/python-classes-and-objects/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">scaler.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127916;</div>
+                    <div class="card-title">Corey Schafer &mdash; Classes</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">20-min video covering exactly what we did today.</div>
+                    <a href="https://www.youtube.com/watch?v=ZDa-Z5JzLYM" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">YouTube &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128640;</div>
+                    <div class="card-title">NASA Power of 10 Rules</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Safety-critical coding guidelines from JPL.</div>
+                    <a href="https://en.wikipedia.org/wiki/The_Power_of_10:_Rules_for_Developing_Safety-Critical_Code" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">Wikipedia &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Real Python &mdash; @property</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Deep dive into property decorators.</div>
+                    <a href="https://realpython.com/python-property/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">realpython.com &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-02 &bull; OOP-1: Intro to OOP, Access Modifiers, Constructors<br><span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span></p>
+    </footer>
+
+    <script>
+        window.addEventListener('scroll', () => { const s = document.body.scrollTop || document.documentElement.scrollTop; const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; document.getElementById('progressBar').style.width = (s / h) * 100 + '%'; });
+        function toggleTheme() { const b = document.body, i = document.getElementById('themeIcon'), t = document.getElementById('themeText'); if (b.getAttribute('data-theme') === 'light') { b.removeAttribute('data-theme'); i.textContent = '\u{1F319}'; t.textContent = 'Dark'; } else { b.setAttribute('data-theme', 'light'); i.textContent = '\u{2600}\u{FE0F}'; t.textContent = 'Light'; } }
+        function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+        function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+        function copyCode(button) { const code = button.closest('.code-block').querySelector('pre').textContent; navigator.clipboard.writeText(code).then(() => { button.textContent = 'Copied!'; setTimeout(() => button.textContent = 'Copy', 2000); }); }
+        function checkQuiz(button, isCorrect) { const box = button.closest('.quiz-box'); if (box.classList.contains('answered')) return; box.classList.add('answered'); button.classList.add('selected'); if (isCorrect) { button.classList.add('correct'); } else { button.classList.add('wrong'); box.querySelectorAll('.quiz-option').forEach(o => { if (o.getAttribute('onclick')?.includes('true')) o.classList.add('correct'); }); } }
+        function revealRow(tr) { tr.classList.toggle('revealed-row'); }
+        document.addEventListener('keydown', (e) => { if (e.key === 'e' && e.altKey) { document.querySelectorAll('.code-block.collapsed').forEach(b => b.classList.remove('collapsed')); document.querySelectorAll('.collapsible:not(.open)').forEach(c => c.classList.add('open')); } if (e.key === 'c' && e.altKey) { document.querySelectorAll('.code-block:not(.collapsed)').forEach(b => b.classList.add('collapsed')); document.querySelectorAll('.collapsible.open').forEach(c => c.classList.remove('open')); } });
+    </script>
+</body>
+</html>
