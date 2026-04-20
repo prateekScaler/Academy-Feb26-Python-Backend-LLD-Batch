@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-03: OOP-2 — Inheritance and Polymorphism</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .reveal-table td.reveal-val { cursor: pointer; position: relative; transition: all 0.3s; }
+        .reveal-table td.reveal-val .val-text { display: none; }
+        .reveal-table td.reveal-val::after { content: 'click to reveal'; color: var(--text-muted); font-size: 0.75rem; font-style: italic; }
+        .reveal-table td.reveal-val:hover { background: rgba(16, 185, 129, 0.05); }
+        .reveal-table tr.revealed-row td.reveal-val .val-text { display: inline; }
+        .reveal-table tr.revealed-row td.reveal-val::after { display: none; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-03: OOP-2</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#inheritance">Inheritance</a></li>
+            <li><a href="#super">super()</a></li>
+            <li><a href="#types">Types &amp; MRO</a></li>
+            <li><a href="#polymorphism">Polymorphism</a></li>
+            <li><a href="#operators">Operators</a></li>
+            <li><a href="#overloading">Overloading</a></li>
+            <li><a href="#which-method">Which Method?</a></li>
+            <li><a href="#together">Together</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#9728;&#65039;</span> <span id="themeText">Light</span></button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#128106;</div>
+        <h1>OOP-2: Inheritance &amp; Polymorphism</h1>
+        <p class="hero-meta">LLD-03 &bull; Pillars 3 &amp; 4 of Object-Oriented Programming</p>
+        <p class="hero-tagline">
+            Last class: Abstraction &amp; Encapsulation.<br>
+            Today: <strong>Reuse code without copy-pasting, and write code that works with types it hasn't met yet.</strong>
+        </p>
+    </section>
+
+    <!-- Recap -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label warning">Warm-Up</span>
+            <h2 class="section-title">Quick Recap &mdash; OOP-1</h2>
+            <p class="section-subtitle">Let's make sure the foundations are solid.</p>
+
+            <div class="quiz-box">
+                <h4>What does <code>self</code> refer to inside a method?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">The class itself</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">The specific object (instance) calling the method</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">A Python keyword like <code>this</code> in Java</button>
+                <div class="quiz-explanation">
+                    <code>self</code> = this specific object. <code>c1.increment()</code> &rarr; self is c1. <code>c2.increment()</code> &rarr; self is c2.
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What's the difference between <code>self.name</code>, <code>self._name</code>, and <code>self.__name</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">They're all the same, just different styles</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Public (anyone), Protected (convention: internal), Private (name-mangled)</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Single underscore is private, double is super-private</button>
+                <div class="quiz-explanation">
+                    <code>self.name</code> = open to all.<br>
+                    <code>self._name</code> = "please don't touch unless you're a subclass."<br>
+                    <code>self.__name</code> = Python renames it to <code>_ClassName__name</code> to prevent accidents.<br><br>
+                    Today you'll see why <strong>protected</strong> (<code>_name</code>) matters in inheritance.
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Why should a constructor require essential parameters?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">An object should be READY TO USE from birth. <code>Dish("Biryani", 300)</code> can never forget name or price.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It's just a coding convention</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Non-parameterized is always better</button>
+                <div class="quiz-explanation">Parameterized constructors = objects that can't be broken. Today child classes will call <code>super().__init__()</code> to pass data up to the parent.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Inheritance: The Duplication Problem -->
+    <section id="inheritance">
+        <div class="section-container">
+            <span class="section-label danger">The Problem</span>
+            <h2 class="section-title">Inheritance &mdash; "Reuse and Extend"</h2>
+            <p class="section-subtitle">Stop copy-pasting code. Let classes share what they have in common.</p>
+
+            <div class="highlight-box" style="margin-bottom: 25px;">
+                <h4 style="margin-bottom: 8px;">Real-world analogy</h4>
+                <p style="color: var(--text-secondary);">A child inherits traits from their parents &mdash; eye color, last name. The child doesn't re-learn walking from scratch. But the child CAN do new things (like play guitar). <strong>Get the parent's stuff for free, add your own on top.</strong></p>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Your restaurant has Food and Beverages. Spot the duplication:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>menu_v1.py &mdash; spot the duplication</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Food</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, calories):
+        self.name = name           <span class="comment"># duplicated</span>
+        self.price = price         <span class="comment"># duplicated</span>
+        self.calories = calories
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):          <span class="comment"># duplicated</span>
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, volume_ml):
+        self.name = name           <span class="comment"># duplicated</span>
+        self.price = price         <span class="comment"># duplicated</span>
+        self.volume_ml = volume_ml
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):          <span class="comment"># duplicated</span>
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What's the problem?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">There's a bug in the code</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><code>name</code>, <code>price</code>, and <code>describe()</code> are copy-pasted. Fix a bug in Food's <code>describe()</code>? Must remember to fix Beverage too. With 10 types, that's 10 places.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Merge them into one class</button>
+                <div class="quiz-explanation"><strong>The fix: extract common parts into a parent class.</strong></div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Syntax</h3>
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">
+                    <code><strong>class Food(MenuItem):</strong></code> &mdash; means Food <strong>inherits from</strong> MenuItem.<br><br>
+                    Food automatically gets everything MenuItem has: its attributes AND its methods. Food can then add its own stuff on top (like <code>calories</code>).
+                </p>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 20px; margin-bottom: 15px;">Great, so now we know the syntax. Let's write <code>Food</code> inheriting from <code>MenuItem</code>. Does this look right?</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>menu_attempt.py &mdash; our first try at inheritance</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, calories):
+        self.calories = calories
+
+biryani = Food(<span class="string">"Biryani"</span>, <span class="number">300</span>, <span class="number">450</span>)
+print(biryani.calories)     <span class="comment"># 450</span>
+print(biryani.describe())   <span class="comment"># ???</span>
+print(biryani.name)         <span class="comment"># ???</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Food inherits from MenuItem. We create a Food object with name, price, and calories. Will <code>biryani.name</code> work?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; Food inherits name from MenuItem, so it's set automatically</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><code>AttributeError</code>! Food's <code>__init__</code> only sets <code>calories</code>. It never told the parent to set up <code>name</code> and <code>price</code>. Inheriting doesn't mean the parent's <code>__init__</code> runs automatically.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It works but name will be None</button>
+                <div class="quiz-explanation">
+                    <strong>Inheritance gives you the parent's methods, but <code>__init__</code> doesn't run on its own.</strong> You must EXPLICITLY call <code>super().__init__(name, price)</code> to let the parent do its setup. Here's the fix:
+                </div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>menu_v2.py &mdash; the fix with super().__init__() &mdash; click to reveal</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:                    <span class="comment"># Parent (base class)</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):              <span class="comment"># Child &mdash; inherits name, price, describe()</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, calories):
+        <span class="function">super</span>().__init__(name, price)  <span class="comment"># &larr; Tell parent to set up name &amp; price</span>
+        self.calories = calories      <span class="comment"># Then set up food-specific attr</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem):          <span class="comment"># Child &mdash; inherits name, price, describe()</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, volume_ml):
+        <span class="function">super</span>().__init__(name, price)  <span class="comment"># &larr; Same: let parent handle name &amp; price</span>
+        self.volume_ml = volume_ml
+
+biryani = Food(<span class="string">"Biryani"</span>, <span class="number">300</span>, <span class="number">450</span>)
+chai = Beverage(<span class="string">"Chai"</span>, <span class="number">40</span>, <span class="number">200</span>)
+print(biryani.name)         <span class="comment"># "Biryani" &mdash; now it works!</span>
+print(biryani.describe())   <span class="comment"># "Biryani - Rs.300" &mdash; inherited!</span>
+print(chai.describe())      <span class="comment"># "Chai - Rs.40" &mdash; inherited!</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 12px;">What inheritance gives you</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>1. No duplication</strong> &mdash; <code>name</code>, <code>price</code>, <code>describe()</code> written ONCE in <code>MenuItem</code>.
+                </p>
+                <p style="color: var(--text-secondary); margin-top: 10px;">
+                    <strong>2. Fix once, fixed everywhere</strong> &mdash; update <code>describe()</code> in <code>MenuItem</code>, all children get the fix.
+                </p>
+                <p style="color: var(--text-secondary); margin-top: 10px;">
+                    <strong>3. Each child adds only what's unique</strong> &mdash; <code>Food</code> adds <code>calories</code>, <code>Beverage</code> adds <code>volume_ml</code>.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>If <code>Food</code> inherits from <code>MenuItem</code>, does a <code>Food</code> object have a <code>describe()</code> method?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Yes &mdash; it inherits <code>describe()</code> from MenuItem even though Food doesn't define it</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">No &mdash; Food must define its own <code>describe()</code></button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Only if you explicitly copy it</button>
+                <div class="quiz-explanation">The child gets ALL of the parent's methods automatically. That's the whole point of inheritance.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Method Overriding + Protected + super -->
+    <section id="super">
+        <div class="section-container">
+            <span class="section-label purple">Key Concept</span>
+            <h2 class="section-title">Method Overriding &amp; Protected Access</h2>
+            <p class="section-subtitle">A child can change the parent's behavior. There are two ways to do it.</p>
+
+            <h3 style="margin-bottom: 15px;">Overriding: Replace vs Extend</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When a child defines a method with the <strong>same name</strong> as the parent, that's called <strong>overriding</strong>. Both of these are overriding:</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before" style="background: rgba(168, 85, 247, 0.1); border-color: #a855f7;">
+                    <h4 style="color: #a855f7; margin-bottom: 10px;">Replace &mdash; completely new behavior</h4>
+                    <div class="code-block"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        <span class="comment"># Ignores parent's version entirely</span>
+        <span class="keyword">return</span> <span class="string">f"{self.name} ({self.calories} cal)"</span>
+
+<span class="comment"># "Biryani (450 cal)"</span>
+<span class="comment"># Parent's "Biryani - Rs.300" is gone</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Use when the parent's logic <strong>doesn't apply</strong> to this child at all.</p>
+                </div>
+                <div class="comparison-card after" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6;">
+                    <h4 style="color: #3b82f6; margin-bottom: 10px;">Extend &mdash; parent's behavior + more</h4>
+                    <div class="code-block"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        base = <span class="function">super</span>().describe()  <span class="comment"># Get parent's result</span>
+        <span class="keyword">return</span> <span class="string">f"{base} ({self.calories} cal)"</span>
+
+<span class="comment"># "Biryani - Rs.300 (450 cal)"</span>
+<span class="comment"># Parent's output + child's addition</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Use when you want <strong>everything the parent does PLUS more</strong>. More common.</p>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Both are called "overriding."</strong> The difference is whether you call <code>super().method()</code> inside.<br>
+                    Replace = don't call super. Extend = call super first, then add to the result.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4><code>biryani.describe()</code> &mdash; which <code>describe()</code> runs?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">MenuItem's &mdash; it's the parent</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Food's &mdash; biryani IS a Food, Food overrides describe(). If Food uses <code>super().describe()</code> inside, MenuItem's version runs too, but Food's is the entry point.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Both run simultaneously</button>
+                <div class="quiz-explanation">The <strong>OBJECT's type</strong> decides. biryani is a Food, Food has describe(), so Food's version runs. <code>super().describe()</code> inside it explicitly calls MenuItem's version.</div>
+            </div>
+
+            <!-- Protected Access Modifier -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">Protected Access &mdash; <code>_name</code> and Inheritance</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Remember from OOP-1: <code>self._name</code> (single underscore) means "protected." Now you see WHY it exists:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>protected_demo.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name           <span class="comment"># Public &mdash; anyone can access</span>
+        self._base_price = price   <span class="comment"># Protected &mdash; children can access, outsiders shouldn't</span>
+        self.__secret = <span class="string">"hidden"</span>  <span class="comment"># Private &mdash; only MenuItem can access</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self):
+        <span class="keyword">return</span> self._base_price * <span class="number">1.05</span>   <span class="comment"># &check; Child CAN access _protected</span>
+        <span class="comment"># return self.__secret             &cross; Child CANNOT access __private</span>
+        <span class="comment"># (would need self._MenuItem__secret &mdash; ugly and wrong)</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">
+                    <strong>Public</strong> (<code>self.name</code>) &mdash; everyone, including outside code.<br>
+                    <strong>Protected</strong> (<code>self._base_price</code>) &mdash; the class itself + its children. Signals: "internal, but subclasses need it."<br>
+                    <strong>Private</strong> (<code>self.__secret</code>) &mdash; only the class itself. Children can't access it directly.<br><br>
+                    Protected is the <strong>sweet spot for inheritance</strong>: outsiders can't touch it, but children can use it to extend behavior.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>A child class <code>Food</code> tries to access <code>self.__secret</code> (defined in parent <code>MenuItem</code> as <code>self.__secret</code>). What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Works fine &mdash; children inherit everything</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><code>AttributeError</code>! Double-underscore attributes are name-mangled to <code>_MenuItem__secret</code>. Food would need <code>self._MenuItem__secret</code> which is ugly and defeats the purpose. Use <code>self._secret</code> (protected) instead.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It works but prints None</button>
+                <div class="quiz-explanation">This is why protected (<code>_name</code>) exists: it's the right level for attributes that children need. Private (<code>__name</code>) is too restrictive for inheritance. Public is too open.</div>
+            </div>
+
+            <h3 style="margin-top: 35px; margin-bottom: 15px;"><code>super</code> vs <code>super()</code></h3>
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">
+                    <code><strong>super</strong></code> &mdash; the built-in class itself (a type object). Rarely used alone.<br>
+                    <code><strong>super()</strong></code> &mdash; creates a <strong>proxy object</strong> that follows the MRO to find the next class in the chain.<br><br>
+                    You almost always want <code>super()</code> with parentheses: <code>super().__init__()</code>, <code>super().describe()</code>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Types of Inheritance + MRO -->
+    <section id="types">
+        <div class="section-container">
+            <span class="section-label blue">Deep Dive</span>
+            <h2 class="section-title">Types of Inheritance &amp; MRO</h2>
+            <p class="section-subtitle">Four types of inheritance, and how Python decides which method to call when there's ambiguity.</p>
+
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">1</span> Single Inheritance</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">#   Animal</span>
+<span class="comment">#     |</span>
+<span class="comment">#    Dog</span>
+
+<span class="keyword">class</span> <span class="function">Animal</span>:
+    <span class="keyword">def</span> <span class="function">breathe</span>(self): <span class="keyword">return</span> <span class="string">"breathing..."</span>
+
+<span class="keyword">class</span> <span class="function">Dog</span>(Animal):
+    <span class="keyword">def</span> <span class="function">bark</span>(self): <span class="keyword">return</span> <span class="string">"Woof!"</span>
+
+dog = Dog()
+print(dog.breathe())  <span class="comment"># inherited from Animal</span>
+print(dog.bark())     <span class="comment"># its own method</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">One parent, one child. The most common and simplest type.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">2</span> Hierarchical Inheritance</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">#     MenuItem</span>
+<span class="comment">#    /   |   \</span>
+<span class="comment">#  Food  Bev  Dessert</span>
+
+<span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">describe</span>(self): <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem): <span class="keyword">pass</span>
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem): <span class="keyword">pass</span>
+<span class="keyword">class</span> <span class="function">Dessert</span>(MenuItem): <span class="keyword">pass</span>
+<span class="comment"># All three share MenuItem's describe()</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">Multiple children, same parent. Our restaurant menu is exactly this.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">3</span> Multilevel Inheritance</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">#  Animal</span>
+<span class="comment">#    |</span>
+<span class="comment">#   Dog</span>
+<span class="comment">#    |</span>
+<span class="comment">#  GuideDog</span>
+
+<span class="keyword">class</span> <span class="function">Animal</span>:
+    <span class="keyword">def</span> <span class="function">breathe</span>(self): <span class="keyword">return</span> <span class="string">"breathing"</span>
+
+<span class="keyword">class</span> <span class="function">Dog</span>(Animal):
+    <span class="keyword">def</span> <span class="function">bark</span>(self): <span class="keyword">return</span> <span class="string">"Woof!"</span>
+
+<span class="keyword">class</span> <span class="function">GuideDog</span>(Dog):
+    <span class="keyword">def</span> <span class="function">guide</span>(self): <span class="keyword">return</span> <span class="string">"guiding owner"</span>
+
+buddy = GuideDog()
+buddy.breathe()  <span class="comment"># from Animal (grandparent)</span>
+buddy.bark()     <span class="comment"># from Dog (parent)</span>
+buddy.guide()    <span class="comment"># its own</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">Grandparent &rarr; Parent &rarr; Child chain. Keep to 2-3 levels max.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">4</span> Multiple Inheritance <span style="color: var(--accent-warning); font-size: 0.8rem;">(Python only &mdash; Java says no!)</span></h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">#  Car    Plane</span>
+<span class="comment">#    \   /</span>
+<span class="comment">#  FlyingCar</span>
+
+<span class="keyword">class</span> <span class="function">Car</span>:
+    <span class="keyword">def</span> <span class="function">drive</span>(self): <span class="keyword">return</span> <span class="string">"driving on road"</span>
+
+<span class="keyword">class</span> <span class="function">Plane</span>:
+    <span class="keyword">def</span> <span class="function">fly</span>(self): <span class="keyword">return</span> <span class="string">"flying in sky"</span>
+
+<span class="keyword">class</span> <span class="function">FlyingCar</span>(Car, Plane):  <span class="comment"># Inherits from BOTH</span>
+    <span class="keyword">pass</span>
+
+fc = FlyingCar()
+fc.drive()  <span class="comment"># from Car</span>
+fc.fly()    <span class="comment"># from Plane</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">One child, MULTIPLE parents. <strong>Python allows this. Java does NOT.</strong> This leads to the Diamond Problem &mdash; which is where MRO comes in.</p>
+                </div></div>
+            </div>
+
+            <h3 style="margin-top: 35px; margin-bottom: 15px;">MRO &mdash; Method Resolution Order</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When a child has multiple parents with the same method, which one runs? Python uses <strong>C3 Linearization</strong> to decide.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>mro_demo.py &mdash; the diamond problem</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment">#      A          (has greet)</span>
+<span class="comment">#     / \</span>
+<span class="comment">#    B   C        (both have greet)</span>
+<span class="comment">#     \ /</span>
+<span class="comment">#      D          (no greet &mdash; which parent's greet runs?)</span>
+
+<span class="keyword">class</span> <span class="function">A</span>:
+    <span class="keyword">def</span> <span class="function">greet</span>(self): <span class="keyword">return</span> <span class="string">"Hello from A"</span>
+
+<span class="keyword">class</span> <span class="function">B</span>(A):
+    <span class="keyword">def</span> <span class="function">greet</span>(self): <span class="keyword">return</span> <span class="string">"Hello from B"</span>
+
+<span class="keyword">class</span> <span class="function">C</span>(A):
+    <span class="keyword">def</span> <span class="function">greet</span>(self): <span class="keyword">return</span> <span class="string">"Hello from C"</span>
+
+<span class="keyword">class</span> <span class="function">D</span>(B, C):
+    <span class="keyword">pass</span>
+
+d = D()
+print(d.greet())   <span class="comment"># ???</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>D inherits from both B and C. Both have <code>greet()</code>. What does <code>D().greet()</code> print?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">B's &mdash; "Hello from B"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">C's &mdash; "Hello from C"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">A's &mdash; goes to the top of the chain</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Error &mdash; Python can't decide</button>
+                <div class="quiz-explanation">
+                    <strong>Python goes left-to-right in the parent list.</strong> <code>class D(B, C)</code> &rarr; B is listed first, so B wins.<br><br>
+                    You can check the full order with <code>D.__mro__</code>:<br>
+                    <code>D &rarr; B &rarr; C &rarr; A &rarr; object</code><br><br>
+                    This is called <strong>C3 Linearization</strong> (MRO). Rule: left-to-right, depth-first, each class appears only ONCE.
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">
+                    <strong>Java vs Python:</strong> Java bans multiple class inheritance entirely (only interfaces). Python allows it and uses MRO to resolve conflicts. You can always check with <code>ClassName.__mro__</code> or <code>ClassName.mro()</code>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Polymorphism -->
+    <section id="polymorphism">
+        <div class="section-container">
+            <span class="section-label success">Pillar 4</span>
+            <h2 class="section-title">Polymorphism &mdash; "Many Forms"</h2>
+            <p class="section-subtitle">poly (many) + morph (forms).</p>
+
+            <div class="highlight-box" style="margin-bottom: 25px;">
+                <h4 style="margin-bottom: 8px;">Definition</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Polymorphism</strong> = the ability of different objects to respond to the <strong>SAME method call</strong> in their <strong>OWN way</strong>. The caller doesn't know or care about the specific type &mdash; it just calls the method and the right behavior happens.
+                </p>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><strong>The problem polymorphism solves:</strong> you're writing <code>print_bill()</code> and it needs to calculate prices. Without polymorphism:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>print_bill_bad.py &mdash; if/elif spaghetti</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">print_bill</span>(items):
+    <span class="keyword">for</span> item <span class="keyword">in</span> items:
+        <span class="keyword">if</span> isinstance(item, Food):
+            price = item.price * <span class="number">1.05</span>   <span class="comment"># 5% GST</span>
+        <span class="keyword">elif</span> isinstance(item, Beverage):
+            price = item.price + <span class="number">10</span>     <span class="comment"># container deposit</span>
+        <span class="keyword">elif</span> isinstance(item, Dessert):
+            price = item.price * <span class="number">1.12</span>   <span class="comment"># 12% GST</span>
+        <span class="comment"># New type? Add another elif. Breaks Open/Closed.</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>We add Dessert, then Combo, then Snack, then DrinkRefill. What happens to <code>print_bill()</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Nothing &mdash; the if/elif handles it automatically</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Each new type needs a new elif branch in print_bill(). 10 types = 10 branches. Every time you add a type, you risk breaking the existing ones by editing this function.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Just add a default else at the end</button>
+                <div class="quiz-explanation"><strong>Polymorphism eliminates the if/elif entirely.</strong> Each type knows how to calculate its own price &mdash; <code>print_bill()</code> just calls the method:</div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>print_bill_good.py &mdash; polymorphism &mdash; click to reveal</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">print_bill</span>(items):
+    <span class="keyword">for</span> item <span class="keyword">in</span> items:
+        price = item.calculate_price()   <span class="comment"># Each type handles its own logic!</span>
+        print(<span class="string">f"  {item.name}: Rs.{price:.2f}"</span>)
+<span class="comment"># New type? Just add a class with calculate_price(). ZERO changes here.</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 35px; margin-bottom: 15px;">Duck Typing &mdash; "If It Quacks Like a Duck..."</h3>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>duck_typing.py</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">EmailNotification</span>:
+    <span class="keyword">def</span> <span class="function">send</span>(self, msg): print(<span class="string">f"EMAIL: {msg}"</span>)
+
+<span class="keyword">class</span> <span class="function">Pigeon</span>:  <span class="comment"># Not a notification class at all!</span>
+    <span class="keyword">def</span> <span class="function">send</span>(self, msg): print(<span class="string">f"PIGEON carries: {msg}"</span>)
+
+<span class="keyword">def</span> <span class="function">notify</span>(notifier, msg):
+    notifier.send(msg)  <span class="comment"># Python doesn't check TYPE, only: "does it have send()?"</span>
+
+notify(EmailNotification(), <span class="string">"Order ready"</span>)  <span class="comment"># Works</span>
+notify(Pigeon(), <span class="string">"Order ready"</span>)              <span class="comment"># Also works!</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">Python doesn't care about the TYPE &mdash; it only cares if the method EXISTS. "If it walks like a duck and quacks like a duck, it IS a duck." In Java you'd need <code>implements Notifiable</code>. Python just tries it.</p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>PM says "add WhatsApp notifications." How much existing code changes?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">ZERO. Create <code>WhatsAppNotification</code> with <code>send()</code>. Pass it to <code>notify()</code>. Done.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Modify notify() to handle WhatsApp</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Rewrite the system</button>
+                <div class="quiz-explanation">Polymorphism means new types slot in with zero changes to existing code. This is extensibility from LLD-01.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Operator Overloading -->
+    <section id="operators">
+        <div class="section-container">
+            <span class="section-label">Polymorphism in Operators</span>
+            <h2 class="section-title">Operator Overloading &mdash; Dunder Methods</h2>
+            <p class="section-subtitle"><code>+</code> works on ints, strings, and lists &mdash; differently each time. How? Dunder methods.</p>
+
+            <div class="highlight-box" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 8px;">What are dunder methods?</h4>
+                <p style="color: var(--text-secondary);">
+                    "Dunder" = <strong>d</strong>ouble <strong>under</strong>score. Methods like <code>__str__</code>, <code>__add__</code>, <code>__len__</code> are called <strong>dunder methods</strong> (or magic methods).<br><br>
+                    Python calls them <strong>behind the scenes</strong> when you use operators or built-in functions:<br><br>
+                    <code>print(obj)</code> &rarr; Python internally calls <code>obj.<strong>__str__</strong>()</code><br>
+                    <code>a + b</code> &rarr; Python internally calls <code>a.<strong>__add__</strong>(b)</code><br>
+                    <code>len(obj)</code> &rarr; Python internally calls <code>obj.<strong>__len__</strong>()</code><br>
+                    <code>a == b</code> &rarr; Python internally calls <code>a.<strong>__eq__</strong>(b)</code><br><br>
+                    By defining these methods in YOUR class, you teach Python how <code>print</code>, <code>+</code>, <code>len</code>, <code>==</code> should work for your objects.
+                </p>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">1</span> <code>__str__</code> &mdash; what <code>print()</code> calls</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dish</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self):
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+print(Dish(<span class="string">"Biryani"</span>, <span class="number">300</span>))  <span class="comment"># "Biryani - Rs.300" (not &lt;Dish object at 0x...&gt;)</span></pre>
+                    </div></div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">2</span> <code>__add__</code> &mdash; what <code>+</code> calls</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Money</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, amount, currency=<span class="string">"INR"</span>):
+        self.amount = amount; self.currency = currency
+
+    <span class="keyword">def</span> <span class="function">__add__</span>(self, other):
+        <span class="keyword">if</span> self.currency != other.currency:
+            <span class="keyword">raise</span> ValueError(<span class="string">"Can't add different currencies"</span>)
+        <span class="keyword">return</span> Money(self.amount + other.amount, self.currency)
+
+    <span class="keyword">def</span> <span class="function">__str__</span>(self): <span class="keyword">return</span> <span class="string">f"{self.currency} {self.amount}"</span>
+
+total = Money(<span class="number">300</span>) + Money(<span class="number">54</span>)  <span class="comment"># Calls __add__</span>
+print(total)                       <span class="comment"># "INR 354"</span></pre>
+                    </div></div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">3</span> <code>__len__</code> &mdash; what <code>len()</code> calls</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Cart</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.items = []
+
+    <span class="keyword">def</span> <span class="function">add</span>(self, item): self.items.append(item)
+
+    <span class="keyword">def</span> <span class="function">__len__</span>(self):
+        <span class="keyword">return</span> len(self.items)
+
+cart = Cart()
+cart.add(<span class="string">"Biryani"</span>); cart.add(<span class="string">"Naan"</span>)
+print(len(cart))  <span class="comment"># 2 (calls cart.__len__())</span></pre>
+                    </div></div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><span class="step-number">4</span> <code>__eq__</code> &mdash; what <code>==</code> calls</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+
+    <span class="keyword">def</span> <span class="function">__eq__</span>(self, other):
+        <span class="keyword">return</span> self.name == other.name <span class="keyword">and</span> self.price == other.price
+
+a = MenuItem(<span class="string">"Biryani"</span>, <span class="number">300</span>)
+b = MenuItem(<span class="string">"Biryani"</span>, <span class="number">300</span>)
+print(a == b)  <span class="comment"># True (without __eq__, this would be False &mdash; different objects)</span></pre>
+                    </div></div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 20px;">
+                <h4>Without <code>__str__</code>, what does <code>print(Dish("Biryani", 300))</code> show?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">"Biryani - Rs.300"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Something like <code>&lt;__main__.Dish object at 0x7f3b2c&gt;</code> &mdash; the default unhelpful repr</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">An error</button>
+                <div class="quiz-explanation"><code>__str__</code> makes your objects printable. Without it, Python shows the memory address.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Method Overloading -->
+    <section id="overloading">
+        <div class="section-container">
+            <span class="section-label warning">Gotcha</span>
+            <h2 class="section-title">Method Overloading</h2>
+            <p class="section-subtitle">In Java you can have multiple methods with the same name but different parameters. What about Python?</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Read this code carefully:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>overloading.py</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Calculator</span>:
+    <span class="keyword">def</span> <span class="function">add</span>(self, a, b):
+        <span class="keyword">return</span> a + b
+
+    <span class="keyword">def</span> <span class="function">add</span>(self, a, b, c):
+        <span class="keyword">return</span> a + b + c
+
+calc = Calculator()
+calc.add(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)   <span class="comment"># ???</span>
+calc.add(<span class="number">1</span>, <span class="number">2</span>)      <span class="comment"># ???</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Will both <code>calc.add(1, 2, 3)</code> and <code>calc.add(1, 2)</code> work?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; Python picks the right version based on argument count (like Java)</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Only <code>calc.add(1, 2, 3)</code> works. <code>calc.add(1, 2)</code> throws TypeError. The second <code>add</code> definition REPLACED the first &mdash; the 2-param version is gone forever.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Neither works &mdash; Python throws an error when you define two methods with the same name</button>
+                <div class="quiz-explanation"><strong>Python does NOT support method overloading.</strong> If you define two methods with the same name, the second silently replaces the first. The Pythonic way is default parameters or <code>*args</code>:</div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>The Pythonic way &mdash; click to reveal</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Calculator</span>:
+    <span class="keyword">def</span> <span class="function">add</span>(self, *args):      <span class="comment"># Accept any number of arguments</span>
+        <span class="keyword">return</span> sum(args)
+
+calc = Calculator()
+print(calc.add(<span class="number">1</span>, <span class="number">2</span>))          <span class="comment"># 3</span>
+print(calc.add(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>))       <span class="comment"># 6</span>
+print(calc.add(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>)) <span class="comment"># 15</span></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Which Method Runs? -->
+    <section id="which-method">
+        <div class="section-container">
+            <span class="section-label purple">Tricky Scenarios</span>
+            <h2 class="section-title">Which Method Gets Called?</h2>
+            <p class="section-subtitle">The OBJECT's type decides, not the variable's type. Each scenario has its own code &mdash; no scrolling needed.</p>
+
+            <!-- Scenario 1 -->
+            <div class="quiz-box">
+                <h4>Scenario 1: Child overrides the method</h4>
+                <div class="code-block" style="margin: 10px 0;">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">describe</span>(self): <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">describe</span>(self): <span class="keyword">return</span> <span class="string">f"{self.name} ({self.calories} cal)"</span>
+
+biryani = Food(<span class="string">"Biryani"</span>, <span class="number">300</span>, <span class="number">450</span>)
+biryani.describe()  <span class="comment"># ???</span></pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Food's <code>describe()</code> &mdash; biryani IS a Food, Food overrides describe()</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">MenuItem's <code>describe()</code> &mdash; it's the parent</button>
+                <div class="quiz-explanation">The OBJECT is a Food. Food has describe(). <strong>Python starts at the object's class and looks there first.</strong></div>
+            </div>
+
+            <!-- Scenario 2 -->
+            <div class="quiz-box">
+                <h4>Scenario 2: Child does NOT override the method</h4>
+                <div class="code-block" style="margin: 10px 0;">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">describe</span>(self): <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price + <span class="number">10</span>
+    <span class="comment"># No describe() here!</span>
+
+chai = Beverage(<span class="string">"Chai"</span>, <span class="number">40</span>, <span class="number">200</span>)
+chai.describe()  <span class="comment"># ???</span></pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Error &mdash; Beverage doesn't have describe()</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">MenuItem's describe() &mdash; Beverage doesn't have it, so Python walks UP to the parent and finds it there</button>
+                <div class="quiz-explanation">Python looks at Beverage first &rarr; not found &rarr; goes up to MenuItem &rarr; found! <strong>The chain goes child &rarr; parent &rarr; grandparent &rarr; ... until found.</strong></div>
+            </div>
+
+            <!-- Scenario 3: Parent reference, child object -->
+            <div class="quiz-box">
+                <h4>Scenario 3: Variable typed as parent, object is child</h4>
+                <div class="code-block" style="margin: 10px 0;">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price * <span class="number">1.05</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price + <span class="number">10</span>
+
+items: list[MenuItem] = [Food(<span class="string">"Biryani"</span>, <span class="number">300</span>, <span class="number">450</span>), Beverage(<span class="string">"Chai"</span>, <span class="number">40</span>, <span class="number">200</span>)]
+<span class="keyword">for</span> item <span class="keyword">in</span> items:
+    print(item.calculate_price())  <span class="comment"># ???</span></pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Always MenuItem's &mdash; the list is typed as <code>list[MenuItem]</code></button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">For Food &rarr; Food's version (Rs.315). For Beverage &rarr; Beverage's version (Rs.50). Type hints are just documentation &mdash; Python ignores them at runtime. The OBJECT decides.</button>
+                <div class="quiz-explanation"><strong>This IS polymorphism.</strong> The variable says MenuItem, but the OBJECT decides which method runs. Python doesn't have static typing that restricts method dispatch.</div>
+            </div>
+
+            <!-- Scenario 4: Multilevel — grandparent, parent, child -->
+            <div class="quiz-box">
+                <h4>Scenario 4: Multilevel inheritance &mdash; which level's method runs?</h4>
+                <div class="code-block" style="margin: 10px 0;">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Animal</span>:
+    <span class="keyword">def</span> <span class="function">speak</span>(self): <span class="keyword">return</span> <span class="string">"..."</span>
+
+<span class="keyword">class</span> <span class="function">Dog</span>(Animal):
+    <span class="keyword">def</span> <span class="function">speak</span>(self): <span class="keyword">return</span> <span class="string">"Woof!"</span>
+
+<span class="keyword">class</span> <span class="function">GuideDog</span>(Dog):
+    <span class="keyword">pass</span>   <span class="comment"># No speak() override</span>
+
+buddy = GuideDog()
+buddy.speak()  <span class="comment"># ???</span></pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Animal's &mdash; "..." (goes to the top)</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Dog's &mdash; "Woof!" (GuideDog doesn't have speak(), goes up one level to Dog, finds it there)</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Error &mdash; GuideDog doesn't define speak()</button>
+                <div class="quiz-explanation">Python walks the MRO: GuideDog &rarr; Dog &rarr; Animal. Finds <code>speak()</code> in Dog, stops there. <strong>It doesn't go all the way to the top &mdash; it stops at the first class that has the method.</strong></div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 8px;">The rule</h4>
+                <p style="color: var(--text-secondary);">
+                    Python starts at the <strong>object's actual class</strong> and walks UP the inheritance chain (following MRO). It uses the <strong>first version it finds</strong>. It NEVER goes back down. The variable's type annotation doesn't matter &mdash; only the object's real class.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Together -->
+    <section id="together">
+        <div class="section-container">
+            <span class="section-label success">The Full Picture</span>
+            <h2 class="section-title">Inheritance + Polymorphism Together</h2>
+            <p class="section-subtitle">Adding a new type requires ZERO changes to existing code.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>menu_system.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price * <span class="number">1.05</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price + <span class="number">10</span>
+
+<span class="keyword">def</span> <span class="function">print_bill</span>(items):  <span class="comment"># Works with ANY MenuItem</span>
+    total = sum(item.calculate_price() <span class="keyword">for</span> item <span class="keyword">in</span> items)
+    <span class="keyword">for</span> item <span class="keyword">in</span> items:
+        print(<span class="string">f"  {item.name}: Rs.{item.calculate_price():.2f}"</span>)
+    print(<span class="string">f"  TOTAL: Rs.{total:.2f}"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>PM says "add Desserts with 12% GST." How many existing lines change?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">ZERO. Create <code>class Dessert(MenuItem)</code> with its own <code>calculate_price()</code>. Existing code untouched.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Modify print_bill()</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Add if/elif in calculate_price()</button>
+                <div class="quiz-explanation"><strong>Open/Closed Principle</strong> (SOLID). Open for extension (add Dessert), closed for modification (MenuItem, Food, Beverage, print_bill untouched).</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Common Mistakes -->
+    <section id="mistakes">
+        <div class="section-container">
+            <span class="section-label danger">Watch Out</span>
+            <h2 class="section-title">Common Mistakes</h2>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="card" style="border-color: var(--accent-danger);">
+                    <div class="card-title" style="color: var(--accent-danger);">Too-deep hierarchies</div>
+                    <div class="card-desc"><code>Animal &rarr; Mammal &rarr; Pet &rarr; Dog &rarr; GuideDog</code><br>Keep to 2-3 levels. If deeper, use composition.</div>
+                </div>
+                <div class="card" style="border-color: var(--accent-danger);">
+                    <div class="card-title" style="color: var(--accent-danger);">Forgetting super().__init__()</div>
+                    <div class="card-desc">Parent attributes never get set. <code>AttributeError</code> when accessing them.</div>
+                </div>
+                <div class="card" style="border-color: var(--accent-warning);">
+                    <div class="card-title" style="color: var(--accent-warning);">"Is-a" vs "Has-a"</div>
+                    <div class="card-desc"><strong>IS-A</strong> = inheritance: Food IS a MenuItem.<br><strong>HAS-A</strong> = composition: Order HAS items.<br><code>class Order(list)</code> &mdash; wrong! Order is NOT a list.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's Next -->
+    <section id="next">
+        <div class="section-container">
+            <span class="section-label">Looking Ahead</span>
+            <h2 class="section-title">What's Next</h2>
+            <div class="table-container">
+                <table>
+                    <tr><th>Today</th><th>OOP-3</th><th>Later</th></tr>
+                    <tr><td><strong>Inheritance</strong></td><td>Abstract Base Classes &mdash; enforce children MUST implement methods</td><td>Factory decides WHICH child to create</td></tr>
+                    <tr><td><strong>Polymorphism</strong></td><td>ABCs + polymorphism = contracts</td><td>Strategy Pattern = polymorphism as design pattern</td></tr>
+                    <tr><td><strong>Method Overriding</strong></td><td>@abstractmethod forces overriding</td><td>Liskov Substitution (SOLID)</td></tr>
+                    <tr><td><strong>MRO</strong></td><td>Static methods &mdash; methods without self</td><td>Decorator pattern uses inheritance</td></tr>
+                </table>
+            </div>
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 8px;">Next: OOP-3 &mdash; Static Methods and Abstract Base Classes</h4>
+                <p style="color: var(--text-secondary);">Today <code>notify()</code> trusts that objects have <code>send()</code>. But what if someone forgets? ABCs ENFORCE the contract: "you MUST have send(), or you can't be created."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label success">Resources</span>
+            <h2 class="section-title">Practice &amp; Learn More</h2>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#128013;</div>
+                    <div class="card-title">Scaler &mdash; Inheritance</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">All types of inheritance in Python.</div>
+                    <a href="https://www.scaler.com/topics/python/inheritance-in-python/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">scaler.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127916;</div>
+                    <div class="card-title">Corey Schafer &mdash; Inheritance</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">OOP series Part 4. Covers super() and MRO.</div>
+                    <a href="https://www.youtube.com/watch?v=RSl87lqOXDE" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">YouTube &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Real Python &mdash; super()</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">MRO and cooperative inheritance deep dive.</div>
+                    <a href="https://realpython.com/python-super/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">realpython.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128640;</div>
+                    <div class="card-title">Composition vs Inheritance</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">When "is-a" vs "has-a". Essential reading.</div>
+                    <a href="https://realpython.com/inheritance-composition-python/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">realpython.com &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-03 &bull; OOP-2: Inheritance and Polymorphism<br><span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span></p>
+    </footer>
+
+    <script>
+        window.addEventListener('scroll', () => { const s = document.body.scrollTop || document.documentElement.scrollTop; const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; document.getElementById('progressBar').style.width = (s / h) * 100 + '%'; });
+        function toggleTheme() { const b = document.body, i = document.getElementById('themeIcon'), t = document.getElementById('themeText'); if (b.getAttribute('data-theme') === 'light') { b.removeAttribute('data-theme'); i.textContent = '\u{1F319}'; t.textContent = 'Dark'; } else { b.setAttribute('data-theme', 'light'); i.textContent = '\u{2600}\u{FE0F}'; t.textContent = 'Light'; } }
+        function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+        function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+        function copyCode(button) { const code = button.closest('.code-block').querySelector('pre').textContent; navigator.clipboard.writeText(code).then(() => { button.textContent = 'Copied!'; setTimeout(() => button.textContent = 'Copy', 2000); }); }
+        function checkQuiz(button, isCorrect) { const box = button.closest('.quiz-box'); if (box.classList.contains('answered')) return; box.classList.add('answered'); button.classList.add('selected'); if (isCorrect) { button.classList.add('correct'); } else { button.classList.add('wrong'); box.querySelectorAll('.quiz-option').forEach(o => { if (o.getAttribute('onclick')?.includes('true')) o.classList.add('correct'); }); } }
+        function revealRow(tr) { tr.classList.toggle('revealed-row'); }
+        document.addEventListener('keydown', (e) => { if (e.key === 'e' && e.altKey) { document.querySelectorAll('.code-block.collapsed').forEach(b => b.classList.remove('collapsed')); document.querySelectorAll('.collapsible:not(.open)').forEach(c => c.classList.add('open')); } if (e.key === 'c' && e.altKey) { document.querySelectorAll('.code-block:not(.collapsed)').forEach(b => b.classList.add('collapsed')); document.querySelectorAll('.collapsible.open').forEach(c => c.classList.remove('open')); } });
+    </script>
+</body>
+</html>
