@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-04: OOP-3 — Static and Abstract Base Class</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .reveal-table td.reveal-val { cursor: pointer; position: relative; transition: all 0.3s; }
+        .reveal-table td.reveal-val .val-text { display: none; }
+        .reveal-table td.reveal-val::after { content: 'click to reveal'; color: var(--text-muted); font-size: 0.75rem; font-style: italic; }
+        .reveal-table td.reveal-val:hover { background: rgba(16, 185, 129, 0.05); }
+        .reveal-table tr.revealed-row td.reveal-val .val-text { display: inline; }
+        .reveal-table tr.revealed-row td.reveal-val::after { display: none; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-04: OOP-3</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#static">Static</a></li>
+            <li><a href="#classmethod">Class Methods</a></li>
+            <li><a href="#comparison">Compare</a></li>
+            <li><a href="#abc-problem">ABC Problem</a></li>
+            <li><a href="#abc-solution">ABC Solution</a></li>
+            <li><a href="#abc-syntax">ABC Syntax</a></li>
+            <li><a href="#together">Together</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#9728;&#65039;</span> <span id="themeText">Light</span></button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#128737;</div>
+        <h1>OOP-3: Static &amp; Abstract Base Classes</h1>
+        <p class="hero-meta">LLD-04 &bull; Completing the OOP Toolkit</p>
+        <p class="hero-tagline">
+            Last class: Inheritance &amp; Polymorphism.<br>
+            Today: <strong>Methods that don't need objects, and contracts that children MUST follow.</strong>
+        </p>
+    </section>
+
+    <!-- Recap: Code-driven quizzes from OOP-2 -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label warning">Warm-Up</span>
+            <h2 class="section-title">Quick Recap &mdash; OOP-2</h2>
+            <p class="section-subtitle">Code-driven questions. Read the snippet, then answer.</p>
+
+            <!-- Q1: super().__init__ -->
+            <div class="quiz-box">
+                <h4>What does <code>print(b.name)</code> output?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, cal):
+        self.cal = cal
+
+b = Food(<span class="string">"Biryani"</span>, <span class="number">300</span>, <span class="number">450</span>)
+print(b.name)   <span class="comment"># ???</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">"Biryani"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">AttributeError &mdash; <code>name</code> was never set because <code>super().__init__()</code> was not called</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">None</button>
+                <div class="quiz-explanation">Food's <code>__init__</code> replaces MenuItem's. Without <code>super().__init__(name, price)</code>, the parent never sets <code>name</code> and <code>price</code>.</div>
+            </div>
+
+            <!-- Q1b: Why no super for regular methods? -->
+            <div class="quiz-box">
+                <h4>Food doesn't define <code>describe()</code>. Does <code>b.describe()</code> work (assuming super was called properly)?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+    <span class="keyword">def</span> <span class="function">describe</span>(self):
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price, cal):
+        <span class="function">super</span>().__init__(name, price)
+        self.cal = cal
+    <span class="comment"># No describe() here</span>
+
+b = Food(<span class="string">"Biryani"</span>, <span class="number">300</span>, <span class="number">450</span>)
+b.describe()   <span class="comment"># ???</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Yes &mdash; inherited methods are available automatically. Only <code>__init__</code> needs explicit <code>super()</code> because the child's <code>__init__</code> replaces the parent's.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">No &mdash; you need <code>super().describe()</code> to call it</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Error &mdash; Food doesn't have describe()</button>
+                <div class="quiz-explanation">Regular inherited methods work automatically. <code>__init__</code> is special because defining it in the child <strong>overrides</strong> the parent's. Other methods are inherited unless explicitly overridden.</div>
+            </div>
+
+            <!-- Q2: MRO with code -->
+            <div class="quiz-box">
+                <h4>What does <code>D().greet()</code> return?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">A</span>:
+    <span class="keyword">def</span> <span class="function">greet</span>(self): <span class="keyword">return</span> <span class="string">"A"</span>
+
+<span class="keyword">class</span> <span class="function">B</span>(A):
+    <span class="keyword">def</span> <span class="function">greet</span>(self): <span class="keyword">return</span> <span class="string">"B"</span>
+
+<span class="keyword">class</span> <span class="function">C</span>(A):
+    <span class="keyword">def</span> <span class="function">greet</span>(self): <span class="keyword">return</span> <span class="string">"C"</span>
+
+<span class="keyword">class</span> <span class="function">D</span>(B, C):
+    <span class="keyword">pass</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">"B" &mdash; MRO goes left-to-right: D &rarr; B &rarr; C &rarr; A</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">"C"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">"A"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Error</button>
+                <div class="quiz-explanation"><code>class D(B, C)</code> &rarr; B is listed first, so B's greet() wins.</div>
+            </div>
+
+            <!-- Q3: Method overloading with code -->
+            <div class="quiz-box">
+                <h4>What happens when you run this?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Calc</span>:
+    <span class="keyword">def</span> <span class="function">add</span>(self, a, b):
+        <span class="keyword">return</span> a + b
+
+    <span class="keyword">def</span> <span class="function">add</span>(self, a, b, c):
+        <span class="keyword">return</span> a + b + c
+
+calc = Calc()
+print(calc.add(<span class="number">1</span>, <span class="number">2</span>))    <span class="comment"># ???</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">3 &mdash; picks the 2-param version</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">TypeError &mdash; the 2-param <code>add</code> is gone. The second definition replaced it. Python has no method overloading.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Both exist, Python picks the right one</button>
+                <div class="quiz-explanation"><strong>Why no overloading?</strong> Python is dynamically typed &mdash; it can't distinguish methods by parameter types at definition time like Java. In Java, <code>add(int, int)</code> and <code>add(int, int, int)</code> are different signatures. In Python, the name is all that matters &mdash; second <code>def add</code> overwrites the first.</div>
+            </div>
+
+            <!-- Q4: Private in inheritance with code -->
+            <div class="quiz-box">
+                <h4>What does <code>f.show()</code> output?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name):
+        self.name = name
+        self.__secret = <span class="string">"recipe"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name):
+        <span class="function">super</span>().__init__(name)
+
+    <span class="keyword">def</span> <span class="function">show_secret</span>(self):
+        <span class="keyword">return</span> self.__secret
+
+f = Food(<span class="string">"Biryani"</span>)
+f.show_secret()  <span class="comment"># ???</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">"recipe"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">AttributeError &mdash; <code>__secret</code> is mangled to <code>_MenuItem__secret</code>. Food's <code>self.__secret</code> looks for <code>_Food__secret</code> which doesn't exist.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">None</button>
+                <div class="quiz-explanation">Use <code>self._protected</code> for attributes children need. <code>__private</code> is for the defining class only.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Static Methods -->
+    <section id="static">
+        <div class="section-container">
+            <span class="section-label">New Concept</span>
+            <h2 class="section-title">Static Methods &mdash; No <code>self</code> Needed</h2>
+            <p class="section-subtitle">Sometimes a function is related to a class but doesn't need any object data.</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><strong>Step 1:</strong> You have utility functions floating around as globals:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>step1_globals.py &mdash; homeless functions</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># These are about menu items... but live outside the class</span>
+<span class="keyword">def</span> <span class="function">is_valid_price</span>(price):
+    <span class="keyword">return</span> isinstance(price, (<span class="function">int</span>, <span class="function">float</span>)) <span class="keyword">and</span> price > <span class="number">0</span>
+
+<span class="keyword">def</span> <span class="function">format_currency</span>(amount):
+    <span class="keyword">return</span> <span class="string">f"Rs.{amount:.2f}"</span>
+
+<span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price</pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 20px; margin-bottom: 15px;"><strong>Step 2:</strong> You encapsulate them inside the class (from OOP-1 &mdash; related things should live together). But since methods need <code>self</code>, you add it:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>step2_inside_class.py &mdash; moved inside, but...</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+    <span class="keyword">def</span> <span class="function">is_valid_price</span>(self, price):   <span class="comment"># self is here...</span>
+        <span class="keyword">return</span> isinstance(price, (<span class="function">int</span>, <span class="function">float</span>)) <span class="keyword">and</span> price > <span class="number">0</span>
+
+<span class="comment"># To validate, you MUST create an object first:</span>
+item = MenuItem(<span class="string">"temp"</span>, <span class="number">0</span>)           <span class="comment"># Create a useless object...</span>
+print(item.is_valid_price(<span class="number">300</span>))      <span class="comment"># ...just to call validation</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Look at <code>is_valid_price(self, price)</code>. Does it actually USE <code>self</code> anywhere in its body?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No &mdash; it only uses the <code>price</code> parameter. <code>self</code> is there but completely unused. We had to create a useless MenuItem just to call validation.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; self is always needed inside a class</button>
+                <div class="quiz-explanation"><strong>Step 3:</strong> If a method doesn't use <code>self</code>, make it <code>@staticmethod</code>. Two changes: add the decorator, remove <code>self</code> from params.</div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>The fix &mdash; @staticmethod &mdash; click to reveal</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+    <span class="decorator">@staticmethod</span>                          <span class="comment"># No self parameter!</span>
+    <span class="keyword">def</span> <span class="function">is_valid_price</span>(price):
+        <span class="keyword">return</span> isinstance(price, (<span class="function">int</span>, <span class="function">float</span>)) <span class="keyword">and</span> price > <span class="number">0</span>
+
+<span class="comment"># Now call it WITHOUT creating an object:</span>
+print(MenuItem.is_valid_price(<span class="number">300</span>))   <span class="comment"># True &mdash; no object needed!</span>
+print(MenuItem.is_valid_price(-<span class="number">50</span>))   <span class="comment"># False</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Two things changed:</strong><br>
+                    1. Added <code>@staticmethod</code> decorator<br>
+                    2. Removed <code>self</code> from the parameter list<br><br>
+                    Now you don't need to create an object just to validate a price. The function lives inside the class for <strong>organization</strong> but doesn't need instance data.
+                </p>
+            </div>
+
+            <!-- Quiz: Should this be static? -->
+            <div class="quiz-box">
+                <h4>Should <code>apply_discount</code> be <code>@staticmethod</code>?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">apply_discount</span>(percent):
+        <span class="keyword">return</span> self.price * (<span class="number">1</span> - percent/<span class="number">100</span>)</pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; discount calculation is a utility</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No! It uses <code>self.price</code> &mdash; it needs the object's data. This will crash with NameError. Remove <code>@staticmethod</code> and add <code>self</code> as first param.</button>
+                <div class="quiz-explanation"><strong>Rule: if you use <code>self.anything</code>, it's NOT static.</strong> Static methods have no access to <code>self</code>. Only make a method static if it uses ONLY its own parameters.</div>
+            </div>
+
+            <!-- Code-driven quiz: can static access self? -->
+            <div class="quiz-box">
+                <h4>Will this work?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">describe_item</span>():
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+MenuItem(<span class="string">"Biryani"</span>, <span class="number">300</span>).describe_item()</pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; "Biryani - Rs.300"</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">NameError &mdash; <code>self</code> doesn't exist in static methods. They have NO access to instance data. If you need <code>self</code>, it's an instance method, not static.</button>
+                <div class="quiz-explanation">Static = "I don't need any object data." If you find yourself needing <code>self</code>, remove <code>@staticmethod</code> and add <code>self</code> as the first parameter.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">When to Use Static Methods</h3>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <div class="card-title">Validation helpers</div>
+                    <div class="card-desc"><code>MenuItem.is_valid_price(300)</code><br><code>User.is_valid_email("a@b.com")</code><br><code>Password.is_strong("abc123")</code></div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <div class="card-title">Formatting / conversion</div>
+                    <div class="card-desc"><code>MenuItem.format_currency(299.5)</code><br><code>Temperature.celsius_to_fahrenheit(100)</code><br><code>DateUtils.format_date(dt)</code></div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <div class="card-title">Pure utility logic</div>
+                    <div class="card-desc"><code>MathHelper.gcd(12, 8)</code><br><code>StringUtils.slugify("Hello World")</code><br><code>FileUtils.get_extension("a.pdf")</code></div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 8px;">Popular static methods in Python's standard library</h4>
+                <p style="color: var(--text-secondary);">
+                    <code>str.<strong>maketrans</strong>("aeiou", "12345")</code> &mdash; creates a translation table<br>
+                    <code>os.path.<strong>join</strong>("/home", "user")</code> &mdash; joins path components (technically module-level, but static in spirit)<br>
+                    <code>json.<strong>dumps</strong>(data)</code> / <code>json.<strong>loads</strong>(text)</code> &mdash; serialize/deserialize (module-level functions, same pattern)<br><br>
+                    Python uses module-level functions more than @staticmethod. But in YOUR classes, @staticmethod is the right way to keep utility functions organized.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Class Methods -->
+    <section id="classmethod">
+        <div class="section-container">
+            <span class="section-label purple">New Concept</span>
+            <h2 class="section-title">Class Methods &mdash; Alternative Constructors</h2>
+            <p class="section-subtitle">Your API sends menu items as dicts. Your CSV import sends them as strings. How do you create objects from both?</p>
+
+            <!-- Problem first -->
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>the_problem.py &mdash; creation logic scattered outside</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+<span class="comment"># Creation logic is OUTSIDE the class &mdash; scattered, not encapsulated</span>
+<span class="keyword">def</span> <span class="function">create_from_dict</span>(data):
+    <span class="keyword">return</span> MenuItem(data[<span class="string">"name"</span>], data[<span class="string">"price"</span>])
+
+<span class="keyword">def</span> <span class="function">create_from_csv</span>(line):
+    name, price = line.split(<span class="string">","</span>)
+    <span class="keyword">return</span> MenuItem(name.strip(), <span class="function">float</span>(price))</pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>These functions create MenuItem objects. Should this logic live outside the class or inside?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Outside is fine &mdash; they just call the constructor</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Inside &mdash; they're about creating MenuItems, so they belong in the MenuItem class. But they can't be instance methods (you don't have an object yet). They need something new.</button>
+                <div class="quiz-explanation">This is what <code>@classmethod</code> solves. It gets <code>cls</code> (the class itself) as its first parameter, so it can create objects:</div>
+            </div>
+
+            <div class="code-block collapsed">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>the_fix.py &mdash; @classmethod &mdash; click to reveal</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name
+        self.price = price
+
+    <span class="decorator">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">from_dict</span>(cls, data):              <span class="comment"># cls = the class itself</span>
+        <span class="keyword">return</span> cls(data[<span class="string">"name"</span>], data[<span class="string">"price"</span>])  <span class="comment"># same as MenuItem(...)</span>
+
+    <span class="decorator">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">from_csv</span>(cls, line):
+        name, price = line.split(<span class="string">","</span>)
+        <span class="keyword">return</span> cls(name.strip(), <span class="function">float</span>(price))
+
+<span class="comment"># Three ways to create the same object:</span>
+m1 = MenuItem(<span class="string">"Biryani"</span>, <span class="number">300</span>)
+m2 = MenuItem.from_dict({<span class="string">"name"</span>: <span class="string">"Biryani"</span>, <span class="string">"price"</span>: <span class="number">300</span>})
+m3 = MenuItem.from_csv(<span class="string">"Biryani, 300"</span>)</pre>
+                </div>
+            </div>
+
+            <!-- Static vs Class relationship -->
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 8px;">Is @classmethod a type of @staticmethod?</h4>
+                <p style="color: var(--text-secondary);">
+                    No. They're siblings, not parent-child.<br>
+                    <strong>@staticmethod</strong> = no <code>self</code>, no <code>cls</code>. Completely independent of the class. Just organized inside it.<br>
+                    <strong>@classmethod</strong> = no <code>self</code>, but gets <code>cls</code>. It KNOWS which class called it. It can create objects of that class.<br><br>
+                    Think of it this way: static is a <strong>tenant</strong> (lives in the building but has no keys). Classmethod is the <strong>building manager</strong> (has the master key = <code>cls</code>).
+                </p>
+            </div>
+
+            <!-- Memory model -->
+            <div class="collapsible" style="margin-top: 20px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128200; How are they stored in memory?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment"># Memory layout (simplified):</span>
+<span class="comment">#</span>
+<span class="comment"># MenuItem CLASS object (in memory ONCE)</span>
+<span class="comment"># ┌─────────────────────────────────────────┐</span>
+<span class="comment"># │ __init__        → function(self, ...)   │  Instance method</span>
+<span class="comment"># │ describe        → function(self, ...)   │  Instance method</span>
+<span class="comment"># │ is_valid_price  → function(price)       │  Static — no self/cls</span>
+<span class="comment"># │ from_dict       → function(cls, data)   │  Class — gets cls</span>
+<span class="comment"># └─────────────────────────────────────────┘</span>
+<span class="comment">#</span>
+<span class="comment"># biryani INSTANCE object (one per object created)</span>
+<span class="comment"># ┌─────────────────────────────────────────┐</span>
+<span class="comment"># │ name = "Biryani"                        │  Instance data</span>
+<span class="comment"># │ price = 300                             │  Instance data</span>
+<span class="comment"># │ (methods live in CLASS, not here)       │</span>
+<span class="comment"># └─────────────────────────────────────────┘</span>
+<span class="comment">#</span>
+<span class="comment"># Key: ALL methods (instance, static, class) are stored in the</span>
+<span class="comment"># CLASS object. Instances only store their DATA (attributes).</span>
+<span class="comment"># When you call biryani.describe(), Python finds describe() in</span>
+<span class="comment"># the class and passes biryani as self.</span></pre>
+                    </div></div>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">
+                        <strong>Instance methods</strong> = stored in class, Python auto-passes the object as <code>self</code><br>
+                        <strong>Static methods</strong> = stored in class, Python passes nothing extra<br>
+                        <strong>Class methods</strong> = stored in class, Python auto-passes the class as <code>cls</code>
+                    </p>
+                </div></div>
+            </div>
+
+            <!-- cls vs hardcoded: code-driven quiz -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Why <code>cls</code> and not <code>MenuItem</code>?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Compare these two versions:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>version_A.py &mdash; uses cls</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+
+    <span class="decorator">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">from_dict</span>(cls, data):
+        <span class="keyword">return</span> <strong>cls</strong>(data[<span class="string">"name"</span>], data[<span class="string">"price"</span>])
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem): <span class="keyword">pass</span>
+
+f = Food.from_dict({<span class="string">"name"</span>: <span class="string">"Biryani"</span>, <span class="string">"price"</span>: <span class="number">300</span>})
+print(type(f))  <span class="comment"># ???</span></pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>version_B.py &mdash; hardcodes MenuItem</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name; self.price = price
+
+    <span class="decorator">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">from_dict</span>(cls, data):
+        <span class="keyword">return</span> <strong>MenuItem</strong>(data[<span class="string">"name"</span>], data[<span class="string">"price"</span>])  <span class="comment"># hardcoded!</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem): <span class="keyword">pass</span>
+
+f = Food.from_dict({<span class="string">"name"</span>: <span class="string">"Biryani"</span>, <span class="string">"price"</span>: <span class="number">300</span>})
+print(type(f))  <span class="comment"># ???</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>In version A (<code>cls</code>), <code>type(f)</code> is <code>Food</code>. In version B (hardcoded <code>MenuItem</code>), <code>type(f)</code> is...?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Also Food &mdash; both are the same</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><code>MenuItem</code> &mdash; not Food! Hardcoding ignores which class called the method. <code>cls</code> adapts: <code>Food.from_dict()</code> &rarr; cls=Food. <code>MenuItem.from_dict()</code> &rarr; cls=MenuItem.</button>
+                <div class="quiz-explanation">Always use <code>cls()</code>, not the class name. <code>cls</code> respects inheritance.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">When to Use Class Methods</h3>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <div class="card-title">Alternative constructors</div>
+                    <div class="card-desc"><code>MenuItem.from_dict()</code><br><code>MenuItem.from_csv()</code><br><code>MenuItem.from_json()</code></div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <div class="card-title">Access/modify class-level data</div>
+                    <div class="card-desc">Change shared config that affects ALL instances (see example below)</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128161;</div>
+                    <div class="card-title">Real Python examples</div>
+                    <div class="card-desc"><code>datetime.now()</code><br><code>datetime.fromtimestamp()</code><br><code>dict.fromkeys()</code></div>
+                </div>
+            </div>
+
+            <div class="collapsible" style="margin-top: 20px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>Class-level vs Instance-level data &mdash; with example</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block"><div class="code-header" onclick="toggleCode(this)">
+                        <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>class_vs_instance_data.py</span></div>
+                        <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                    </div><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    tax_rate = <span class="number">0.05</span>    <span class="comment"># CLASS-LEVEL: shared by ALL instances</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        self.name = name   <span class="comment"># INSTANCE-LEVEL: unique per object</span>
+        self.price = price  <span class="comment"># INSTANCE-LEVEL: unique per object</span>
+
+    <span class="keyword">def</span> <span class="function">final_price</span>(self):
+        <span class="keyword">return</span> self.price * (<span class="number">1</span> + MenuItem.tax_rate)
+
+    <span class="decorator">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">set_tax_rate</span>(cls, rate):
+        cls.tax_rate = rate  <span class="comment"># Changes for ALL instances at once</span>
+
+biryani = MenuItem(<span class="string">"Biryani"</span>, <span class="number">300</span>)
+chai = MenuItem(<span class="string">"Chai"</span>, <span class="number">40</span>)
+
+print(biryani.final_price())   <span class="comment"># 315.0 (5% tax)</span>
+print(chai.final_price())      <span class="comment"># 42.0  (5% tax)</span>
+
+MenuItem.set_tax_rate(<span class="number">0.12</span>)    <span class="comment"># Government changes GST to 12%</span>
+
+print(biryani.final_price())   <span class="comment"># 336.0 (12% tax) &mdash; changed!</span>
+print(chai.final_price())      <span class="comment"># 44.8  (12% tax) &mdash; changed!</span></pre>
+                    </div></div>
+                    <div class="highlight-box" style="margin-top: 10px;">
+                        <p style="color: var(--text-secondary);">
+                            <strong>Class-level</strong> (<code>tax_rate</code>) = ONE copy, shared by all objects. Change it once, all objects see the change. Use for: configs, tax rates, default values.<br><br>
+                            <strong>Instance-level</strong> (<code>self.name</code>, <code>self.price</code>) = each object has its OWN copy. Changing biryani's name doesn't change chai's. Use for: object-specific data.<br><br>
+                            <strong>When to use @classmethod for class data:</strong> when the change should affect ALL existing and future instances (like a tax rate update). Don't use it for data that varies per object.
+                        </p>
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison -->
+    <section id="comparison">
+        <div class="section-container">
+            <span class="section-label blue">Side by Side</span>
+            <h2 class="section-title">Instance vs Static vs Class</h2>
+            <p class="section-subtitle">Click each row to reveal the differences.</p>
+
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th></th><th>Instance Method</th><th>Static Method</th><th>Class Method</th></tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Auto-passed param</strong></td>
+                        <td class="reveal-val"><span class="val-text"><code>self</code> (the instance)</span></td>
+                        <td class="reveal-val"><span class="val-text">Nothing &mdash; no auto-passed param, just your own params</span></td>
+                        <td class="reveal-val"><span class="val-text"><code>cls</code> (the class itself)</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Access instance data?</strong></td>
+                        <td class="reveal-val"><span class="val-text">Yes (<code>self.name</code>)</span></td>
+                        <td class="reveal-val"><span class="val-text">No</span></td>
+                        <td class="reveal-val"><span class="val-text">No</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Access class data?</strong></td>
+                        <td class="reveal-val"><span class="val-text">Yes</span></td>
+                        <td class="reveal-val"><span class="val-text">No</span></td>
+                        <td class="reveal-val"><span class="val-text">Yes (<code>cls.tax_rate</code>)</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Need an object?</strong></td>
+                        <td class="reveal-val"><span class="val-text">Yes</span></td>
+                        <td class="reveal-val"><span class="val-text">No</span></td>
+                        <td class="reveal-val"><span class="val-text">No</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Main use</strong></td>
+                        <td class="reveal-val"><span class="val-text">Operate on object</span></td>
+                        <td class="reveal-val"><span class="val-text">Utility functions</span></td>
+                        <td class="reveal-val"><span class="val-text">Alternative constructors</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 20px;">
+                <h4><code>celsius_to_fahrenheit(temp)</code> &mdash; just math, no object or class data. Which type?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">@staticmethod</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">@classmethod</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Instance method</button>
+                <div class="quiz-explanation">Pure input &rarr; output with no object or class data = static.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>A method creates and returns a new object of the same class. Which type?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">@staticmethod</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">@classmethod &mdash; needs <code>cls</code> to create the right type (works with inheritance)</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Instance method</button>
+                <div class="quiz-explanation"><code>cls(args)</code> creates the right type even in child classes. Static can't do that.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABC: The Problem -->
+    <section id="abc-problem">
+        <div class="section-container">
+            <span class="section-label danger">The Problem</span>
+            <h2 class="section-title">Abstract Base Classes &mdash; Why?</h2>
+            <p class="section-subtitle">Duck typing from OOP-2 has a dangerous weakness.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>duck_typing_weakness.py</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">EmailNotification</span>:
+    <span class="keyword">def</span> <span class="function">send</span>(self, msg): print(<span class="string">f"EMAIL: {msg}"</span>)
+
+<span class="keyword">class</span> <span class="function">BrokenNotification</span>:
+    <span class="keyword">pass</span>  <span class="comment"># Forgot to implement send()</span>
+
+<span class="keyword">def</span> <span class="function">notify</span>(notifier, msg):
+    notifier.send(msg)
+
+notify(EmailNotification(), <span class="string">"Order ready"</span>)
+notify(BrokenNotification(), <span class="string">"Order ready"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What happens when <code>notify(BrokenNotification(), "Order ready")</code> runs?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Works fine &mdash; sends a default notification</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">AttributeError at runtime &mdash; <code>BrokenNotification</code> has no <code>send()</code> method. The object was created successfully. The crash only happens when <code>send()</code> is called &mdash; maybe in production at 2 AM.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Error when creating the object</button>
+                <div class="quiz-explanation">The object was created fine. The crash happens later, at the worst possible time.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What would be better?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Catch the bug at object creation &mdash; if it can't do its job, it shouldn't exist. Fail fast, fail loud.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Catch it at runtime &mdash; maybe they'll never call send()</button>
+                <div class="quiz-explanation"><strong>ABC makes this possible.</strong> It prevents broken objects from being created at all.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABC: The Solution -->
+    <section id="abc-solution">
+        <div class="section-container">
+            <span class="section-label success">The Solution</span>
+            <h2 class="section-title"><code>ABC</code> + <code>@abstractmethod</code></h2>
+            <p class="section-subtitle">Define a contract. Children MUST implement it, or they can't be created.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>abc_fix.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Notification</span>(ABC):        <span class="comment"># &larr; Inherits from ABC</span>
+    <span class="decorator">@abstractmethod</span>               <span class="comment"># &larr; Children MUST implement</span>
+    <span class="keyword">def</span> <span class="function">send</span>(self, message): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">EmailNotification</span>(Notification):
+    <span class="keyword">def</span> <span class="function">send</span>(self, message): print(<span class="string">f"EMAIL: {message}"</span>)  <span class="comment"># &check;</span>
+
+<span class="keyword">class</span> <span class="function">BrokenNotification</span>(Notification):
+    <span class="keyword">pass</span>                          <span class="comment"># &cross; Forgot send!</span>
+
+email = EmailNotification()         <span class="comment"># &check; Works</span>
+broken = BrokenNotification()       <span class="comment"># &cross; TypeError IMMEDIATELY</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Before (duck typing):</strong> BrokenNotification created successfully, crashes later at runtime.<br>
+                    <strong>After (ABC):</strong> BrokenNotification <strong>can't even be created</strong>. TypeError the moment you try.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABC Syntax & Scenarios -->
+    <section id="abc-syntax">
+        <div class="section-container">
+            <span class="section-label purple">Deep Dive</span>
+            <h2 class="section-title">ABC Syntax &amp; Edge Cases</h2>
+            <p class="section-subtitle">When to use concrete inheritance vs ABC, and what happens in tricky scenarios.</p>
+
+            <h3 style="margin-bottom: 15px;">Concrete Class vs ABC &mdash; When to Use Which?</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card after" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6;">
+                    <h4 style="color: #3b82f6; margin-bottom: 10px;">Concrete Parent &mdash; children CAN override</h4>
+                    <div class="code-block" style="margin-top: 10px;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MenuItem</span>:
+    <span class="keyword">def</span> <span class="function">describe</span>(self):  <span class="comment"># Working default</span>
+        <span class="keyword">return</span> <span class="string">f"{self.name} - Rs.{self.price}"</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">pass</span>  <span class="comment"># Uses parent's describe() as-is</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">describe</span>(self):  <span class="comment"># Overrides (optional)</span>
+        <span class="keyword">return</span> <span class="string">f"{self.name} ({self.volume_ml}ml)"</span></pre>
+                    </div></div>
+                </div>
+                <div class="comparison-card after" style="background: rgba(168, 85, 247, 0.1); border-color: #a855f7;">
+                    <h4 style="color: #a855f7; margin-bottom: 10px;">ABC Parent &mdash; children MUST implement</h4>
+                    <div class="code-block" style="margin-top: 10px;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">PaymentGateway</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">charge</span>(self, amt): <span class="keyword">pass</span>  <span class="comment"># No default</span>
+
+<span class="keyword">class</span> <span class="function">Razorpay</span>(PaymentGateway):
+    <span class="keyword">def</span> <span class="function">charge</span>(self, amt):  <span class="comment"># MUST implement</span>
+        print(<span class="string">f"Razorpay: {amt}"</span>)
+
+<span class="keyword">class</span> <span class="function">Broken</span>(PaymentGateway):
+    <span class="keyword">pass</span>  <span class="comment"># TypeError at creation!</span></pre>
+                    </div></div>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Can a class be ABC if it has NO abstract methods?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Yes, but it's pointless. Without @abstractmethod, nothing is enforced. You can instantiate it directly. It's just a regular class that happens to inherit from ABC.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">No &mdash; ABC requires at least one abstract method</button>
+                <div class="quiz-explanation">Technically valid, but useless. ABC without abstract methods = a regular class with extra steps.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Can a class have <code>@abstractmethod</code> WITHOUT inheriting from <code>ABC</code>?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">NotAnABC</span>:   <span class="comment"># No ABC parent!</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">do_something</span>(self): <span class="keyword">pass</span>
+
+obj = NotAnABC()  <span class="comment"># ???</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Works! <code>@abstractmethod</code> without ABC does NOTHING. No enforcement. The object is created fine. This is a silent bug.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">TypeError &mdash; @abstractmethod always enforces</button>
+                <div class="quiz-explanation"><strong>Always pair <code>@abstractmethod</code> with <code>class Parent(ABC)</code>.</strong> Without ABC, the decorator is just decoration.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Can you create an instance of the ABC itself?</h4>
+                <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Shape</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">pass</span>
+
+s = Shape()  <span class="comment"># ???</span></pre>
+                </div></div>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; area() just returns None</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">TypeError &mdash; "Can't instantiate abstract class Shape without an implementation for abstract method 'area'". ABCs are blueprints, not usable directly.</button>
+                <div class="quiz-explanation">ABCs define RULES. Only concrete children that implement all abstract methods can be instantiated.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 10px;">Concrete Inheritance vs ABC</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Click each row to reveal.</p>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th></th><th>Concrete Inheritance</th><th>ABC</th></tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Parent has implementation?</strong></td>
+                        <td class="reveal-val"><span class="val-text">Yes &mdash; children get working defaults</span></td>
+                        <td class="reveal-val"><span class="val-text">No &mdash; children MUST provide their own</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Can create parent object?</strong></td>
+                        <td class="reveal-val"><span class="val-text">Yes &mdash; <code>MenuItem()</code> works</span></td>
+                        <td class="reveal-val"><span class="val-text">No &mdash; <code>Shape()</code> &rarr; TypeError</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Enforcement</strong></td>
+                        <td class="reveal-val"><span class="val-text">None &mdash; children can skip overriding</span></td>
+                        <td class="reveal-val"><span class="val-text">Strict &mdash; must implement all abstract methods</span></td>
+                    </tr>
+                    <tr onclick="revealRow(this)">
+                        <td><strong>Best for</strong></td>
+                        <td class="reveal-val"><span class="val-text">Shared behavior with optional customization</span></td>
+                        <td class="reveal-val"><span class="val-text">Enforcing contracts in large teams/APIs</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Everything Together -->
+    <section id="together">
+        <div class="section-container">
+            <span class="section-label success">The Full Picture</span>
+            <h2 class="section-title">Static + Class + Abstract Together</h2>
+            <p class="section-subtitle">One complete example using everything from today.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>complete_menu.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">MenuItem</span>(ABC):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, price):
+        <span class="keyword">if not</span> MenuItem.is_valid_price(price):
+            <span class="keyword">raise</span> ValueError(<span class="string">f"Invalid price: {price}"</span>)
+        self.name = name
+        self.price = price
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@classmethod</span>
+    <span class="keyword">def</span> <span class="function">from_dict</span>(cls, data):
+        <span class="keyword">return</span> cls(data[<span class="string">"name"</span>], data[<span class="string">"price"</span>])
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">is_valid_price</span>(price):
+        <span class="keyword">return</span> isinstance(price, (<span class="function">int</span>, <span class="function">float</span>)) <span class="keyword">and</span> price > <span class="number">0</span>
+
+<span class="keyword">class</span> <span class="function">Food</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price * <span class="number">1.05</span>
+
+<span class="keyword">class</span> <span class="function">Beverage</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">calculate_price</span>(self): <span class="keyword">return</span> self.price + <span class="number">10</span>
+
+<span class="comment"># All three in action:</span>
+MenuItem.is_valid_price(<span class="number">300</span>)                              <span class="comment"># Static</span>
+biryani = Food.from_dict({<span class="string">"name"</span>: <span class="string">"Biryani"</span>, <span class="string">"price"</span>: <span class="number">300</span>})  <span class="comment"># Classmethod</span>
+print(biryani.calculate_price())                          <span class="comment"># Abstract (impl by Food)</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4><code>MenuItem("Biryani", 300)</code> directly &mdash; what happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">TypeError &mdash; MenuItem is abstract. Only Food/Beverage (which implement calculate_price) can be created.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Works fine</button>
+                <div class="quiz-explanation">ABCs are blueprints. MenuItem defines the rules. Food and Beverage follow them.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Common Mistakes -->
+    <section id="mistakes">
+        <div class="section-container">
+            <span class="section-label danger">Watch Out</span>
+            <h2 class="section-title">Common Mistakes</h2>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="card" style="border-color: var(--accent-danger);">
+                    <div class="card-title" style="color: var(--accent-danger);">Making everything @staticmethod</div>
+                    <div class="card-desc">If you use <code>self.anything</code> inside, it's NOT static. Static = no object data needed.</div>
+                </div>
+                <div class="card" style="border-color: var(--accent-danger);">
+                    <div class="card-title" style="color: var(--accent-danger);">@abstractmethod without ABC</div>
+                    <div class="card-desc">Without <code>class Parent(ABC)</code>, the decorator does nothing. No enforcement. Silent failure.</div>
+                </div>
+                <div class="card" style="border-color: var(--accent-warning);">
+                    <div class="card-title" style="color: var(--accent-warning);">@staticmethod for constructors</div>
+                    <div class="card-desc">If your method creates objects, use <code>@classmethod</code> with <code>cls</code>. <code>@staticmethod</code> with hardcoded class breaks inheritance.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's Next -->
+    <section id="next">
+        <div class="section-container">
+            <span class="section-label">Looking Ahead</span>
+            <h2 class="section-title">What's Next</h2>
+            <p class="section-subtitle">OOP is complete! Next: Concurrency.</p>
+            <div class="table-container">
+                <table>
+                    <tr><th>Today</th><th>Concurrency</th><th>Design Patterns</th></tr>
+                    <tr><td><strong>Static methods</strong></td><td>Thread-safe utilities</td><td>Singleton uses @classmethod</td></tr>
+                    <tr><td><strong>ABC</strong></td><td>&mdash;</td><td>Strategy: ABC defines the interface</td></tr>
+                    <tr><td><strong>Class methods</strong></td><td>&mdash;</td><td>Factory method pattern</td></tr>
+                </table>
+            </div>
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h4 style="margin-bottom: 8px;">Next: Concurrency-1 &mdash; Processes and Threads</h4>
+                <p style="color: var(--text-secondary);">Different topic, but OOP is everywhere. Thread pools are objects. Locks use encapsulation. Your OOP foundation makes concurrency easier.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label success">Resources</span>
+            <h2 class="section-title">Practice &amp; Learn More</h2>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#127916;</div>
+                    <div class="card-title">Corey Schafer &mdash; Static/Class</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Best video on this topic.</div>
+                    <a href="https://www.youtube.com/watch?v=rq8cL2XMM5M" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">YouTube &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Real Python &mdash; ABC</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Abstract Base Classes deep dive.</div>
+                    <a href="https://realpython.com/python-interface/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">realpython.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128640;</div>
+                    <div class="card-title">Python docs &mdash; abc</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Official abc module docs.</div>
+                    <a href="https://docs.python.org/3/library/abc.html" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">docs.python.org &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-04 &bull; OOP-3: Static and Abstract Base Class<br><span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span></p>
+    </footer>
+
+    <script>
+        window.addEventListener('scroll', () => { const s = document.body.scrollTop || document.documentElement.scrollTop; const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; document.getElementById('progressBar').style.width = (s / h) * 100 + '%'; });
+        function toggleTheme() { const b = document.body, i = document.getElementById('themeIcon'), t = document.getElementById('themeText'); if (b.getAttribute('data-theme') === 'light') { b.removeAttribute('data-theme'); i.textContent = '\u{1F319}'; t.textContent = 'Dark'; } else { b.setAttribute('data-theme', 'light'); i.textContent = '\u{2600}\u{FE0F}'; t.textContent = 'Light'; } }
+        function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+        function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+        function copyCode(button) { const code = button.closest('.code-block').querySelector('pre').textContent; navigator.clipboard.writeText(code).then(() => { button.textContent = 'Copied!'; setTimeout(() => button.textContent = 'Copy', 2000); }); }
+        function checkQuiz(button, isCorrect) { const box = button.closest('.quiz-box'); if (box.classList.contains('answered')) return; box.classList.add('answered'); button.classList.add('selected'); if (isCorrect) { button.classList.add('correct'); } else { button.classList.add('wrong'); box.querySelectorAll('.quiz-option').forEach(o => { if (o.getAttribute('onclick')?.includes('true')) o.classList.add('correct'); }); } }
+        function revealRow(tr) { tr.classList.toggle('revealed-row'); }
+        document.addEventListener('keydown', (e) => { if (e.key === 'e' && e.altKey) { document.querySelectorAll('.code-block.collapsed').forEach(b => b.classList.remove('collapsed')); document.querySelectorAll('.collapsible:not(.open)').forEach(c => c.classList.add('open')); } if (e.key === 'c' && e.altKey) { document.querySelectorAll('.code-block:not(.collapsed)').forEach(b => b.classList.add('collapsed')); document.querySelectorAll('.collapsible.open').forEach(c => c.classList.remove('open')); } });
+    </script>
+</body>
+</html>

@@ -37,9 +37,9 @@ Interactive course materials for the Python Backend Low Level Design module.
 | # | Class | Topics |
 |---|-------|--------|
 | 1 | [Intro to LLD & Module Overview](LLD-01-Intro-to-LLD-Module-Overview/) | HLD vs LLD, code qualities, interview types |
-| 2 | OOP-1: Intro to OOP, Access Modifiers, Constructors | Upcoming |
-| 3 | OOP-2: Inheritance and Polymorphism | Upcoming |
-| 4 | OOP-3: Static and Abstract Base Class | Upcoming |
+| 2 | [OOP-1: Intro to OOP, Access Modifiers, Constructors](LLD-02-OOP-1-Intro-Access-Modifiers-Constructors/) | Classes, objects, self, encapsulation, @property |
+| 3 | [OOP-2: Inheritance and Polymorphism](LLD-03-OOP-2-Inheritance-Polymorphism/) | Inheritance, super(), MRO, polymorphism, duck typing, operator overloading |
+| 4 | [OOP-3: Static and Abstract Base Class](LLD-04-OOP-3-Static-Abstract-Base-Class/) | @staticmethod, @classmethod, ABC, @abstractmethod |
 | 5 | Concurrency-1: Processes and Threads | Upcoming |
 | 6 | Concurrency-2: Executors and Futures | Upcoming |
 | 7 | Concurrency-3: Semaphores and Deadlocks | Upcoming |
