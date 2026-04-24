@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-05: Concurrency-1 — Processes and Threads</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .reveal-table td.reveal-val { cursor: pointer; position: relative; transition: all 0.3s; }
+        .reveal-table td.reveal-val .val-text { display: none; }
+        .reveal-table td.reveal-val::after { content: 'click to reveal'; color: var(--text-muted); font-size: 0.75rem; font-style: italic; }
+        .reveal-table td.reveal-val:hover { background: rgba(16, 185, 129, 0.05); }
+        .reveal-table tr.revealed-row td.reveal-val .val-text { display: inline; }
+        .reveal-table tr.revealed-row td.reveal-val::after { display: none; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-05: Concurrency-1</div>
+        <ul class="nav-links">
+            <li><a href="#why">Why</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#os-internals">PCB/TCB</a></li>
+            <li><a href="#thread">Thread</a></li>
+            <li><a href="#conc-vs-par">Conc vs Par</a></li>
+            <li><a href="#instructions">Instructions</a></li>
+            <li><a href="#python">Python</a></li>
+            <li><a href="#gil">GIL</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#9728;&#65039;</span> <span id="themeText">Light</span></button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">&#9889;</div>
+        <h1>Concurrency-1: Processes &amp; Threads</h1>
+        <p class="hero-meta">LLD-05 &bull; Making Code Do Multiple Things</p>
+        <p class="hero-tagline">OOP taught you how to <strong>structure</strong> code.<br>Concurrency teaches you how to make it <strong>fast.</strong></p>
+    </section>
+
+    <!-- 1. The Restaurant Story — teaches everything -->
+    <section id="why">
+        <div class="section-container">
+            <span class="section-label danger">The Big Picture</span>
+            <h2 class="section-title">The Restaurant That Explains Everything</h2>
+            <p class="section-subtitle">No code. No jargon. Just a restaurant with waiters and customers.</p>
+
+            <!-- Act 1: The Problem -->
+            <h3 style="margin-bottom: 15px;"><span class="step-number">1</span> The Problem &mdash; Sequential</h3>
+            <div class="highlight-box danger" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>1 waiter, 5 tables. The waiter is DUMB &mdash; he STANDS at the kitchen waiting for each dish.</strong><br><br>
+                    Customer A orders &rarr; waiter goes to kitchen &rarr; <strong>stands there 10 min</strong> &rarr; brings food &rarr; THEN goes to Customer B &rarr; stands 10 min again...<br><br>
+                    5 customers &times; 10 min = <strong>50 minutes.</strong> Customer E waits 40 min just to ORDER.
+                </p>
+            </div>
+            <div class="code-block"><div class="code-content">
+<pre><span class="comment">Waiter: [A: take order][A: wait 10m][A: serve]  [B: take order][B: wait 10m][B: serve]  ...</span>
+<span class="comment">                       ^^^^^^^^^^                              ^^^^^^^^^^</span>
+<span class="comment">                       DOING NOTHING                           DOING NOTHING</span>
+<span class="comment">Total: 50 minutes. Waiter is idle 80% of the time.</span></pre>
+            </div></div>
+
+            <!-- Act 2: Concurrency (1 smart waiter) -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;"><span class="step-number">2</span> Concurrency &mdash; 1 Smart Waiter</h3>
+            <div class="highlight-box warning" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Same 1 waiter, but SMART.</strong> He doesn't stand at the kitchen waiting. While the kitchen prepares A's food, he takes B's order. While B's food cooks, he takes C's order...<br><br>
+                    He <strong>SWITCHES</strong> between customers during their wait times. Still 1 waiter, but he's never idle.
+                </p>
+            </div>
+            <div class="code-block"><div class="code-content">
+<pre><span class="comment">Waiter: [A: order][B: order][C: order][D: order][E: order][A: serve][B: serve]...</span>
+<span class="comment">Kitchen:          [A cooking...][B cooking...][C cooking...]</span>
+<span class="comment">                   (happening in background while waiter takes other orders)</span>
+<span class="comment">Total: ~14 minutes. Same 1 waiter. Just smarter scheduling.</span></pre>
+            </div></div>
+            <div class="highlight-box" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>This is CONCURRENCY.</strong> One worker, multiple tasks, switching between them during idle time.<br>
+                    The waiter switching from Customer A to Customer B while waiting = <strong>context switching.</strong>
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Is the smart waiter doing two things at the SAME instant?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; he's serving everyone at once</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No &mdash; at any single moment, he's with ONE customer. He just switches between them during their wait times. It LOOKS simultaneous but isn't.</button>
+                <div class="quiz-explanation"><strong>Concurrency ≠ doing things at the same time.</strong> It's MANAGING multiple tasks by switching between them. Like juggling &mdash; you only hold one ball at a time, but you keep 5 in the air.</div>
+            </div>
+
+            <!-- Act 3: Context Switching — is it free? -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;"><span class="step-number">3</span> Context Switching &mdash; Is It Free?</h3>
+            <div class="highlight-box warning" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    Every time the waiter switches, he needs to: <strong>remember where he left off</strong> with the previous customer, <strong>walk to the new table</strong>, <strong>recall their order status.</strong><br><br>
+                    This takes a few seconds each time. It's not free. If the waiter switches too often (every 2 seconds), he spends MORE time walking between tables than actually serving.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Is context switching always good?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Always good &mdash; more switching = more efficiency</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Always bad &mdash; it wastes time walking</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><strong>Depends.</strong> Good when customers are WAITING (kitchen is cooking). Bad when they need continuous attention (explaining the menu). Switching during idle time = efficient. Switching during active work = overhead.</button>
+                <div class="quiz-explanation">This maps directly to computers: switching during I/O wait = good. Switching during CPU computation = wasted overhead. We'll formalize this as I/O-bound vs CPU-bound later.</div>
+            </div>
+
+            <!-- Act 4: Parallelism (multiple waiters) -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;"><span class="step-number">4</span> Parallelism &mdash; Multiple Waiters</h3>
+            <div class="highlight-box success" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Now hire 5 waiters.</strong> Each waiter serves their own table. All 5 customers are being served <strong>at the exact same time.</strong> Not switching, not juggling &mdash; genuinely simultaneous.
+                </p>
+            </div>
+            <div class="code-block"><div class="code-content">
+<pre><span class="comment">Waiter 1: [A: order][A: serve]</span>
+<span class="comment">Waiter 2: [B: order][B: serve]      All happening</span>
+<span class="comment">Waiter 3: [C: order][C: serve]      AT THE SAME TIME</span>
+<span class="comment">Waiter 4: [D: order][D: serve]</span>
+<span class="comment">Waiter 5: [E: order][E: serve]</span>
+<span class="comment">Total: ~10 minutes. True parallel execution.</span></pre>
+            </div></div>
+            <div class="highlight-box" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>This is PARALLELISM.</strong> Multiple workers, genuinely simultaneous. Not taking turns &mdash; truly at the same instant.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What's the difference between the smart waiter (concurrency) and 5 waiters (parallelism)?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Same thing, just different words</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><strong>Concurrency</strong> = 1 waiter juggling tasks (switching during idle time). <strong>Parallelism</strong> = 5 waiters working simultaneously. Concurrency is about structure. Parallelism is about execution.</button>
+                <div class="quiz-explanation">A single-core CPU is the smart waiter &mdash; it can be concurrent but not parallel. A multi-core CPU is 5 waiters &mdash; it can be both.</div>
+            </div>
+
+            <!-- Act 5: Connect to hardware -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;"><span class="step-number">5</span> Connecting to Your Computer</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Restaurant</th><th>Computer</th></tr>
+                    <tr><td>Dumb waiter (sequential)</td><td>Single-threaded program &mdash; does one thing, waits, does next</td></tr>
+                    <tr><td>Smart waiter (concurrent)</td><td><strong>1 CPU core with threads</strong> &mdash; switches between tasks during wait</td></tr>
+                    <tr><td>Waiter switching tables</td><td><strong>Context switching</strong> &mdash; OS saves/restores task state</td></tr>
+                    <tr><td>5 waiters (parallel)</td><td><strong>Multiple CPU cores</strong> &mdash; truly simultaneous execution</td></tr>
+                    <tr><td>Kitchen cooking in background</td><td><strong>I/O operation</strong> &mdash; API call, DB query, file read</td></tr>
+                    <tr><td>Waiter explaining menu (active)</td><td><strong>CPU computation</strong> &mdash; math, resize, compress</td></tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 20px;">
+                <h4>This machine has an Apple M2 Pro with 12 cores. In restaurant terms, how many waiters can work simultaneously?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">1 &mdash; it's still one computer</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">12 &mdash; each core is a waiter. 12 things can truly run at the exact same instant. More than 12 tasks? The waiters start juggling (context switching).</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Unlimited &mdash; modern CPUs can handle anything</button>
+                <div class="quiz-explanation">Your CPU cores = your waiters. 12 cores = 12 truly parallel tasks. 100 tasks on 12 cores = each core juggles ~8 tasks via context switching. Check yours: <code>python3 -c "import os; print(os.cpu_count())"</code></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. What is a Process -->
+    <section id="process">
+        <div class="section-container">
+            <span class="section-label blue">Core Concept</span>
+            <h2 class="section-title">What is a Process?</h2>
+            <p class="section-subtitle">A process = a running program. No Python yet &mdash; this is an OS concept.</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When you double-click Chrome, the OS creates a <strong>process</strong>. Open VS Code? Another process. Every running program is a process.</p>
+
+            <div class="highlight-box" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px;">&#128187; See it on YOUR machine</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>macOS:</strong> Open <strong>Activity Monitor</strong> (Cmd + Space &rarr; "Activity Monitor"). Every row = a process.<br>
+                    <strong>Windows:</strong> Open <strong>Task Manager</strong> (Ctrl + Shift + Esc) &rarr; "Details" tab.<br>
+                    <strong>Linux:</strong> Run <code>htop</code> or <code>ps aux</code>.<br><br>
+                    Right now, your machine runs <strong>hundreds</strong> of processes &mdash; browser, IDE, Spotify, system services.
+                </p>
+            </div>
+
+            <!-- Diagram: What a process contains -->
+            <div class="visual-diagram" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; margin: 20px 0;">
+                <div class="diagram-label" style="font-size: 1rem; margin-bottom: 15px; font-weight: 700;">What a Process Contains</div>
+                <div style="display: flex; gap: 30px; justify-content: center; flex-wrap: wrap;">
+                    <div class="diagram-box primary" style="min-width: 200px;">Code<small>Your program instructions</small></div>
+                    <div class="diagram-box warning" style="min-width: 200px;">Heap<small>Variables, objects, data</small></div>
+                    <div class="diagram-box purple" style="min-width: 200px;">Stack<small>Function call history</small></div>
+                    <div class="diagram-box muted" style="min-width: 200px;">OS Resources<small>File handles, network sockets</small></div>
+                </div>
+                <p style="margin-top: 15px; color: var(--text-muted); font-size: 0.85rem;">Each process has its OWN copy of ALL of these. Process A can't see Process B's memory.</p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Chrome has 20 tabs open. How many processes?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">1 &mdash; Chrome is one app</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">~20+ &mdash; Chrome runs each tab as a separate process. Check Activity Monitor! One tab crashing doesn't kill the others.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">2 &mdash; browser + tabs</button>
+                <div class="quiz-explanation">Chrome is a real-world example of multiprocessing. Each tab is isolated &mdash; its own memory, its own crash boundary.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Process A sets <code>x = 100</code>. Can Process B read that value?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; they're on the same machine</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No &mdash; each process has its own memory. B has its own <code>x</code>, completely separate.</button>
+                <div class="quiz-explanation">Processes are <strong>isolated</strong>. To communicate, they need special OS tools (pipes, queues, shared memory). <a href="https://planetscale.com/blog/processes-and-threads" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Deep dive &rarr;</a></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- OS Internals: PCB, TCB, Memory Layout -->
+    <section id="os-internals">
+        <div class="section-container">
+            <span class="section-label">Under the Hood</span>
+            <h2 class="section-title">How the OS Manages Processes &amp; Threads</h2>
+            <p class="section-subtitle">The OS keeps a "profile card" for every process and every thread.</p>
+
+            <div class="comparison-grid">
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-primary);">PCB &mdash; Process Control Block</div>
+                    <div class="card-desc">The OS keeps one for EVERY process:</div>
+                    <div class="code-block" style="margin-top: 10px;"><div class="code-content">
+<pre><span class="comment">PCB holds:</span>
+- PID (process ID)
+- Memory mappings (page table)
+- Open files
+- Signal handlers
+- User/group IDs
+- Child processes</pre>
+                    </div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-purple);">TCB &mdash; Thread Control Block</div>
+                    <div class="card-desc">The OS keeps one for EVERY thread:</div>
+                    <div class="code-block" style="margin-top: 10px;"><div class="code-content">
+<pre><span class="comment">TCB holds:</span>
+- TID (thread ID)
+- Register state (snapshot)
+- Stack pointer
+- Program counter
+- Pointer back to parent PCB</pre>
+                    </div></div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 8px;">Why context switching between threads is FASTER than between processes</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Thread switch (same process):</strong> swap the TCB only &mdash; registers, stack pointer. Memory mappings stay the same. Quick.<br>
+                    <strong>Process switch:</strong> swap the entire PCB &mdash; including flushing and reloading memory mappings (TLB flush). <strong>Expensive.</strong>
+                </p>
+            </div>
+
+            <!-- Memory Layout Diagram -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Memory Layout &mdash; Two Processes Side by Side</h3>
+            <div class="code-block"><div class="code-content">
+<pre><span class="comment">PROCESS A                        PROCESS B</span>
+<span class="comment">┌─────────────────────┐          ┌─────────────────────┐</span>
+<span class="comment">│  Code segment        │          │  Code segment        │</span>
+<span class="comment">│  (read only)         │          │                      │</span>
+<span class="comment">├─────────────────────┤          ├─────────────────────┤</span>
+<span class="comment">│  Heap                │          │  Heap                │</span>
+<span class="comment">│  (shared by all      │          │                      │</span>
+<span class="comment">│   threads in A)      │          │                      │</span>
+<span class="comment">├─────────────────────┤          ├─────────────────────┤</span>
+<span class="comment">│  Stack — Thread 1    │          │  Stack — Thread 1    │</span>
+<span class="comment">├─────────────────────┤          ├─────────────────────┤</span>
+<span class="comment">│  Stack — Thread 2    │          │  Stack — Thread 2    │</span>
+<span class="comment">├─────────────────────┤          └─────────────────────┘</span>
+<span class="comment">│  Stack — Thread 3    │</span>
+<span class="comment">└─────────────────────┘</span>
+<span class="comment"></span>
+<span class="comment">Process A and B CANNOT touch each other's memory.</span>
+<span class="comment">But threads within A SHARE the heap — fast but dangerous.</span></pre>
+            </div></div>
+
+            <!-- Resource ownership table -->
+            <h3 style="margin-top: 25px; margin-bottom: 10px;">What's shared, what's separate?</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Click each row to reveal.</p>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th>Resource</th><th>Process</th><th>Thread</th></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Memory space</strong></td><td class="reveal-val"><span class="val-text">Own, isolated</span></td><td class="reveal-val"><span class="val-text">Shared with all threads in process</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Stack</strong></td><td class="reveal-val"><span class="val-text">Own</span></td><td class="reveal-val"><span class="val-text">Own (each thread gets its own)</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Heap</strong></td><td class="reveal-val"><span class="val-text">Own</span></td><td class="reveal-val"><span class="val-text">Shared</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Code segment</strong></td><td class="reveal-val"><span class="val-text">Own</span></td><td class="reveal-val"><span class="val-text">Shared</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>File descriptors</strong></td><td class="reveal-val"><span class="val-text">Own</span></td><td class="reveal-val"><span class="val-text">Shared</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>PID</strong></td><td class="reveal-val"><span class="val-text">Own</span></td><td class="reveal-val"><span class="val-text">Shares parent's PID (has own TID)</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>CPU registers</strong></td><td class="reveal-val"><span class="val-text">Own snapshot</span></td><td class="reveal-val"><span class="val-text">Own snapshot</span></td></tr>
+                </table>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>The only things a thread owns exclusively:</strong> its stack and its register state. Everything else is shared with the process. This is why threads are "lightweight" &mdash; creating one doesn't duplicate memory.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>A thread in Process A crashes (segfault). What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Only that thread dies, others continue</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">The entire Process A dies &mdash; ALL threads in A die. But Process B is completely unaffected (isolated memory).</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">All processes on the machine crash</button>
+                <div class="quiz-explanation">Threads share fate within a process. Processes are isolated. This is why Chrome runs tabs as separate processes &mdash; one bad tab can't crash others.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. What is a Thread + Why -->
+    <section id="thread">
+        <div class="section-container">
+            <span class="section-label purple">Core Concept</span>
+            <h2 class="section-title">What is a Thread?</h2>
+            <p class="section-subtitle">You'll hear "a lightweight process." That's misleading. Here's what it actually is.</p>
+
+            <div class="highlight-box danger" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 8px;">&#9888; The misleading definition</h4>
+                <p style="color: var(--text-secondary);">
+                    Textbooks say: <em>"A thread is a lightweight process."</em><br><br>
+                    This is confusing because it implies a thread IS a process, just smaller. It's not. A thread is a <strong>unit of execution WITHIN a process.</strong> A process can have many threads.
+                </p>
+            </div>
+
+            <div class="highlight-box" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 8px;">&#127968; The House Analogy</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Process = a house.</strong> Own kitchen, bathroom, electricity. Completely independent.<br>
+                    <strong>Threads = people in the house.</strong> Share the kitchen and bathroom (shared memory), each has their own bedroom (own stack).<br><br>
+                    New process = build a new house (expensive).<br>
+                    New thread = move a person into existing house (cheap).
+                </p>
+            </div>
+
+            <!-- Diagram: Process with threads -->
+            <div class="visual-diagram" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; margin: 20px 0;">
+                <div class="diagram-label" style="font-size: 1rem; margin-bottom: 15px; font-weight: 700;">One Process, Three Threads</div>
+                <div style="border: 2px solid var(--accent-primary); border-radius: 12px; padding: 20px; display: inline-block;">
+                    <div style="color: var(--accent-primary); font-weight: 700; margin-bottom: 15px;">Process (shared memory: code, heap, files)</div>
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <div class="diagram-box purple" style="min-width: 130px;">Thread 1<small>own stack</small></div>
+                        <div class="diagram-box purple" style="min-width: 130px;">Thread 2<small>own stack</small></div>
+                        <div class="diagram-box purple" style="min-width: 130px;">Thread 3<small>own stack</small></div>
+                    </div>
+                </div>
+                <p style="margin-top: 15px; color: var(--text-muted); font-size: 0.85rem;">Threads share everything EXCEPT their stack. This is why they're fast to create and fast to communicate &mdash; but also dangerous (shared data = race conditions).</p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Why do we need threads? Why not just create more processes?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">No reason &mdash; processes are better in every way</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Processes are expensive (duplicate all memory). Threads are cheap (share memory). If 1000 requests each need their own process, you'd run out of RAM. Threads handle this with minimal overhead.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Threads are just a legacy concept</button>
+                <div class="quiz-explanation">A web server handling 1000 concurrent requests with 1000 processes would use ~1000x the memory. With threads, they share the same memory space &mdash; vastly more efficient.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Thread A sets <code>x = 100</code>. Can Thread B (same process) read it?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Yes &mdash; threads share memory. B sees the same <code>x</code>. Fast, but dangerous if both modify it simultaneously.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">No &mdash; threads are isolated like processes</button>
+                <div class="quiz-explanation">Shared memory = fast communication but risk of race conditions. We'll fix this in Concurrency-3 with locks.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4+5. Formalize: Concurrency vs Parallelism with diagrams -->
+    <section id="conc-vs-par">
+        <div class="section-container">
+            <span class="section-label success">Most Confused Concept</span>
+            <h2 class="section-title">Concurrency vs Parallelism &mdash; Formalized</h2>
+            <p class="section-subtitle">You saw smart waiter (concurrency) vs 5 waiters (parallelism). Now the technical version with CPU diagrams.</p>
+
+            <div class="highlight-box" style="margin-bottom: 25px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Concurrency</strong> = dealing with multiple things at once (structure).<br>
+                    <strong>Parallelism</strong> = doing multiple things at the exact same instant (execution).<br><br>
+                    A <strong>single-core</strong> machine can be concurrent (switching between tasks) but NEVER truly parallel.<br>
+                    A <strong>multi-core</strong> machine can be both concurrent AND parallel.
+                </p>
+            </div>
+
+            <!-- 4 Scenarios with diagrams -->
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));">
+                <div class="card">
+                    <div class="card-title">Scenario 1: Not concurrent, not parallel</div>
+                    <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="comment">1 core, 1 task at a time, NO switching</span>
+Core: <span class="string">[AAAAAAA]</span><span class="keyword">[BBBBBBB]</span><span class="function">[CCCCCCC]</span>
+<span class="comment">Finish A completely, then B, then C.</span>
+<span class="comment">Sequential. Slow.</span></pre>
+                    </div></div>
+                </div>
+                <div class="card" style="border-color: var(--accent-warning);">
+                    <div class="card-title" style="color: var(--accent-warning);">Scenario 2: Concurrent, NOT parallel</div>
+                    <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="comment">1 core, multiple tasks, switching between them</span>
+Core: <span class="string">[AA]</span><span class="keyword">[BB]</span><span class="function">[C]</span><span class="string">[AA]</span><span class="keyword">[BB]</span><span class="function">[CC]</span><span class="string">[A]</span>
+<span class="comment">Tasks INTERLEAVE on 1 core.</span>
+<span class="comment">Concurrent (juggling) but not parallel.</span></pre>
+                    </div></div>
+                </div>
+                <div class="card" style="border-color: var(--accent-primary);">
+                    <div class="card-title" style="color: var(--accent-primary);">Scenario 3: Parallel, NOT concurrent (rare)</div>
+                    <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="comment">2 cores, 2 tasks, each on its own core, no sharing</span>
+Core 1: <span class="string">[AAAAAAA]</span>
+Core 2: <span class="keyword">[BBBBBBB]</span>
+<span class="comment">Truly simultaneous, but no interleaving.</span></pre>
+                    </div></div>
+                </div>
+                <div class="card" style="border-color: var(--accent-success);">
+                    <div class="card-title" style="color: var(--accent-success);">Scenario 4: Concurrent AND parallel</div>
+                    <div class="code-block" style="margin: 10px 0;"><div class="code-content">
+<pre><span class="comment">2 cores, 4 tasks, switching + parallel</span>
+Core 1: <span class="string">[AA]</span><span class="function">[CC]</span><span class="string">[AA]</span><span class="function">[CC]</span>
+Core 2: <span class="keyword">[BB]</span><span class="decorator">[DD]</span><span class="keyword">[BB]</span><span class="decorator">[DD]</span>
+<span class="comment">2 tasks run AT THE SAME TIME on 2 cores,</span>
+<span class="comment">while also switching with other tasks.</span>
+<span class="comment">This is what modern computers do.</span></pre>
+                    </div></div>
+                </div>
+            </div>
+
+            <div class="quiz-box" style="margin-top: 25px;">
+                <h4>You have 1 CPU core and 3 threads. Is this concurrent, parallel, or both?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Concurrent but NOT parallel. 1 core = can only run 1 thread at any instant. The OS switches between them rapidly (context switching). It LOOKS parallel but isn't.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Parallel &mdash; 3 threads means 3 things at once</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Neither &mdash; 1 core can't handle multiple threads</button>
+                <div class="quiz-explanation"><strong>Concurrency &ne; parallelism.</strong> Concurrency is about STRUCTURE (handling multiple tasks). Parallelism is about EXECUTION (running at the same instant). You need multiple cores for true parallelism.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>You have 4 CPU cores and 4 threads, each doing heavy computation. Is this concurrent, parallel, or both?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Only concurrent</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Only parallel</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">Both! 4 threads on 4 cores = all running at the exact same instant (parallel) while being managed concurrently by the OS.</button>
+                <div class="quiz-explanation">This is Scenario 4. Modern apps use both &mdash; multiple cores running multiple threads, each core switching between tasks.</div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Rob Pike (creator of Go):</strong> <em>"Concurrency is about dealing with lots of things at once. Parallelism is about doing lots of things at once. Not the same, but related."</em>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Your CPU -->
+    <section id="cpu">
+        <div class="section-container">
+            <span class="section-label">Hardware</span>
+            <h2 class="section-title">Your Processor</h2>
+            <p class="section-subtitle">What your hardware can actually do.</p>
+
+            <div class="highlight-box" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px;">&#128187; This machine: Apple M2 Pro &mdash; 12 cores</h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>12 things can truly run at the exact same time.</strong> Not switching &mdash; genuinely parallel.<br><br>
+                    &bull; 1 thread = 1 core busy, 11 idle<br>
+                    &bull; 12 threads = all cores busy = maximum parallelism<br>
+                    &bull; 100 threads = only 12 run at once, rest take turns (context switching)<br><br>
+                    Check yours: <code>python3 -c "import os; print(os.cpu_count())"</code>
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Your laptop has 8 cores. You create 16 CPU-heavy processes. Faster than 8?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; more processes = more speed</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No &mdash; only 8 can run at once. The extra 8 wait + context switching overhead. For CPU-bound, processes = cores is the sweet spot.</button>
+                <div class="quiz-explanation">For CPU-bound: match processes to cores. For I/O-bound: you CAN have many more threads than cores because they spend most time waiting. <a href="https://cpu.land/" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Learn more at cpu.land &rarr;</a></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Instructions & Assembly -->
+    <section id="instructions">
+        <div class="section-container">
+            <span class="section-label blue">Under the Hood</span>
+            <h2 class="section-title">What Actually Runs?</h2>
+            <p class="section-subtitle">Your Python code becomes machine instructions. The CPU executes those one at a time per core.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>From Python to machine instructions</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># You write:</span>
+x = a + b
+
+<span class="comment"># Python compiles to bytecode (dis module):</span>
+<span class="comment"># LOAD_FAST    a</span>
+<span class="comment"># LOAD_FAST    b</span>
+<span class="comment"># BINARY_ADD</span>
+<span class="comment"># STORE_FAST   x</span>
+
+<span class="comment"># Which ultimately becomes CPU assembly instructions:</span>
+<span class="comment"># MOV  R1, [a]      ; load a into register</span>
+<span class="comment"># MOV  R2, [b]      ; load b into register</span>
+<span class="comment"># ADD  R1, R2       ; add them</span>
+<span class="comment"># MOV  [x], R1      ; store result</span>
+
+<span class="comment"># The CPU executes ONE instruction at a time per core.</span>
+<span class="comment"># A context switch can happen BETWEEN any two instructions.</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <p style="color: var(--text-secondary);">
+                    <strong>Everything is instructions.</strong> Your Python, Java, Go, Rust &mdash; all become assembly instructions the CPU executes. The difference is HOW they get there (interpreted vs compiled) and HOW MANY instructions the same task takes.<br><br>
+                    See it yourself at <a href="https://godbolt.org/" target="_blank" style="color: var(--accent-primary); font-weight: 600;">godbolt.org</a> &mdash; type C/C++/Rust code and see the assembly output. Compare with <a href="https://benjdd.com/languages/" target="_blank" style="color: var(--accent-primary); font-weight: 600;">language benchmarks</a>.
+                </p>
+            </div>
+
+            <div class="quiz-box">
+                <h4><code>counter += 1</code> looks like one operation. Is it one CPU instruction?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Yes &mdash; it's one line of code</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">No &mdash; it's at least 3: READ counter, ADD 1, WRITE back. A context switch can happen between READ and WRITE, causing race conditions.</button>
+                <div class="quiz-explanation">This is WHY race conditions exist. <code>counter += 1</code> is NOT atomic. Two threads can both READ the same value, both ADD 1, both WRITE &mdash; one increment is lost. We'll fix this in Concurrency-3.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Process vs Thread Comparison -->
+    <section id="compare">
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">Process vs Thread</h2>
+            <p class="section-subtitle">Click each row to reveal.</p>
+
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th></th><th>Process</th><th>Thread</th></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Memory</strong></td><td class="reveal-val"><span class="val-text">Separate &mdash; isolated, can't see each other</span></td><td class="reveal-val"><span class="val-text">Shared &mdash; same heap, same globals. Fast but dangerous.</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Creation cost</strong></td><td class="reveal-val"><span class="val-text">Heavy &mdash; duplicates entire memory</span></td><td class="reveal-val"><span class="val-text">Light &mdash; just a new stack</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Communication</strong></td><td class="reveal-val"><span class="val-text">IPC: pipes, queues (slow, explicit)</span></td><td class="reveal-val"><span class="val-text">Direct: shared variables (fast, needs locks)</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Crash impact</strong></td><td class="reveal-val"><span class="val-text">Isolated &mdash; one crash, others fine</span></td><td class="reveal-val"><span class="val-text">Shared fate &mdash; one crash kills all threads</span></td></tr>
+                    <tr onclick="revealRow(this)"><td><strong>Best for</strong></td><td class="reveal-val"><span class="val-text">CPU-bound (bypass GIL in Python)</span></td><td class="reveal-val"><span class="val-text">I/O-bound (waiting for APIs, DB, files)</span></td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. CPU-bound vs I/O-bound -->
+    <section id="cpu-io">
+        <div class="section-container">
+            <span class="section-label danger">Critical Distinction</span>
+            <h2 class="section-title">CPU-bound vs I/O-bound</h2>
+            <p class="section-subtitle">THIS decides your concurrency strategy. Get this right and everything follows.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before" style="background: rgba(59, 130, 246, 0.1); border-color: #3b82f6;">
+                    <h4 style="color: #3b82f6; margin-bottom: 10px;">I/O-bound &mdash; WAITING</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">CPU idle. Waiting for: API, database, file, network.<br><br>Context switching HELPS &mdash; while one waits, another runs.<br><strong>Use threads.</strong></p>
+                </div>
+                <div class="comparison-card before" style="background: rgba(239, 68, 68, 0.1); border-color: #ef4444;">
+                    <h4 style="color: #ef4444; margin-bottom: 10px;">CPU-bound &mdash; COMPUTING</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">CPU at 100%. Doing: image resize, ML training, compression.<br><br>Context switching HURTS &mdash; adds overhead, no idle time to fill.<br><strong>Use processes (multiple cores).</strong></p>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 15px;"><a href="https://planetscale.com/blog/io-devices-and-latency" target="_blank" style="color: var(--accent-primary); font-weight: 600;">PlanetScale: I/O Devices &amp; Latency &rarr;</a> &mdash; why I/O is slow at the hardware level.</p>
+
+            <div class="quiz-box" style="margin-top: 15px;">
+                <h4>Django view calls Razorpay API (500ms wait) &mdash; CPU-bound or I/O-bound?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">I/O-bound &mdash; CPU is idle, just waiting for Razorpay to respond.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">CPU-bound &mdash; processing the payment</button>
+                <div class="quiz-explanation">The server sends a request and WAITS. Perfect for threading.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Resizing 1000 images &mdash; CPU-bound or I/O-bound?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">I/O-bound &mdash; reading files</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">CPU-bound &mdash; pixel math maxes out the CPU. Use multiprocessing.</button>
+                <div class="quiz-explanation">Reading the file is I/O, but the resize is heavy computation. Bottleneck = CPU.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. NOW Python Code -->
+    <section id="python">
+        <div class="section-container">
+            <span class="section-label success">Now: Python</span>
+            <h2 class="section-title">Threads &amp; Processes in Python</h2>
+            <p class="section-subtitle">Now that you understand the concepts, here's how to use them.</p>
+
+            <!-- Syntax Breakdown -->
+            <h3 style="margin-bottom: 15px;">The Syntax &mdash; Line by Line</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>threading_explained.py</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> threading
+
+<span class="comment"># Step 1: Define the function your thread will run</span>
+<span class="keyword">def</span> <span class="function">task</span>(name):
+    print(<span class="string">f"Running {name}"</span>)
+
+<span class="comment"># Step 2: Create a Thread object</span>
+<span class="comment"># target = WHICH function to run (don't add () &mdash; you're passing the function, not calling it)</span>
+<span class="comment"># args   = arguments to pass to the function (must be a TUPLE &mdash; note the trailing comma)</span>
+t = threading.Thread(
+    target=task,          <span class="comment"># task, NOT task() &mdash; no parentheses!</span>
+    args=(<span class="string">"worker-1"</span>,)   <span class="comment"># trailing comma makes it a tuple</span>
+)
+
+<span class="comment"># Step 3: Start the thread &mdash; it begins running task("worker-1") in the background</span>
+t.start()
+
+<span class="comment"># Step 4: Wait for it to finish &mdash; main thread blocks here until t is done</span>
+t.join()
+
+<span class="comment"># Without join(), the main program might exit before the thread finishes!</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>Why <code>target=task</code> and NOT <code>target=task()</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">Same thing &mdash; just style</button>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><code>task</code> = the function object (pass it to the thread, let the THREAD call it). <code>task()</code> = call it NOW in the main thread, pass the return value. You'd be running it sequentially, defeating the purpose.</button>
+                <div class="quiz-explanation"><code>target=task</code> says "here's the function, call it when you start." <code>target=task()</code> would call <code>task()</code> immediately and pass <code>None</code> (the return value) as the target.</div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>What does <code>t.join()</code> do? What happens if you skip it?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)"><code>join()</code> = "main thread, WAIT here until thread t is done." Without it, the main program might exit (or move to the next step) while the thread is still running in the background.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It starts the thread</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">It's optional and doesn't matter</button>
+                <div class="quiz-explanation"><code>start()</code> = launch it. <code>join()</code> = wait for it. If you launch 5 threads without joining, the program might print "Done" before any thread finishes.</div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 8px;"><code>multiprocessing</code> has the EXACT same API</h4>
+                <p style="color: var(--text-secondary);">
+                    Replace <code>threading.Thread</code> with <code>multiprocessing.Process</code>. Same <code>target</code>, <code>args</code>, <code>.start()</code>, <code>.join()</code>. Switching between threads and processes is literally a one-word change.
+                </p>
+            </div>
+
+            <!-- Demo: time.sleep releases GIL -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Demo 1: <code>time.sleep()</code> releases the GIL</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><code>time.sleep()</code> is NOT just "pretending." It's a real I/O call that <strong>releases the GIL</strong>, just like a real API call would. Here's why threading works for it:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>sleep_releases_gil.py &mdash; run this!</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> time, threading
+
+<span class="keyword">def</span> <span class="function">simulate_api</span>(name, seconds):
+    print(<span class="string">f"  {name}: starting (sleeping {seconds}s &mdash; GIL released)"</span>)
+    time.sleep(seconds)    <span class="comment"># Releases GIL! Other threads can run.</span>
+    print(<span class="string">f"  {name}: done!"</span>)
+
+<span class="comment"># Sequential: 1+2+1+1 = 5 seconds</span>
+start = time.time()
+simulate_api(<span class="string">"Razorpay"</span>, <span class="number">2</span>)
+simulate_api(<span class="string">"Email"</span>, <span class="number">1</span>)
+simulate_api(<span class="string">"SMS"</span>, <span class="number">1</span>)
+simulate_api(<span class="string">"Push"</span>, <span class="number">1</span>)
+print(<span class="string">f"  Sequential: {time.time()-start:.1f}s\n"</span>)
+
+<span class="comment"># Threaded: all sleep at the same time = ~2 seconds (the longest one)</span>
+start = time.time()
+threads = [
+    threading.Thread(target=simulate_api, args=(<span class="string">"Razorpay"</span>, <span class="number">2</span>)),
+    threading.Thread(target=simulate_api, args=(<span class="string">"Email"</span>, <span class="number">1</span>)),
+    threading.Thread(target=simulate_api, args=(<span class="string">"SMS"</span>, <span class="number">1</span>)),
+    threading.Thread(target=simulate_api, args=(<span class="string">"Push"</span>, <span class="number">1</span>)),
+]
+[t.start() <span class="keyword">for</span> t <span class="keyword">in</span> threads]
+[t.join() <span class="keyword">for</span> t <span class="keyword">in</span> threads]
+print(<span class="string">f"  Threaded:   {time.time()-start:.1f}s"</span>)</pre>
+                </div>
+            </div>
+
+            <!-- Demo 2: Real I/O that releases GIL -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Demo 2: Real operations that release the GIL</h3>
+            <div class="highlight-box" style="margin-bottom: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <code>time.sleep()</code> isn't the only thing that releases the GIL. <strong>ALL I/O operations do:</strong>
+                </p>
+            </div>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>real_io_releases_gil.py &mdash; file I/O example</span></div>
+                    <div class="code-toggle"><button class="copy-btn" onclick="event.stopPropagation(); copyCode(this)">Copy</button> <span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> threading, urllib.request, time
+
+<span class="comment"># These ALL release the GIL while waiting:</span>
+<span class="comment"># - time.sleep()         &mdash; OS sleep call</span>
+<span class="comment"># - urllib.request       &mdash; network I/O</span>
+<span class="comment"># - open().read()        &mdash; file I/O</span>
+<span class="comment"># - socket.recv()        &mdash; network I/O</span>
+<span class="comment"># - subprocess.run()     &mdash; waiting for child process</span>
+<span class="comment"># - database drivers     &mdash; waiting for DB response</span>
+
+<span class="keyword">def</span> <span class="function">fetch_url</span>(url):
+    <span class="keyword">try</span>:
+        resp = urllib.request.urlopen(url, timeout=<span class="number">5</span>)  <span class="comment"># GIL released during network wait!</span>
+        print(<span class="string">f"  {url[:30]}... &mdash; {len(resp.read())} bytes"</span>)
+    <span class="keyword">except</span>:
+        print(<span class="string">f"  {url[:30]}... &mdash; failed (no internet?)"</span>)
+
+urls = [
+    <span class="string">"https://httpbin.org/delay/1"</span>,
+    <span class="string">"https://httpbin.org/delay/1"</span>,
+    <span class="string">"https://httpbin.org/delay/1"</span>,
+]
+
+<span class="comment"># Sequential: ~3 seconds</span>
+start = time.time()
+<span class="keyword">for</span> u <span class="keyword">in</span> urls: fetch_url(u)
+print(<span class="string">f"  Sequential: {time.time()-start:.1f}s\n"</span>)
+
+<span class="comment"># Threaded: ~1 second (all waiting simultaneously)</span>
+start = time.time()
+threads = [threading.Thread(target=fetch_url, args=(u,)) <span class="keyword">for</span> u <span class="keyword">in</span> urls]
+[t.start() <span class="keyword">for</span> t <span class="keyword">in</span> threads]
+[t.join() <span class="keyword">for</span> t <span class="keyword">in</span> threads]
+print(<span class="string">f"  Threaded:   {time.time()-start:.1f}s"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 8px;">What releases the GIL?</h4>
+                <p style="color: var(--text-secondary);">
+                    Any operation where Python calls out to the OS or a C library and <strong>waits</strong>:<br><br>
+                    <code>time.sleep()</code> &bull; <code>requests.get()</code> &bull; <code>open().read()</code> &bull; <code>socket.recv()</code> &bull; <code>subprocess.run()</code> &bull; database queries &bull; <code>urllib.request</code><br><br>
+                    What does NOT release the GIL: pure Python computation (<code>for i in range(10_000_000): x += i</code>). That's why threads don't help for CPU-bound work.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 11. GIL + Language Comparison -->
+    <section id="gil">
+        <div class="section-container">
+            <span class="section-label warning">Python-Specific</span>
+            <h2 class="section-title">The GIL &amp; Language Comparison</h2>
+            <p class="section-subtitle">Python has a unique limitation other languages don't. Here's what it is and why.</p>
+
+            <div class="code-block" style="margin-bottom: 20px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><span>GIL = only 1 thread runs Python at a time</span></div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment">WITHOUT GIL (Java, Go, Rust) &mdash; true parallel threads:</span>
+Core 1: <span class="string">[Thread 1 ████████████████]</span>
+Core 2: <span class="keyword">[Thread 2 ████████████████]</span>
+Core 3: <span class="function">[Thread 3 ████████████████]</span>
+Core 4: <span class="decorator">[Thread 4 ████████████████]</span>
+
+<span class="comment">WITH GIL (Python) &mdash; threads take turns on 1 core:</span>
+Core 1: <span class="string">[T1]</span><span class="keyword">[T2]</span><span class="function">[T3]</span><span class="decorator">[T4]</span><span class="string">[T1]</span><span class="keyword">[T2]</span><span class="function">[T3]</span><span class="decorator">[T4]</span>
+Core 2: <span class="comment">[idle]</span>
+Core 3: <span class="comment">[idle]</span>
+Core 4: <span class="comment">[idle]</span></pre>
+                </div>
+            </div>
+
+            <div class="quiz-box">
+                <h4>If GIL blocks parallel threads, why do threads still help with I/O?</h4>
+                <button class="quiz-option" onclick="checkQuiz(this, true)">When a thread waits for I/O (API call), it RELEASES the GIL. Other threads grab it. The waiting thread isn't doing Python work anyway &mdash; it's waiting for a network response.</button>
+                <button class="quiz-option" onclick="checkQuiz(this, false)">They don't help</button>
+                <div class="quiz-explanation"><strong>I/O releases the GIL.</strong> For CPU-bound, use <code>multiprocessing</code> &mdash; each process has its own GIL, its own Python interpreter, runs on a separate core.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 10px;">Why Does Python Have GIL?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">CPython uses reference counting for memory management. The GIL protects the reference count from corruption by multiple threads. It's simple but limiting.</p>
+
+            <h3 style="margin-top: 25px; margin-bottom: 10px;">Language Comparison</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Language</th><th>GIL?</th><th>True parallel threads?</th><th>Concurrency model</th></tr>
+                    <tr><td><strong>Python</strong></td><td>Yes (CPython)</td><td>No (use multiprocessing)</td><td>Threads for I/O, processes for CPU</td></tr>
+                    <tr><td><strong>Java</strong></td><td>No</td><td>Yes</td><td>Native threads, thread pools</td></tr>
+                    <tr><td><strong>Go</strong></td><td>No</td><td>Yes</td><td>Goroutines (lightweight green threads)</td></tr>
+                    <tr><td><strong>Rust</strong></td><td>No</td><td>Yes</td><td>Ownership system prevents data races at compile time</td></tr>
+                    <tr><td><strong>JavaScript</strong></td><td>Single-threaded</td><td>No (Web Workers for parallel)</td><td>Event loop (like asyncio)</td></tr>
+                </table>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 15px;">
+                <p style="color: var(--text-secondary);">
+                    <strong>Why the difference?</strong> Java/Go/Rust were designed for concurrency from the start. Python was designed for simplicity; concurrency was added later. The GIL was the simplest solution.<br><br>
+                    See the speed gap: <a href="https://benjdd.com/languages/" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Language benchmarks</a> | <a href="https://godbolt.org/" target="_blank" style="color: var(--accent-primary); font-weight: 600;">Compiler Explorer</a>
+                </p>
+            </div>
+
+            <!-- Deep Dive: OS threads vs Green threads + How GIL actually works -->
+            <div class="collapsible" style="margin-top: 25px;">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128270; Deep Dive: Are Python threads real OS threads? How does GIL actually block them?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <h4 style="margin-bottom: 10px;">Two kinds of threads exist</h4>
+                    <div class="comparison-grid">
+                        <div class="card">
+                            <div class="card-title">OS Threads (Kernel Threads)</div>
+                            <div class="card-desc">Created and scheduled by the OS kernel. The OS sees them, context-switches them. Heavy &mdash; each needs a TCB, stack (1-8MB).<br><br><strong>Java, Python, C++ use these.</strong></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Green Threads (User-space)</div>
+                            <div class="card-desc">Created by the language runtime. OS has NO idea they exist. Light &mdash; runtime controls scheduling, tiny stacks.<br><br><strong>Go's goroutines, Erlang's processes use these.</strong></div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 25px; margin-bottom: 10px;">Java: 1:1 mapping, truly parallel</h4>
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">Java Thread &rarr; OS Thread &rarr; CPU Core</span>
+<span class="comment"></span>
+<span class="comment">Thread t1 = new Thread(...) &rarr; OS Thread 1 &rarr; Core 1</span>
+<span class="comment">Thread t2 = new Thread(...) &rarr; OS Thread 2 &rarr; Core 2</span>
+<span class="comment">Thread t3 = new Thread(...) &rarr; OS Thread 3 &rarr; Core 3</span>
+<span class="comment"></span>
+<span class="comment">OS sees all 3. OS schedules all 3. Truly parallel.</span>
+<span class="comment">JVM says: "OS, here's a thread, you handle it."</span></pre>
+                    </div></div>
+
+                    <h4 style="margin-top: 25px; margin-bottom: 10px;">Python: also 1:1 OS threads, but GIL on top</h4>
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">Python threads ARE real OS threads. OS sees them, schedules them.</span>
+<span class="comment">But CPython puts a lock around its interpreter:</span>
+<span class="comment"></span>
+<span class="comment">┌─── GIL (one mutex lock) ─────────────────────┐</span>
+<span class="comment">│  Only ONE thread runs Python bytecode         │</span>
+<span class="comment">│  at any instant                               │</span>
+<span class="comment">└───────────────────────────────────────────────┘</span>
+<span class="comment"></span>
+<span class="comment">Thread t1 &rarr; OS Thread 1 &rarr; Core 1  (has GIL &rarr; running)</span>
+<span class="comment">Thread t2 &rarr; OS Thread 2 &rarr; Core 2  (waiting for GIL &rarr; idle!)</span>
+<span class="comment">Thread t3 &rarr; OS Thread 3 &rarr; Core 3  (waiting for GIL &rarr; idle!)</span>
+<span class="comment"></span>
+<span class="comment">OS gave t2 a core. But t2 is spinning on the GIL mutex.</span>
+<span class="comment">The OS has no idea — it thinks t2 is "running."</span></pre>
+                    </div></div>
+
+                    <h4 style="margin-top: 25px; margin-bottom: 10px;">How GIL releases work &mdash; the timeline</h4>
+                    <div class="code-block"><div class="code-content">
+<pre><span class="comment">CPython releases GIL every ~5ms (sys.getswitchinterval()).</span>
+<span class="comment">And immediately during any I/O call.</span>
+<span class="comment"></span>
+<span class="comment">CPU-bound (GIL held, threads take turns):</span>
+<span class="comment">Thread 1: ██████░░░░░░██████░░░░░░██████</span>
+<span class="comment">Thread 2: ░░░░░░██████░░░░░░██████░░░░░░</span>
+<span class="comment">           ^           ^</span>
+<span class="comment">           GIL released every 5ms, other thread grabs it</span>
+<span class="comment"></span>
+<span class="comment">I/O-bound (GIL released during wait):</span>
+<span class="comment">Thread 1: ██░░░░░░░░░░░░░░░░██████    (network wait = GIL free)</span>
+<span class="comment">Thread 2: ░░██████████████░░░░░░░░    (runs freely)</span>
+<span class="comment">             ^                        </span>
+<span class="comment">             Thread 2 gets the GIL for the entire wait duration</span></pre>
+                    </div></div>
+
+                    <div class="highlight-box danger" style="margin-top: 15px;">
+                        <h4 style="margin-bottom: 8px;">The irony of Python threads</h4>
+                        <p style="color: var(--text-secondary);">
+                            Python threads are REAL OS threads. You pay the full cost (heavy, expensive context switches). But you get NONE of the parallelism for CPU-bound work. You get the worst of both worlds.<br><br>
+                            This is why <code>multiprocessing</code> exists (each process = own GIL) and why Python 3.13+ is experimenting with a <strong>"no-GIL" build</strong>.
+                        </p>
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's Next -->
+    <section id="next">
+        <div class="section-container">
+            <span class="section-label">Looking Ahead</span>
+            <h2 class="section-title">What's Next</h2>
+            <div class="table-container">
+                <table>
+                    <tr><th>Today</th><th>Concurrency-2</th><th>Concurrency-3</th><th>Concurrency-4</th></tr>
+                    <tr><td>Concepts + basics</td><td>Thread Pools &amp; Futures</td><td>Locks &amp; Deadlocks</td><td>Async I/O</td></tr>
+                    <tr><td>Manual threads</td><td>Let Python manage for you</td><td>Safe shared resources</td><td>Single-thread concurrency</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label success">Resources</span>
+            <h2 class="section-title">Deep Dives &amp; References</h2>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="card">
+                    <div class="card-icon">&#128421;</div>
+                    <div class="card-title">cpu.land</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Interactive guide to how CPUs work. Beautifully explained.</div>
+                    <a href="https://cpu.land/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">cpu.land &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128196;</div>
+                    <div class="card-title">PlanetScale &mdash; Processes &amp; Threads</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Clear visual explainer with diagrams.</div>
+                    <a href="https://planetscale.com/blog/processes-and-threads" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">planetscale.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9201;</div>
+                    <div class="card-title">PlanetScale &mdash; I/O &amp; Latency</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Why I/O is slow at the hardware level.</div>
+                    <a href="https://planetscale.com/blog/io-devices-and-latency" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">planetscale.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127916;</div>
+                    <div class="card-title">David Beazley &mdash; GIL Talk</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">THE classic talk on Python's GIL.</div>
+                    <a href="https://www.youtube.com/watch?v=Obt-vMVdM8s" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">YouTube &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128295;</div>
+                    <div class="card-title">Compiler Explorer</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">See assembly output of C/Rust code.</div>
+                    <a href="https://godbolt.org/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">godbolt.org &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128200;</div>
+                    <div class="card-title">Language Benchmarks</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Python vs Java vs Go vs Rust speed.</div>
+                    <a href="https://benjdd.com/languages/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">benjdd.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Real Python &mdash; Threading</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Practical threading guide.</div>
+                    <a href="https://realpython.com/intro-to-python-threading/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">realpython.com &rarr;</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128640;</div>
+                    <div class="card-title">Real Python &mdash; Concurrency</div>
+                    <div class="card-desc" style="margin-bottom: 10px;">Threading, multiprocessing, asyncio compared.</div>
+                    <a href="https://realpython.com/python-concurrency/" target="_blank" style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem; text-decoration: none;">realpython.com &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-05 &bull; Concurrency-1: Introduction to Processes and Threads<br><span style="font-size: 0.8rem;">Academy Feb 26 - Python Backend LLD Batch</span></p>
+    </footer>
+
+    <script>
+        window.addEventListener('scroll', () => { const s = document.body.scrollTop || document.documentElement.scrollTop; const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; document.getElementById('progressBar').style.width = (s / h) * 100 + '%'; });
+        function toggleTheme() { const b = document.body, i = document.getElementById('themeIcon'), t = document.getElementById('themeText'); if (b.getAttribute('data-theme') === 'light') { b.removeAttribute('data-theme'); i.textContent = '\u{1F319}'; t.textContent = 'Dark'; } else { b.setAttribute('data-theme', 'light'); i.textContent = '\u{2600}\u{FE0F}'; t.textContent = 'Light'; } }
+        function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+        function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+        function copyCode(button) { const code = button.closest('.code-block').querySelector('pre').textContent; navigator.clipboard.writeText(code).then(() => { button.textContent = 'Copied!'; setTimeout(() => button.textContent = 'Copy', 2000); }); }
+        function checkQuiz(button, isCorrect) { const box = button.closest('.quiz-box'); if (box.classList.contains('answered')) return; box.classList.add('answered'); button.classList.add('selected'); if (isCorrect) { button.classList.add('correct'); } else { button.classList.add('wrong'); box.querySelectorAll('.quiz-option').forEach(o => { if (o.getAttribute('onclick')?.includes('true')) o.classList.add('correct'); }); } }
+        function revealRow(tr) { tr.classList.toggle('revealed-row'); }
+        document.addEventListener('keydown', (e) => { if (e.key === 'e' && e.altKey) { document.querySelectorAll('.code-block.collapsed').forEach(b => b.classList.remove('collapsed')); document.querySelectorAll('.collapsible:not(.open)').forEach(c => c.classList.add('open')); } if (e.key === 'c' && e.altKey) { document.querySelectorAll('.code-block:not(.collapsed)').forEach(b => b.classList.add('collapsed')); document.querySelectorAll('.collapsible.open').forEach(c => c.classList.remove('open')); } });
+    </script>
+</body>
+</html>
