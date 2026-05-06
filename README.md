@@ -44,7 +44,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 6 | [Concurrency-2: Executors and Futures](LLD-06-Concurrency-2-Executors-Futures/) | GIL deep dive, ThreadPoolExecutor, ProcessPoolExecutor, Futures |
 | 7 | [Concurrency-3: Executor Syntax, Merge Sort, Mutex & Deadlock](LLD-07-Concurrency-3-Executor-Syntax-Mutex-Deadlock/) | submit(), map(), parallel merge sort, race conditions, mutex, deadlock |
 | 8 | [Concurrency-4: Semaphores & Async I/O](LLD-08-Concurrency-4-Semaphores-AsyncIO/) | Semaphores, producer-consumer, async/await, event loop, asyncio |
-| 9 | Python Advanced-1: Typing and Generics | Upcoming |
+| 9 | [Python Advanced-1: Typing and Generics](LLD-09-Python-Advanced-1-Typing-Generics/) | Typing, generics, TypeVar, Protocol, mypy |
 | 10 | Python Advanced-2: Collections | Upcoming |
 | 11 | Python Advanced-3: Lambda Functions and FP | Upcoming |
 | 12 | Python Advanced-4: Exception Handling | Upcoming |

@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-09: Typing &amp; Generics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-09: Typing &amp; Generics</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#why-types">Why Types?</a></li>
+            <li><a href="#basics">Basics</a></li>
+            <li><a href="#typevar">TypeVar</a></li>
+            <li><a href="#protocol">Protocol</a></li>
+            <li><a href="#mypy">mypy</a></li>
+            <li><a href="#production">Production</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#9728;&#65039;</span> <span id="themeText">Light</span></button>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-icon">&#128272;</div>
+        <h1>Typing &amp; Generics</h1>
+        <p class="hero-meta">LLD-09 &bull; Python Advanced-1</p>
+        <p class="hero-tagline">Python lets you write code without types. That's a feature for scripts.<br><strong>It's a liability for systems.</strong></p>
+    </section>
+
+    <!-- ===== RECAP: CONCURRENCY MODULE ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label warning">Concurrency Recap</span>
+            <h2 class="section-title">Before We Move On...</h2>
+            <p class="section-subtitle">4 classes of concurrency. These concepts should be crystal clear. Not syntax &mdash; the <em>reasoning</em>.</p>
+
+            <div class="quiz-box" id="q-recap1">
+                <h4>Your teammate says: "We don't need locks in Python because of the GIL." Are they right?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, false)">Yes &mdash; the GIL ensures only one thread runs, so data is safe</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, true)">No &mdash; the GIL doesn't prevent context switching between bytecode operations</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, false)">Yes &mdash; but only for CPU-bound work</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, false)">It depends on the Python version</button>
+                <div class="quiz-explanation"><strong>GIL &ne; thread safety.</strong> The GIL prevents <em>parallel</em> execution but NOT context switching. <code>counter += 1</code> is LOAD + ADD + STORE &mdash; a thread can be interrupted between these. You still need locks for shared mutable state.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap2">
+                <h4>Highway has 5 toll booths. 20 cars arrive. You use a Mutex. What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, false)">5 cars at a time, 4 batches, done in 4 seconds</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, true)">1 car at a time, 4 booths sit empty, takes 20 seconds</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, false)">All 20 rush in at once, some crash</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, false)">Deadlock &mdash; mutex can't handle multiple resources</button>
+                <div class="quiz-explanation"><strong>Mutex is binary: 1 at a time.</strong> Even though there are 5 booths, mutex only allows 1 car through. You need <code>Semaphore(5)</code> to allow 5 at once. Mutex = lock/unlock. Semaphore = counter 0 to N.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap3">
+                <h4>Producer-Consumer: buffer is full. Why can't a mutex make the producer WAIT until space is free?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, false)">It can &mdash; the producer just holds the lock and loops until space opens</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, false)">Mutex doesn't work with buffers, only with counters</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, true)">Mutex can't signal &mdash; if producer holds lock while waiting, consumer can never free space = deadlock</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, false)">It works fine, you just need two mutexes</button>
+                <div class="quiz-explanation"><strong>Mutex protects. Semaphore signals.</strong> A mutex is locked/unlocked &mdash; it can't express "wait until a condition changes." Holding lock + looping = consumer blocked = deadlock. Semaphore's <code>release()</code> WAKES UP a blocked <code>acquire()</code>. That's signalling.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap4">
+                <h4>You write <code>time.sleep(2)</code> inside an <code>async def</code> function. What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap4', this, false)">Only that coroutine sleeps, others continue</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap4', this, true)">The ENTIRE event loop freezes for 2 seconds &mdash; nothing else runs</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap4', this, false)">Python raises an error &mdash; can't use time.sleep in async</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap4', this, false)">It's fine as long as you await it</button>
+                <div class="quiz-explanation"><strong><code>time.sleep()</code> is blocking.</strong> It doesn't yield to the event loop. The entire async system freezes. Use <code>await asyncio.sleep(2)</code> instead &mdash; it yields control so other coroutines run. The #1 async bug.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap5">
+                <h4>You need to resize 1000 images in Python. Which concurrency approach?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap5', this, false)">ThreadPoolExecutor &mdash; threads handle I/O well</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap5', this, false)">asyncio &mdash; async is always the best choice</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap5', this, true)">ProcessPoolExecutor &mdash; image resize is CPU-bound, only processes bypass GIL</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap5', this, false)">Semaphore(10) to limit concurrency</button>
+                <div class="quiz-explanation"><strong>CPU-bound = Processes.</strong> Image resize is pure computation. GIL prevents threads from running in parallel. Async doesn't help (no I/O wait). Only <code>ProcessPoolExecutor</code> gives true parallelism across cores.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap6">
+                <h4>FastAPI app calls 3 external APIs. Best approach?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap6', this, false)">Create 3 threads with ThreadPoolExecutor</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap6', this, true)">asyncio.gather() with aiohttp &mdash; FastAPI is already async</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap6', this, false)">ProcessPoolExecutor for true parallelism</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap6', this, false)">Call them sequentially &mdash; 3 is not worth parallelizing</button>
+                <div class="quiz-explanation"><strong>Async + async library.</strong> FastAPI runs on an async event loop. Use <code>asyncio.gather()</code> with <code>aiohttp</code>. One thread handles all 3 concurrently. Threads would add unnecessary overhead inside an already-async framework.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY TYPES? ===== -->
+    <section id="why-types">
+        <div class="section-container">
+            <span class="section-label danger">The Problem</span>
+            <h2 class="section-title">Why Types?</h2>
+            <p class="section-subtitle">Let's start with a bug. A real one.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Read this code. Can you spot the bug?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">calculate_total</span>(items):
+    total = <span class="number">0</span>
+    <span class="keyword">for</span> item <span class="keyword">in</span> items:
+        total += item[<span class="string">"price"</span>] * item[<span class="string">"quantity"</span>]
+    <span class="keyword">return</span> total
+
+<span class="keyword">def</span> <span class="function">apply_discount</span>(total, discount):
+    <span class="keyword">return</span> total - (total * discount)
+
+<span class="keyword">def</span> <span class="function">process_order</span>(order):
+    total = calculate_total(order[<span class="string">"items"</span>])
+    final = apply_discount(total, order[<span class="string">"discount"</span>])
+    <span class="keyword">return</span> final</pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-spot-bug">
+                <h4>A new developer calls: <code>process_order({"items": [...], "discount": "10%"})</code>. What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-spot-bug', this, false)">It applies 10% discount correctly</button>
+                <button class="quiz-option" onclick="checkQuiz('q-spot-bug', this, false)">It returns 0</button>
+                <button class="quiz-option" onclick="checkQuiz('q-spot-bug', this, true)">TypeError at runtime &mdash; can't multiply string by int</button>
+                <button class="quiz-option" onclick="checkQuiz('q-spot-bug', this, false)">It silently returns the wrong answer</button>
+                <div class="quiz-explanation"><code>apply_discount(250, "10%")</code> tries to compute <code>250 * "10%"</code> &mdash; <strong>crash.</strong> The function expected a float like <code>0.1</code> but got a string. You'd never know until production. With types: <code>def apply_discount(total: float, discount: float) -> float</code> &mdash; mypy catches this <strong>before you even run</strong> the code.</div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>The real question isn't "what's the bug?"</strong></p>
+                <p>It's: <strong>how would the new developer have KNOWN</strong> that <code>discount</code> should be a float and not a string? The function signature <code>def apply_discount(total, discount)</code> tells them nothing. They have to read the implementation. In a 50,000-line codebase, that's not sustainable.</p>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Who actually uses types in Python?</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Company</th><th>Codebase</th><th>Result</th></tr>
+                    <tr><td><strong>Dropbox</strong></td><td>4M+ lines typed</td><td>Invented mypy. Jukka Lehtosalo built it as his PhD project.</td></tr>
+                    <tr><td><strong>Instagram</strong></td><td>3M+ lines, fully typed</td><td>Fewer production bugs, faster onboarding for new engineers</td></tr>
+                    <tr><td><strong>Stripe</strong></td><td>Internal Python typed</td><td>15-30% fewer bugs reported after adopting types</td></tr>
+                    <tr><td><strong>FastAPI</strong></td><td>Framework built ON types</td><td>Auto-generates API docs from type hints. Pydantic validates at runtime.</td></tr>
+                </table>
+            </div>
+
+            <div class="table-container" style="margin-top: 30px;">
+                <table>
+                    <tr><th>Codebase Size</th><th>Types?</th><th>Why</th></tr>
+                    <tr><td>50-line script</td><td>No</td><td>You hold it all in your head</td></tr>
+                    <tr><td>500-line project</td><td>Helpful</td><td>IDE autocomplete saves time</td></tr>
+                    <tr><td>5000+ lines / team</td><td><strong>Essential</strong></td><td>Humans forget. Types don't.</td></tr>
+                    <tr><td>Library / Open-source</td><td><strong>Mandatory</strong></td><td>Users can't read your source code</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== BASICS: EACH TYPE THROUGH A SCENARIO ===== -->
+    <section id="basics">
+        <div class="section-container">
+            <span class="section-label success">Fundamentals</span>
+            <h2 class="section-title">Type Hints &mdash; One Scenario at a Time</h2>
+            <p class="section-subtitle">We'll introduce each type through a problem. You tell me what should happen.</p>
+
+            <!-- Scenario 1: Basic annotations -->
+            <h3 style="margin-bottom: 15px;">Scenario 1: "What does this function accept?"</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Without types</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="keyword">return</span> <span class="string">f"Hello, </span>{name}<span class="string">!"</span>
+
+<span class="keyword">def</span> <span class="function">add</span>(a, b):
+    <span class="keyword">return</span> a + b</pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-basic1">
+                <h4>What happens when you call <code>add("hello", " world")</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-basic1', this, false)">TypeError &mdash; add expects numbers</button>
+                <button class="quiz-option" onclick="checkQuiz('q-basic1', this, true)">Returns "hello world" &mdash; Python doesn't care, + works on strings too</button>
+                <button class="quiz-option" onclick="checkQuiz('q-basic1', this, false)">Returns 0</button>
+                <div class="quiz-explanation"><strong>Python doesn't enforce types.</strong> <code>add("hello", " world")</code> returns <code>"hello world"</code>. Python sees <code>+</code> and uses string concatenation. There's no way to know from the function signature that <code>add</code> was meant for numbers. Type hints fix this:</div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> With types &mdash; crystal clear</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">greet</span>(name: <span class="function">str</span>) -> <span class="function">str</span>:
+    <span class="keyword">return</span> <span class="string">f"Hello, </span>{name}<span class="string">!"</span>
+
+<span class="keyword">def</span> <span class="function">add</span>(a: <span class="function">int</span>, b: <span class="function">int</span>) -> <span class="function">int</span>:
+    <span class="keyword">return</span> a + b
+
+<span class="keyword">def</span> <span class="function">is_adult</span>(age: <span class="function">int</span>) -> <span class="function">bool</span>:
+    <span class="keyword">return</span> age >= <span class="number">18</span>
+
+<span class="comment"># Python STILL doesn't enforce at runtime!</span>
+add(<span class="string">"hello"</span>, <span class="string">" world"</span>)  <span class="comment"># Runs fine!</span>
+<span class="comment"># But mypy catches it: Argument 1 has incompatible type "str"; expected "int"</span></pre></div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Key insight:</strong> Types are <strong>hints</strong>, not constraints. Python ignores them at runtime. Three things USE them:<br>
+                <strong>1. Your IDE</strong> &mdash; autocomplete, hover info, red squiggles<br>
+                <strong>2. mypy</strong> &mdash; static checker that catches bugs before you run code<br>
+                <strong>3. Humans</strong> &mdash; reading the code 6 months later
+            </div>
+
+            <!-- Scenario 2: Collections -->
+            <h3 style="margin: 50px 0 15px;">Scenario 2: "What's INSIDE this list?"</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> A list of... what?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">process</span>(items):
+    <span class="keyword">for</span> item <span class="keyword">in</span> items:
+        <span class="function">print</span>(item.upper())  <span class="comment"># Will this work? Who knows!</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-collection">
+                <h4>Someone calls <code>process([1, 2, 3])</code>. What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-collection', this, false)">Prints "1", "2", "3"</button>
+                <button class="quiz-option" onclick="checkQuiz('q-collection', this, true)">AttributeError: 'int' object has no attribute 'upper'</button>
+                <button class="quiz-option" onclick="checkQuiz('q-collection', this, false)">TypeError at the for loop</button>
+                <div class="quiz-explanation">The function calls <code>.upper()</code> which only works on strings. <code>list</code> alone doesn't tell you what's inside. You need <code>list[str]</code>:</div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Collection types &mdash; what's inside matters</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Python 3.9+ syntax (recommended)</span>
+<span class="keyword">def</span> <span class="function">process_names</span>(names: <span class="function">list</span>[<span class="function">str</span>]) -> <span class="function">list</span>[<span class="function">str</span>]:
+    <span class="keyword">return</span> [name.upper() <span class="keyword">for</span> name <span class="keyword">in</span> names]
+
+<span class="keyword">def</span> <span class="function">get_scores</span>() -> <span class="function">dict</span>[<span class="function">str</span>, <span class="function">int</span>]:
+    <span class="keyword">return</span> {<span class="string">"Alice"</span>: <span class="number">95</span>, <span class="string">"Bob"</span>: <span class="number">87</span>}
+
+<span class="keyword">def</span> <span class="function">get_coordinates</span>() -> <span class="function">tuple</span>[<span class="function">float</span>, <span class="function">float</span>]:  <span class="comment"># exactly 2 elements</span>
+    <span class="keyword">return</span> (<span class="number">28.6139</span>, <span class="number">77.2090</span>)
+
+<span class="keyword">def</span> <span class="function">get_unique_tags</span>() -> <span class="function">set</span>[<span class="function">str</span>]:
+    <span class="keyword">return</span> {<span class="string">"python"</span>, <span class="string">"backend"</span>, <span class="string">"lld"</span>}
+
+<span class="comment"># Nested collections:</span>
+<span class="keyword">def</span> <span class="function">get_class_scores</span>() -> <span class="function">dict</span>[<span class="function">str</span>, <span class="function">list</span>[<span class="function">int</span>]]:
+    <span class="keyword">return</span> {<span class="string">"Alice"</span>: [<span class="number">95</span>, <span class="number">88</span>, <span class="number">92</span>], <span class="string">"Bob"</span>: [<span class="number">87</span>, <span class="number">91</span>]}</pre></div>
+            </div>
+
+            <!-- Scenario 3: The None disaster -->
+            <h3 style="margin: 50px 0 15px;">Scenario 3: "Your app crashes at 3am..."</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">You wrote <code>find_user(user_id)</code>. It works great in development. Then in production, a request comes in with a user_id that doesn't exist.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The 3am crash</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">find_user</span>(user_id):
+    users = {<span class="number">1</span>: {<span class="string">"name"</span>: <span class="string">"Alice"</span>}, <span class="number">2</span>: {<span class="string">"name"</span>: <span class="string">"Bob"</span>}}
+    <span class="keyword">return</span> users.get(user_id)  <span class="comment"># returns None if not found</span>
+
+<span class="comment"># Works perfectly in development:</span>
+user = find_user(<span class="number">1</span>)
+<span class="function">print</span>(user[<span class="string">"name"</span>])  <span class="comment"># "Alice" &#10004;</span>
+
+<span class="comment"># 3am in production &mdash; a user_id that doesn't exist:</span>
+user = find_user(<span class="number">999</span>)
+<span class="function">print</span>(user[<span class="string">"name"</span>])  <span class="comment"># TypeError: 'NoneType' object is not subscriptable</span>
+<span class="comment"># user is None. You never checked.</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-none">
+                <h4>How do we tell the caller "this function might return None"?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-none', this, false)">Add a comment: "# warning: may return None"</button>
+                <button class="quiz-option" onclick="checkQuiz('q-none', this, false)">Raise an exception instead of returning None</button>
+                <button class="quiz-option" onclick="checkQuiz('q-none', this, true)">Return type <code>dict | None</code> &mdash; mypy forces the caller to handle None</button>
+                <button class="quiz-option" onclick="checkQuiz('q-none', this, false)">Return an empty dict instead</button>
+                <div class="quiz-explanation">With <code>-> dict | None</code>, mypy will <strong>error</strong> if the caller does <code>user["name"]</code> without checking for None first. The caller is forced to write <code>if user is not None:</code>. The bug is caught at write time, not at 3am.</div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Optional &mdash; "This value might not exist"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><code>Optional[X]</code> is just shorthand for <code>X | None</code>. It means: "this could be X, or it could be None." Both syntaxes mean the exact same thing.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Optional &mdash; the fix</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> Optional
+
+<span class="comment"># These three are IDENTICAL:</span>
+<span class="keyword">def</span> <span class="function">find_user_v1</span>(uid: <span class="function">int</span>) -> Optional[<span class="function">dict</span>]:   <span class="comment"># typing module syntax</span>
+    ...
+<span class="keyword">def</span> <span class="function">find_user_v2</span>(uid: <span class="function">int</span>) -> <span class="function">dict</span> | <span class="keyword">None</span>:      <span class="comment"># Python 3.10+ pipe syntax</span>
+    ...
+<span class="comment"># Both mean: "returns a dict OR None"</span>
+
+<span class="comment"># The real function:</span>
+<span class="keyword">def</span> <span class="function">find_user</span>(user_id: <span class="function">int</span>) -> <span class="function">dict</span> | <span class="keyword">None</span>:
+    users = {<span class="number">1</span>: {<span class="string">"name"</span>: <span class="string">"Alice"</span>}, <span class="number">2</span>: {<span class="string">"name"</span>: <span class="string">"Bob"</span>}}
+    <span class="keyword">return</span> users.get(user_id)
+
+<span class="comment"># Now mypy FORCES you to handle None:</span>
+user = find_user(<span class="number">999</span>)
+user[<span class="string">"name"</span>]  <span class="comment"># mypy ERROR: Item "None" has no attribute "__getitem__"</span></pre></div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Three Ways to Handle Optional</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Pattern 1: if-check (most common)</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>user = find_user(<span class="number">999</span>)
+
+<span class="keyword">if</span> user <span class="keyword">is not None</span>:
+    <span class="function">print</span>(user[<span class="string">"name"</span>])  <span class="comment"># mypy happy &mdash; inside the if, user is dict (not None)</span>
+<span class="keyword">else</span>:
+    <span class="function">print</span>(<span class="string">"User not found"</span>)</pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Pattern 2: early return (guard clause)</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">get_user_name</span>(user_id: <span class="function">int</span>) -> <span class="function">str</span>:
+    user = find_user(user_id)
+    <span class="keyword">if</span> user <span class="keyword">is None</span>:
+        <span class="keyword">return</span> <span class="string">"Unknown"</span>        <span class="comment"># bail out early</span>
+    <span class="keyword">return</span> user[<span class="string">"name"</span>]          <span class="comment"># mypy knows: user is dict here (None was returned above)</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Pattern 3: raise if missing</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">get_user_or_404</span>(user_id: <span class="function">int</span>) -> <span class="function">dict</span>:
+    user = find_user(user_id)
+    <span class="keyword">if</span> user <span class="keyword">is None</span>:
+        <span class="keyword">raise</span> ValueError(<span class="string">f"User </span>{user_id}<span class="string"> not found"</span>)
+    <span class="keyword">return</span> user                   <span class="comment"># mypy knows: user is dict (None raised above)</span>
+<span class="comment"># This is the Django/FastAPI pattern: get_object_or_404()</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-optional-where">
+                <h4>Where does <code>Optional</code> / <code>None</code> show up in real code? (Select the best answer)</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-optional-where', this, false)">Only in database queries</button>
+                <button class="quiz-option" onclick="checkQuiz('q-optional-where', this, true)">Everywhere: DB lookups, dict.get(), config values, API responses, function params with defaults</button>
+                <button class="quiz-option" onclick="checkQuiz('q-optional-where', this, false)">Only when you explicitly return None</button>
+                <button class="quiz-option" onclick="checkQuiz('q-optional-where', this, false)">It's rare &mdash; most functions always return a value</button>
+                <div class="quiz-explanation"><code>None</code> is <strong>everywhere</strong> in Python. <code>dict.get()</code> returns it, <code>list.find()</code> equivalents return it, DB queries return it when no row matches, config values may be unset, API fields may be missing. <code>Optional</code> makes all of these explicit. Tony Hoare (who invented null) called it his "billion dollar mistake" &mdash; Optional is Python's way of making that mistake visible.</div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>Common pitfall: <code>Optional</code> in function parameters.</strong><br><br>
+                <code>def greet(name: Optional[str] = None)</code> means the parameter is <strong>optional to provide</strong> (has a default) AND the value <strong>might be None</strong>.<br><br>
+                <code>def greet(name: str = "World")</code> means the parameter is optional to provide but is <strong>never None</strong> &mdash; it always has a string value. Don't use <code>Optional</code> here!<br><br>
+                Rule: use <code>Optional[X]</code> only when <code>None</code> is a valid value you need to handle.
+            </div>
+
+            <h3 style="margin: 40px 0 15px;">Union &mdash; "Could be either type"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><code>Optional[X]</code> is just <code>X | None</code>. But <code>Union</code> is more general &mdash; it means "could be any of these types."</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Union and the | syntax</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Accepts int or str &mdash; must handle both</span>
+<span class="keyword">def</span> <span class="function">format_id</span>(id_value: <span class="function">int</span> | <span class="function">str</span>) -> <span class="function">str</span>:
+    <span class="keyword">if</span> <span class="function">isinstance</span>(id_value, <span class="function">int</span>):
+        <span class="keyword">return</span> <span class="string">f"ID-</span>{id_value:05d}<span class="string">"</span>   <span class="comment"># mypy knows: int in this branch</span>
+    <span class="keyword">return</span> <span class="string">f"ID-</span>{id_value}<span class="string">"</span>          <span class="comment"># mypy knows: str in this branch</span>
+
+format_id(<span class="number">42</span>)       <span class="comment"># "ID-00042"</span>
+format_id(<span class="string">"ABC"</span>)    <span class="comment"># "ID-ABC"</span>
+format_id(<span class="number">3.14</span>)     <span class="comment"># mypy error: float is not int | str</span>
+
+<span class="comment"># Syntax evolution (all equivalent):</span>
+<span class="comment"># Python 3.9:  Union[int, str]   /  Optional[str] = Union[str, None]</span>
+<span class="comment"># Python 3.10: int | str         /  str | None</span>
+<span class="comment"># Prefer the | syntax &mdash; it's cleaner</span></pre></div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>mypy's "type narrowing":</strong> When you write <code>if isinstance(x, int)</code> or <code>if x is not None</code>, mypy <strong>narrows the type</strong> inside that branch. It knows <code>x</code> is <code>int</code> (not <code>str</code>) inside the if-block. This is why the patterns above work &mdash; mypy tracks your control flow.
+            </div>
+
+            <!-- Scenario 4: Callable -->
+            <h3 style="margin: 50px 0 15px;">Scenario 4: "How do you type a function that accepts a function?"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Remember the strategy pattern? Decorators? Callbacks? They all take <em>functions</em> as parameters. How do you type that?</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What does 'handler' expect? No idea.</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Without types: WHAT should handler look like?</span>
+<span class="keyword">def</span> <span class="function">retry</span>(handler, max_retries):
+    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(max_retries):
+        <span class="keyword">try</span>:
+            <span class="keyword">return</span> handler()
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">if</span> i == max_retries - <span class="number">1</span>: <span class="keyword">raise</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Callable[[params], return] &mdash; type a function</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> Callable
+
+<span class="comment"># Callable[[param_types...], return_type]</span>
+<span class="keyword">def</span> <span class="function">retry</span>(handler: Callable[[], <span class="function">str</span>], max_retries: <span class="function">int</span> = <span class="number">3</span>) -> <span class="function">str</span>:
+    <span class="comment"># Now it's clear: handler takes NO args, returns str</span>
+    ...
+
+<span class="comment"># More examples:</span>
+MathOp = Callable[[<span class="function">int</span>, <span class="function">int</span>], <span class="function">int</span>]  <span class="comment"># (int, int) -> int</span>
+
+<span class="keyword">def</span> <span class="function">apply</span>(a: <span class="function">int</span>, b: <span class="function">int</span>, op: MathOp) -> <span class="function">int</span>:
+    <span class="keyword">return</span> op(a, b)
+
+apply(<span class="number">5</span>, <span class="number">3</span>, <span class="keyword">lambda</span> x, y: x + y)   <span class="comment"># &#10004;</span>
+apply(<span class="number">5</span>, <span class="number">3</span>, <span class="keyword">lambda</span> x, y: <span class="string">"hi"</span>)  <span class="comment"># mypy error: expected int return</span>
+
+<span class="comment"># Real-world uses: decorators, event handlers, middleware, strategies</span>
+EventHandler = Callable[[<span class="function">str</span>, <span class="function">dict</span>], <span class="keyword">None</span>]
+Middleware = Callable[[Request, Response], Response]</pre></div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Type syntax summary so far:</strong><br>
+                &bull; Primitives: <code>int</code>, <code>str</code>, <code>float</code>, <code>bool</code><br>
+                &bull; Collections: <code>list[str]</code>, <code>dict[str, int]</code>, <code>tuple[float, float]</code>, <code>set[int]</code><br>
+                &bull; Optional: <code>str | None</code> &mdash; "might not be there"<br>
+                &bull; Union: <code>int | str</code> &mdash; "could be either"<br>
+                &bull; Callable: <code>Callable[[int, str], bool]</code> &mdash; "a function with this shape"<br>
+                &bull; Any: <code>Any</code> &mdash; escape hatch, <strong>disables all checking</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TYPEVAR & GENERICS ===== -->
+    <section id="typevar">
+        <div class="section-container">
+            <span class="section-label purple">The Big Idea</span>
+            <h2 class="section-title">TypeVar &amp; Generics</h2>
+            <p class="section-subtitle">This is the hardest concept today. Let's build up to it with a problem.</p>
+
+            <!-- Step 1: The problem -->
+            <h3 style="margin-bottom: 15px;">Step 1: The Problem &mdash; A Container with No Type Safety</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Box that holds anything</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">class</span> <span class="function">Box</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, item):
+        self.item = item
+    <span class="keyword">def</span> <span class="function">get</span>(self):
+        <span class="keyword">return</span> self.item
+
+int_box = Box(<span class="number">42</span>)
+str_box = Box(<span class="string">"hello"</span>)
+
+result = int_box.get()  <span class="comment"># What type is result?</span>
+result.upper()          <span class="comment"># Runtime crash! But IDE gave no warning.</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-box-type">
+                <h4>When you hover over <code>int_box.get()</code> in your IDE, what type does it show?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-box-type', this, false)"><code>int</code> &mdash; because we put 42 in</button>
+                <button class="quiz-option" onclick="checkQuiz('q-box-type', this, true)"><code>Any</code> or unknown &mdash; IDE has no idea what <code>get()</code> returns</button>
+                <button class="quiz-option" onclick="checkQuiz('q-box-type', this, false)"><code>object</code> &mdash; the base type of everything</button>
+                <div class="quiz-explanation">The IDE shows <code>Any</code> (or just gives up). It can't know what <code>get()</code> returns because <code>item</code> has no type annotation. So <code>result.upper()</code> looks fine to the IDE... but crashes at runtime because 42 is an int.</div>
+            </div>
+
+            <!-- Step 2: Failed attempts -->
+            <h3 style="margin: 40px 0 15px;">Step 2: How do we fix it?</h3>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 12px;">Attempt A: Separate classes</h4>
+                    <div class="code-block" style="margin: 0;">
+                        <div class="code-content"><pre><span class="keyword">class</span> <span class="function">IntBox</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, item: <span class="function">int</span>): ...
+    <span class="keyword">def</span> <span class="function">get</span>(self) -> <span class="function">int</span>: ...
+
+<span class="keyword">class</span> <span class="function">StrBox</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, item: <span class="function">str</span>): ...
+    <span class="keyword">def</span> <span class="function">get</span>(self) -> <span class="function">str</span>: ...</pre></div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--accent-danger); margin-top: 10px;">IntBox, StrBox, FloatBox, UserBox, OrderBox... doesn't scale.</p>
+                </div>
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 12px;">Attempt B: Use Any</h4>
+                    <div class="code-block" style="margin: 0;">
+                        <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> Any
+
+<span class="keyword">class</span> <span class="function">AnyBox</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, item: Any): ...
+    <span class="keyword">def</span> <span class="function">get</span>(self) -> Any: ...</pre></div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--accent-danger); margin-top: 10px;">Any = "give up type checking." We're back to square one.</p>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>We need ONE class that:</strong></p>
+                <p>1. Works with ANY type (int, str, User, Order...)<br>
+                2. <strong>Remembers</strong> which type was put in<br>
+                3. IDE knows <code>Box(42).get()</code> returns <code>int</code>, not <code>Any</code></p>
+            </div>
+
+            <!-- Step 3: TypeVar -->
+            <h3 style="margin: 40px 0 15px;">Step 3: TypeVar &mdash; A Placeholder for "Some Type"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><code>TypeVar</code> is like a variable, but for <strong>types</strong>. Instead of holding a value like <code>x = 42</code>, it holds a type like <code>T = int</code>.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> TypeVar: the key concept</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> TypeVar
+
+T = TypeVar(<span class="string">"T"</span>)  <span class="comment"># T = "some type, to be determined later"</span>
+
+<span class="comment"># Think of it like algebra:</span>
+<span class="comment"># In math: f(x) = x + 1    &larr; x is "some number"</span>
+<span class="comment"># In types: def first(items: list[T]) -> T    &larr; T is "some type"</span></pre></div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Step 4: Generic Functions &mdash; TypeVar in Action</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Return type follows input type</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>T = TypeVar(<span class="string">"T"</span>)
+
+<span class="keyword">def</span> <span class="function">first</span>(items: <span class="function">list</span>[T]) -> T:
+    <span class="string">"""Return first element. Return type matches element type."""</span>
+    <span class="keyword">return</span> items[<span class="number">0</span>]
+
+<span class="comment"># When you call first([1, 2, 3]):</span>
+<span class="comment">#   T = int (inferred from list[int])</span>
+<span class="comment">#   return type = int</span>
+num = first([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])       <span class="comment"># IDE knows: int</span>
+word = first([<span class="string">"a"</span>, <span class="string">"b"</span>])     <span class="comment"># IDE knows: str</span>
+user = first([alice, bob])  <span class="comment"># IDE knows: User</span>
+
+<span class="comment"># Multiple TypeVars:</span>
+K = TypeVar(<span class="string">"K"</span>)
+V = TypeVar(<span class="string">"V"</span>)
+
+<span class="keyword">def</span> <span class="function">get_or_default</span>(d: <span class="function">dict</span>[K, V], key: K, default: V) -> V:
+    <span class="keyword">return</span> d.get(key, default)
+
+scores: <span class="function">dict</span>[<span class="function">str</span>, <span class="function">int</span>] = {<span class="string">"Alice"</span>: <span class="number">95</span>}
+get_or_default(scores, <span class="string">"Bob"</span>, <span class="number">0</span>)   <span class="comment"># &#10004; K=str, V=int</span>
+get_or_default(scores, <span class="number">42</span>, <span class="number">0</span>)      <span class="comment"># &#10008; mypy: key must be str!</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-typevar-infer">
+                <h4>What does <code>first(["apple", "banana"])</code> return, according to the type system?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-typevar-infer', this, false)"><code>Any</code> &mdash; first() can return anything</button>
+                <button class="quiz-option" onclick="checkQuiz('q-typevar-infer', this, true)"><code>str</code> &mdash; T was inferred as str from list[str]</button>
+                <button class="quiz-option" onclick="checkQuiz('q-typevar-infer', this, false)"><code>list[str]</code> &mdash; it returns the whole list</button>
+                <button class="quiz-option" onclick="checkQuiz('q-typevar-infer', this, false)"><code>object</code> &mdash; base type</button>
+                <div class="quiz-explanation">The input is <code>list[str]</code>, so <code>T = str</code>. The return type <code>T</code> becomes <code>str</code>. The IDE now knows <code>first(["apple", "banana"])</code> returns a <code>str</code> and offers <code>.upper()</code>, <code>.split()</code>, etc. <strong>The type flows through the TypeVar.</strong></div>
+            </div>
+
+            <!-- Step 5: Generic classes -->
+            <h3 style="margin: 40px 0 15px;">Step 5: Generic Classes &mdash; Solving the Box Problem</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Generic[T] &mdash; the solution</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> TypeVar, Generic
+
+T = TypeVar(<span class="string">"T"</span>)
+
+<span class="keyword">class</span> <span class="function">Box</span>(Generic[T]):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, item: T):
+        self.item = item
+    <span class="keyword">def</span> <span class="function">get</span>(self) -> T:
+        <span class="keyword">return</span> self.item
+    <span class="keyword">def</span> <span class="function">replace</span>(self, new_item: T) -> <span class="keyword">None</span>:
+        self.item = new_item
+
+<span class="comment"># Usage: T is filled in at creation</span>
+int_box = Box[<span class="function">int</span>](<span class="number">42</span>)       <span class="comment"># T = int for this instance</span>
+str_box = Box[<span class="function">str</span>](<span class="string">"hello"</span>)  <span class="comment"># T = str for this instance</span>
+
+val = int_box.get()   <span class="comment"># IDE KNOWS: int  (not Any!)</span>
+val2 = str_box.get()  <span class="comment"># IDE KNOWS: str</span>
+val2.upper()          <span class="comment"># IDE offers string methods! &#10004;</span>
+
+int_box.replace(<span class="string">"oops"</span>)  <span class="comment"># mypy ERROR: expected int, got str &#10004;</span></pre></div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>ONE class. ANY type. Full type safety.</strong> When you write <code>Box[int](42)</code>, every <code>T</code> in the class becomes <code>int</code>. The IDE and mypy track this. No separate IntBox, StrBox needed.
+            </div>
+
+            <!-- Real-world Generic -->
+            <h3 style="margin: 40px 0 15px;">Real-World: Generic Repository</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">This is how Django QuerySets, SQLAlchemy sessions, and FastAPI dependencies work under the hood.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> One Repository for any model</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">class</span> <span class="function">Repository</span>(Generic[T]):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self) -> <span class="keyword">None</span>:
+        self._items: <span class="function">dict</span>[<span class="function">int</span>, T] = {}
+
+    <span class="keyword">def</span> <span class="function">add</span>(self, id: <span class="function">int</span>, item: T) -> <span class="keyword">None</span>:
+        self._items[id] = item
+
+    <span class="keyword">def</span> <span class="function">get</span>(self, id: <span class="function">int</span>) -> T | <span class="keyword">None</span>:
+        <span class="keyword">return</span> self._items.get(id)
+
+    <span class="keyword">def</span> <span class="function">get_all</span>(self) -> <span class="function">list</span>[T]:
+        <span class="keyword">return</span> <span class="function">list</span>(self._items.values())
+
+<span class="comment"># Type-safe for each model:</span>
+user_repo = Repository[User]()
+order_repo = Repository[Order]()
+
+user_repo.add(<span class="number">1</span>, User(<span class="string">"Alice"</span>))
+user_repo.add(<span class="number">2</span>, some_order)  <span class="comment"># mypy ERROR: expected User, got Order</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-already-generics">
+                <h4>Surprise: you've been using generics all along. Which of these is a generic type?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-already-generics', this, false)">Only <code>Box[int]</code> &mdash; generics are for custom classes</button>
+                <button class="quiz-option" onclick="checkQuiz('q-already-generics', this, true)"><code>list[int]</code>, <code>dict[str, int]</code>, <code>set[str]</code> &mdash; ALL of these!</button>
+                <button class="quiz-option" onclick="checkQuiz('q-already-generics', this, false)">None &mdash; Python's built-in types aren't generic</button>
+                <div class="quiz-explanation"><code>list</code> is <code>Generic[T]</code> under the hood! When you write <code>list[int]</code>, you're parameterizing a generic type &mdash; just like <code>Box[int]</code>. Same with <code>dict[K, V]</code>, <code>set[T]</code>, <code>tuple[T, ...]</code>. You've been using generics since the collections slide.</div>
+            </div>
+
+            <!-- More Generic patterns -->
+            <h3 style="margin: 40px 0 15px;">More Patterns: Generic Stack</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Any data structure that holds "items of some type" is a candidate for generics.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Stack&lt;T&gt; &mdash; push/pop with type safety</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">class</span> <span class="function">Stack</span>(Generic[T]):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self) -> <span class="keyword">None</span>:
+        self._items: <span class="function">list</span>[T] = []
+
+    <span class="keyword">def</span> <span class="function">push</span>(self, item: T) -> <span class="keyword">None</span>:
+        self._items.append(item)
+
+    <span class="keyword">def</span> <span class="function">pop</span>(self) -> T:
+        <span class="keyword">return</span> self._items.pop()
+
+    <span class="keyword">def</span> <span class="function">peek</span>(self) -> T:
+        <span class="keyword">return</span> self._items[-<span class="number">1</span>]
+
+<span class="comment"># Usage:</span>
+int_stack = Stack[<span class="function">int</span>]()
+int_stack.push(<span class="number">10</span>)
+int_stack.push(<span class="number">20</span>)
+val = int_stack.pop()    <span class="comment"># IDE knows: int</span>
+
+str_stack = Stack[<span class="function">str</span>]()
+str_stack.push(<span class="string">"hello"</span>)
+str_stack.push(<span class="number">42</span>)       <span class="comment"># mypy ERROR: expected str, got int</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-stack-pop">
+                <h4>You have <code>Stack[User]</code>. What type does <code>.pop()</code> return?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-stack-pop', this, false)"><code>Any</code> &mdash; pop can return anything</button>
+                <button class="quiz-option" onclick="checkQuiz('q-stack-pop', this, true)"><code>User</code> &mdash; T was bound to User, so pop() returns User</button>
+                <button class="quiz-option" onclick="checkQuiz('q-stack-pop', this, false)"><code>object</code> &mdash; base type</button>
+                <div class="quiz-explanation"><code>Stack[User]</code> binds <code>T = User</code>. Every method using <code>T</code> now uses <code>User</code>. <code>pop() -> T</code> becomes <code>pop() -> User</code>. The IDE knows it, mypy verifies it. You get autocomplete for <code>.name</code>, <code>.email</code>, etc.</div>
+            </div>
+
+            <h3 style="margin: 40px 0 15px;">Pattern: Result&lt;T, E&gt; &mdash; Multiple TypeVars</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">What if your function can succeed with a value OR fail with an error? Instead of returning <code>Any</code> or raising exceptions, use a typed Result.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Result pattern &mdash; success or failure, both typed</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+
+T = TypeVar(<span class="string">"T"</span>)
+E = TypeVar(<span class="string">"E"</span>)
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Success</span>(Generic[T]):
+    value: T
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Failure</span>(Generic[E]):
+    error: E
+
+<span class="keyword">def</span> <span class="function">divide</span>(a: <span class="function">float</span>, b: <span class="function">float</span>) -> Success[<span class="function">float</span>] | Failure[<span class="function">str</span>]:
+    <span class="keyword">if</span> b == <span class="number">0</span>:
+        <span class="keyword">return</span> Failure(<span class="string">"Division by zero"</span>)
+    <span class="keyword">return</span> Success(a / b)
+
+result = divide(<span class="number">10</span>, <span class="number">3</span>)
+<span class="keyword">if</span> <span class="function">isinstance</span>(result, Success):
+    <span class="function">print</span>(result.value)   <span class="comment"># IDE knows: float</span>
+<span class="keyword">else</span>:
+    <span class="function">print</span>(result.error)   <span class="comment"># IDE knows: str</span></pre></div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Where you'll see generics in the wild:</strong><br>
+                &bull; <strong>Django:</strong> <code>QuerySet[User]</code> &mdash; query results know the model type<br>
+                &bull; <strong>FastAPI:</strong> <code>Response[UserSchema]</code> &mdash; auto-generates API docs from the type<br>
+                &bull; <strong>SQLAlchemy:</strong> <code>Session.query(User)</code> returns typed results<br>
+                &bull; <strong>Pydantic:</strong> <code>BaseModel</code> subclasses are validated generic containers<br>
+                &bull; <strong>Standard lib:</strong> <code>list[T]</code>, <code>dict[K,V]</code>, <code>Optional[T]</code>, <code>Future[T]</code>
+            </div>
+
+            <!-- Constrained and Bounded -->
+            <h3 style="margin: 40px 0 15px;">Limiting TypeVar: "T, but only these types"</h3>
+            <div class="quiz-box" id="q-constrained">
+                <h4>You write <code>def double(x: T) -> T</code>. Someone calls <code>double("hello")</code>. Is that OK?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-constrained', this, true)">Yes &mdash; T is unrestricted, so any type is fine (returns "hellohello")</button>
+                <button class="quiz-option" onclick="checkQuiz('q-constrained', this, false)">No &mdash; double only works with numbers</button>
+                <button class="quiz-option" onclick="checkQuiz('q-constrained', this, false)">mypy error &mdash; T must be int</button>
+                <div class="quiz-explanation"><code>T = TypeVar("T")</code> is completely unrestricted &mdash; any type goes. If you want <code>double</code> to only accept numbers, you need a <strong>constrained</strong> TypeVar.</div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Constrained vs Bounded TypeVar</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Constrained: T can ONLY be one of these specific types</span>
+Number = TypeVar(<span class="string">"Number"</span>, <span class="function">int</span>, <span class="function">float</span>)
+
+<span class="keyword">def</span> <span class="function">double</span>(x: Number) -> Number:
+    <span class="keyword">return</span> x * <span class="number">2</span>
+
+double(<span class="number">5</span>)       <span class="comment"># &#10004; T=int, returns int</span>
+double(<span class="number">3.14</span>)    <span class="comment"># &#10004; T=float, returns float</span>
+double(<span class="string">"hi"</span>)    <span class="comment"># &#10008; mypy: "str" is not "int" or "float"</span>
+
+<span class="comment"># Bounded: T must be this class or ANY subclass</span>
+<span class="keyword">class</span> <span class="function">Animal</span>:
+    <span class="keyword">def</span> <span class="function">speak</span>(self) -> <span class="function">str</span>: <span class="keyword">return</span> <span class="string">"..."</span>
+
+<span class="keyword">class</span> <span class="function">Dog</span>(Animal):
+    <span class="keyword">def</span> <span class="function">speak</span>(self) -> <span class="function">str</span>: <span class="keyword">return</span> <span class="string">"Woof!"</span>
+
+A = TypeVar(<span class="string">"A"</span>, bound=Animal)
+
+<span class="keyword">def</span> <span class="function">loudest</span>(animals: <span class="function">list</span>[A]) -> A:
+    <span class="keyword">return</span> <span class="function">max</span>(animals, key=<span class="keyword">lambda</span> a: <span class="function">len</span>(a.speak()))
+
+<span class="comment"># Key insight: returns Dog, NOT just Animal!</span>
+dogs: <span class="function">list</span>[Dog] = [Dog(), Dog()]
+result = loudest(dogs)  <span class="comment"># IDE knows: Dog (preserves the subtype)</span></pre></div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>TypeVar cheatsheet:</strong><br>
+                &bull; <code>T = TypeVar("T")</code> &mdash; any type, completely open<br>
+                &bull; <code>TypeVar("T", int, float)</code> &mdash; constrained: pick from fixed list<br>
+                &bull; <code>TypeVar("T", bound=Animal)</code> &mdash; bounded: Animal or any subclass<br>
+                &bull; <code>class Box(Generic[T])</code> &mdash; make a class generic<br>
+                &bull; <code>def first(items: list[T]) -> T</code> &mdash; return type flows from input<br>
+                &bull; You've been using generics: <code>list[int]</code> IS generic!<br>
+                &bull; Real-world: Repository&lt;T&gt;, Stack&lt;T&gt;, Result&lt;T, E&gt;, Response&lt;T&gt;
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PROTOCOL ===== -->
+    <section id="protocol">
+        <div class="section-container">
+            <span class="section-label blue">Structural Typing</span>
+            <h2 class="section-title">Protocol &mdash; Duck Typing Made Safe</h2>
+            <p class="section-subtitle">Remember ABC from OOP class? Protocol is the alternative when you don't control the classes.</p>
+
+            <div class="quiz-box" id="q-protocol-intro">
+                <h4>You have a third-party logging library with a <code>Logger</code> class that has a <code>log(msg: str)</code> method. You want your function to accept ANY logger with a <code>log()</code> method. Can you use ABC?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-protocol-intro', this, false)">Yes &mdash; make the third-party Logger inherit from your ABC</button>
+                <button class="quiz-option" onclick="checkQuiz('q-protocol-intro', this, true)">No &mdash; you can't modify third-party code to inherit from your ABC</button>
+                <button class="quiz-option" onclick="checkQuiz('q-protocol-intro', this, false)">Yes &mdash; use a wrapper class</button>
+                <div class="quiz-explanation"><strong>You can't force third-party classes to inherit from your ABC.</strong> ABC requires the class author to opt in. Protocol doesn't &mdash; any class with the right methods automatically satisfies the Protocol. No inheritance needed.</div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">ABC (Nominal Typing)</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Classes MUST inherit from the base.<br>Can't use third-party classes without wrapping.<br>Forces a hierarchy.</p>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Protocol (Structural Typing)</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Classes just need the right methods.<br>Works with ANY class, even third-party.<br>No forced inheritance. Like Go interfaces.</p>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Protocol in action</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> Protocol
+
+<span class="keyword">class</span> <span class="function">Drawable</span>(Protocol):
+    <span class="string">"""Any class with draw() -> str satisfies this."""</span>
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>: ...
+
+<span class="comment"># These DON'T inherit from Drawable!</span>
+<span class="keyword">class</span> <span class="function">Circle</span>:
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>: <span class="keyword">return</span> <span class="string">"&#9675;"</span>
+
+<span class="keyword">class</span> <span class="function">Square</span>:
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>: <span class="keyword">return</span> <span class="string">"&#9633;"</span>
+
+<span class="comment"># This accepts ANYTHING with draw() -> str:</span>
+<span class="keyword">def</span> <span class="function">render_all</span>(shapes: <span class="function">list</span>[Drawable]) -> <span class="keyword">None</span>:
+    <span class="keyword">for</span> s <span class="keyword">in</span> shapes:
+        <span class="function">print</span>(s.draw())
+
+render_all([Circle(), Square()])  <span class="comment"># &#10004; Works! No inheritance needed.</span></pre></div>
+            </div>
+
+            <div class="table-container" style="margin-top: 25px;">
+                <table>
+                    <tr><th></th><th>ABC</th><th>Protocol</th></tr>
+                    <tr><td><strong>Requires inheritance?</strong></td><td>Yes</td><td>No</td></tr>
+                    <tr><td><strong>Works with 3rd-party?</strong></td><td>No (must wrap)</td><td>Yes</td></tr>
+                    <tr><td><strong>Runtime check?</strong></td><td><code>isinstance()</code></td><td><code>@runtime_checkable</code></td></tr>
+                    <tr><td><strong>Analogy</strong></td><td>Java interface</td><td><strong>Go interface</strong></td></tr>
+                    <tr><td><strong>Use when</strong></td><td>You own the hierarchy</td><td>You need a contract for any class</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MYPY DEEP DIVE ===== -->
+    <section id="mypy">
+        <div class="section-container">
+            <span class="section-label warning">The Tool</span>
+            <h2 class="section-title">mypy &mdash; The Type Checker</h2>
+            <p class="section-subtitle">You've written type hints. Now meet the tool that actually checks them.</p>
+
+            <h3 style="margin-bottom: 15px;">What is mypy?</h3>
+            <div class="highlight-box">
+                <strong>mypy is a static type checker for Python.</strong> It reads your code and type hints WITHOUT running it, and finds type errors. Think of it as a <strong>compiler for Python types</strong> &mdash; except Python still runs fine without it.
+                <br><br>
+                <strong>Origin story:</strong> Created by <strong>Jukka Lehtosalo</strong> at the University of Cambridge as his PhD project (2012). Guido van Rossum (Python's creator) joined the project at <strong>Dropbox</strong> and helped make it the standard. Dropbox had 4 million lines of Python that kept breaking &mdash; mypy was their solution.
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Installing and Running</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Getting started with mypy</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Install (once per project)</span>
+pip install mypy
+
+<span class="comment"># Check one file</span>
+mypy my_file.py
+
+<span class="comment"># Check entire project</span>
+mypy src/
+
+<span class="comment"># Strict mode (recommended for new projects)</span>
+mypy src/ --strict
+
+<span class="comment"># Ignore one specific line (escape hatch)</span>
+result = sketchy_function()  <span class="comment"># type: ignore</span></pre></div>
+            </div>
+
+            <h3 style="margin: 40px 0 15px;">What Does mypy Catch? &mdash; 5 Real Scenarios</h3>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>Scenario 1: Wrong argument type</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-content"><pre><span class="keyword">def</span> <span class="function">add</span>(a: <span class="function">int</span>, b: <span class="function">int</span>) -> <span class="function">int</span>:
+    <span class="keyword">return</span> a + b
+
+add(<span class="number">10</span>, <span class="string">"20"</span>)
+<span class="comment"># mypy: Argument 2 to "add" has incompatible type "str"; expected "int"</span></pre></div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Python would concatenate or crash. mypy catches it at check time.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>Scenario 2: Not handling None</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-content"><pre><span class="keyword">def</span> <span class="function">find_user</span>(uid: <span class="function">int</span>) -> <span class="function">dict</span> | <span class="keyword">None</span>:
+    <span class="keyword">return</span> {<span class="number">1</span>: {<span class="string">"name"</span>: <span class="string">"Alice"</span>}}.get(uid)
+
+user = find_user(<span class="number">999</span>)
+<span class="function">print</span>(user[<span class="string">"name"</span>])
+<span class="comment"># mypy: Value of type "dict[str, str] | None" is not indexable</span>
+<span class="comment"># Fix: if user is not None: print(user["name"])</span></pre></div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">The #1 production crash. mypy forces you to handle it.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>Scenario 3: Wrong return type</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-content"><pre><span class="keyword">def</span> <span class="function">get_age</span>() -> <span class="function">int</span>:
+    <span class="keyword">return</span> <span class="string">"twenty-five"</span>
+<span class="comment"># mypy: Incompatible return value type (got "str", expected "int")</span></pre></div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Easy to miss in refactoring. mypy catches silently wrong returns.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>Scenario 4: Accessing non-existent attribute</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-content"><pre><span class="keyword">class</span> <span class="function">Dog</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name: <span class="function">str</span>):
+        self.name = name
+    <span class="keyword">def</span> <span class="function">bark</span>(self) -> <span class="function">str</span>:
+        <span class="keyword">return</span> <span class="string">f"</span>{self.name}<span class="string">: Woof!"</span>
+
+dog = Dog(<span class="string">"Rex"</span>)
+dog.speak()  <span class="comment"># mypy: "Dog" has no attribute "speak"</span></pre></div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Typos in method names are caught instantly.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>Scenario 5: Wrong container element</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-content"><pre>items: <span class="function">list</span>[<span class="function">str</span>] = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="number">42</span>]
+<span class="comment"># mypy: List item 2 has incompatible type "int"; expected "str"</span></pre></div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Mixed-type lists are a common source of downstream bugs.</p>
+                </div></div>
+            </div>
+
+            <h3 style="margin: 40px 0 15px;">mypy vs pyright &mdash; Which to Use?</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th></th><th>mypy</th><th>pyright</th></tr>
+                    <tr><td><strong>Creator</strong></td><td>Dropbox / Jukka Lehtosalo</td><td>Microsoft</td></tr>
+                    <tr><td><strong>Language</strong></td><td>Python</td><td>TypeScript (faster)</td></tr>
+                    <tr><td><strong>IDE integration</strong></td><td>Plugin required</td><td>Built into VS Code (Pylance)</td></tr>
+                    <tr><td><strong>Speed</strong></td><td>Slower on large codebases</td><td>Much faster</td></tr>
+                    <tr><td><strong>Community</strong></td><td>De facto standard, most tutorials</td><td>Growing fast</td></tr>
+                    <tr><td><strong>Verdict</strong></td><td colspan="2"><strong>Use mypy in CI/CD.</strong> VS Code already runs pyright via Pylance. You get both.</td></tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" id="q-mypy-when">
+                <h4>When does mypy run?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-mypy-when', this, false)">At runtime, when Python executes your code</button>
+                <button class="quiz-option" onclick="checkQuiz('q-mypy-when', this, false)">When you import the file</button>
+                <button class="quiz-option" onclick="checkQuiz('q-mypy-when', this, true)">BEFORE runtime &mdash; it reads your code statically, like a compiler</button>
+                <button class="quiz-option" onclick="checkQuiz('q-mypy-when', this, false)">Only in production</button>
+                <div class="quiz-explanation"><strong>mypy is static analysis.</strong> It reads your code and type hints without running it. That's why it can catch bugs before you deploy. It doesn't slow down your program &mdash; it never runs at the same time as your program.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PRODUCTION PRACTICES ===== -->
+    <section id="production">
+        <div class="section-container">
+            <span class="section-label danger">Real World</span>
+            <h2 class="section-title">How Production Code Enforces Types</h2>
+            <p class="section-subtitle">Having type hints is useless if nobody checks them. Here's how teams make sure types are always verified.</p>
+
+            <!-- Git Hooks -->
+            <h3 style="margin-bottom: 15px;">Git Hooks &mdash; "What even are these?"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">You know <code>git commit</code>. But did you know git can run code <strong>automatically</strong> before or after certain actions?</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px;"><strong>The Lifecycle of a Git Commit</strong></div>
+                <div class="flow-row">
+                    <div class="flow-box">You type<br><code>git commit</code></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue"><strong>pre-commit hook</strong><br><small>Runs BEFORE commit is created</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green">Commit created<br><small>(only if hook passes)</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue"><strong>post-commit hook</strong><br><small>Runs after (notifications, etc.)</small></div>
+                </div>
+                <div style="text-align: center; margin-top: 15px; color: var(--text-muted); font-size: 0.85rem;">If the pre-commit hook <strong>fails</strong> (returns non-zero), the commit is <strong>rejected</strong>. Your code doesn't get committed.</div>
+            </div>
+
+            <div class="quiz-box" id="q-hooks">
+                <h4>You set up a pre-commit hook that runs <code>mypy</code>. You try to commit code with a type error. What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-hooks', this, false)">The commit goes through with a warning</button>
+                <button class="quiz-option" onclick="checkQuiz('q-hooks', this, true)">The commit is REJECTED &mdash; you must fix the type error first</button>
+                <button class="quiz-option" onclick="checkQuiz('q-hooks', this, false)">mypy runs but the commit isn't affected</button>
+                <button class="quiz-option" onclick="checkQuiz('q-hooks', this, false)">Git ignores the hook in most cases</button>
+                <div class="quiz-explanation"><strong>Pre-commit hooks block the commit.</strong> If mypy finds an error, it returns a non-zero exit code. Git sees this and <strong>refuses</strong> to create the commit. You must fix the error first. This means type-broken code <em>can never</em> enter the repository.</div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Where Do Hooks Live?</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Git hooks are just shell scripts</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Every git repo has a .git/hooks/ folder with sample hooks:</span>
+ls .git/hooks/
+<span class="string">pre-commit.sample    pre-push.sample    commit-msg.sample</span>
+
+<span class="comment"># To create a pre-commit hook manually:</span>
+<span class="comment"># 1. Create the file</span>
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+echo "Running mypy..."
+mypy src/
+EOF
+
+<span class="comment"># 2. Make it executable</span>
+chmod +x .git/hooks/pre-commit
+
+<span class="comment"># Now every `git commit` runs mypy first!</span></pre></div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">pre-commit Framework &mdash; The Easy Way</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Writing raw shell scripts is fragile. Most teams use the <code>pre-commit</code> framework instead:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> .pre-commit-config.yaml</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Install the framework:</span>
+pip install pre-commit
+
+<span class="comment"># Create .pre-commit-config.yaml in your project root:</span>
+repos:
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff          <span class="comment"># linting</span>
+      - id: ruff-format   <span class="comment"># formatting</span>
+
+<span class="comment"># Install hooks (once per repo clone):</span>
+pre-commit install
+
+<span class="comment"># Now every git commit auto-runs: mypy + ruff + formatting</span></pre></div>
+            </div>
+
+            <!-- CI/CD -->
+            <h3 style="margin: 40px 0 15px;">CI/CD Pipeline &mdash; The Safety Net</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Pre-commit hooks run locally. But what if someone skips them? (<code>git commit --no-verify</code>). That's where CI/CD comes in.</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px;"><strong>How Companies Enforce Types</strong></div>
+                <div class="flow-row">
+                    <div class="flow-box purple"><strong>Developer writes code</strong><br><small>IDE (pyright) shows warnings live</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue"><strong>git commit</strong><br><small>pre-commit hook runs mypy</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue"><strong>git push + PR</strong><br><small>CI pipeline runs mypy --strict</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green"><strong>Merge to main</strong><br><small>Only if ALL checks pass</small></div>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> GitHub Actions: mypy in CI</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># .github/workflows/type-check.yml</span>
+name: Type Check
+on: [push, pull_request]
+
+jobs:
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install mypy
+      - run: mypy src/ --strict
+
+<span class="comment"># If mypy fails, the PR gets a red X.</span>
+<span class="comment"># Most teams require all checks to pass before merging.</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-enforce">
+                <h4>A developer skips the pre-commit hook with <code>--no-verify</code> and pushes code with a type error. What happens?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-enforce', this, false)">Nothing &mdash; the code is merged</button>
+                <button class="quiz-option" onclick="checkQuiz('q-enforce', this, false)">Git rejects the push</button>
+                <button class="quiz-option" onclick="checkQuiz('q-enforce', this, true)">CI/CD runs mypy on the PR &mdash; the PR gets a red X and can't be merged</button>
+                <button class="quiz-option" onclick="checkQuiz('q-enforce', this, false)">Other developers get a notification</button>
+                <div class="quiz-explanation"><strong>Defense in depth.</strong> Pre-commit hooks are the first layer (local). CI/CD is the second layer (server-side). Even if someone skips hooks, the CI pipeline catches type errors on the PR. The PR shows a red X and the team can block merging until all checks pass. This is standard at companies like Stripe, Instagram, and Dropbox.</div>
+            </div>
+
+            <!-- Gradual Adoption -->
+            <h3 style="margin: 40px 0 15px;">Gradual Adoption &mdash; You Don't Type Everything Day 1</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Phase</th><th>What to Do</th><th>Timeline</th></tr>
+                    <tr><td><strong>1. New code only</strong></td><td>Type all new functions. Leave legacy alone.</td><td>Immediately</td></tr>
+                    <tr><td><strong>2. Return types</strong></td><td>Add return types to existing public functions. Biggest ROI.</td><td>Week 1-2</td></tr>
+                    <tr><td><strong>3. Critical paths</strong></td><td>Type the code that handles money, auth, data.</td><td>Month 1</td></tr>
+                    <tr><td><strong>4. mypy in CI</strong></td><td>Run <code>mypy src/</code> on every PR. Start with no strict flag.</td><td>Month 1-2</td></tr>
+                    <tr><td><strong>5. Strict mode</strong></td><td>Enable <code>--strict</code>. Type everything. Use <code># type: ignore</code> for legacy.</td><td>Month 3+</td></tr>
+                </table>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> pyproject.toml &mdash; project-wide config</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># pyproject.toml (put in project root)</span>
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+<span class="comment"># Exclude specific files/folders from checking:</span>
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+<span class="comment"># Ignore third-party libraries without type stubs:</span>
+[[tool.mypy.overrides]]
+module = "some_old_library.*"
+ignore_missing_imports = true</pre></div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Production typing stack:</strong><br>
+                &bull; <strong>IDE:</strong> pyright (Pylance in VS Code) &mdash; catches errors as you type<br>
+                &bull; <strong>Pre-commit hook:</strong> mypy runs before every commit<br>
+                &bull; <strong>CI/CD:</strong> mypy --strict on every PR &mdash; the final gate<br>
+                &bull; <strong>Config:</strong> pyproject.toml for project-wide mypy settings<br>
+                &bull; <strong>Gradual:</strong> Start with new code, expand over time, use <code># type: ignore</code> as escape hatch<br>
+                &bull; <strong>Never skip hooks:</strong> <code>--no-verify</code> is a code smell. CI catches it anyway.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DOUBT SECTION ===== -->
+    <section id="doubts">
+        <div class="section-container">
+            <span class="section-label warning">Doubt Clarification</span>
+            <h2 class="section-title">Callable &mdash; Explained Simply</h2>
+            <p class="section-subtitle">A function that takes another function as a parameter. How do you type "the function I'm passing in"?</p>
+
+            <h3 style="margin-bottom: 15px;">Step 1: Functions are objects in Python</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">You already know this. You can store a function in a variable, pass it around, return it from another function.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Functions are just objects</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">add</span>(a, b):
+    <span class="keyword">return</span> a + b
+
+<span class="keyword">def</span> <span class="function">multiply</span>(a, b):
+    <span class="keyword">return</span> a * b
+
+<span class="comment"># Store a function in a variable (NO parentheses = the function itself)</span>
+operation = add
+<span class="function">print</span>(operation(<span class="number">3</span>, <span class="number">4</span>))   <span class="comment"># 7</span>
+
+operation = multiply
+<span class="function">print</span>(operation(<span class="number">3</span>, <span class="number">4</span>))   <span class="comment"># 12</span></pre></div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Step 2: Pass a function to another function</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Without types &mdash; what is 'func'?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">do_math</span>(a, b, func):
+    <span class="string">"""What should func look like? 1 arg? 2 args? What does it return?"""</span>
+    <span class="keyword">return</span> func(a, b)
+
+do_math(<span class="number">5</span>, <span class="number">3</span>, add)       <span class="comment"># 8  &mdash; passed the add function</span>
+do_math(<span class="number">5</span>, <span class="number">3</span>, multiply)  <span class="comment"># 15 &mdash; passed the multiply function</span></pre></div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>The problem:</strong> A new developer sees <code>func</code> as a parameter. They ask: "What kind of function do I pass? How many arguments? What should it return?" There's <strong>no way to know</strong> without reading the implementation.</p>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Step 3: Callable &mdash; "here's the shape of the function"</h3>
+            <div class="highlight-box">
+                <strong>Callable[[parameter types], return type]</strong><br><br>
+                Think of it as a blueprint: "I need a function that takes <em>these</em> inputs and gives back <em>this</em> output."
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> With Callable &mdash; crystal clear</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> Callable
+
+<span class="keyword">def</span> <span class="function">do_math</span>(a: <span class="function">int</span>, b: <span class="function">int</span>, func: Callable[[<span class="function">int</span>, <span class="function">int</span>], <span class="function">int</span>]) -> <span class="function">int</span>:
+    <span class="comment">#                                ^^^^^^^^^^^^^^^^^^^^^^^^</span>
+    <span class="comment">#                                func takes (int, int)</span>
+    <span class="comment">#                                and returns int</span>
+    <span class="keyword">return</span> func(a, b)
+
+<span class="comment"># Now any developer knows EXACTLY what to pass:</span>
+do_math(<span class="number">5</span>, <span class="number">3</span>, add)       <span class="comment"># &#10004; add takes (int, int) returns int</span>
+do_math(<span class="number">5</span>, <span class="number">3</span>, multiply)  <span class="comment"># &#10004; multiply takes (int, int) returns int</span>
+do_math(<span class="number">5</span>, <span class="number">3</span>, <span class="function">len</span>)       <span class="comment"># &#10008; mypy error! len takes 1 arg, not 2</span></pre></div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Reading the Syntax</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Callable Type</th><th>Means</th><th>Example Function</th></tr>
+                    <tr>
+                        <td><code>Callable[[int, int], int]</code></td>
+                        <td>Takes 2 ints, returns an int</td>
+                        <td><code>def add(a: int, b: int) -> int</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Callable[[str], None]</code></td>
+                        <td>Takes 1 string, returns nothing</td>
+                        <td><code>def log(msg: str) -> None</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Callable[[], str]</code></td>
+                        <td>Takes nothing, returns a string</td>
+                        <td><code>def greet() -> str</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Callable[[dict], list[str]]</code></td>
+                        <td>Takes a dict, returns list of strings</td>
+                        <td><code>def get_keys(d: dict) -> list[str]</code></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" id="q-callable-read">
+                <h4>What does <code>Callable[[str, int], bool]</code> describe?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-callable-read', this, false)">A function that takes a bool and returns str and int</button>
+                <button class="quiz-option" onclick="checkQuiz('q-callable-read', this, true)">A function that takes (str, int) and returns bool</button>
+                <button class="quiz-option" onclick="checkQuiz('q-callable-read', this, false)">A class with str, int, and bool attributes</button>
+                <button class="quiz-option" onclick="checkQuiz('q-callable-read', this, false)">A function that takes 3 arguments</button>
+                <div class="quiz-explanation">Read it as: <code>Callable[[inputs...], output]</code>. First bracket = what goes IN. After the bracket = what comes OUT. So <code>Callable[[str, int], bool]</code> = a function like <code>def is_valid(name: str, age: int) -> bool</code>.</div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Where You'll See Callable in Real Code</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Real-world uses</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># 1. Event handler / callback</span>
+<span class="keyword">def</span> <span class="function">on_click</span>(handler: Callable[[<span class="function">int</span>, <span class="function">int</span>], <span class="keyword">None</span>]) -> <span class="keyword">None</span>:
+    handler(<span class="number">100</span>, <span class="number">200</span>)  <span class="comment"># call it when user clicks</span>
+
+<span class="comment"># 2. Retry logic</span>
+<span class="keyword">def</span> <span class="function">retry</span>(func: Callable[[], <span class="function">str</span>], times: <span class="function">int</span> = <span class="number">3</span>) -> <span class="function">str</span>:
+    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(times):
+        <span class="keyword">try</span>:
+            <span class="keyword">return</span> func()
+        <span class="keyword">except</span>:
+            <span class="keyword">pass</span>
+
+<span class="comment"># 3. Strategy pattern (from OOP classes!)</span>
+<span class="keyword">def</span> <span class="function">sort_users</span>(users: <span class="function">list</span>, key: Callable[[User], <span class="function">int</span>]) -> <span class="function">list</span>:
+    <span class="keyword">return</span> <span class="function">sorted</span>(users, key=key)
+
+<span class="comment"># 4. Decorator</span>
+<span class="keyword">def</span> <span class="function">timer</span>(func: Callable[..., Any]) -> Callable[..., Any]:
+    <span class="comment"># ... wraps func with timing logic</span>
+    ...</pre></div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Callable in one sentence:</strong><br>
+                It's the <strong>type hint for a function</strong>. Just like <code>int</code> describes "a number" and <code>str</code> describes "text", <code>Callable[[int, int], int]</code> describes "a function that takes two ints and returns an int."<br><br>
+                <strong>When to use it:</strong> Any time a function accepts another function as a parameter &mdash; callbacks, strategies, decorators, middleware, retry logic, event handlers, <code>sorted(key=...)</code>, <code>map(func, ...)</code>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SUMMARY ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label">Wrap Up</span>
+            <h2 class="section-title">Key Takeaways</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128203;</div>
+                    <div class="card-title">Types = Verified Docs</div>
+                    <div class="card-desc">Unlike comments, types can't go stale. mypy enforces them. Your IDE uses them for autocomplete.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128268;</div>
+                    <div class="card-title">TypeVar = Type Placeholder</div>
+                    <div class="card-desc">A variable for types. <code>T</code> flows through your code, preserving type info. list[int] is already a generic!</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129413;</div>
+                    <div class="card-title">Protocol = Smart Duck Typing</div>
+                    <div class="card-desc">Structural typing without inheritance. Works with third-party code. Like Go interfaces.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128736;</div>
+                    <div class="card-title">mypy + Git Hooks + CI</div>
+                    <div class="card-desc">Three layers of defense. IDE catches live, hooks catch at commit, CI catches at PR. Type-broken code never reaches main.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 40px;">
+                <strong>Next class:</strong> Python Advanced-2 &mdash; Collections (defaultdict, Counter, deque, namedtuple, ChainMap &mdash; and when each outperforms plain list/dict).
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-09: Typing &amp; Generics &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
