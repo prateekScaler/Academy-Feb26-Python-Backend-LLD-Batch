@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-10: Collections</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+
+        /* Reveal table styles */
+        .reveal-table td.revealable { cursor: pointer; background: var(--bg-tertiary); text-align: center; color: var(--text-muted); font-style: italic; transition: all 0.3s; user-select: none; }
+        .reveal-table td.revealable:hover { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-primary); }
+        .reveal-table td.revealed { background: rgba(16, 185, 129, 0.08); color: var(--text-primary); font-style: normal; cursor: default; font-weight: 500; }
+
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-10: Collections</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#protocol">Protocol</a></li>
+            <li><a href="#why-collections">Why?</a></li>
+            <li><a href="#defaultdict">defaultdict</a></li>
+            <li><a href="#counter">Counter</a></li>
+            <li><a href="#deque">deque</a></li>
+            <li><a href="#namedtuple">namedtuple</a></li>
+            <li><a href="#special">Special</a></li>
+            <li><a href="#custom">Custom</a></li>
+            <li><a href="#thread-safety">Threads</a></li>
+            <li><a href="#decision">Guide</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#128230;</div>
+        <h1>Collections</h1>
+        <p class="hero-meta">LLD-10 &bull; Python Advanced-2</p>
+        <p class="hero-tagline">Python's built-in list and dict are great. But for <strong>specific problems</strong>, the collections module has <strong>purpose-built tools</strong> that are faster, cleaner, and less buggy.</p>
+    </section>
+
+    <!-- ===== RECAP: TYPING + AGENTS ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label warning">Recap &mdash; Last Class</span>
+            <h2 class="section-title">Typing, Generics &amp; AI Agents</h2>
+            <p class="section-subtitle">Quick check on last class's concepts before we move on.</p>
+
+            <div class="code-block" style="margin-bottom: 5px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Read this code. When does it crash?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">find_user</span>(user_id: <span class="function">int</span>) -> <span class="function">dict</span> | <span class="keyword">None</span>:
+    users = {<span class="number">1</span>: {<span class="string">"name"</span>: <span class="string">"Alice"</span>}, <span class="number">2</span>: {<span class="string">"name"</span>: <span class="string">"Bob"</span>}}
+    <span class="keyword">return</span> users.get(user_id)
+
+user = find_user(<span class="number">999</span>)
+<span class="function">print</span>(user[<span class="string">"name"</span>])    <span class="comment"># &larr; What happens here?</span></pre></div>
+            </div>
+            <div class="quiz-box" id="q-recap-optional">
+                <h4>When does this bug surface?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-optional', this, false)">Immediately &mdash; Python refuses to run the file</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-optional', this, false)">When mypy runs &mdash; it stops the code from executing</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-optional', this, true)">At runtime in production &mdash; Python doesn't enforce types, crashes with TypeError</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-optional', this, false)">Never &mdash; Python handles None gracefully</button>
+                <div class="quiz-explanation"><strong>Types are hints, not constraints.</strong> Python happily runs <code>user["name"]</code> and crashes with <code>TypeError: 'NoneType' object is not subscriptable</code> at runtime. mypy would have caught it &mdash; it sees <code>dict | None</code> and errors if you don't check for None. But mypy is a separate tool. That's why you need it in your CI/CD pipeline.</div>
+            </div>
+
+            <div class="code-block" style="margin-bottom: 5px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What type does result get?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> TypeVar
+
+T = TypeVar(<span class="string">"T"</span>)
+
+<span class="keyword">def</span> <span class="function">first</span>(items: <span class="function">list</span>[T]) -> T:
+    <span class="keyword">return</span> items[<span class="number">0</span>]
+
+result = first([<span class="string">"apple"</span>, <span class="string">"banana"</span>])
+result.<span class="comment">???</span>   <span class="comment"># What methods does the IDE offer?</span></pre></div>
+            </div>
+            <div class="quiz-box" id="q-recap-typevar">
+                <h4>What type does the IDE show for <code>result</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-typevar', this, false)"><code>Any</code> &mdash; T can be anything</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-typevar', this, true)"><code>str</code> &mdash; T is inferred as str from list[str], IDE offers .upper(), .split() etc.</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-typevar', this, false)"><code>list[str]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-typevar', this, false)"><code>T</code> &mdash; the placeholder itself</button>
+                <div class="quiz-explanation"><strong>TypeVar flows through.</strong> Input is <code>list[str]</code>, so <code>T = str</code>. Return type <code>T</code> becomes <code>str</code>. The IDE knows <code>result</code> is a <code>str</code> and offers <code>.upper()</code>, <code>.split()</code>, <code>.startswith()</code> etc. That's the power of generics &mdash; the type is preserved, not erased to <code>Any</code>.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap-claude">
+                <h4>You want your AI coding agent (Claude, Cursor, Copilot) to always use type hints and follow your project conventions. Where do you put these instructions?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-claude', this, false)">In a comment at the top of every Python file</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-claude', this, true)">In a <code>CLAUDE.md</code> or <code>.cursorrules</code> file in the project root &mdash; the agent reads it automatically</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-claude', this, false)">In the chat prompt every single time you ask</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-claude', this, false)">In <code>pyproject.toml</code> under a special section</button>
+                <div class="quiz-explanation"><strong>Project-level instructions for AI agents.</strong> <code>CLAUDE.md</code> is read automatically by Claude Code at the start of every session. <code>.cursorrules</code> does the same for Cursor. You write rules like "always use type hints", "use dataclasses not plain dicts", "follow PEP 8" &mdash; and the agent follows them for every file it touches. One file, every session, no repeating yourself.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap-agents">
+                <h4>You create a <code>CLAUDE.md</code> with: "Always add type hints to all function parameters and return types." What happens when the agent writes new code?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-agents', this, false)">Nothing &mdash; agents ignore markdown files</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-agents', this, false)">It only works if you also mention it in the prompt</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-agents', this, true)">The agent reads CLAUDE.md automatically and generates typed code &mdash; like a persistent system prompt for your project</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-agents', this, false)">It runs mypy on the code before showing it to you</button>
+                <div class="quiz-explanation"><strong>CLAUDE.md is your project's "agent constitution."</strong> Every time Claude Code starts a session in your repo, it reads this file first. Rules you put here apply to ALL code it writes &mdash; type hints, naming conventions, import styles, test patterns. Think of it as <code>.editorconfig</code> but for AI. Same concept: <code>.cursorrules</code> for Cursor, <code>.github/copilot-instructions.md</code> for Copilot.</div>
+            </div>
+
+            <div class="quiz-box" id="q-recap-hooks">
+                <h4>Your team has a pre-commit hook running <code>mypy</code>. A developer writes code without type hints. What happens when they <code>git commit</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-hooks', this, false)">The commit goes through with a warning</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-hooks', this, true)">The commit is REJECTED &mdash; mypy fails, git refuses to create the commit</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-hooks', this, false)">mypy auto-adds the type hints</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap-hooks', this, false)">Nothing &mdash; pre-commit hooks are optional</button>
+                <div class="quiz-explanation"><strong>Pre-commit hooks block bad commits.</strong> If mypy returns a non-zero exit code (type errors found), git refuses to create the commit. The developer must fix the type errors first. This is layer 1 of defense. Layer 2 is CI/CD on the PR. Type-broken code never reaches main.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 2. PROTOCOL — THE JOURNEY ===== -->
+    <section id="protocol">
+        <div class="section-container">
+            <span class="section-label warning">From Last Class</span>
+            <h2 class="section-title">The Journey: Nothing &rarr; ABC &rarr; Protocol</h2>
+            <p class="section-subtitle">We didn't start with Protocol. We got here step by step. Let's retrace the path.</p>
+
+            <!-- Step 1: No contract -->
+            <h3 style="margin-bottom: 15px;"><span class="step-number">1</span> No Contract &mdash; Just Hope</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">In early OOP classes, we wrote code like this. Anyone can pass anything.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Step 1: No contract at all</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">render_all</span>(shapes):
+    <span class="keyword">for</span> shape <span class="keyword">in</span> shapes:
+        shape.draw()   <span class="comment"># Hope it has draw()... no guarantee!</span>
+
+<span class="keyword">class</span> <span class="function">Circle</span>:
+    <span class="keyword">def</span> <span class="function">draw</span>(self): <span class="function">print</span>(<span class="string">"Drawing circle"</span>)
+
+<span class="keyword">class</span> <span class="function">Cat</span>:
+    <span class="keyword">def</span> <span class="function">meow</span>(self): <span class="function">print</span>(<span class="string">"Meow"</span>)
+
+render_all([Circle()])   <span class="comment"># &#10004; works</span>
+render_all([Cat()])      <span class="comment"># &#10008; AttributeError at RUNTIME! No draw() method.</span>
+<span class="comment"># Bug found in production, not at write time.</span></pre></div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>Problem:</strong> No way to enforce that shapes have a <code>draw()</code> method. The error only shows up at runtime when someone passes a <code>Cat</code>. In a 50K-line codebase, this could sit undetected for weeks.
+            </div>
+
+            <!-- Step 2: ABC -->
+            <h3 style="margin: 40px 0 15px;"><span class="step-number">2</span> ABC &mdash; Enforce a Contract</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">In the OOP-3 class, we introduced Abstract Base Classes. Now Python <em>refuses</em> to create an object that doesn't implement the required methods.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Step 2: ABC enforces the contract</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Drawable</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>: ...
+
+<span class="keyword">class</span> <span class="function">Circle</span>(Drawable):            <span class="comment"># MUST inherit from Drawable</span>
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>:
+        <span class="keyword">return</span> <span class="string">"Drawing circle"</span>
+
+<span class="keyword">class</span> <span class="function">BadShape</span>(Drawable):           <span class="comment"># Inherits but forgets draw()</span>
+    <span class="keyword">pass</span>
+
+Circle()     <span class="comment"># &#10004; works &mdash; draw() is implemented</span>
+BadShape()   <span class="comment"># &#10008; TypeError: Can't instantiate abstract class!</span>
+<span class="comment"># Bug caught at object CREATION, not at draw() call. Much better!</span></pre></div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>ABC is great!</strong> It catches missing methods at object creation, not at runtime deep inside your code. But...
+            </div>
+
+            <div class="quiz-box" id="q-abc-problem">
+                <h4>You're using a third-party logging library. It has a <code>Logger</code> class with a <code>log(msg)</code> method. You want your function to accept any logger with <code>log()</code>. Can you use ABC?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-abc-problem', this, false)">Yes &mdash; just make Logger inherit from your ABC</button>
+                <button class="quiz-option" onclick="checkQuiz('q-abc-problem', this, true)">No &mdash; you can't modify third-party source code to add inheritance</button>
+                <button class="quiz-option" onclick="checkQuiz('q-abc-problem', this, false)">Yes &mdash; ABC automatically detects matching methods</button>
+                <div class="quiz-explanation"><strong>ABC requires the class author to opt in</strong> by inheriting from the ABC. You can't change a library's source code to add <code>class Logger(YourABC)</code>. ABC only works when you <em>own</em> all the classes. For third-party code, duck typing, or plugins &mdash; you need something else.</div>
+            </div>
+
+            <!-- Step 3: Protocol -->
+            <h3 style="margin: 40px 0 15px;"><span class="step-number">3</span> Protocol &mdash; "If It Has the Methods, It's Valid"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Protocol checks the <em>shape</em> of the class, not its family tree. No inheritance needed.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Step 3: Protocol &mdash; structural typing</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> Protocol
+
+<span class="keyword">class</span> <span class="function">Drawable</span>(Protocol):
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>: ...
+
+<span class="comment"># These DON'T inherit from Drawable. They just have draw().</span>
+<span class="keyword">class</span> <span class="function">Circle</span>:
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>:
+        <span class="keyword">return</span> <span class="string">"Drawing circle"</span>
+
+<span class="keyword">class</span> <span class="function">Square</span>:
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>:
+        <span class="keyword">return</span> <span class="string">"Drawing square"</span>
+
+<span class="comment"># Third-party class you didn't write:</span>
+<span class="keyword">class</span> <span class="function">ThirdPartyWidget</span>:
+    <span class="keyword">def</span> <span class="function">draw</span>(self) -> <span class="function">str</span>:
+        <span class="keyword">return</span> <span class="string">"Drawing widget"</span>
+
+<span class="keyword">def</span> <span class="function">render_all</span>(shapes: <span class="function">list</span>[Drawable]) -> <span class="keyword">None</span>:
+    <span class="keyword">for</span> shape <span class="keyword">in</span> shapes:
+        <span class="function">print</span>(shape.draw())
+
+<span class="comment"># ALL work &mdash; even the third-party class!</span>
+render_all([Circle(), Square(), ThirdPartyWidget()])</pre></div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Protocol = duck typing + type safety.</strong> "If it walks like a duck and quacks like a duck..." &mdash; but now mypy <em>verifies</em> it at check time. No runtime surprises, no forced inheritance.
+            </div>
+
+            <!-- When to use which -->
+            <h3 style="margin: 40px 0 15px;">When to Use Which?</h3>
+
+            <div class="table-container">
+                <table>
+                    <tr><th>Approach</th><th>How It Works</th><th>When to Use</th></tr>
+                    <tr>
+                        <td><strong>Nothing</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">plain duck typing</span></td>
+                        <td>No contract. Hope for the best.</td>
+                        <td><strong>Quick scripts, prototypes.</strong> You know what's being passed. Small team, small codebase.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ABC</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">nominal typing</span></td>
+                        <td>Must inherit. Error at object creation if methods missing.</td>
+                        <td><strong>You own ALL the classes.</strong> Building a framework with a class hierarchy (Shape, Animal, PaymentGateway). Want runtime enforcement.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Protocol</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">structural typing</span></td>
+                        <td>Just needs the right methods. No inheritance. mypy checks at analysis time.</td>
+                        <td><strong>Third-party code, plugins, duck typing.</strong> You can't (or don't want to) force inheritance. Go-style interfaces.</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" id="q-protocol">
+                <h4>You're building a payment system. You own all payment classes (Razorpay, Stripe, PayPal). Which approach?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-protocol', this, false)">Nothing &mdash; just hope they all have process_payment()</button>
+                <button class="quiz-option" onclick="checkQuiz('q-protocol', this, true)">ABC &mdash; you own the classes, want runtime enforcement, build a PaymentGateway hierarchy</button>
+                <button class="quiz-option" onclick="checkQuiz('q-protocol', this, false)">Protocol &mdash; always better than ABC</button>
+                <div class="quiz-explanation"><strong>ABC is the right choice here.</strong> You own all the classes. You want Python to refuse to create a <code>Razorpay()</code> that forgot to implement <code>process_payment()</code>. ABC catches this at object creation. Protocol would only catch it when mypy runs (static check), not at runtime. Use ABC when you own the hierarchy and want runtime safety. Use Protocol when you can't control the classes.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>The evolution:</strong><br>
+                &bull; <strong>Nothing</strong> &rarr; bugs found at runtime, deep in the call stack<br>
+                &bull; <strong>ABC</strong> &rarr; bugs found at object creation (runtime), but requires inheritance<br>
+                &bull; <strong>Protocol</strong> &rarr; bugs found by mypy (before runtime), no inheritance needed<br><br>
+                <strong>Rule of thumb:</strong> Own the classes? &rarr; ABC. Don't own them? &rarr; Protocol. Quick script? &rarr; Neither.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY COLLECTIONS? ===== -->
+    <section id="why-collections">
+        <div class="section-container">
+            <span class="section-label">The Premise</span>
+            <h2 class="section-title">Why Not Just Use list and dict?</h2>
+            <p class="section-subtitle">You can build a house with just a hammer and nails. But a screwdriver, level, and drill make you 10x faster and less error-prone.</p>
+
+            <!-- ═══════ PART 1: BUILT-IN PRIMER ═══════ -->
+            <h3 style="margin-bottom: 20px;">Part 1: Built-in Collections &mdash; Quick Primer</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Before we touch the <code>collections</code> module, let's make sure the built-ins are solid. These need no import.</p>
+
+            <!-- list -->
+            <div class="collapsible" style="margin-bottom: 8px;">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4 style="color: var(--accent-primary);">list &mdash; ordered, mutable, allows duplicates</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block" style="margin-top: 0;">
+                        <div class="code-content"><pre>nums = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">1</span>, <span class="number">5</span>]       <span class="comment"># duplicates OK</span>
+nums.append(<span class="number">9</span>)                    <span class="comment"># [3, 1, 4, 1, 5, 9]</span>
+nums.sort()                        <span class="comment"># [1, 1, 3, 4, 5, 9]</span>
+nums[<span class="number">0</span>]                            <span class="comment"># 1 — O(1) random access</span>
+nums.insert(<span class="number">0</span>, <span class="number">99</span>)                <span class="comment"># O(n)! Shifts everything right</span>
+<span class="function">print</span>(<span class="number">3</span> <span class="keyword">in</span> nums)                 <span class="comment"># True — O(n) membership check</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- tuple -->
+            <div class="collapsible" style="margin-bottom: 8px;">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4 style="color: var(--accent-primary);">tuple &mdash; ordered, immutable, allows duplicates</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block" style="margin-top: 0;">
+                        <div class="code-content"><pre>point = (<span class="number">3</span>, <span class="number">7</span>)                   <span class="comment"># fixed, immutable</span>
+x, y = point                       <span class="comment"># unpacking</span>
+point[<span class="number">0</span>]                           <span class="comment"># 3 — O(1) access</span>
+<span class="comment"># point[0] = 10                    # TypeError! Can't mutate.</span>
+
+<span class="comment"># Multiple return values:</span>
+<span class="keyword">def</span> <span class="function">get_user</span>():
+    <span class="keyword">return</span> <span class="string">"Alice"</span>, <span class="number">25</span>             <span class="comment"># actually returns a tuple</span>
+name, age = get_user()
+
+<span class="comment"># Can be a dict key (immutable = hashable):</span>
+locations = {(<span class="number">28.6</span>, <span class="number">77.2</span>): <span class="string">"Delhi"</span>, (<span class="number">19.0</span>, <span class="number">72.8</span>): <span class="string">"Mumbai"</span>}</pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- dict -->
+            <div class="collapsible" style="margin-bottom: 8px;">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4 style="color: var(--accent-primary);">dict &mdash; key-value pairs, O(1) lookup, ordered (3.7+)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block" style="margin-top: 0;">
+                        <div class="code-content"><pre>scores = {<span class="string">"Alice"</span>: <span class="number">95</span>, <span class="string">"Bob"</span>: <span class="number">87</span>}
+scores[<span class="string">"Alice"</span>]                    <span class="comment"># 95 — O(1) lookup</span>
+scores[<span class="string">"Charlie"</span>]                  <span class="comment"># KeyError!</span>
+scores.get(<span class="string">"Charlie"</span>, <span class="number">0</span>)           <span class="comment"># 0 — safe, no error</span>
+scores[<span class="string">"Charlie"</span>] = <span class="number">92</span>             <span class="comment"># O(1) insert</span>
+
+<span class="comment"># Iteration (Python 3.7+: insertion order preserved)</span>
+<span class="keyword">for</span> name, score <span class="keyword">in</span> scores.items():
+    <span class="function">print</span>(<span class="string">f"</span>{name}<span class="string">: </span>{score}<span class="string">"</span>)
+
+<span class="comment"># Keys must be HASHABLE (immutable):</span>
+valid   = {<span class="string">"name"</span>: <span class="number">1</span>, <span class="number">42</span>: <span class="number">2</span>, (<span class="number">1</span>,<span class="number">2</span>): <span class="number">3</span>}   <span class="comment"># str, int, tuple → OK</span>
+invalid = {[<span class="number">1</span>,<span class="number">2</span>]: <span class="number">3</span>}                     <span class="comment"># list → TypeError: unhashable type</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- set -->
+            <div class="collapsible" style="margin-bottom: 8px;">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4 style="color: var(--accent-primary);">set &mdash; unordered, unique elements, O(1) membership</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block" style="margin-top: 0;">
+                        <div class="code-content"><pre>tags = {<span class="string">"python"</span>, <span class="string">"backend"</span>, <span class="string">"python"</span>}  <span class="comment"># {'python', 'backend'} — deduped</span>
+tags.add(<span class="string">"django"</span>)
+<span class="function">print</span>(<span class="string">"python"</span> <span class="keyword">in</span> tags)            <span class="comment"># True — O(1) membership!</span>
+
+<span class="comment"># Set algebra:</span>
+a = {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>}
+b = {<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>}
+a | b   <span class="comment"># {1, 2, 3, 4}  union</span>
+a & b   <span class="comment"># {2, 3}        intersection</span>
+a - b   <span class="comment"># {1}           difference</span>
+
+<span class="comment"># No indexing: s[0] is TypeError! Sets are unordered.</span>
+<span class="comment"># Elements must be hashable: strings, ints, tuples OK. Lists NO.</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- frozenset -->
+            <div class="collapsible" style="margin-bottom: 8px;">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4 style="color: var(--accent-primary);">frozenset &mdash; immutable set, hashable (can be a dict key!)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block" style="margin-top: 0;">
+                        <div class="code-content"><pre><span class="comment"># Regular set can't be a dict key:</span>
+<span class="comment"># {{"python", "backend"}: "team_a"}  → TypeError!</span>
+
+<span class="comment"># frozenset can:</span>
+tags = <span class="function">frozenset</span>({<span class="string">"python"</span>, <span class="string">"backend"</span>})
+teams = {tags: <span class="string">"team_a"</span>}  <span class="comment"># Works! frozenset is hashable.</span>
+
+<span class="comment"># All set operations work (return new frozensets):</span>
+a = <span class="function">frozenset</span>({<span class="number">1</span>, <span class="number">2</span>})
+b = <span class="function">frozenset</span>({<span class="number">2</span>, <span class="number">3</span>})
+a | b   <span class="comment"># frozenset({1, 2, 3})</span>
+a & b   <span class="comment"># frozenset({2})</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- Quick reference table — click to reveal -->
+            <h3 style="margin: 30px 0 15px;">Quick Reference &mdash; Click to Reveal</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Test yourself: for each type, click the cell to check your answer.</p>
+
+            <div class="table-container" style="margin: 15px 0;">
+                <table class="reveal-table">
+                    <tr><th>Type</th><th>Ordered?</th><th>Mutable?</th><th>Duplicates?</th><th>Indexed?</th><th>Hashable?</th></tr>
+                    <tr>
+                        <td><code>list</code></td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes (mutable)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes [i]">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                    </tr>
+                    <tr>
+                        <td><code>tuple</code></td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No (immutable)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes [i]">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes ✓">Click</td>
+                    </tr>
+                    <tr>
+                        <td><code>dict</code></td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes (3.7+)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes (mutable)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Keys: No">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="By key [k]">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                    </tr>
+                    <tr>
+                        <td><code>set</code></td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes (mutable)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No (unique)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                    </tr>
+                    <tr>
+                        <td><code>frozenset</code></td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No (immutable)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No (unique)">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="No ✗">Click</td>
+                        <td class="revealable" onclick="revealCell(this)" data-answer="Yes ✓">Click</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- WHY IMMUTABLE KEYS — visual explanation -->
+            <h3 style="margin: 40px 0 15px;">Why Must Dict Keys Be Immutable?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">A dict is a <strong>hash table</strong>. When you store <code>d["alice"] = 95</code>, Python computes a <strong>hash</strong> of the key to decide <em>where</em> in memory to put the value. Lookup works the same way &mdash; hash the key, jump to that slot.</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">How <code>d["alice"] = 95</code> works internally</div>
+                <div class="flow-row">
+                    <div class="flow-box green" style="min-width: 120px;">Key: <code>"alice"</code><br><small>immutable string</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue" style="min-width: 140px;"><code>hash("alice")</code><br><small>= 3248679812</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue" style="min-width: 120px;"><code>3248.. % 8</code><br><small>= slot 4</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="min-width: 140px;">Slot 4: <code>95</code><br><small>value stored here</small></div>
+                </div>
+
+                <div style="text-align: center; margin: 20px 0 15px; font-weight: 700; color: var(--accent-danger);">Now imagine the key was a list...</div>
+                <div class="flow-row">
+                    <div class="flow-box red" style="min-width: 120px;">Key: <code>[1, 2]</code><br><small>hash = 789</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box" style="min-width: 120px;">Stored in<br>slot <strong>5</strong></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box red" style="min-width: 160px;">key.append(3)<br><code>[1, 2, 3]</code><br><small>hash is now <strong>142</strong>!</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box red" style="min-width: 140px;">Lookup: slot <strong>2</strong><br><small>Wrong slot! Value lost.</small></div>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>If the key mutates, its hash changes.</strong> The value is still in slot 5, but the new hash points to slot 2. The dict can never find it again. That's why Python <strong>refuses</strong> mutable keys &mdash; <code>list</code>, <code>dict</code>, <code>set</code> all raise <code>TypeError: unhashable type</code>. Only immutable types (<code>str</code>, <code>int</code>, <code>tuple</code>, <code>frozenset</code>) have a stable hash.
+            </div>
+
+            <!-- GOTCHA QUIZZES right here -->
+            <h3 style="margin: 40px 0 15px;">Built-in Gotchas &mdash; Interview Favorites</h3>
+
+            <div class="quiz-box" id="q-gotcha-empty-set">
+                <h4>What type is <code>a</code>?&ensp; <code>a = {}</code></h4>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-empty-set', this, false)">set &mdash; curly braces create a set</button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-empty-set', this, true)">dict &mdash; <code>{}</code> is an empty dict, use <code>set()</code> for an empty set</button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-empty-set', this, false)">It depends on context</button>
+                <div class="quiz-explanation"><code>{}</code> is always a <strong>dict</strong>. For an empty set, you must use <code>set()</code>.<br><br><code style="background: #1e1e2e; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; display: block; margin-top: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; white-space: pre;">a = {}           # type(a) → &lt;class 'dict'&gt;
+b = set()        # type(b) → &lt;class 'set'&gt;
+c = {1, 2, 3}    # type(c) → &lt;class 'set'&gt;  (values make it a set)</code></div>
+            </div>
+
+            <div class="quiz-box" id="q-gotcha-tuple">
+                <h4>What does this print?&ensp; <code>t = (42)</code> then <code>print(type(t))</code></h4>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-tuple', this, false)"><code>&lt;class 'tuple'&gt;</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-tuple', this, true)"><code>&lt;class 'int'&gt;</code> &mdash; single-element tuple needs a comma: <code>(42,)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-tuple', this, false)">SyntaxError</button>
+                <div class="quiz-explanation"><code>(42)</code> is just parentheses around the number 42 &mdash; it's an <code>int</code>. For a single-element tuple, you need <code>(42,)</code> with the trailing comma. This is a classic Python gotcha. <code>(1, 2, 3)</code> works without because the commas make it a tuple, not the parentheses.</div>
+            </div>
+
+            <div class="quiz-box" id="q-gotcha-set-index">
+                <h4>What does <code>s = {1, 2, 3}; print(s[0])</code> do?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-set-index', this, false)">Prints <code>1</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-set-index', this, true)">TypeError &mdash; sets are unordered, no indexing</button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-set-index', this, false)">Prints a random element</button>
+                <div class="quiz-explanation"><strong>Sets have no order and no indexing.</strong> You can iterate, add, remove, and check membership (<code>x in s</code> is O(1)), but you can't access by position. If you need order + uniqueness, use <code>dict.fromkeys()</code> (Python 3.7+ dicts preserve insertion order).</div>
+            </div>
+
+            <div class="quiz-box" id="q-gotcha-dict-key">
+                <h4>Which of these is valid?&ensp; <code>d1 = {(1, 2): "a"}</code> &ensp;vs&ensp; <code>d2 = {[1, 2]: "a"}</code></h4>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-dict-key', this, false)">Both work fine</button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-dict-key', this, true)">Only <code>d1</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-dict-key', this, false)">Neither works</button>
+                <div class="quiz-explanation"><strong>Dict keys must be hashable.</strong> Tuples are immutable → hashable → valid keys. Lists are mutable → unhashable → <code>TypeError</code>. Same rule for set elements. This is why <code>frozenset</code> exists &mdash; an immutable, hashable set.</div>
+            </div>
+
+            <div class="code-block" style="margin-bottom: 5px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What does the second call print?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">add</span>(name, students=[]):
+    students.append(name)
+    <span class="keyword">return</span> students
+
+add(<span class="string">"Alice"</span>)
+<span class="function">print</span>(add(<span class="string">"Bob"</span>))   <span class="comment"># What prints here?</span></pre></div>
+            </div>
+            <div class="quiz-box" id="q-gotcha-mutable-default">
+                <h4>What does <code>add("Bob")</code> return?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-mutable-default', this, false)"><code>["Bob"]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-mutable-default', this, true)"><code>["Alice", "Bob"]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-gotcha-mutable-default', this, false)"><code>["Alice"]</code> then <code>["Bob"]</code></button>
+                <div class="quiz-explanation"><strong>Mutable default arguments are shared.</strong> The default <code>[]</code> is created ONCE when the function is defined, not on each call. Every call appends to the SAME list.<br><br><code style="background: #1e1e2e; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; display: block; margin-top: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; white-space: pre;"># Fix: use None as default, create new list inside
+def add(name, students=None):
+    if students is None:
+        students = []
+    students.append(name)
+    return students</code></div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>These gotchas are interview favorites.</strong> Now you know the built-ins and their traps. Let's see what the <code>collections</code> module adds on top.
+            </div>
+
+            <!-- ═══════ PART 2: COLLECTIONS MODULE ═══════ -->
+            <h3 style="margin: 50px 0 15px;">Part 2: The <code>collections</code> Module</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Built-ins cover the basics. But for specific patterns &mdash; grouping, counting, fast queues, named records, custom dicts &mdash; the <code>collections</code> module has purpose-built tools.</p>
+
+            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+                <div style="font-weight: 700; color: var(--accent-purple); margin-bottom: 12px; font-size: 0.95rem;">from collections import ...</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span style="background: rgba(168,85,247,0.15); border: 1px solid var(--accent-purple); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">defaultdict</span>
+                    <span style="background: rgba(168,85,247,0.15); border: 1px solid var(--accent-purple); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">Counter</span>
+                    <span style="background: rgba(168,85,247,0.15); border: 1px solid var(--accent-purple); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">deque</span>
+                    <span style="background: rgba(168,85,247,0.15); border: 1px solid var(--accent-purple); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">namedtuple</span>
+                    <span style="background: rgba(168,85,247,0.15); border: 1px solid var(--accent-purple); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">OrderedDict</span>
+                    <span style="background: rgba(168,85,247,0.15); border: 1px solid var(--accent-purple); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">ChainMap</span>
+                    <span style="background: rgba(245,158,11,0.15); border: 1px solid var(--accent-warning); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">UserDict</span>
+                    <span style="background: rgba(245,158,11,0.15); border: 1px solid var(--accent-warning); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">UserList</span>
+                    <span style="background: rgba(245,158,11,0.15); border: 1px solid var(--accent-warning); border-radius: 6px; padding: 5px 12px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">UserString</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <tr><th>Collection</th><th>One-Line Description</th><th>Replaces This Pattern</th></tr>
+                    <tr><td><strong>defaultdict</strong></td><td>Dict with auto-created missing keys</td><td><code>if key not in d: d[key] = []</code></td></tr>
+                    <tr><td><strong>Counter</strong></td><td>Count things from any iterable</td><td>Manual counting loops</td></tr>
+                    <tr><td><strong>deque</strong></td><td>Fast append/pop from both ends</td><td><code>list.insert(0, x)</code> which is O(n)</td></tr>
+                    <tr><td><strong>namedtuple</strong></td><td>Tuple with named fields</td><td><code>point[0]</code> &mdash; what is index 0?</td></tr>
+                    <tr><td><strong>OrderedDict</strong></td><td>Dict with order-sensitive equality</td><td>Order-aware comparisons</td></tr>
+                    <tr><td><strong>ChainMap</strong></td><td>Layered dict lookups</td><td>Manual <code>{**defaults, **overrides}</code></td></tr>
+                    <tr><td><strong>UserDict / UserList</strong></td><td>Safe base for custom collections</td><td>Broken <code>dict</code> subclasses</td></tr>
+                </table>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 15px;">Let's go through each one, <strong>starting with the problem it solves</strong>.</p>
+        </div>
+    </section>
+
+    <!-- ===== 3. DEFAULTDICT ===== -->
+    <section id="defaultdict">
+        <div class="section-container">
+            <span class="section-label success">No More KeyError</span>
+            <h2 class="section-title">defaultdict</h2>
+            <p class="section-subtitle">Group, count, or collect &mdash; without checking if the key exists first.</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><strong>Problem:</strong> Group words by their first letter. What if we skip the boilerplate?</p>
+
+            <div class="code-block" style="margin-bottom: 5px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What happens if we just do grouped[key].append(word)?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>words = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"avocado"</span>, <span class="string">"blueberry"</span>]
+grouped = {}
+
+<span class="keyword">for</span> word <span class="keyword">in</span> words:
+    grouped[word[<span class="number">0</span>]].append(word)   <span class="comment"># No if-check. What happens?</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-dd-nocheck">
+                <h4>What happens when this runs?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-dd-nocheck', this, false)">It works &mdash; Python auto-creates the list</button>
+                <button class="quiz-option" onclick="checkQuiz('q-dd-nocheck', this, true)">KeyError: <code>'a'</code> &mdash; the key doesn't exist yet, can't append to nothing</button>
+                <button class="quiz-option" onclick="checkQuiz('q-dd-nocheck', this, false)">It creates <code>{'a': 'apple'}</code> without the list</button>
+                <div class="quiz-explanation"><strong>KeyError!</strong> <code>grouped["a"]</code> doesn't exist yet, so Python can't call <code>.append()</code> on it. You <em>must</em> create the empty list first. That's why you see this boilerplate everywhere:<br><br><code style="background: #1e1e2e; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; display: block; margin-top: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; white-space: pre;">if key not in grouped:
+    grouped[key] = []     # create the list first
+grouped[key].append(word) # now append works</code><br>This is exactly what <code>defaultdict</code> eliminates.</div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Plain dict (verbose)</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The hard way</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>words = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"avocado"</span>, <span class="string">"blueberry"</span>]
+grouped = {}
+
+<span class="keyword">for</span> word <span class="keyword">in</span> words:
+    key = word[<span class="number">0</span>]
+    <span class="keyword">if</span> key <span class="keyword">not in</span> grouped:   <span class="comment"># Boilerplate!</span>
+        grouped[key] = []     <span class="comment"># Every. Single. Time.</span>
+    grouped[key].append(word)</pre></div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">defaultdict (clean)</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The right way</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict
+
+words = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"avocado"</span>, <span class="string">"blueberry"</span>]
+grouped = defaultdict(<span class="function">list</span>)  <span class="comment"># Missing key? Create []</span>
+
+<span class="keyword">for</span> word <span class="keyword">in</span> words:
+    grouped[word[<span class="number">0</span>]].append(word)  <span class="comment"># Just use it!</span>
+
+<span class="comment"># {'a': ['apple', 'avocado'], 'b': ['banana', 'blueberry']}</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-box" id="q-dd1">
+                <h4>What happens when you access a key that doesn't exist in a plain <code>dict</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-dd1', this, false)">Returns None</button>
+                <button class="quiz-option" onclick="checkQuiz('q-dd1', this, true)">Raises KeyError</button>
+                <button class="quiz-option" onclick="checkQuiz('q-dd1', this, false)">Returns 0</button>
+                <button class="quiz-option" onclick="checkQuiz('q-dd1', this, false)">Creates the key with an empty value</button>
+                <div class="quiz-explanation"><strong>KeyError.</strong> Plain dict throws <code>KeyError</code> for missing keys. That's why you see <code>if key not in d</code> everywhere. <code>defaultdict</code> eliminates this by auto-creating a default value.</div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128200; defaultdict(int) &mdash; Counting</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Count occurrences</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict
+
+votes = [<span class="string">"alice"</span>, <span class="string">"bob"</span>, <span class="string">"alice"</span>, <span class="string">"charlie"</span>, <span class="string">"bob"</span>, <span class="string">"alice"</span>]
+counts = defaultdict(<span class="function">int</span>)  <span class="comment"># Missing key? Start at 0</span>
+
+<span class="keyword">for</span> name <span class="keyword">in</span> votes:
+    counts[name] += <span class="number">1</span>
+
+<span class="comment"># defaultdict(int, {'alice': 3, 'bob': 2, 'charlie': 1})</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127919; defaultdict(set) &mdash; Unique Values</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Unique tags per user</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>user_tags = defaultdict(<span class="function">set</span>)
+
+user_tags[<span class="string">"alice"</span>].add(<span class="string">"python"</span>)
+user_tags[<span class="string">"alice"</span>].add(<span class="string">"django"</span>)
+user_tags[<span class="string">"alice"</span>].add(<span class="string">"python"</span>)  <span class="comment"># Duplicate ignored</span>
+
+<span class="comment"># {'alice': {'python', 'django'}}</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>&#9888;&#65039; Gotcha:</strong> Simply <em>accessing</em> a missing key in a defaultdict <strong>creates it</strong>. <code>d = defaultdict(list); d["ghost"]</code> now has key "ghost" with value <code>[]</code>. This can cause subtle bugs if you check <code>"ghost" in d</code> after accessing it.
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Factory functions:</strong> The argument to <code>defaultdict</code> is a <em>callable</em> (a factory). <code>list</code> &rarr; <code>[]</code>, <code>int</code> &rarr; <code>0</code>, <code>set</code> &rarr; <code>set()</code>, <code>lambda: "N/A"</code> &rarr; <code>"N/A"</code>. It calls the factory every time a missing key is accessed.<br><br>
+                <strong>Real-life use cases:</strong><br>
+                &bull; <strong>Grouping API responses</strong> &mdash; group orders by customer_id, logs by severity level<br>
+                &bull; <strong>Building adjacency lists</strong> &mdash; graph representation: <code>graph = defaultdict(list); graph[node].append(neighbor)</code><br>
+                &bull; <strong>Inverted index</strong> &mdash; search engines: word &rarr; list of documents containing it<br>
+                &bull; <strong>Collecting unique tags</strong> &mdash; <code>defaultdict(set)</code> to track unique categories per user
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. COUNTER ===== -->
+    <section id="counter">
+        <div class="section-container">
+            <span class="section-label purple">Count Everything</span>
+            <h2 class="section-title">Counter</h2>
+            <p class="section-subtitle">A dict subclass designed for counting. Handles the common case so you don't have to.</p>
+
+            <div class="question-box">
+                <p><strong>Question:</strong> You need word frequencies from a paragraph. You could use <code>defaultdict(int)</code> and loop. But what if Python had a one-liner?</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Counter basics</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> Counter
+
+words = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"apple"</span>, <span class="string">"cherry"</span>, <span class="string">"banana"</span>, <span class="string">"apple"</span>]
+counts = Counter(words)
+
+<span class="function">print</span>(counts)
+<span class="comment"># Counter({'apple': 3, 'banana': 2, 'cherry': 1})</span>
+
+<span class="comment"># Missing key? Returns 0, not KeyError!</span>
+<span class="function">print</span>(counts[<span class="string">"mango"</span>])  <span class="comment"># 0</span>
+
+<span class="comment"># Top N most common</span>
+<span class="function">print</span>(counts.<span class="function">most_common</span>(<span class="number">2</span>))
+<span class="comment"># [('apple', 3), ('banana', 2)]</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Real-world: Vote counting</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>votes = [<span class="string">"Alice"</span>, <span class="string">"Bob"</span>, <span class="string">"Alice"</span>, <span class="string">"Charlie"</span>, <span class="string">"Alice"</span>, <span class="string">"Bob"</span>]
+vote_counts = Counter(votes)
+<span class="comment"># Counter({'Alice': 3, 'Bob': 2, 'Charlie': 1})</span>
+
+winner = vote_counts.most_common(<span class="number">1</span>)[<span class="number">0</span>]
+<span class="function">print</span>(<span class="string">f"Winner: </span>{winner[<span class="number">0</span>]}<span class="string"> with </span>{winner[<span class="number">1</span>]}<span class="string"> votes"</span>)
+<span class="comment"># Winner: Alice with 3 votes</span></pre></div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Key difference from dict:</strong> <code>counter["missing_key"]</code> returns <code>0</code>, not <code>KeyError</code>. And unlike <code>defaultdict(int)</code>, it doesn't <em>create</em> the key either. It just returns 0.
+            </div>
+
+            <div class="code-block" style="margin-bottom: 5px;">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What does this print?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> Counter
+
+c1 = Counter([<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>, <span class="string">"a"</span>])
+c2 = Counter([<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"d"</span>])
+
+result = c1 + c2
+<span class="function">print</span>(result[<span class="string">"a"</span>])   <span class="comment"># What prints here?</span></pre></div>
+            </div>
+            <div class="quiz-box" id="q-counter-arith">
+                <h4>What does <code>(c1 + c2)["a"]</code> return?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-counter-arith', this, false)">2</button>
+                <button class="quiz-option" onclick="checkQuiz('q-counter-arith', this, true)">3</button>
+                <button class="quiz-option" onclick="checkQuiz('q-counter-arith', this, false)">1</button>
+                <button class="quiz-option" onclick="checkQuiz('q-counter-arith', this, false)">4</button>
+                <div class="quiz-explanation"><code>c1 + c2</code> adds the counts for each key:<br><br><code style="background: #1e1e2e; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; display: block; margin-top: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; white-space: pre;">c1 = {'a': 2, 'b': 1, 'c': 1}
+c2 = {'a': 1, 'b': 1, 'd': 1}
+c1 + c2 = {'a': 3, 'b': 2, 'c': 1, 'd': 1}   # a: 2+1 = 3</code><br>Counter arithmetic treats counts like numbers. Subtraction drops results &le; 0.</div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#9989; Counter Arithmetic</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> +, -, &amp;, |</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>inventory_a = Counter({<span class="string">"apple"</span>: <span class="number">5</span>, <span class="string">"banana"</span>: <span class="number">3</span>})
+inventory_b = Counter({<span class="string">"apple"</span>: <span class="number">2</span>, <span class="string">"cherry"</span>: <span class="number">7</span>})
+
+<span class="comment"># Addition: combine inventories</span>
+<span class="function">print</span>(inventory_a + inventory_b)
+<span class="comment"># Counter({'cherry': 7, 'apple': 7, 'banana': 3})</span>
+
+<span class="comment"># Subtraction: what's left after selling?</span>
+<span class="function">print</span>(inventory_a - inventory_b)
+<span class="comment"># Counter({'banana': 3, 'apple': 3})  # Negative counts dropped!</span>
+
+<span class="comment"># Intersection (&amp;): minimum of each</span>
+<span class="function">print</span>(inventory_a & inventory_b)
+<span class="comment"># Counter({'apple': 2})</span>
+
+<span class="comment"># Union (|): maximum of each</span>
+<span class="function">print</span>(inventory_a | inventory_b)
+<span class="comment"># Counter({'cherry': 7, 'apple': 5, 'banana': 3})</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" id="q-counter">
+                <h4><code>Counter("mississippi")</code> &mdash; which letter is most common?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-counter', this, false)">m (1 time)</button>
+                <button class="quiz-option" onclick="checkQuiz('q-counter', this, false)">s (4 times)</button>
+                <button class="quiz-option" onclick="checkQuiz('q-counter', this, true)">i (4 times) and s (4 times) are tied, but i comes first in most_common</button>
+                <button class="quiz-option" onclick="checkQuiz('q-counter', this, false)">p (2 times)</button>
+                <div class="quiz-explanation"><strong>Counter('mississippi')</strong> gives <code>{'i': 4, 's': 4, 'p': 2, 'm': 1}</code>. Both 'i' and 's' appear 4 times. <code>most_common(1)</code> returns one of the tied elements. The key insight: Counter works on any iterable, including strings (which iterate over characters).</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Real-life use cases for Counter:</strong><br>
+                &bull; <strong>Word frequency</strong> &mdash; NLP, search engines: find most common terms in a document<br>
+                &bull; <strong>Vote counting</strong> &mdash; elections, polls: <code>Counter(votes).most_common(1)</code> = winner<br>
+                &bull; <strong>Inventory management</strong> &mdash; combine warehouse stock (<code>c1 + c2</code>), track sold items (<code>c1 - c2</code>)<br>
+                &bull; <strong>Log analysis</strong> &mdash; count error types: how many 404s vs 500s today?<br>
+                &bull; <strong>Feature usage metrics</strong> &mdash; which buttons do users click most?<br>
+                &bull; <strong>Duplicate detection</strong> &mdash; <code>[x for x, count in Counter(items).items() if count > 1]</code>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. DEQUE ===== -->
+    <section id="deque">
+        <div class="section-container">
+            <span class="section-label danger">Performance Matters</span>
+            <h2 class="section-title">deque</h2>
+            <p class="section-subtitle">A double-ended queue. When you need fast operations on both ends.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> <code>list.insert(0, x)</code> is <strong>O(n)</strong> &mdash; it shifts every element. If you're building a queue (FIFO), this kills performance. What if prepending was O(1)?</p>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>&#9200; Performance reality:</strong> <code>list.insert(0, x)</code> on a list of 1,000,000 elements shifts ALL of them. <code>deque.appendleft(x)</code> does it in constant time. For queue-like operations, deque can be <strong>1000x faster</strong>.
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> deque operations</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> deque
+
+d = deque([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])
+
+<span class="comment"># Add to both ends — both O(1)</span>
+d.<span class="function">append</span>(<span class="number">4</span>)         <span class="comment"># [1, 2, 3, 4]</span>
+d.<span class="function">appendleft</span>(<span class="number">0</span>)     <span class="comment"># [0, 1, 2, 3, 4]</span>
+
+<span class="comment"># Remove from both ends — both O(1)</span>
+d.<span class="function">pop</span>()              <span class="comment"># 4  → [0, 1, 2, 3]</span>
+d.<span class="function">popleft</span>()          <span class="comment"># 0  → [1, 2, 3]</span></pre></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128203; maxlen &mdash; Sliding Window / Recent Logs</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Bounded deque</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="comment"># Keep only the last 3 log entries</span>
+recent_logs = deque(maxlen=<span class="number">3</span>)
+
+recent_logs.<span class="function">append</span>(<span class="string">"Login"</span>)
+recent_logs.<span class="function">append</span>(<span class="string">"View page"</span>)
+recent_logs.<span class="function">append</span>(<span class="string">"Add to cart"</span>)
+recent_logs.<span class="function">append</span>(<span class="string">"Checkout"</span>)  <span class="comment"># "Login" is auto-evicted!</span>
+
+<span class="function">print</span>(<span class="function">list</span>(recent_logs))
+<span class="comment"># ['View page', 'Add to cart', 'Checkout']</span></pre></div>
+                    </div>
+                    <p style="margin-top: 10px; color: var(--text-secondary);">When the deque is full and you append, the oldest item is automatically removed. Perfect for "last N items" patterns.</p>
+                </div></div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Test yourself: click each cell to check the complexity.</p>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th>Operation</th><th>list</th><th>deque</th></tr>
+                    <tr><td>Append right</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1)*">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1)">Click</td></tr>
+                    <tr><td>Append left</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n) — shifts everything!" style="color: var(--accent-danger);">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1) ✓">Click</td></tr>
+                    <tr><td>Pop right</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1)">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1)">Click</td></tr>
+                    <tr><td>Pop left</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n) — shifts everything!" style="color: var(--accent-danger);">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1) ✓">Click</td></tr>
+                    <tr><td>Random access [i]</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1) ✓">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n) — list wins here">Click</td></tr>
+                    <tr><td>Insert middle</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n)">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n)">Click</td></tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" id="q-deque">
+                <h4>BFS (Breadth-First Search) uses a queue. You need FIFO: first in, first out. Which pair of operations?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-deque', this, false)">append() + pop() &mdash; LIFO, that's a stack</button>
+                <button class="quiz-option" onclick="checkQuiz('q-deque', this, true)">append() + popleft() &mdash; add to right, remove from left = FIFO</button>
+                <button class="quiz-option" onclick="checkQuiz('q-deque', this, false)">appendleft() + pop() &mdash; add to left, remove from right</button>
+                <button class="quiz-option" onclick="checkQuiz('q-deque', this, false)">appendleft() + popleft() &mdash; LIFO from the left side</button>
+                <div class="quiz-explanation"><strong>FIFO = append() + popleft().</strong> Items enter from the right and leave from the left. Using <code>list.pop(0)</code> is O(n). Deque makes it O(1).</div>
+            </div>
+
+            <!-- FIFO visual -->
+            <div class="diagram-box" style="margin: 25px 0;">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">FIFO Queue: <code>append()</code> + <code>popleft()</code></div>
+                <div class="flow-row">
+                    <div class="flow-box green" style="min-width: 80px;"><strong>IN</strong><br><code>append()</code><br><small>adds to right</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">A</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">B</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">C</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">D</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box red" style="min-width: 80px;"><strong>OUT</strong><br><code>popleft()</code><br><small>removes from left</small></div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">First in (A) &rarr; First out (A). BFS processes nodes in discovery order.</div>
+            </div>
+
+            <div class="diagram-box" style="margin: 15px 0;">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">LIFO Stack: <code>append()</code> + <code>pop()</code></div>
+                <div class="flow-row">
+                    <div class="flow-box green" style="min-width: 80px;"><strong>IN</strong><br><code>append()</code><br><small>adds to right</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">A</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">B</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">C</div>
+                    <div class="flow-box" style="min-width: 50px; font-family: 'Fira Code', monospace; font-size: 0.85rem;">D</div>
+                    <div class="flow-arrow">&larr;</div>
+                    <div class="flow-box red" style="min-width: 80px;"><strong>OUT</strong><br><code>pop()</code><br><small>removes from right</small></div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">Last in (D) &rarr; First out (D). DFS, undo/redo, browser back button.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Real-life use cases for deque:</strong><br>
+                &bull; <strong>BFS traversal</strong> &mdash; process graph/tree nodes in discovery order (append + popleft)<br>
+                &bull; <strong>Task queue</strong> &mdash; Celery-like job processing: add tasks, workers pick from front<br>
+                &bull; <strong>Browser history</strong> &mdash; back/forward navigation (stack with append + pop)<br>
+                &bull; <strong>Sliding window</strong> &mdash; keep last N log entries, last N API requests for rate limiting (<code>maxlen=N</code>)<br>
+                &bull; <strong>Undo/Redo</strong> &mdash; text editors, drawing apps (two stacks)
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 6. NAMEDTUPLE ===== -->
+    <section id="namedtuple">
+        <div class="section-container">
+            <span class="section-label blue">Readable Tuples</span>
+            <h2 class="section-title">namedtuple</h2>
+            <p class="section-subtitle">Give your tuples names. Stop guessing what index 0 means.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> <code>point = (3, 7)</code> &mdash; is <code>point[0]</code> the x or the y? With plain tuples, you're reading code like it's a puzzle.</p>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Plain tuple</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Confusing</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>point = (<span class="number">3</span>, <span class="number">7</span>)
+<span class="function">print</span>(point[<span class="number">0</span>])  <span class="comment"># What is 0? x? y? z?</span>
+<span class="function">print</span>(point[<span class="number">1</span>])  <span class="comment"># Hope you remember...</span></pre></div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">namedtuple</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Self-documenting</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> namedtuple
+
+Point = namedtuple(<span class="string">"Point"</span>, [<span class="string">"x"</span>, <span class="string">"y"</span>])
+p = Point(<span class="number">3</span>, <span class="number">7</span>)
+<span class="function">print</span>(p.x)  <span class="comment"># 3 — crystal clear</span>
+<span class="function">print</span>(p.y)  <span class="comment"># 7</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128221; Typed NamedTuple (modern syntax)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> typing.NamedTuple</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> typing <span class="keyword">import</span> NamedTuple
+
+<span class="keyword">class</span> <span class="function">Point</span>(NamedTuple):
+    x: <span class="function">float</span>
+    y: <span class="function">float</span>
+    label: <span class="function">str</span> = <span class="string">"origin"</span>  <span class="comment"># Default value</span>
+
+p = Point(<span class="number">3.0</span>, <span class="number">7.0</span>)
+<span class="function">print</span>(p.label)  <span class="comment"># "origin"</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128295; _replace, _asdict, unpacking</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Useful methods</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>Point = namedtuple(<span class="string">"Point"</span>, [<span class="string">"x"</span>, <span class="string">"y"</span>])
+p = Point(<span class="number">3</span>, <span class="number">7</span>)
+
+<span class="comment"># _replace — returns NEW tuple (immutable!)</span>
+p2 = p.<span class="function">_replace</span>(x=<span class="number">10</span>)
+<span class="function">print</span>(p2)  <span class="comment"># Point(x=10, y=7)</span>
+
+<span class="comment"># _asdict — convert to dict</span>
+<span class="function">print</span>(p.<span class="function">_asdict</span>())  <span class="comment"># {'x': 3, 'y': 7}</span>
+
+<span class="comment"># Unpacking — works like regular tuple</span>
+x, y = p
+<span class="function">print</span>(x, y)  <span class="comment"># 3 7</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" id="q-namedtuple">
+                <h4><code>namedtuple</code> vs <code>dataclass</code> &mdash; which is immutable by default?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-namedtuple', this, true)">namedtuple &mdash; it's a tuple, tuples are immutable</button>
+                <button class="quiz-option" onclick="checkQuiz('q-namedtuple', this, false)">dataclass &mdash; it uses @dataclass(frozen=True) by default</button>
+                <button class="quiz-option" onclick="checkQuiz('q-namedtuple', this, false)">Both are immutable by default</button>
+                <button class="quiz-option" onclick="checkQuiz('q-namedtuple', this, false)">Neither is immutable by default</button>
+                <div class="quiz-explanation"><strong>namedtuple is always immutable</strong> &mdash; it's a tuple subclass. <code>p.x = 5</code> raises <code>AttributeError</code>. Dataclasses are mutable by default; you need <code>@dataclass(frozen=True)</code> to make them immutable. Use namedtuple for simple, immutable records. Use dataclass for complex, mutable objects.</div>
+            </div>
+
+            <div class="quiz-box" id="q-tuple-mutability">
+                <h4>Tricky: <code>t = ([1, 2], 3)</code>. Can you do <code>t[0].append(99)</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-tuple-mutability', this, true)">Yes! The tuple is immutable, but the list INSIDE it is still mutable</button>
+                <button class="quiz-option" onclick="checkQuiz('q-tuple-mutability', this, false)">No &mdash; tuples are immutable so nothing inside can change</button>
+                <button class="quiz-option" onclick="checkQuiz('q-tuple-mutability', this, false)">It depends on the Python version</button>
+                <div class="quiz-explanation"><strong>Tuple immutability is shallow.</strong> You can't reassign <code>t[0] = [4, 5]</code> (that changes the tuple), but you CAN mutate the list <em>inside</em> it: <code>t[0].append(99)</code> works fine because the tuple still holds the same list object &mdash; the list's contents changed, not the tuple's reference. This is a classic interview question.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Real-life use cases for namedtuple:</strong><br>
+                &bull; <strong>Database rows</strong> &mdash; <code>row.name</code> instead of <code>row[0]</code>. Python's <code>sqlite3</code> can return namedtuples.<br>
+                &bull; <strong>API responses</strong> &mdash; parse JSON into <code>HTTPResponse(status=200, body=...)</code><br>
+                &bull; <strong>Coordinates / Points</strong> &mdash; <code>Point(x=3, y=7)</code> instead of <code>(3, 7)</code><br>
+                &bull; <strong>Function return values</strong> &mdash; return <code>Result(success=True, data=...)</code> instead of a plain tuple<br>
+                &bull; <strong>Config</strong> &mdash; immutable settings objects, less memory than dict, hashable (can be cached)
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. ORDEREDDICT, CHAINMAP, FROZENSET ===== -->
+    <section id="special">
+        <div class="section-container">
+            <span class="section-label warning">Special-Purpose</span>
+            <h2 class="section-title">OrderedDict, ChainMap &amp; frozenset</h2>
+            <p class="section-subtitle">Niche tools that solve specific problems elegantly.</p>
+
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128218; OrderedDict &mdash; Order-Sensitive Equality</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Since Python 3.7, regular <code>dict</code> preserves insertion order. So why does <code>OrderedDict</code> still exist?</p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Order matters for equality</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> OrderedDict
+
+<span class="comment"># Regular dict: order doesn't affect equality</span>
+d1 = {<span class="string">"a"</span>: <span class="number">1</span>, <span class="string">"b"</span>: <span class="number">2</span>}
+d2 = {<span class="string">"b"</span>: <span class="number">2</span>, <span class="string">"a"</span>: <span class="number">1</span>}
+<span class="function">print</span>(d1 == d2)  <span class="comment"># True — same keys &amp; values</span>
+
+<span class="comment"># OrderedDict: order IS part of equality</span>
+od1 = OrderedDict({<span class="string">"a"</span>: <span class="number">1</span>, <span class="string">"b"</span>: <span class="number">2</span>})
+od2 = OrderedDict({<span class="string">"b"</span>: <span class="number">2</span>, <span class="string">"a"</span>: <span class="number">1</span>})
+<span class="function">print</span>(od1 == od2)  <span class="comment"># False — different order!</span>
+
+<span class="comment"># move_to_end — useful for LRU cache</span>
+od1.<span class="function">move_to_end</span>(<span class="string">"a"</span>)  <span class="comment"># Move to end (most recent)</span>
+od1.<span class="function">move_to_end</span>(<span class="string">"b"</span>, last=<span class="keyword">False</span>)  <span class="comment"># Move to front</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128279; ChainMap &mdash; Layered Dict Lookups</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Config layering</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> ChainMap
+
+defaults = {<span class="string">"theme"</span>: <span class="string">"light"</span>, <span class="string">"lang"</span>: <span class="string">"en"</span>, <span class="string">"debug"</span>: <span class="keyword">False</span>}
+env_config = {<span class="string">"debug"</span>: <span class="keyword">True</span>}
+user_config = {<span class="string">"theme"</span>: <span class="string">"dark"</span>}
+
+<span class="comment"># Lookup priority: user > env > defaults</span>
+config = ChainMap(user_config, env_config, defaults)
+
+<span class="function">print</span>(config[<span class="string">"theme"</span>])  <span class="comment"># "dark"  (from user_config)</span>
+<span class="function">print</span>(config[<span class="string">"debug"</span>])  <span class="comment"># True   (from env_config)</span>
+<span class="function">print</span>(config[<span class="string">"lang"</span>])   <span class="comment"># "en"   (from defaults)</span>
+
+<span class="comment"># Writes go to the FIRST dict only</span>
+config[<span class="string">"lang"</span>] = <span class="string">"fr"</span>
+<span class="function">print</span>(user_config)  <span class="comment"># {'theme': 'dark', 'lang': 'fr'}</span></pre></div>
+                    </div>
+                    <p style="margin-top: 10px; color: var(--text-secondary);">ChainMap doesn't merge dicts &mdash; it searches them in order. Changes go to the first dict. Think of it like scope resolution: local > enclosing > global > built-in.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#10052;&#65039; frozenset &mdash; Immutable Set</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Hashable sets</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="comment"># Regular set — mutable, NOT hashable</span>
+s = {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>}
+<span class="comment"># d = {s: "value"}  # TypeError: unhashable type: 'set'</span>
+
+<span class="comment"># frozenset — immutable, IS hashable</span>
+fs = <span class="function">frozenset</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])
+d = {fs: <span class="string">"value"</span>}  <span class="comment"># Works! Can be a dict key</span>
+
+<span class="comment"># Set of sets (using frozenset)</span>
+groups = {
+    <span class="function">frozenset</span>([<span class="string">"alice"</span>, <span class="string">"bob"</span>]),
+    <span class="function">frozenset</span>([<span class="string">"charlie"</span>, <span class="string">"dave"</span>]),
+}
+
+<span class="comment"># frozenset supports all read operations</span>
+<span class="function">print</span>(fs & <span class="function">frozenset</span>([<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]))  <span class="comment"># frozenset({2, 3})</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" id="q-frozenset">
+                <h4>Can you use a regular <code>set</code> as a dictionary key?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-frozenset', this, false)">Yes &mdash; sets are just like lists in a dict</button>
+                <button class="quiz-option" onclick="checkQuiz('q-frozenset', this, true)">No &mdash; sets are mutable, so they're unhashable. Use frozenset instead.</button>
+                <button class="quiz-option" onclick="checkQuiz('q-frozenset', this, false)">Yes &mdash; Python converts it to frozenset automatically</button>
+                <button class="quiz-option" onclick="checkQuiz('q-frozenset', this, false)">No &mdash; sets can never be used with dicts in any way</button>
+                <div class="quiz-explanation"><strong>Dict keys must be hashable.</strong> Mutable types (list, set, dict) are unhashable &mdash; their hash could change if contents change. <code>frozenset</code> is immutable, so it has a stable hash and can be a dict key or set element.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Real-life use cases:</strong><br><br>
+                <strong>OrderedDict:</strong><br>
+                &bull; <strong>LRU Cache</strong> &mdash; <code>move_to_end()</code> marks recently used, <code>popitem(last=False)</code> evicts oldest<br>
+                &bull; <strong>JSON output with guaranteed key order</strong> &mdash; when API contract requires specific field order<br>
+                &bull; <strong>Test assertions</strong> &mdash; when order of items matters for correctness<br><br>
+                <strong>ChainMap:</strong><br>
+                &bull; <strong>Django settings</strong> &mdash; <code>base.py &rarr; dev.py &rarr; local.py</code>: each overrides the previous<br>
+                &bull; <strong>CLI tools</strong> &mdash; <code>ChainMap(cli_args, env_vars, config_file, defaults)</code>: first match wins<br>
+                &bull; <strong>Template engines</strong> &mdash; variable scopes: local block &rarr; parent template &rarr; global context<br>
+                &bull; <strong>Python itself</strong> &mdash; scope resolution uses this pattern: local &rarr; enclosing &rarr; global &rarr; builtin<br><br>
+                <strong>frozenset:</strong><br>
+                &bull; <strong>Caching</strong> &mdash; use <code>frozenset(args)</code> as a cache key when order doesn't matter<br>
+                &bull; <strong>Graph edges</strong> &mdash; <code>frozenset({A, B})</code> = undirected edge (A-B same as B-A)<br>
+                &bull; <strong>Permissions</strong> &mdash; immutable set of roles: <code>frozenset({"admin", "editor"})</code><br>
+                &bull; <strong>Feature combinations</strong> &mdash; ML: dict key = frozenset of feature names
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. CUSTOM COLLECTIONS ===== -->
+    <section id="custom">
+        <div class="section-container">
+            <span class="section-label danger">Don't Subclass dict!</span>
+            <h2 class="section-title">Custom Collections</h2>
+            <p class="section-subtitle">When you need to customize built-in behavior, use UserDict, UserList, and UserString. But first &mdash; <em>why</em> does subclassing break?</p>
+
+            <!-- The problem -->
+            <h3 style="margin-bottom: 15px;">The Bug</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Broken: subclassing dict</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> BrokenUpperDict</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">class</span> <span class="function">BrokenUpperDict</span>(<span class="function">dict</span>):
+    <span class="keyword">def</span> <span class="function">__setitem__</span>(self, key, val):
+        <span class="function">super</span>().<span class="function">__setitem__</span>(key.upper(), val)
+
+d = BrokenUpperDict()
+d[<span class="string">"hello"</span>] = <span class="number">1</span>            <span class="comment"># &#10004; "HELLO"</span>
+d.<span class="function">update</span>({<span class="string">"world"</span>: <span class="number">2</span>})   <span class="comment"># &#10008; "world" lowercase!</span>
+<span class="function">print</span>(d)
+<span class="comment"># {'HELLO': 1, 'world': 2}  ← BROKEN!</span></pre></div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Correct: UserDict</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> UpperDict</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> UserDict
+
+<span class="keyword">class</span> <span class="function">UpperDict</span>(UserDict):
+    <span class="keyword">def</span> <span class="function">__setitem__</span>(self, key, val):
+        <span class="function">super</span>().<span class="function">__setitem__</span>(key.upper(), val)
+
+d = UpperDict()
+d[<span class="string">"hello"</span>] = <span class="number">1</span>
+d.<span class="function">update</span>({<span class="string">"world"</span>: <span class="number">2</span>})
+<span class="function">print</span>(d)
+<span class="comment"># {'HELLO': 1, 'WORLD': 2}  ← CORRECT!</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WHY it breaks — the visual explanation -->
+            <h3 style="margin: 40px 0 15px;">But WHY does it break?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Python's built-in <code>dict</code>, <code>list</code>, and <code>str</code> are implemented in <strong>C</strong> for speed. When you subclass them and override a method in Python, the C methods <strong>don't know about your override</strong>.</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">What happens when you call <code>d.update({"world": 2})</code></div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; color: var(--accent-danger); margin-bottom: 8px;">Subclassing <code>dict</code> directly:</div>
+                    <div class="flow-row">
+                        <div class="flow-box" style="min-width: 120px;"><code>d.update()</code><br><small>you call this</small></div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-box red" style="min-width: 180px;"><strong>C code</strong> inside dict<br><small>directly writes to hash table</small><br><small>SKIPS your __setitem__!</small></div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-box red" style="min-width: 130px;"><code>"world"</code> stored<br><small>lowercase &mdash; bug!</small></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-weight: 600; color: var(--accent-success); margin-bottom: 8px;">Subclassing <code>UserDict</code>:</div>
+                    <div class="flow-row">
+                        <div class="flow-box" style="min-width: 120px;"><code>d.update()</code><br><small>you call this</small></div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-box green" style="min-width: 180px;"><strong>Python code</strong> inside UserDict<br><small>calls <code>self.__setitem__()</code></small><br><small>YOUR override runs!</small></div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-box green" style="min-width: 130px;"><code>"WORLD"</code> stored<br><small>uppercased &mdash; correct!</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>The root cause:</strong> <code>dict</code> is written in C. Its <code>update()</code>, <code>__init__()</code>, <code>setdefault()</code>, etc. are all C functions that directly manipulate the internal hash table. They don't call your Python <code>__setitem__</code>. <code>UserDict</code> is a <strong>pure Python wrapper</strong> around a regular dict (stored as <code>self.data</code>). All its methods go through <code>__setitem__</code>, so your overrides always work. Same applies to <code>list</code>/<code>UserList</code> and <code>str</code>/<code>UserString</code>.
+            </div>
+
+            <div class="quiz-box" id="q-userdict">
+                <h4>Why does subclassing <code>dict</code> directly break when you override <code>__setitem__</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-userdict', this, false)">dict doesn't support subclassing</button>
+                <button class="quiz-option" onclick="checkQuiz('q-userdict', this, false)">__setitem__ is a private method</button>
+                <button class="quiz-option" onclick="checkQuiz('q-userdict', this, true)">dict's C implementation of update() bypasses your Python __setitem__ override</button>
+                <button class="quiz-option" onclick="checkQuiz('q-userdict', this, false)">Python disallows overriding built-in methods</button>
+                <div class="quiz-explanation"><strong>C code doesn't call Python code.</strong> <code>dict.update()</code> is a C function that writes directly to the hash table. It never calls your Python <code>__setitem__</code>. <code>UserDict.update()</code> is Python code that loops through items and calls <code>self.__setitem__()</code> for each one. That's the entire difference.</div>
+            </div>
+
+            <!-- How UserDict/UserList/UserString actually work -->
+            <h3 style="margin: 40px 0 15px;">How Do User* Classes Work Internally?</h3>
+
+            <div class="table-container">
+                <table>
+                    <tr><th>Class</th><th>Wraps</th><th>Your data lives in</th><th>All methods go through</th></tr>
+                    <tr><td><code>UserDict</code></td><td><code>dict</code></td><td><code>self.data</code> (a regular dict)</td><td><code>__setitem__</code>, <code>__getitem__</code>, <code>__delitem__</code></td></tr>
+                    <tr><td><code>UserList</code></td><td><code>list</code></td><td><code>self.data</code> (a regular list)</td><td><code>append</code>, <code>__setitem__</code>, <code>extend</code>, etc.</td></tr>
+                    <tr><td><code>UserString</code></td><td><code>str</code></td><td><code>self.data</code> (a regular string)</td><td><code>__eq__</code>, <code>__contains__</code>, <code>__add__</code>, etc.</td></tr>
+                </table>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 15px 0;">They're <strong>wrappers</strong>, not subclasses of the C types. Your overrides always run because everything is Python all the way down.</p>
+
+            <!-- UserList -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128220; UserList &mdash; Validated list (only positive numbers)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> PositiveList</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> UserList
+
+<span class="keyword">class</span> <span class="function">PositiveList</span>(UserList):
+    <span class="keyword">def</span> <span class="function">append</span>(self, item):
+        <span class="keyword">if</span> item <= <span class="number">0</span>:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">f"Only positive: got </span>{item}<span class="string">"</span>)
+        <span class="function">super</span>().<span class="function">append</span>(item)
+
+    <span class="keyword">def</span> <span class="function">__setitem__</span>(self, index, item):
+        <span class="keyword">if</span> item <= <span class="number">0</span>:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">f"Only positive: got </span>{item}<span class="string">"</span>)
+        <span class="function">super</span>().<span class="function">__setitem__</span>(index, item)
+
+nums = PositiveList([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])
+nums.<span class="function">append</span>(<span class="number">4</span>)     <span class="comment"># &#10004; [1, 2, 3, 4]</span>
+nums.<span class="function">append</span>(-<span class="number">1</span>)    <span class="comment"># &#10008; ValueError! Only positive</span>
+nums[<span class="number">0</span>] = -<span class="number">5</span>       <span class="comment"># &#10008; ValueError! Validation on assignment too</span>
+
+<span class="comment"># Why not subclass list?</span>
+<span class="comment"># list.extend() and list.__init__() are C code.</span>
+<span class="comment"># They'd bypass your append() override. Same bug as dict.</span></pre></div>
+                    </div>
+                    <p style="margin-top: 10px; color: var(--text-secondary);"><strong>Use case:</strong> Validated data structures &mdash; a list that enforces types, ranges, or business rules on every modification. Think: a playlist that only allows Song objects, an order list that rejects negative quantities.</p>
+                </div></div>
+            </div>
+
+            <!-- UserString -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128221; UserString &mdash; Custom string behavior</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Python's <code>str</code> is immutable and implemented in C. You can't override <code>__eq__</code> or <code>__contains__</code> reliably by subclassing <code>str</code> because many operations return a plain <code>str</code>, not your subclass.</p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> CaselessString &mdash; case-insensitive comparison</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> UserString
+
+<span class="keyword">class</span> <span class="function">CaselessString</span>(UserString):
+    <span class="keyword">def</span> <span class="function">__eq__</span>(self, other):
+        <span class="keyword">return</span> self.data.lower() == <span class="function">str</span>(other).lower()
+
+    <span class="keyword">def</span> <span class="function">__contains__</span>(self, item):
+        <span class="keyword">return</span> <span class="function">str</span>(item).lower() <span class="keyword">in</span> self.data.lower()
+
+s = CaselessString(<span class="string">"Hello World"</span>)
+<span class="function">print</span>(s == <span class="string">"HELLO WORLD"</span>)     <span class="comment"># True</span>
+<span class="function">print</span>(s == <span class="string">"hello world"</span>)     <span class="comment"># True</span>
+<span class="function">print</span>(<span class="string">"WORLD"</span> <span class="keyword">in</span> s)           <span class="comment"># True</span>
+
+<span class="comment"># self.data holds the actual string</span>
+<span class="function">print</span>(s.data)                   <span class="comment"># "Hello World" (original case preserved)</span>
+<span class="function">print</span>(s.upper())                <span class="comment"># "HELLO WORLD" — all str methods still work</span></pre></div>
+                    </div>
+
+                    <div class="highlight-box" style="margin-top: 10px;">
+                        <strong>Why not subclass <code>str</code>?</strong> Because <code>str</code> is immutable C code. When you do <code>"Hello" + " World"</code> on a str subclass, Python returns a plain <code>str</code>, not your subclass. Your custom behavior vanishes. <code>UserString</code> stores the string in <code>self.data</code> and delegates all operations through Python methods, so your overrides always apply.
+                    </div>
+
+                    <p style="margin-top: 10px; color: var(--text-secondary);"><strong>Use cases:</strong> Case-insensitive strings (configuration keys, HTTP headers), strings with validation (email format, max length), strings that auto-sanitize HTML, currency/phone number formatting.</p>
+                </div></div>
+            </div>
+
+            <!-- Summary table -->
+            <div class="table-container" style="margin-top: 25px;">
+                <table>
+                    <tr><th>If you subclass...</th><th>What breaks</th><th>Use instead</th></tr>
+                    <tr><td><code>dict</code></td><td><code>update()</code>, <code>__init__()</code>, <code>setdefault()</code> bypass your <code>__setitem__</code></td><td><code>UserDict</code></td></tr>
+                    <tr><td><code>list</code></td><td><code>extend()</code>, <code>__init__()</code>, <code>__iadd__</code> bypass your <code>append</code></td><td><code>UserList</code></td></tr>
+                    <tr><td><code>str</code></td><td><code>+</code>, <code>.upper()</code>, slicing return plain <code>str</code>, not your subclass</td><td><code>UserString</code></td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. THREAD SAFETY ===== -->
+    <section id="thread-safety">
+        <div class="section-container">
+            <span class="section-label warning">Concurrency</span>
+            <h2 class="section-title">Thread Safety in Collections</h2>
+            <p class="section-subtitle">Which operations are safe without locks? Fewer than you think.</p>
+
+            <div class="table-container">
+                <table>
+                    <tr><th>Operation</th><th>Thread-Safe?</th><th>Why?</th></tr>
+                    <tr><td><code>list.append(x)</code></td><td style="color: var(--accent-success);">Safe*</td><td>Single bytecode operation under GIL</td></tr>
+                    <tr><td><code>dict[key] = value</code></td><td style="color: var(--accent-success);">Safe*</td><td>Single bytecode operation under GIL</td></tr>
+                    <tr><td><code>deque.append(x)</code></td><td style="color: var(--accent-success);">Safe*</td><td>Atomic under GIL</td></tr>
+                    <tr><td><code>deque.popleft()</code></td><td style="color: var(--accent-success);">Safe*</td><td>Atomic under GIL</td></tr>
+                    <tr><td><code>counter += 1</code></td><td style="color: var(--accent-danger);">UNSAFE</td><td>Read + Add + Store = 3 operations</td></tr>
+                    <tr><td><code>if key not in d: d[key] = v</code></td><td style="color: var(--accent-danger);">UNSAFE</td><td>Check-then-act = race condition</td></tr>
+                    <tr><td><code>list[i] = x</code> (where i may be invalid)</td><td style="color: var(--accent-danger);">UNSAFE</td><td>Index check + assignment = 2 ops</td></tr>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">* "Safe" under CPython's GIL only. Not guaranteed by the Python language spec.</p>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128230; queue.Queue &mdash; Thread-Safe by Design</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Producer-Consumer</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">import</span> queue
+<span class="keyword">import</span> threading
+
+q = queue.<span class="function">Queue</span>(maxsize=<span class="number">10</span>)
+
+<span class="keyword">def</span> <span class="function">producer</span>():
+    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">5</span>):
+        q.<span class="function">put</span>(i)         <span class="comment"># Blocks if full</span>
+        <span class="function">print</span>(<span class="string">f"Produced </span>{i}<span class="string">"</span>)
+
+<span class="keyword">def</span> <span class="function">consumer</span>():
+    <span class="keyword">while</span> <span class="keyword">True</span>:
+        item = q.<span class="function">get</span>()   <span class="comment"># Blocks if empty</span>
+        <span class="function">print</span>(<span class="string">f"Consumed </span>{item}<span class="string">"</span>)
+        q.<span class="function">task_done</span>()
+
+t1 = threading.<span class="function">Thread</span>(target=producer)
+t2 = threading.<span class="function">Thread</span>(target=consumer, daemon=<span class="keyword">True</span>)
+t1.<span class="function">start</span>(); t2.<span class="function">start</span>()
+t1.<span class="function">join</span>()</pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>&#9888;&#65039; Don't rely on the GIL.</strong> PEP 703 (accepted) introduces a no-GIL build of CPython. In future Python versions, even <code>list.append()</code> may not be thread-safe. Use <code>queue.Queue</code>, <code>threading.Lock</code>, or <code>concurrent.futures</code> for thread-safe code.
+            </div>
+
+            <div class="quiz-box" id="q-thread">
+                <h4>Is <code>list.append()</code> thread-safe in CPython?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-thread', this, false)">No &mdash; always use a lock</button>
+                <button class="quiz-option" onclick="checkQuiz('q-thread', this, true)">Yes, but only because of the GIL &mdash; not guaranteed in future Python</button>
+                <button class="quiz-option" onclick="checkQuiz('q-thread', this, false)">Yes &mdash; list is always thread-safe</button>
+                <button class="quiz-option" onclick="checkQuiz('q-thread', this, false)">Only if you use threading.RLock</button>
+                <div class="quiz-explanation"><strong>Currently safe, but don't depend on it.</strong> <code>list.append()</code> is a single bytecode op, so the GIL makes it atomic in CPython. But this is an implementation detail, not a language guarantee. PEP 703 (no-GIL Python) will break this assumption. Use proper synchronization for production code.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. DECISION GUIDE ===== -->
+    <section id="decision">
+        <div class="section-container">
+            <span class="section-label success">The Complete Picture</span>
+            <h2 class="section-title">Which Collection for Which Job?</h2>
+            <p class="section-subtitle">Click the "Use..." cells to reveal the answer. Test yourself first.</p>
+
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th>I need to...</th><th style="text-align: center;">Use... (click to reveal)</th></tr>
+                    <tr><td>Group items by key</td><td class="revealable" onclick="revealCell(this)" data-answer="defaultdict(list)">Click to reveal</td></tr>
+                    <tr><td>Count occurrences</td><td class="revealable" onclick="revealCell(this)" data-answer="Counter">Click to reveal</td></tr>
+                    <tr><td>Fast prepend / append left</td><td class="revealable" onclick="revealCell(this)" data-answer="deque (O(1) appendleft)">Click to reveal</td></tr>
+                    <tr><td>Sliding window of last N items</td><td class="revealable" onclick="revealCell(this)" data-answer="deque(maxlen=N)">Click to reveal</td></tr>
+                    <tr><td>BFS queue (FIFO)</td><td class="revealable" onclick="revealCell(this)" data-answer="deque (append + popleft)">Click to reveal</td></tr>
+                    <tr><td>Immutable record with named fields</td><td class="revealable" onclick="revealCell(this)" data-answer="namedtuple / NamedTuple">Click to reveal</td></tr>
+                    <tr><td>Layered config / scoped lookups</td><td class="revealable" onclick="revealCell(this)" data-answer="ChainMap">Click to reveal</td></tr>
+                    <tr><td>Use a set as a dict key</td><td class="revealable" onclick="revealCell(this)" data-answer="frozenset (hashable)">Click to reveal</td></tr>
+                    <tr><td>Order-sensitive dict equality</td><td class="revealable" onclick="revealCell(this)" data-answer="OrderedDict">Click to reveal</td></tr>
+                    <tr><td>Custom dict with reliable overrides</td><td class="revealable" onclick="revealCell(this)" data-answer="UserDict (not dict subclass)">Click to reveal</td></tr>
+                    <tr><td>Thread-safe queue</td><td class="revealable" onclick="revealCell(this)" data-answer="queue.Queue">Click to reveal</td></tr>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">Performance: list vs deque (click to reveal)</h3>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th>Operation</th><th>list</th><th>deque</th></tr>
+                    <tr><td>Append right</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1)*">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1)">Click</td></tr>
+                    <tr><td>Append left / Insert(0)</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n) — slow!">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1) ✓">Click</td></tr>
+                    <tr><td>Pop left / Pop(0)</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n) — slow!">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1) ✓">Click</td></tr>
+                    <tr><td>Random access [i]</td><td class="revealable" onclick="revealCell(this)" data-answer="O(1) ✓">Click</td><td class="revealable" onclick="revealCell(this)" data-answer="O(n) — list wins">Click</td></tr>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">* Amortized O(1) &mdash; occasionally O(n) when internal array resizes.</p>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Mutability Pairs</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Mutable</th><th>Immutable / Frozen</th></tr>
+                    <tr><td>list</td><td>tuple</td></tr>
+                    <tr><td>set</td><td>frozenset</td></tr>
+                    <tr><td>dict</td><td>types.MappingProxyType</td></tr>
+                    <tr><td>bytearray</td><td>bytes</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. MINDMAP ===== -->
+    <section id="mindmap">
+        <div class="section-container">
+            <span class="section-label purple">Visual Overview</span>
+            <h2 class="section-title">The Collections Module</h2>
+            <p class="section-subtitle">How everything connects.</p>
+
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green">defaultdict<small>Auto-create missing keys</small></div>
+                    <div class="flow-arrow">&larr;</div>
+                    <div class="flow-box" style="border-color: var(--accent-primary); background: rgba(16,185,129,0.15); font-weight: 700; font-size: 1rem; padding: 18px 28px;">collections<br>module</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green">Counter<small>Count &amp; rank elements</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box red">deque<small>Fast double-ended ops</small></div>
+                    <div class="flow-arrow">&larr;</div>
+                    <div class="flow-box" style="visibility: hidden; padding: 18px 28px;">spacer</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box blue">namedtuple<small>Readable immutable records</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box purple">OrderedDict<small>Order-aware equality</small></div>
+                    <div class="flow-arrow">&larr;</div>
+                    <div class="flow-box" style="visibility: hidden; padding: 18px 28px;">spacer</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box purple">ChainMap + frozenset<small>Layered lookups &amp; hashable sets</small></div>
+                </div>
+                <div class="flow-row" style="margin-top: 5px;">
+                    <div class="flow-box red">UserDict / UserList / UserString<small>Safe base classes for custom collections</small></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 12. SUMMARY ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label success">Wrap Up</span>
+            <h2 class="section-title">Key Takeaways</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128209;</div>
+                    <div class="card-title">defaultdict &amp; Counter</div>
+                    <div class="card-desc"><strong>defaultdict</strong> eliminates key-existence checks with factory functions (list, int, set). <strong>Counter</strong> counts elements in one line and supports arithmetic (+, -, &amp;, |).</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title">deque</div>
+                    <div class="card-desc">O(1) operations on both ends. Use for queues (FIFO), stacks (LIFO), sliding windows (maxlen), and BFS. Don't use for random access.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127991;&#65039;</div>
+                    <div class="card-title">namedtuple</div>
+                    <div class="card-desc">Immutable, lightweight, self-documenting records. Use <code>typing.NamedTuple</code> for type hints. Supports _replace, _asdict, and unpacking.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128295;</div>
+                    <div class="card-title">User* Classes</div>
+                    <div class="card-desc">Never subclass dict/list/str directly. Use <strong>UserDict</strong>, <strong>UserList</strong>, <strong>UserString</strong> for reliable method overrides. C implementations bypass your Python overrides.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 40px;">
+                <strong>Next class:</strong> Python Advanced-3 &mdash; Lambda Functions and FP (map, filter, reduce, closures, and when functional style beats OOP).
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RESOURCES ===== -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label success">Resources</span>
+            <h2 class="section-title">Official Python Docs &amp; Further Reading</h2>
+
+            <div class="table-container">
+                <table>
+                    <tr><th>Topic</th><th>Link</th></tr>
+                    <tr><td><strong>collections module</strong></td><td><a href="https://docs.python.org/3/library/collections.html" target="_blank" style="color: var(--accent-primary);">docs.python.org/3/library/collections.html</a></td></tr>
+                    <tr><td><strong>defaultdict</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.defaultdict" target="_blank" style="color: var(--accent-primary);">collections.html#defaultdict</a></td></tr>
+                    <tr><td><strong>Counter</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.Counter" target="_blank" style="color: var(--accent-primary);">collections.html#Counter</a></td></tr>
+                    <tr><td><strong>deque</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.deque" target="_blank" style="color: var(--accent-primary);">collections.html#deque</a></td></tr>
+                    <tr><td><strong>namedtuple</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.namedtuple" target="_blank" style="color: var(--accent-primary);">collections.html#namedtuple</a></td></tr>
+                    <tr><td><strong>OrderedDict</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.OrderedDict" target="_blank" style="color: var(--accent-primary);">collections.html#OrderedDict</a></td></tr>
+                    <tr><td><strong>ChainMap</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.ChainMap" target="_blank" style="color: var(--accent-primary);">collections.html#ChainMap</a></td></tr>
+                    <tr><td><strong>UserDict / UserList / UserString</strong></td><td><a href="https://docs.python.org/3/library/collections.html#collections.UserDict" target="_blank" style="color: var(--accent-primary);">collections.html#UserDict</a></td></tr>
+                    <tr><td><strong>frozenset</strong></td><td><a href="https://docs.python.org/3/library/stdtypes.html#frozenset" target="_blank" style="color: var(--accent-primary);">stdtypes.html#frozenset</a></td></tr>
+                    <tr><td><strong>queue.Queue</strong> (thread-safe)</td><td><a href="https://docs.python.org/3/library/queue.html" target="_blank" style="color: var(--accent-primary);">docs.python.org/3/library/queue.html</a></td></tr>
+                    <tr><td><strong>typing.NamedTuple</strong></td><td><a href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" target="_blank" style="color: var(--accent-primary);">typing.html#NamedTuple</a></td></tr>
+                    <tr><td><strong>Data Structures Tutorial</strong></td><td><a href="https://docs.python.org/3/tutorial/datastructures.html" target="_blank" style="color: var(--accent-primary);">tutorial/datastructures.html</a> &mdash; official tutorial on lists, dicts, sets, tuples</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <p>LLD-10: Collections &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    function revealCell(cell) {
+        if (cell.classList.contains('revealed')) return;
+        cell.classList.add('revealed');
+        cell.classList.remove('revealable');
+        cell.textContent = cell.getAttribute('data-answer');
+        cell.style.cursor = 'default';
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
