@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-11: Lambda &amp; Functional Programming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+
+        /* Reveal table styles */
+        .reveal-table td.revealable { cursor: pointer; background: var(--bg-tertiary); text-align: center; color: var(--text-muted); font-style: italic; transition: all 0.3s; user-select: none; }
+        .reveal-table td.revealable:hover { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-primary); }
+        .reveal-table td.revealed { background: rgba(16, 185, 129, 0.08); color: var(--text-primary); font-style: normal; cursor: default; font-weight: 500; }
+
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-11: Lambda &amp; FP</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#functions-objects">Functions</a></li>
+            <li><a href="#lambda">Lambda</a></li>
+            <li><a href="#iterables-iterators">Iter</a></li>
+            <li><a href="#map">map</a></li>
+            <li><a href="#filter">filter</a></li>
+            <li><a href="#reduce">reduce</a></li>
+            <li><a href="#comprehensions-vs-fp">Comp vs FP</a></li>
+            <li><a href="#closures">Closures</a></li>
+            <li><a href="#decorators">Decorators</a></li>
+            <li><a href="#fp-vs-oop">FP vs OOP</a></li>
+            <li><a href="#comprehensions-deep-dive">Comp</a></li>
+            <li><a href="#map-filter-reduce-compared">Compare</a></li>
+            <li><a href="#exercises">Exercises</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#955;</div>
+        <h1>Lambda &amp; Functional Programming</h1>
+        <p class="hero-meta">LLD-11 &bull; Python Advanced-3</p>
+        <p class="hero-tagline">Functions are objects. Once you see that, <strong>lambda</strong>, <strong>map</strong>, <strong>filter</strong>, <strong>closures</strong>, and <strong>decorators</strong> all click.</p>
+    </section>
+
+    <!-- ===== 2. RECAP ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label">Recap</span>
+            <h2 class="section-title">Quick Check &mdash; Collections</h2>
+            <p class="section-subtitle">Before we move on, let's make sure last class stuck.</p>
+
+            <!-- Quiz 1: defaultdict -->
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What happens here?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict
+
+d = defaultdict(<span class="function">list</span>)
+d[<span class="string">"existing"</span>].<span class="function">append</span>(<span class="number">1</span>)
+
+result = d[<span class="string">"new_key"</span>]
+<span class="function">print</span>(result)</pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-recap1">
+                <h4>What does <code>d["new_key"]</code> return?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, false)">KeyError</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, false)">None</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, true)">[] &mdash; an empty list</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap1', this, false)">0</button>
+                <div class="quiz-explanation"><strong>defaultdict(list)</strong> calls <code>list()</code> for any missing key, which returns <code>[]</code>. That's the whole point &mdash; no more <code>if key not in d: d[key] = []</code>.</div>
+            </div>
+
+            <!-- Quiz 2: deque -->
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> deque with maxlen</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> deque
+
+q = deque(maxlen=<span class="number">3</span>)
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">1</span>, <span class="number">6</span>):  <span class="comment"># 1, 2, 3, 4, 5</span>
+    q.<span class="function">append</span>(i)
+
+<span class="function">print</span>(q)</pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-recap2">
+                <h4>After appending 1, 2, 3, 4, 5 to a deque(maxlen=3), what's left?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, false)">deque([1, 2, 3])</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, true)">deque([3, 4, 5])</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, false)">deque([1, 2, 3, 4, 5])</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap2', this, false)">Error &mdash; deque is full</button>
+                <div class="quiz-explanation"><strong>maxlen=3</strong> means it keeps only the last 3 items. When you append beyond capacity, items are silently dropped from the <em>left</em> (oldest). Perfect for sliding windows and "last N items" buffers.</div>
+            </div>
+
+            <!-- Quiz 3: Counter -->
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Counter</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> collections <span class="keyword">import</span> Counter
+
+c = Counter(<span class="string">"mississippi"</span>)
+<span class="function">print</span>(c[<span class="string">'s'</span>])</pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-recap3">
+                <h4>What is <code>c['s']</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, false)">2</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, false)">3</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, true)">4</button>
+                <button class="quiz-option" onclick="checkQuiz('q-recap3', this, false)">5</button>
+                <div class="quiz-explanation"><strong>"mississippi"</strong> has: m=1, i=4, s=4, p=2. Counter counts every element. <code>c.most_common(1)</code> would return <code>[('i', 4)]</code> or <code>[('s', 4)]</code>.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 3. FUNCTIONS ARE OBJECTS ===== -->
+    <section id="functions-objects">
+        <div class="section-container">
+            <span class="section-label success">The Foundation</span>
+            <h2 class="section-title">Functions Are Objects</h2>
+            <p class="section-subtitle">This one idea unlocks everything else in this class. Take it slow.</p>
+
+            <div class="question-box">
+                <p><strong>What IS a function, really?</strong> In Python, a function is not some magical special thing. It's just an <strong>object</strong> &mdash; like an int, a string, or a list. You can store it, pass it, return it.</p>
+            </div>
+
+            <!-- Step 1 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">1</span> A function IS an object</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> type() proves it</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="keyword">return</span> <span class="string">f"Hello, </span>{name}<span class="string">!"</span>
+
+<span class="function">print</span>(<span class="function">type</span>(greet))
+<span class="comment"># &lt;class 'function'&gt;</span>
+
+<span class="function">print</span>(<span class="function">type</span>(<span class="number">42</span>))
+<span class="comment"># &lt;class 'int'&gt;</span>
+
+<span class="comment"># Both are objects. Both have a type. Both live in memory.</span></pre></div>
+            </div>
+
+            <!-- Step 2 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> Store a function in a variable</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> No parentheses = the function itself</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="keyword">return</span> <span class="string">f"Hello, </span>{name}<span class="string">!"</span>
+
+say_hi = greet           <span class="comment"># No parentheses! Storing the function object</span>
+<span class="function">print</span>(say_hi(<span class="string">"Vipul"</span>))  <span class="comment"># "Hello, Vipul!"</span>
+
+<span class="comment"># say_hi and greet point to the SAME function object</span>
+<span class="function">print</span>(say_hi <span class="keyword">is</span> greet)  <span class="comment"># True</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-fn-ref">
+                <h4>What's the difference between <code>greet</code> and <code>greet()</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-fn-ref', this, false)">They're the same thing</button>
+                <button class="quiz-option" onclick="checkQuiz('q-fn-ref', this, true)"><code>greet</code> is the function object itself; <code>greet()</code> CALLS it and gives the return value</button>
+                <button class="quiz-option" onclick="checkQuiz('q-fn-ref', this, false)"><code>greet</code> returns the function name as a string</button>
+                <button class="quiz-option" onclick="checkQuiz('q-fn-ref', this, false)"><code>greet()</code> is the function object; <code>greet</code> calls it</button>
+                <div class="quiz-explanation"><strong><code>greet</code></strong> is a reference to the function object in memory. <strong><code>greet()</code></strong> calls (invokes) that function and evaluates to whatever it returns. This distinction is crucial &mdash; when you pass a function to <code>map()</code>, <code>sorted(key=...)</code>, etc., you pass the <em>name</em> without parentheses.</div>
+            </div>
+
+            <!-- Step 3 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> Pass a function as an argument</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Higher-order function</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">add</span>(a, b):
+    <span class="keyword">return</span> a + b
+
+<span class="keyword">def</span> <span class="function">subtract</span>(a, b):
+    <span class="keyword">return</span> a - b
+
+<span class="keyword">def</span> <span class="function">apply</span>(func, x, y):
+    <span class="string">"""Takes a function and two numbers, applies the function."""</span>
+    <span class="keyword">return</span> func(x, y)
+
+<span class="function">print</span>(<span class="function">apply</span>(add, <span class="number">5</span>, <span class="number">3</span>))       <span class="comment"># 8</span>
+<span class="function">print</span>(<span class="function">apply</span>(subtract, <span class="number">5</span>, <span class="number">3</span>))  <span class="comment"># 2</span>
+
+<span class="comment"># apply() is a "higher-order function" — it takes a function as input</span></pre></div>
+            </div>
+
+            <!-- Step 4 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">4</span> Return a function from a function</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Function factory</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">make_greeter</span>(greeting):
+    <span class="string">"""Returns a NEW function that uses the greeting."""</span>
+    <span class="keyword">def</span> <span class="function">greeter</span>(name):
+        <span class="keyword">return</span> <span class="string">f"</span>{greeting}<span class="string">, </span>{name}<span class="string">!"</span>
+    <span class="keyword">return</span> greeter  <span class="comment"># Return the function object (no parentheses!)</span>
+
+hello = <span class="function">make_greeter</span>(<span class="string">"Hello"</span>)
+hola = <span class="function">make_greeter</span>(<span class="string">"Hola"</span>)
+
+<span class="function">print</span>(hello(<span class="string">"Vipul"</span>))  <span class="comment"># "Hello, Vipul!"</span>
+<span class="function">print</span>(hola(<span class="string">"Kaarthik"</span>))    <span class="comment"># "Hola, Kaarthik!"</span>
+
+<span class="comment"># Each call to make_greeter() creates a brand new function</span></pre></div>
+            </div>
+
+<div class="collapsible">
+    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+        <h4>&#128176; Another example: Discount calculator factory</h4>
+        <span class="collapsible-arrow">&#9660;</span>
+    </div>
+    <div class="collapsible-content"><div class="collapsible-inner">
+        <p style="color: var(--text-secondary); margin-bottom: 15px;">A more practical example — imagine an e-commerce site where different user tiers get different discounts:</p>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Function that creates discount functions</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre><span class="keyword">def</span> <span class="function">make_discount</span>(percent):
+    <span class="string">"""Returns a function that applies the given discount."""</span>
+    <span class="keyword">def</span> <span class="function">apply_discount</span>(price):
+        <span class="keyword">return</span> price * (<span class="number">1</span> - percent / <span class="number">100</span>)
+    <span class="keyword">return</span> apply_discount
+
+<span class="comment"># Create specific discount functions</span>
+student_discount = <span class="function">make_discount</span>(<span class="number">10</span>)   <span class="comment"># 10% off</span>
+premium_discount = <span class="function">make_discount</span>(<span class="number">25</span>)   <span class="comment"># 25% off</span>
+employee_discount = <span class="function">make_discount</span>(<span class="number">40</span>)  <span class="comment"># 40% off</span>
+
+price = <span class="number">1000</span>
+<span class="function">print</span>(student_discount(price))   <span class="comment"># 900.0</span>
+<span class="function">print</span>(premium_discount(price))   <span class="comment"># 750.0</span>
+<span class="function">print</span>(employee_discount(price))  <span class="comment"># 600.0</span>
+
+<span class="comment"># Each function "remembers" its own percent value</span>
+<span class="comment"># We created 3 functions from 1 factory — no code duplication!</span></pre></div>
+        </div>
+    </div></div>
+</div>
+
+            <div class="highlight-box success">
+                <strong>This is WHY lambda, map, filter, decorators, and closures work.</strong> They all depend on one fact: functions are objects you can store, pass, and return. Everything in the rest of this class builds on these 4 steps.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. LAMBDA ===== -->
+    <section id="lambda">
+        <div class="section-container">
+            <span class="section-label purple">Anonymous Functions</span>
+            <h2 class="section-title">Lambda &mdash; A Function Without a Name</h2>
+            <p class="section-subtitle">Sometimes you need a tiny function for just one line. Lambda gives you that.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> You want to sort a list of dicts by age. You need a function that extracts the age. Do you really need a whole <code>def</code> for <code>return person["age"]</code>?</p>
+            </div>
+
+            <!-- def vs lambda -->
+            <h3 style="margin: 30px 0 15px;">def vs lambda &mdash; side by side</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Regular def</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 2 lines</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">def</span> <span class="function">double</span>(x):
+    <span class="keyword">return</span> x * <span class="number">2</span>
+
+<span class="function">print</span>(<span class="function">double</span>(<span class="number">5</span>))  <span class="comment"># 10</span></pre></div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Lambda equivalent</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 1 expression</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>double = <span class="keyword">lambda</span> x: x * <span class="number">2</span>
+
+<span class="function">print</span>(double(<span class="number">5</span>))  <span class="comment"># 10</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Build the syntax -->
+            <h3 style="margin: 30px 0 15px;">Building the syntax step by step</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Lambda variations</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># One parameter</span>
+<span class="keyword">lambda</span> x: x * <span class="number">2</span>
+<span class="comment"># "given x, return x * 2"</span>
+
+<span class="comment"># Two parameters</span>
+<span class="keyword">lambda</span> a, b: a + b
+<span class="comment"># "given a and b, return a + b"</span>
+
+<span class="comment"># No parameters</span>
+<span class="keyword">lambda</span>: <span class="number">3.14</span>
+<span class="comment"># "takes nothing, returns 3.14"</span>
+
+<span class="comment"># With a ternary (conditional)</span>
+<span class="keyword">lambda</span> x: <span class="string">"even"</span> <span class="keyword">if</span> x % <span class="number">2</span> == <span class="number">0</span> <span class="keyword">else</span> <span class="string">"odd"</span>
+<span class="comment"># "given x, return 'even' or 'odd'"</span></pre></div>
+            </div>
+
+            <div class="diagram-box">
+                <div style="text-align: center; font-weight: 700; margin-bottom: 10px;">Lambda syntax breakdown</div>
+                <div class="flow-row">
+                    <div class="flow-box purple" style="font-family: 'Fira Code', monospace;"><strong>lambda</strong><small>keyword</small></div>
+                    <div class="flow-box blue" style="font-family: 'Fira Code', monospace;"><strong>x, y</strong><small>parameters</small></div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace; font-weight: 700;">:<small>separator</small></div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;"><strong>x + y</strong><small>expression (returned)</small></div>
+                </div>
+                <div style="text-align: center; color: var(--text-muted); margin-top: 10px;">No <code>return</code> keyword. No function name. One expression only.</div>
+            </div>
+
+            <!-- Anti-pattern quiz -->
+            <div class="quiz-box" id="q-lambda-anti">
+                <h4>What's wrong with this code?</h4>
+                <div class="code-block" style="margin-bottom: 15px;">
+                    <div class="code-content"><pre><span class="comment"># Is this good Python?</span>
+double = <span class="keyword">lambda</span> x: x * <span class="number">2</span>
+<span class="function">print</span>(double(<span class="number">5</span>))  <span class="comment"># 10</span></pre></div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('q-lambda-anti', this, false)">Nothing &mdash; it's perfectly fine</button>
+                <button class="quiz-option" onclick="checkQuiz('q-lambda-anti', this, false)">Lambda can't take parameters</button>
+                <button class="quiz-option" onclick="checkQuiz('q-lambda-anti', this, true)">It's an anti-pattern &mdash; if you're naming it, just use <code>def</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-lambda-anti', this, false)">Lambda is slower than def</button>
+                <div class="quiz-explanation">
+                    <strong>PEP 8 says: don't assign a lambda to a variable.</strong> Lambda is for anonymous, inline use (inside <code>sorted()</code>, <code>map()</code>, etc.). If you're giving it a name, you've just made a worse <code>def</code> &mdash; no docstring, no name in tracebacks.<br><br>
+                    <strong>The correct way:</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+                        <div class="code-content"><pre><span class="comment"># Instead of: double = lambda x: x * 2</span>
+<span class="comment"># Write:</span>
+<span class="keyword">def</span> <span class="function">double</span>(x):
+    <span class="keyword">return</span> x * <span class="number">2</span>
+
+<span class="function">print</span>(double(<span class="number">5</span>))  <span class="comment"># 10 — same result, better practice</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real uses -->
+            <h3 style="margin: 30px 0 15px;">Where lambda actually shines</h3>
+
+<!-- Use case 1: Sorting -->
+<h4 style="margin: 20px 0 10px; color: var(--accent-primary);">1. Sorting by a key</h4>
+<div class="comparison-grid">
+    <div class="comparison-card after">
+        <h4 style="color: var(--accent-success); margin-bottom: 10px;">Lambda (concise)</h4>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> One-liner</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre>students = [
+    {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"age"</span>: <span class="number">22</span>},
+    {<span class="string">"name"</span>: <span class="string">"Kaarthik"</span>, <span class="string">"age"</span>: <span class="number">20</span>},
+    {<span class="string">"name"</span>: <span class="string">"Ajit"</span>, <span class="string">"age"</span>: <span class="number">25</span>},
+]
+
+<span class="function">sorted</span>(students, key=<span class="keyword">lambda</span> s: s[<span class="string">"age"</span>])
+<span class="comment"># Kaarthik(20), Vipul(22), Ajit(25)</span></pre></div>
+        </div>
+    </div>
+    <div class="comparison-card before">
+        <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Without lambda</h4>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> More code for same result</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre><span class="keyword">def</span> <span class="function">get_age</span>(student):
+    <span class="keyword">return</span> student[<span class="string">"age"</span>]
+
+<span class="function">sorted</span>(students, key=get_age)
+<span class="comment"># Same result — but we created a whole</span>
+<span class="comment"># function just to extract one field</span></pre></div>
+        </div>
+    </div>
+</div>
+
+<!-- Use case 2: max/min -->
+<h4 style="margin: 20px 0 10px; color: var(--accent-primary);">2. Finding max/min by a key</h4>
+<div class="comparison-grid">
+    <div class="comparison-card after">
+        <h4 style="color: var(--accent-success); margin-bottom: 10px;">Lambda (concise)</h4>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Quick inline</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre>oldest = <span class="function">max</span>(students, key=<span class="keyword">lambda</span> s: s[<span class="string">"age"</span>])
+<span class="comment"># {'name': 'Ajit', 'age': 25}</span>
+
+shortest_name = <span class="function">min</span>(students, key=<span class="keyword">lambda</span> s: <span class="function">len</span>(s[<span class="string">"name"</span>]))
+<span class="comment"># {'name': 'Ajit', 'age': 25}  (4 chars)</span></pre></div>
+        </div>
+    </div>
+    <div class="comparison-card before">
+        <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Without lambda</h4>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Verbose alternative</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre><span class="keyword">def</span> <span class="function">get_age</span>(student):
+    <span class="keyword">return</span> student[<span class="string">"age"</span>]
+
+<span class="keyword">def</span> <span class="function">get_name_length</span>(student):
+    <span class="keyword">return</span> <span class="function">len</span>(student[<span class="string">"name"</span>])
+
+oldest = <span class="function">max</span>(students, key=get_age)
+shortest_name = <span class="function">min</span>(students, key=get_name_length)
+<span class="comment"># 2 extra functions just for one-time use</span></pre></div>
+        </div>
+    </div>
+</div>
+
+<!-- Use case 3: Dict of operations -->
+<h4 style="margin: 20px 0 10px; color: var(--accent-primary);">3. Dictionary of operations (mini calculator)</h4>
+<div class="comparison-grid">
+    <div class="comparison-card after">
+        <h4 style="color: var(--accent-success); margin-bottom: 10px;">Lambda (concise)</h4>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Compact dispatch table</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre>ops = {
+    <span class="string">"+"</span>: <span class="keyword">lambda</span> a, b: a + b,
+    <span class="string">"-"</span>: <span class="keyword">lambda</span> a, b: a - b,
+    <span class="string">"*"</span>: <span class="keyword">lambda</span> a, b: a * b,
+}
+<span class="function">print</span>(ops[<span class="string">"+"</span>](<span class="number">3</span>, <span class="number">4</span>))  <span class="comment"># 7</span></pre></div>
+        </div>
+    </div>
+    <div class="comparison-card before">
+        <h4 style="color: var(--accent-danger); margin-bottom: 10px;">OOP approach</h4>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Class-based calculator</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre><span class="keyword">class</span> <span class="function">Calculator</span>:
+    <span class="keyword">def</span> <span class="function">add</span>(self, a, b): <span class="keyword">return</span> a + b
+    <span class="keyword">def</span> <span class="function">sub</span>(self, a, b): <span class="keyword">return</span> a - b
+    <span class="keyword">def</span> <span class="function">mul</span>(self, a, b): <span class="keyword">return</span> a * b
+
+    <span class="keyword">def</span> <span class="function">compute</span>(self, op, a, b):
+        <span class="keyword">if</span> op == <span class="string">"+"</span>: <span class="keyword">return</span> self.<span class="function">add</span>(a, b)
+        <span class="keyword">if</span> op == <span class="string">"-"</span>: <span class="keyword">return</span> self.<span class="function">sub</span>(a, b)
+        <span class="keyword">if</span> op == <span class="string">"*"</span>: <span class="keyword">return</span> self.<span class="function">mul</span>(a, b)
+
+calc = Calculator()
+<span class="function">print</span>(calc.<span class="function">compute</span>(<span class="string">"+"</span>, <span class="number">3</span>, <span class="number">4</span>))  <span class="comment"># 7</span>
+<span class="comment"># Works, but way more code for a simple lookup</span></pre></div>
+        </div>
+    </div>
+</div>
+
+            <div class="knowledge-block">
+                <p><strong>Lambda rules to remember:</strong><br>
+                &bull; <strong>One expression only</strong> &mdash; no statements, no assignments, no loops<br>
+                &bull; <strong>No name</strong> &mdash; that's the point. Use inline with sorted(), map(), filter()<br>
+                &bull; <strong>Implicit return</strong> &mdash; the expression's value IS the return value<br>
+                &bull; <strong>Use def if:</strong> the function needs a name, docstring, multiple lines, or appears in tracebacks
+                </p>
+            </div>
+
+<div class="quiz-box" id="q-lambda-def1">
+    <h4>You need a function to validate email addresses with regex, logging, and error messages. Lambda or def?</h4>
+    <button class="quiz-option" onclick="checkQuiz('q-lambda-def1', this, false)">Lambda &mdash; keep it short</button>
+    <button class="quiz-option" onclick="checkQuiz('q-lambda-def1', this, true)">def &mdash; it needs multiple lines, a name, and possibly a docstring</button>
+    <div class="quiz-explanation"><strong>Use <code>def</code>.</strong> This function needs: a descriptive name (<code>validate_email</code>), multiple lines of logic, a docstring explaining the validation rules, and a clear name in error tracebacks. Lambda can only handle one expression.</div>
+</div>
+
+<div class="quiz-box" id="q-lambda-def2">
+    <h4>You're sorting a list of tuples <code>[(3, 'c'), (1, 'a'), (2, 'b')]</code> by the second element. Lambda or def?</h4>
+    <button class="quiz-option" onclick="checkQuiz('q-lambda-def2', this, true)">Lambda &mdash; <code>sorted(data, key=lambda x: x[1])</code></button>
+    <button class="quiz-option" onclick="checkQuiz('q-lambda-def2', this, false)">def &mdash; define a <code>get_second_element</code> function first</button>
+    <div class="quiz-explanation"><strong>Lambda is perfect here.</strong> It's a tiny, one-expression function used inline as a <code>key=</code> argument. No name needed, no docstring needed, used only once. This is exactly what lambda was designed for: <code>sorted(data, key=lambda x: x[1])</code>.</div>
+</div>
+        </div>
+    </section>
+
+    <!-- ===== 4b. ITERABLES vs ITERATORS ===== -->
+    <section id="iterables-iterators">
+        <div class="section-container">
+            <span class="section-label blue">Before We Continue</span>
+            <h2 class="section-title">Iterable vs Iterator</h2>
+            <p class="section-subtitle">You'll see the words "iterable" and "iterator" everywhere in <code>map()</code>, <code>filter()</code>, and <code>reduce()</code>. Let's clear this up first.</p>
+
+            <div class="question-box">
+                <p><strong>Quick question:</strong> When you write <code>for x in [1, 2, 3]</code>, what is <code>[1, 2, 3]</code>? And what is Python doing behind the scenes to give you one item at a time?</p>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Iterable = "I <em>can be</em> looped over"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">An <strong>iterable</strong> is any object you can put after <code>in</code> in a <code>for</code> loop. It's like a <strong>book</strong> &mdash; it contains pages, and you <em>can</em> read through it.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> These are all iterables</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Lists, tuples, strings, dicts, sets, files — all iterable</span>
+<span class="keyword">for</span> x <span class="keyword">in</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]:       <span class="comment"># list ✓  → loops over elements</span>
+    <span class="keyword">pass</span>
+<span class="keyword">for</span> x <span class="keyword">in</span> (<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>):       <span class="comment"># tuple ✓ → loops over elements</span>
+    <span class="keyword">pass</span>
+<span class="keyword">for</span> ch <span class="keyword">in</span> <span class="string">"hello"</span>:         <span class="comment"># string ✓ → loops over each character</span>
+    <span class="keyword">pass</span>
+
+<span class="comment"># Yes, dict and set are iterable too!</span>
+d = {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"psp"</span>: <span class="number">85</span>}
+<span class="keyword">for</span> k <span class="keyword">in</span> d:               <span class="comment"># dict ✓  → loops over KEYS ("name", "psp")</span>
+    <span class="keyword">pass</span>
+<span class="keyword">for</span> k, v <span class="keyword">in</span> d.<span class="function">items</span>():   <span class="comment"># dict.items() → loops over (key, value) pairs</span>
+    <span class="keyword">pass</span>
+
+s = {<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>}
+<span class="keyword">for</span> x <span class="keyword">in</span> s:               <span class="comment"># set ✓   → loops over elements (unordered!)</span>
+    <span class="keyword">pass</span>
+
+<span class="keyword">for</span> n <span class="keyword">in</span> <span class="function">range</span>(<span class="number">5</span>):        <span class="comment"># range ✓ → loops over 0, 1, 2, 3, 4</span>
+    <span class="keyword">pass</span>
+
+<span class="comment"># An iterable knows HOW to create an iterator</span>
+<span class="comment"># Think: "I'm a book — ask me and I'll give you a bookmark"</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-not-iterable">
+                <h4>Which of these can you <strong>NOT</strong> loop over with <code>for x in ...</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-not-iterable', this, false)"><code>[1, 2, 3]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-not-iterable', this, false)"><code>"hello"</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-not-iterable', this, true)"><code>42</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-not-iterable', this, false)"><code>range(10)</code></button>
+                <div class="quiz-explanation">
+                    <strong><code>42</code> is not iterable.</strong> If you try <code>for x in 42</code>, Python raises <code>TypeError: 'int' object is not iterable</code>.<br><br>
+                    <strong>Not iterable (you CANNOT loop over these):</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+                        <div class="code-content"><pre><span class="keyword">for</span> x <span class="keyword">in</span> <span class="number">42</span>:         <span class="comment"># ✗ int — it's a single value, not a collection</span>
+<span class="keyword">for</span> x <span class="keyword">in</span> <span class="number">3.14</span>:       <span class="comment"># ✗ float — same reason</span>
+<span class="keyword">for</span> x <span class="keyword">in</span> <span class="keyword">True</span>:       <span class="comment"># ✗ bool — True/False are single values</span>
+<span class="keyword">for</span> x <span class="keyword">in</span> <span class="keyword">None</span>:       <span class="comment"># ✗ NoneType — "nothing" can't be looped</span>
+<span class="keyword">for</span> x <span class="keyword">in</span> <span class="function">len</span>:        <span class="comment"># ✗ function — it's callable, not iterable</span>
+
+<span class="comment"># All of these raise: TypeError: '...' object is not iterable</span>
+<span class="comment"># Rule of thumb: if it's a SINGLE value (not a collection),</span>
+<span class="comment"># you can't loop over it.</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Iterator = "I <em>am</em> looping &mdash; and I remember where I am"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">An <strong>iterator</strong> is the object that actually does the work of producing values <strong>one at a time</strong>. It's the <strong>bookmark</strong> that keeps track of which page you're on.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Iterables create iterators</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>nums = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>]          <span class="comment"># This is an ITERABLE (the book)</span>
+
+it = <span class="function">iter</span>(nums)                <span class="comment"># This creates an ITERATOR (the bookmark)</span>
+
+<span class="function">print</span>(<span class="function">next</span>(it))               <span class="comment"># 10  — first value</span>
+<span class="function">print</span>(<span class="function">next</span>(it))               <span class="comment"># 20  — remembers position, gives next</span>
+<span class="function">print</span>(<span class="function">next</span>(it))               <span class="comment"># 30  — next value</span>
+<span class="function">print</span>(<span class="function">next</span>(it))               <span class="comment"># StopIteration error — no more items!</span>
+
+<span class="comment"># A for loop does exactly this behind the scenes:</span>
+<span class="comment"># 1. Calls iter() on the iterable to get an iterator</span>
+<span class="comment"># 2. Calls next() repeatedly until StopIteration</span></pre></div>
+            </div>
+
+            <div class="diagram-box">
+                <div style="text-align: center; font-weight: 700; margin-bottom: 15px;">Iterable vs Iterator</div>
+                <div class="flow-row">
+                    <div class="flow-box blue" style="min-width: 150px;"><strong>Iterable</strong><small>[1, 2, 3], "hello", range(5)</small></div>
+                    <div class="flow-arrow">&xrarr;</div>
+                    <div class="flow-box purple" style="min-width: 100px;"><strong>iter()</strong><small>creates</small></div>
+                    <div class="flow-arrow">&xrarr;</div>
+                    <div class="flow-box green" style="min-width: 150px;"><strong>Iterator</strong><small>produces values one by one</small></div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">
+                    Iterable = the data source (book). Iterator = the cursor walking through it (bookmark).<br>
+                    You can create <strong>multiple iterators</strong> from one iterable &mdash; like multiple bookmarks in the same book.
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Why does this matter?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><code>map()</code>, <code>filter()</code>, and <code>range()</code> all return <strong>iterators</strong>, not lists. That means:</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Lazy = memory efficient</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># This does NOT create a list of 10 million numbers in memory</span>
+result = <span class="function">map</span>(<span class="keyword">lambda</span> x: x * <span class="number">2</span>, <span class="function">range</span>(<span class="number">10_000_000</span>))
+<span class="comment"># result is an iterator — nothing computed yet!</span>
+
+<span class="function">print</span>(<span class="function">next</span>(result))  <span class="comment"># 0  — computes just this one</span>
+<span class="function">print</span>(<span class="function">next</span>(result))  <span class="comment"># 2  — computes just this one</span>
+
+<span class="comment"># To get ALL values at once, wrap in list():</span>
+<span class="comment"># all_values = list(result)  — but careful with 10M items!</span>
+
+<span class="comment"># Iterator = lazy (one at a time, saves memory)</span>
+<span class="comment"># List     = eager (all at once, uses memory)</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-iter-vs-iterable">
+                <h4>Which of these is an <strong>iterator</strong> (not just an iterable)?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-iter-vs-iterable', this, false)"><code>[1, 2, 3]</code> &mdash; a list</button>
+                <button class="quiz-option" onclick="checkQuiz('q-iter-vs-iterable', this, false)"><code>"hello"</code> &mdash; a string</button>
+                <button class="quiz-option" onclick="checkQuiz('q-iter-vs-iterable', this, true)"><code>map(lambda x: x*2, [1,2,3])</code> &mdash; a map object</button>
+                <button class="quiz-option" onclick="checkQuiz('q-iter-vs-iterable', this, false)"><code>{1, 2, 3}</code> &mdash; a set</button>
+                <div class="quiz-explanation"><strong>A <code>map</code> object is an iterator.</strong> Lists, strings, and sets are <strong>iterables</strong> &mdash; they <em>can</em> produce an iterator via <code>iter()</code>, but they store all data in memory. A <code>map</code> object IS the iterator itself &mdash; it computes values lazily, one at a time. That's why you need <code>list()</code> to see all values: <code>list(map(...))</code>.</div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>TL;DR:</strong> An <strong>iterable</strong> is anything you can loop over (<code>list</code>, <code>str</code>, <code>dict</code>, <code>range</code>). An <strong>iterator</strong> is the lazy worker that gives you values one at a time (<code>map()</code>, <code>filter()</code>, <code>iter()</code> result). Iterators save memory because they don't store everything upfront. When you see <code>map()</code> and <code>filter()</code> returning iterators &mdash; now you know why.
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128218; A bit of history: map/filter vs comprehensions</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="table-container">
+                        <table>
+                            <tr><th>What</th><th>Added in</th><th>Origin</th></tr>
+                            <tr><td><code>map()</code>, <code>filter()</code>, <code>lambda</code></td><td><strong>Python 1.0</strong> (1994)</td><td>Borrowed from Lisp / functional programming languages</td></tr>
+                            <tr><td><code>reduce()</code></td><td><strong>Python 1.0</strong> (1994)</td><td>Also from Lisp &mdash; was a built-in until Python 3</td></tr>
+                            <tr><td><strong>List comprehensions</strong></td><td><strong>Python 2.0</strong> (2000)</td><td>Inspired by Haskell &mdash; more readable for Python's style</td></tr>
+                            <tr><td><strong>Generator expressions</strong></td><td><strong>Python 2.4</strong> (2004)</td><td>Lazy version of list comprehensions: <code>(x for x in ...)</code></td></tr>
+                            <tr><td><strong>Dict/set comprehensions</strong></td><td><strong>Python 2.7 / 3.0</strong></td><td>Extended comprehension syntax to dicts and sets</td></tr>
+                        </table>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 15px;">So <code>map()</code> and <code>filter()</code> came <strong>6 years before</strong> comprehensions. When comprehensions arrived in Python 2.0, they quickly became the preferred way to do most transformations because they're more readable.</p>
+
+                    <h4 style="margin: 20px 0 10px;">Then why do map/filter still exist?</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Great question. <a href="https://gvanrossum.github.io/" target="_blank" style="color: var(--accent-primary);">Guido van Rossum</a> (Python's creator) actually <strong>wanted to remove</strong> <code>map()</code>, <code>filter()</code>, <code>reduce()</code>, and <code>lambda</code> from Python 3. He argued comprehensions made them redundant. But the community pushed back hard. Here's what survived and why:</p>
+
+                    <div class="card-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="card">
+                            <div class="card-title" style="color: var(--accent-success);">Kept as built-ins</div>
+                            <div class="card-desc">
+                                <strong><code>map()</code></strong> &mdash; cleaner than comprehension when you already have a named function: <code>map(int, strings)</code> beats <code>[int(s) for s in strings]</code><br><br>
+                                <strong><code>filter()</code></strong> &mdash; same reason: <code>filter(str.isdigit, chars)</code> is clean<br><br>
+                                <strong><code>lambda</code></strong> &mdash; too useful for <code>key=</code> arguments in <code>sorted()</code>, <code>max()</code>, etc.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title" style="color: var(--accent-warning);">Demoted to functools</div>
+                            <div class="card-desc">
+                                <strong><code>reduce()</code></strong> &mdash; moved to <code>functools.reduce()</code> in Python 3. Guido argued it's rarely needed since <code>sum()</code>, <code>max()</code>, <code>min()</code>, <code>''.join()</code> cover 90% of use cases. Making it an import signals: "think twice before using this."
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box" style="margin-top: 15px;">
+                        <strong>Bottom line:</strong> Comprehensions are the <strong>Pythonic default</strong> for 90% of cases. But <code>map()</code>/<code>filter()</code> earn their place when you already have a named function, and <code>lambda</code> is essential for inline <code>key=</code> arguments. They're not competing tools &mdash; they complement each other.
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. MAP ===== -->
+    <section id="map">
+        <div class="section-container">
+            <span class="section-label blue">Transform</span>
+            <h2 class="section-title">map() &mdash; Transform Every Element</h2>
+            <p class="section-subtitle">Apply a function to every item in an iterable. Like a conveyor belt.</p>
+
+            <div class="highlight-box">
+                <strong>Syntax: <code>map(function, iterable)</code></strong><br>
+                <strong>Takes:</strong> a function and one (or more) iterables<br>
+                <strong>Returns:</strong> an <strong>iterator</strong> (lazy) &mdash; not a list! Wrap in <code>list()</code> to see all values<br>
+                <strong>What it does:</strong> applies the function to each element, one at a time
+            </div>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">map() &mdash; Conveyor Belt</div>
+                <div class="flow-row">
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">1</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">2</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">3</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">4</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box purple" style="font-weight: 700; min-width: 100px;">f(x) = x * 2<small>the function</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">2</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">4</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">6</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">8</div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">Every item goes through the function. Same count in, same count out.</div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> You have prices in dollars: <code>[10, 20, 30, 40]</code>. Convert them all to euros (multiply by 0.85). How many ways can you do it?</p>
+            </div>
+
+            <!-- Three approaches -->
+            <h3 style="margin: 30px 0 15px;">Approach 1: for loop</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The explicit way</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>prices = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>]
+euros = []
+<span class="keyword">for</span> p <span class="keyword">in</span> prices:
+    euros.<span class="function">append</span>(p * <span class="number">0.85</span>)
+<span class="comment"># [8.5, 17.0, 25.5, 34.0]</span></pre></div>
+            </div>
+
+            <h3 style="margin: 20px 0 15px;">Approach 2: list comprehension</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Pythonic</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>euros = [p * <span class="number">0.85</span> <span class="keyword">for</span> p <span class="keyword">in</span> prices]
+<span class="comment"># [8.5, 17.0, 25.5, 34.0]</span></pre></div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 10px;">
+                <strong>What is a list comprehension?</strong> It's Python's shortcut for "build a new list by transforming each item": <code>[expression for item in iterable]</code>. It reads like English: <em>"give me p * 0.85 for each p in prices"</em>. Comprehensions are considered more <strong>Pythonic</strong> (idiomatic Python) than <code>map()</code> because they're easier to read at a glance.
+            </div>
+
+            <h3 style="margin: 20px 0 15px;">Approach 3: map()</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Functional style</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>euros = <span class="function">list</span>(<span class="function">map</span>(<span class="keyword">lambda</span> p: p * <span class="number">0.85</span>, prices))
+<span class="comment"># [8.5, 17.0, 25.5, 34.0]</span></pre></div>
+            </div>
+
+<div class="collapsible open">
+    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+        <h4>&#128218; What is an Iterator?</h4>
+        <span class="collapsible-arrow">&#9660;</span>
+    </div>
+    <div class="collapsible-content"><div class="collapsible-inner">
+        <p style="color: var(--text-secondary); margin-bottom: 15px;">An <strong>iterator</strong> is an object that produces values <strong>one at a time</strong>, on demand &mdash; instead of storing everything in memory at once.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 15px;">You already use iterators without realizing it:</p>
+        <div class="code-block">
+            <div class="code-header" onclick="toggleCode(this)">
+                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Iterators you already know</div>
+                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+            </div>
+            <div class="code-content"><pre><span class="comment"># range() is an iterator — it doesn't create a list of 1 million numbers</span>
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">1_000_000</span>):  <span class="comment"># generates one number at a time</span>
+    <span class="keyword">pass</span>
+
+<span class="comment"># file reading is an iterator — reads one line at a time</span>
+<span class="keyword">for</span> line <span class="keyword">in</span> <span class="function">open</span>(<span class="string">"data.txt"</span>):  <span class="comment"># doesn't load entire file into memory</span>
+    <span class="keyword">pass</span>
+
+<span class="comment"># enumerate() is an iterator</span>
+<span class="keyword">for</span> i, val <span class="keyword">in</span> <span class="function">enumerate</span>([<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]):
+    <span class="keyword">pass</span>
+
+<span class="comment"># map() and filter() also return iterators!</span></pre></div>
+        </div>
+        <p style="color: var(--text-secondary); margin-top: 15px;"><strong>Why lazy?</strong> Imagine processing 10 million rows from a database. A list loads ALL 10M rows into memory. An iterator processes them <strong>one at a time</strong> &mdash; constant memory, no matter the size.</p>
+    </div></div>
+</div>
+
+            <div class="quiz-box" id="q-map-return">
+                <h4><code>map()</code> returns...</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-map-return', this, false)">A list</button>
+                <button class="quiz-option" onclick="checkQuiz('q-map-return', this, true)">An iterator (lazy) &mdash; you need list() to see the values</button>
+                <button class="quiz-option" onclick="checkQuiz('q-map-return', this, false)">A tuple</button>
+                <button class="quiz-option" onclick="checkQuiz('q-map-return', this, false)">A generator function</button>
+                <div class="quiz-explanation"><strong>map() is lazy.</strong> It returns a <code>map object</code> (an iterator). Values are computed one at a time, on demand. Wrap in <code>list()</code> to get all values at once. This laziness saves memory for large datasets.</div>
+            </div>
+
+            <!-- map with named function -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127777;&#65039; map() with a named function &mdash; to_celsius</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Named function with map</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">def</span> <span class="function">to_celsius</span>(f):
+    <span class="keyword">return</span> (f - <span class="number">32</span>) * <span class="number">5</span> / <span class="number">9</span>
+
+fahrenheit = [<span class="number">32</span>, <span class="number">72</span>, <span class="number">100</span>, <span class="number">212</span>]
+celsius = <span class="function">list</span>(<span class="function">map</span>(to_celsius, fahrenheit))
+<span class="comment"># [0.0, 22.22, 37.78, 100.0]</span>
+
+<span class="comment"># When the function already exists and has a name,</span>
+<span class="comment"># map(to_celsius, data) reads better than a lambda.</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>map vs comprehension &mdash; comprehension usually wins in Python.</strong><br><br>
+                Comprehensions are more readable, more <strong>Pythonic</strong> (meaning: they follow Python's philosophy of "readability counts"), and just as fast.<br><br>
+                <strong>Use <code>map()</code> when:</strong><br>
+                &bull; You already have a named function: <code>map(str.upper, words)</code> &mdash; cleaner than <code>[s.upper() for s in words]</code><br>
+                &bull; You're chaining with other FP tools<br>
+                &bull; You want lazy evaluation without writing a generator expression<br><br>
+                <strong>Use comprehension when:</strong><br>
+                &bull; The transformation is a simple expression<br>
+                &bull; You also need filtering: <code>[x*2 for x in nums if x > 0]</code><br>
+                &bull; You want readability (90% of cases)
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 6. FILTER ===== -->
+    <section id="filter">
+        <div class="section-container">
+            <span class="section-label warning">Select</span>
+            <h2 class="section-title">filter() &mdash; Keep Only What Matches</h2>
+            <p class="section-subtitle">Test each element. Keep it if True, discard if False.</p>
+
+            <div class="highlight-box">
+                <strong>Syntax: <code>filter(function, iterable)</code></strong><br>
+                <strong>Takes:</strong> a function that returns <code>True</code>/<code>False</code> (a "predicate"), and an iterable<br>
+                <strong>Returns:</strong> an <strong>iterator</strong> (lazy) &mdash; just like <code>map()</code>, wrap in <code>list()</code> to see values<br>
+                <strong>What it does:</strong> keeps only elements where the function returns <code>True</code>
+            </div>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">filter() &mdash; The Gatekeeper</div>
+                <div class="flow-row">
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">-3</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">7</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">-1</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">4</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">0</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box purple" style="font-weight: 700; min-width: 100px;">x &gt; 0 ?<small>the test</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">7</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">4</div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">Items that pass the test stay. Items that fail are dropped.</div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> Given <code>nums = [-3, 7, -1, 4, 0, 12, -8, 5]</code>, keep only the positive numbers.</p>
+            </div>
+
+            <!-- Three approaches -->
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Loop vs comprehension vs filter</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>nums = [-<span class="number">3</span>, <span class="number">7</span>, -<span class="number">1</span>, <span class="number">4</span>, <span class="number">0</span>, <span class="number">12</span>, -<span class="number">8</span>, <span class="number">5</span>]
+
+<span class="comment"># 1. For loop</span>
+positives = []
+<span class="keyword">for</span> n <span class="keyword">in</span> nums:
+    <span class="keyword">if</span> n > <span class="number">0</span>:
+        positives.<span class="function">append</span>(n)
+
+<span class="comment"># 2. List comprehension (most Pythonic)</span>
+positives = [n <span class="keyword">for</span> n <span class="keyword">in</span> nums <span class="keyword">if</span> n > <span class="number">0</span>]
+
+<span class="comment"># 3. filter()</span>
+positives = <span class="function">list</span>(<span class="function">filter</span>(<span class="keyword">lambda</span> n: n > <span class="number">0</span>, nums))
+
+<span class="comment"># All produce: [7, 4, 12, 5]</span></pre></div>
+            </div>
+
+            <!-- filter(None, ...) trick -->
+            <h3 style="margin: 30px 0 15px;">Neat trick: filter(None, ...) removes falsy values</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Clean up messy data</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>messy = [<span class="string">"hello"</span>, <span class="string">""</span>, <span class="string">"world"</span>, <span class="keyword">None</span>, <span class="string">"foo"</span>, <span class="number">0</span>, <span class="string">"bar"</span>, <span class="keyword">False</span>]
+
+clean = <span class="function">list</span>(<span class="function">filter</span>(<span class="keyword">None</span>, messy))
+<span class="comment"># ["hello", "world", "foo", "bar"]</span>
+
+<span class="comment"># filter(None, iterable) keeps only TRUTHY values</span>
+<span class="comment"># Removes: "", None, 0, False, [], {}</span></pre></div>
+            </div>
+
+            <!-- Real-world example -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127891; Real-world: Filter students by PSP (Problem Solving Points)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Strong performers</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>students = [
+    {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"psp"</span>: <span class="number">85</span>},
+    {<span class="string">"name"</span>: <span class="string">"Gobi"</span>, <span class="string">"psp"</span>: <span class="number">45</span>},
+    {<span class="string">"name"</span>: <span class="string">"Kaarthik"</span>, <span class="string">"psp"</span>: <span class="number">92</span>},
+    {<span class="string">"name"</span>: <span class="string">"Ajit"</span>, <span class="string">"psp"</span>: <span class="number">38</span>},
+]
+
+<span class="comment"># Strong performers: PSP >= 70</span>
+strong = <span class="function">list</span>(<span class="function">filter</span>(<span class="keyword">lambda</span> s: s[<span class="string">"psp"</span>] >= <span class="number">70</span>, students))
+<span class="comment"># [{'name': 'Vipul', 'psp': 85}, {'name': 'Kaarthik', 'psp': 92}]</span>
+
+<span class="comment"># Comprehension version (more readable):</span>
+strong = [s <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span>]</pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" id="q-filter-readable">
+                <h4>Which is more readable for "get names of students with PSP >= 70"?</h4>
+                <div class="code-block" style="margin-bottom: 15px;">
+                    <div class="code-content"><pre><span class="comment"># Option A: filter + map</span>
+<span class="function">list</span>(<span class="function">map</span>(<span class="keyword">lambda</span> s: s[<span class="string">"name"</span>], <span class="function">filter</span>(<span class="keyword">lambda</span> s: s[<span class="string">"psp"</span>] >= <span class="number">70</span>, students)))
+
+<span class="comment"># Option B: comprehension</span>
+[s[<span class="string">"name"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span>]</pre></div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('q-filter-readable', this, false)">Option A &mdash; filter + map is more explicit</button>
+                <button class="quiz-option" onclick="checkQuiz('q-filter-readable', this, true)">Option B &mdash; comprehension reads like English</button>
+                <button class="quiz-option" onclick="checkQuiz('q-filter-readable', this, false)">They're equally readable</button>
+                <div class="quiz-explanation"><strong>Comprehensions win for readability.</strong> The chained <code>map(lambda, filter(lambda, ...))</code> reads inside-out and requires two lambdas. The comprehension reads left-to-right: "give me name for each student if PSP >= 70". <a href="https://gvanrossum.github.io/" target="_blank" style="color: var(--accent-primary);">Guido van Rossum</a> himself prefers comprehensions over map/filter.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. REDUCE ===== -->
+    <section id="reduce">
+        <div class="section-container">
+            <span class="section-label danger">Accumulate</span>
+            <h2 class="section-title">reduce() &mdash; Combine Into One</h2>
+            <p class="section-subtitle">Take a list of things, boil them down to a single value.</p>
+
+            <div class="highlight-box">
+                <strong>Syntax: <code>reduce(function, iterable[, initial])</code></strong><br>
+                <strong>Takes:</strong> a function with <strong>two parameters</strong> (accumulator, current_item), an iterable, and an optional initial value<br>
+                <strong>Returns:</strong> a <strong>single value</strong> &mdash; the final accumulated result<br>
+                <strong>What it does:</strong> applies the function cumulatively &mdash; takes first two items, combines them, then combines result with next item, and so on<br>
+                <strong>Import:</strong> <code>from functools import reduce</code> &mdash; it's NOT a built-in
+            </div>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 15px; font-weight: 700;">reduce(+, [1, 2, 3, 4, 5]) &mdash; Step by Step</div>
+                <div class="flow-row">
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">1</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">2</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace; font-weight: 700;">3</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">3</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">3</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace; font-weight: 700;">6</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">6</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">4</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace; font-weight: 700;">10</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace;">10</div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace;">5</div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace; font-weight: 700;">15</div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">accumulator + next item &rarr; new accumulator. Repeat until one value remains.</div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> reduce examples</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> functools <span class="keyword">import</span> reduce
+
+<span class="comment"># Sum</span>
+<span class="function">reduce</span>(<span class="keyword">lambda</span> acc, x: acc + x, [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
+<span class="comment"># 15  (but just use sum()!)</span>
+
+<span class="comment"># Product</span>
+<span class="function">reduce</span>(<span class="keyword">lambda</span> acc, x: acc * x, [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
+<span class="comment"># 120</span>
+
+<span class="comment"># Find max (manually)</span>
+<span class="function">reduce</span>(<span class="keyword">lambda</span> acc, x: acc <span class="keyword">if</span> acc > x <span class="keyword">else</span> x, [<span class="number">3</span>, <span class="number">7</span>, <span class="number">2</span>, <span class="number">9</span>, <span class="number">1</span>])
+<span class="comment"># 9  (but just use max()!)</span>
+
+<span class="comment"># Flatten nested lists</span>
+<span class="function">reduce</span>(<span class="keyword">lambda</span> acc, x: acc + x, [[<span class="number">1</span>,<span class="number">2</span>], [<span class="number">3</span>,<span class="number">4</span>], [<span class="number">5</span>,<span class="number">6</span>]])
+<span class="comment"># [1, 2, 3, 4, 5, 6]</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-reduce">
+                <h4><code>reduce(lambda acc, x: acc * x, [1, 2, 3, 4, 5])</code> = ?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-reduce', this, false)">15</button>
+                <button class="quiz-option" onclick="checkQuiz('q-reduce', this, true)">120</button>
+                <button class="quiz-option" onclick="checkQuiz('q-reduce', this, false)">60</button>
+                <button class="quiz-option" onclick="checkQuiz('q-reduce', this, false)">Error &mdash; reduce needs an initial value</button>
+                <div class="quiz-explanation"><strong>1 * 2 = 2, 2 * 3 = 6, 6 * 4 = 24, 24 * 5 = 120.</strong> It's 5 factorial. reduce applies the function cumulatively, using the result of each step as the accumulator for the next.</div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>Note: reduce is in <code>functools</code>, not built-in.</strong> <a href="https://gvanrossum.github.io/" target="_blank" style="color: var(--accent-primary);">Guido van Rossum</a> moved it out of built-ins because Python has better alternatives for most cases: <code>sum()</code>, <code>max()</code>, <code>min()</code>, <code>math.prod()</code>, <code>"".join()</code>. Use reduce only when no built-in does what you need.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. COMPREHENSIONS VS FP ===== -->
+    <section id="comprehensions-vs-fp">
+        <div class="section-container">
+            <span class="section-label success">The Python Way</span>
+            <h2 class="section-title">Comprehensions vs FP</h2>
+            <p class="section-subtitle">Python is not Haskell. Know when each tool is the right choice.</p>
+
+            <h3 style="margin-bottom: 15px;">The same task, two styles</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">FP style (map + filter + lambda)</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Hard to read</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="comment"># Get squared values of even numbers</span>
+result = <span class="function">list</span>(
+    <span class="function">map</span>(
+        <span class="keyword">lambda</span> x: x ** <span class="number">2</span>,
+        <span class="function">filter</span>(
+            <span class="keyword">lambda</span> x: x % <span class="number">2</span> == <span class="number">0</span>,
+            numbers
+        )
+    )
+)</pre></div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Comprehension (Pythonic)</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Clean and clear</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="comment"># Get squared values of even numbers</span>
+result = [x ** <span class="number">2</span> <span class="keyword">for</span> x <span class="keyword">in</span> numbers <span class="keyword">if</span> x % <span class="number">2</span> == <span class="number">0</span>]</pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">When to use which</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Tool</th><th>Best For</th><th>Example</th></tr>
+                    <tr><td><strong>List comprehension</strong></td><td>Transform + filter in one step</td><td><code>[x**2 for x in nums if x > 0]</code></td></tr>
+                    <tr><td><strong>Dict comprehension</strong></td><td>Build dicts from iterables</td><td><code>{k: v for k, v in pairs}</code></td></tr>
+                    <tr><td><strong>Set comprehension</strong></td><td>Unique transformed values</td><td><code>{word.lower() for word in words}</code></td></tr>
+                    <tr><td><strong>Generator expression</strong></td><td>Lazy, memory-efficient pipelines</td><td><code>sum(x**2 for x in nums)</code></td></tr>
+                    <tr><td><strong>map()</strong></td><td>Existing named function, lazy eval</td><td><code>map(str.upper, words)</code></td></tr>
+                    <tr><td><strong>filter()</strong></td><td>Existing predicate function</td><td><code>filter(str.isdigit, chars)</code></td></tr>
+                    <tr><td><strong>reduce()</strong></td><td>Cumulative combination, no built-in</td><td><code>reduce(operator.mul, nums)</code></td></tr>
+                </table>
+            </div>
+
+            <div class="quiz-box" id="q-rewrite">
+                <h4>Rewrite <code>list(map(lambda x: x.upper(), words))</code> as a comprehension:</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-rewrite', this, true)"><code>[x.upper() for x in words]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-rewrite', this, false)"><code>[upper(x) for x in words]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-rewrite', this, false)"><code>[words.upper() for x in words]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-rewrite', this, false)"><code>{x.upper() for x in words}</code></button>
+                <div class="quiz-explanation"><strong><code>[x.upper() for x in words]</code></strong> &mdash; same result, more readable. Note: <code>{x.upper() for x in words}</code> would be a <em>set</em> comprehension (no duplicates, unordered), which is a different data structure.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. CLOSURES ===== -->
+    <section id="closures">
+        <div class="section-container">
+            <span class="section-label purple">Functions That Remember</span>
+            <h2 class="section-title">Closures</h2>
+            <p class="section-subtitle">When a function remembers variables from its enclosing scope, even after that scope is gone.</p>
+
+            <div class="question-box">
+                <p><strong>Question:</strong> In <code>make_greeter("Hello")</code>, the parameter <code>"Hello"</code> should vanish when <code>make_greeter</code> finishes. But the returned function still uses it. How?</p>
+            </div>
+
+            <!-- Step 1 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">1</span> Inner function accesses outer variable</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Just scope rules</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">outer</span>():
+    message = <span class="string">"Hello"</span>  <span class="comment"># outer variable</span>
+
+    <span class="keyword">def</span> <span class="function">inner</span>():
+        <span class="function">print</span>(message)   <span class="comment"># inner accesses it — normal scope rules</span>
+
+    <span class="function">inner</span>()  <span class="comment"># "Hello"</span>
+
+<span class="function">outer</span>()</pre></div>
+            </div>
+
+            <!-- Step 2 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> Return the inner function &mdash; it REMEMBERS</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> This is a closure</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">make_greeter</span>(greeting):
+    <span class="keyword">def</span> <span class="function">greeter</span>(name):
+        <span class="keyword">return</span> <span class="string">f"</span>{greeting}<span class="string">, </span>{name}<span class="string">!"</span>  <span class="comment"># "greeting" comes from outer scope</span>
+    <span class="keyword">return</span> greeter  <span class="comment"># Return the function. outer scope is now "gone".</span>
+
+hello = <span class="function">make_greeter</span>(<span class="string">"Hello"</span>)
+<span class="comment"># make_greeter has finished executing.</span>
+<span class="comment"># But "hello" still remembers greeting = "Hello"!</span>
+
+<span class="function">print</span>(hello(<span class="string">"Vipul"</span>))  <span class="comment"># "Hello, Vipul!"</span>
+<span class="function">print</span>(hello(<span class="string">"Kaarthik"</span>))    <span class="comment"># "Hello, Kaarthik!"</span></pre></div>
+            </div>
+
+            <!-- Step 3 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> Each closure has its own state</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> make_counter &mdash; private state</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">make_counter</span>(start=<span class="number">0</span>):
+    count = [start]  <span class="comment"># Use a list so inner function can modify it</span>
+
+    <span class="keyword">def</span> <span class="function">counter</span>():
+        count[<span class="number">0</span>] += <span class="number">1</span>
+        <span class="keyword">return</span> count[<span class="number">0</span>]
+
+    <span class="keyword">return</span> counter
+
+c1 = <span class="function">make_counter</span>()
+c2 = <span class="function">make_counter</span>(<span class="number">100</span>)
+
+<span class="function">print</span>(c1())  <span class="comment"># 1</span>
+<span class="function">print</span>(c1())  <span class="comment"># 2</span>
+<span class="function">print</span>(c2())  <span class="comment"># 101</span>
+<span class="function">print</span>(c1())  <span class="comment"># 3 — c1 and c2 are independent!</span></pre></div>
+            </div>
+
+            <!-- Step 4 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">4</span> Closures with lambda</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> make_multiplier</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">def</span> <span class="function">make_multiplier</span>(factor):
+    <span class="keyword">return</span> <span class="keyword">lambda</span> x: x * factor  <span class="comment"># lambda closes over "factor"</span>
+
+double = <span class="function">make_multiplier</span>(<span class="number">2</span>)
+triple = <span class="function">make_multiplier</span>(<span class="number">3</span>)
+
+<span class="function">print</span>(double(<span class="number">5</span>))  <span class="comment"># 10</span>
+<span class="function">print</span>(triple(<span class="number">5</span>))  <span class="comment"># 15</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-closure">
+                <h4>After <code>hello = make_greeter("Hello")</code>, what does <code>hello("Vipul")</code> return?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-closure', this, false)">Error &mdash; greeting is out of scope</button>
+                <button class="quiz-option" onclick="checkQuiz('q-closure', this, true)"><code>"Hello, Vipul!"</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-closure', this, false)"><code>None</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-closure', this, false)"><code>"Vipul"</code></button>
+                <div class="quiz-explanation"><strong>Closures remember.</strong> Even though <code>make_greeter</code> has finished executing, the inner <code>greeter</code> function holds a reference to <code>greeting = "Hello"</code>. Python keeps the variable alive as long as the closure exists. This is called a "closure" because the function "closes over" the variable.</div>
+            </div>
+
+            <!-- THE GOTCHA -->
+            <h3 style="margin: 40px 0 15px; color: var(--accent-danger);">THE GOTCHA: Lambda in a Loop</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">Bug: [4, 4, 4, 4, 4]</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What you'd expect to work</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>funcs = []
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">5</span>):
+    funcs.<span class="function">append</span>(<span class="keyword">lambda</span>: i)
+
+<span class="comment"># You'd expect [0, 1, 2, 3, 4]</span>
+<span class="function">print</span>([f() <span class="keyword">for</span> f <span class="keyword">in</span> funcs])
+<span class="comment"># [4, 4, 4, 4, 4]  ← BUG!</span></pre></div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">Fix: capture the value</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Default argument trick</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>funcs = []
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">5</span>):
+    funcs.<span class="function">append</span>(<span class="keyword">lambda</span> i=i: i)
+    <span class="comment">#                 ^^^ capture current value!</span>
+
+<span class="function">print</span>([f() <span class="keyword">for</span> f <span class="keyword">in</span> funcs])
+<span class="comment"># [0, 1, 2, 3, 4]  ← CORRECT</span></pre></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>Lambda captures the VARIABLE, not the VALUE.</strong> All 5 lambdas share the same variable <code>i</code>. By the time you call them, the loop is done and <code>i = 4</code>. The fix: <code>lambda i=i: i</code> evaluates <code>i</code> at definition time and stores it as a default argument. This is a classic Python interview gotcha.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. DECORATORS PREVIEW ===== -->
+    <section id="decorators">
+        <div class="section-container">
+            <span class="section-label blue">Closures in Disguise</span>
+            <h2 class="section-title">Decorators Preview</h2>
+            <p class="section-subtitle">Decorators are just closures with syntactic sugar. Once you see it, they're not magic anymore.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> You want to measure how long a function takes. You could add timing code inside every function... or you could <strong>wrap</strong> the function.</p>
+            </div>
+
+            <!-- Step 1 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">1</span> A function that wraps another function</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> timer decorator (manual)</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">import</span> time
+
+<span class="keyword">def</span> <span class="function">timer</span>(func):
+    <span class="string">"""Takes a function, returns a new function that times it."""</span>
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        start = time.<span class="function">time</span>()
+        result = func(*args, **kwargs)   <span class="comment"># Call the original</span>
+        end = time.<span class="function">time</span>()
+        <span class="function">print</span>(<span class="string">f"</span>{func.__name__}<span class="string"> took </span>{end - start:<span class="number">.4f</span>}<span class="string">s"</span>)
+        <span class="keyword">return</span> result
+    <span class="keyword">return</span> wrapper
+
+<span class="keyword">def</span> <span class="function">calculate</span>():
+    <span class="keyword">return</span> <span class="function">sum</span>(<span class="function">range</span>(<span class="number">1_000_000</span>))
+
+<span class="comment"># Manually wrap it:</span>
+calculate = <span class="function">timer</span>(calculate)
+<span class="function">calculate</span>()
+<span class="comment"># "calculate took 0.0312s"</span></pre></div>
+            </div>
+
+            <!-- Step 2 -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> @timer is just syntactic sugar</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The @ syntax</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="decorator">@timer</span>                   <span class="comment"># This is identical to: calculate = timer(calculate)</span>
+<span class="keyword">def</span> <span class="function">calculate</span>():
+    <span class="keyword">return</span> <span class="function">sum</span>(<span class="function">range</span>(<span class="number">1_000_000</span>))
+
+<span class="function">calculate</span>()
+<span class="comment"># "calculate took 0.0312s"</span>
+
+<span class="comment"># @decorator is NOT magic. It's just:</span>
+<span class="comment"># function = decorator(function)</span></pre></div>
+            </div>
+
+            <!-- log_calls decorator -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128221; Another decorator: log_calls</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Logging every function call</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">def</span> <span class="function">log_calls</span>(func):
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args, **kwargs):
+        <span class="function">print</span>(<span class="string">f"Calling </span>{func.__name__}<span class="string">(</span>{args}<span class="string">, </span>{kwargs}<span class="string">)"</span>)
+        result = func(*args, **kwargs)
+        <span class="function">print</span>(<span class="string">f"</span>{func.__name__}<span class="string"> returned </span>{result}<span class="string">"</span>)
+        <span class="keyword">return</span> result
+    <span class="keyword">return</span> wrapper
+
+<span class="decorator">@log_calls</span>
+<span class="keyword">def</span> <span class="function">add</span>(a, b):
+    <span class="keyword">return</span> a + b
+
+<span class="function">add</span>(<span class="number">3</span>, <span class="number">4</span>)
+<span class="comment"># Calling add((3, 4), {})</span>
+<span class="comment"># add returned 7</span></pre></div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" id="q-decorator">
+                <h4>What is <code>@timer</code> equivalent to?</h4>
+                <button class="quiz-option" onclick="checkQuiz('q-decorator', this, false)"><code>timer.calculate()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-decorator', this, true)"><code>calculate = timer(calculate)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-decorator', this, false)"><code>timer = calculate(timer)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-decorator', this, false)"><code>calculate.timer()</code></button>
+                <div class="quiz-explanation"><strong><code>@timer</code> above a function definition is shorthand for <code>calculate = timer(calculate)</code>.</strong> The decorator receives the original function, wraps it in a new function (the closure), and the name <code>calculate</code> now points to the wrapper. When you call <code>calculate()</code>, you're actually calling <code>wrapper()</code>, which calls the original inside.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Real decorators you'll use in production:</strong><br>
+                &bull; <strong><code>@functools.cache</code></strong> &mdash; memoize expensive function calls (cache results)<br>
+                &bull; <strong><code>@login_required</code></strong> &mdash; Django: block unauthenticated users<br>
+                &bull; <strong><code>@app.route("/path")</code></strong> &mdash; Flask/FastAPI: register URL routes<br>
+                &bull; <strong><code>@property</code></strong> &mdash; make a method behave like an attribute<br>
+                &bull; <strong><code>@staticmethod</code></strong>, <strong><code>@classmethod</code></strong> &mdash; OOP method types<br>
+                &bull; <strong><code>@pytest.fixture</code></strong> &mdash; test setup/teardown
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. FP VS OOP ===== -->
+    <section id="fp-vs-oop">
+        <div class="section-container">
+            <span class="section-label">Decision Guide</span>
+            <h2 class="section-title">FP vs OOP &mdash; When to Use Which</h2>
+            <p class="section-subtitle">The same problem solved three ways. Then a guide for choosing.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> Apply a 10% discount to all prices over $100 and get the total.</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> OOP approach</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">class</span> <span class="function">PriceCalculator</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, prices):
+        self.prices = prices
+
+    <span class="keyword">def</span> <span class="function">apply_discount</span>(self, threshold=<span class="number">100</span>, discount=<span class="number">0.10</span>):
+        <span class="keyword">return</span> [
+            p * (<span class="number">1</span> - discount) <span class="keyword">if</span> p > threshold <span class="keyword">else</span> p
+            <span class="keyword">for</span> p <span class="keyword">in</span> self.prices
+        ]
+
+    <span class="keyword">def</span> <span class="function">total</span>(self):
+        <span class="keyword">return</span> <span class="function">sum</span>(self.<span class="function">apply_discount</span>())
+
+calc = PriceCalculator([<span class="number">50</span>, <span class="number">150</span>, <span class="number">200</span>, <span class="number">80</span>])
+<span class="function">print</span>(calc.<span class="function">total</span>())  <span class="comment"># 445.0</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> FP approach</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="keyword">from</span> functools <span class="keyword">import</span> reduce
+
+prices = [<span class="number">50</span>, <span class="number">150</span>, <span class="number">200</span>, <span class="number">80</span>]
+
+discounted = <span class="function">map</span>(<span class="keyword">lambda</span> p: p * <span class="number">0.9</span> <span class="keyword">if</span> p > <span class="number">100</span> <span class="keyword">else</span> p, prices)
+total = <span class="function">reduce</span>(<span class="keyword">lambda</span> acc, p: acc + p, discounted)
+<span class="function">print</span>(total)  <span class="comment"># 445.0</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Pythonic approach (mix both)</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre>prices = [<span class="number">50</span>, <span class="number">150</span>, <span class="number">200</span>, <span class="number">80</span>]
+
+total = <span class="function">sum</span>(p * <span class="number">0.9</span> <span class="keyword">if</span> p > <span class="number">100</span> <span class="keyword">else</span> p <span class="keyword">for</span> p <span class="keyword">in</span> prices)
+<span class="function">print</span>(total)  <span class="comment"># 445.0</span></pre></div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Decision table</h3>
+            <div class="table-container">
+                <table>
+                    <tr><th>Situation</th><th>Use</th><th>Why</th></tr>
+                    <tr><td>Transform data (map, filter, sort)</td><td><strong>FP / Comprehensions</strong></td><td>Stateless, one-liners, readable pipelines</td></tr>
+                    <tr><td>Manage state (user sessions, DB connections)</td><td><strong>OOP</strong></td><td>Objects encapsulate state and behavior together</td></tr>
+                    <tr><td>One-off data pipeline</td><td><strong>Comprehension + built-ins</strong></td><td>No need for classes or imports</td></tr>
+                    <tr><td>Complex business logic with rules</td><td><strong>OOP</strong></td><td>Methods, inheritance, polymorphism</td></tr>
+                    <tr><td>Config, callbacks, event handlers</td><td><strong>FP (closures, lambdas)</strong></td><td>Small, composable, no class overhead</td></tr>
+                    <tr><td>Django views, models, serializers</td><td><strong>OOP + FP mix</strong></td><td>Classes for structure, comprehensions for querysets</td></tr>
+                </table>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Concrete examples: Pick the right tool</h3>
+
+            <!-- Example 1 -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128203; Example 1: Get all student names from a list of dicts</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Data</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>students = [
+    {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"psp"</span>: <span class="number">85</span>},
+    {<span class="string">"name"</span>: <span class="string">"Kaarthik"</span>, <span class="string">"psp"</span>: <span class="number">92</span>},
+    {<span class="string">"name"</span>: <span class="string">"Ajit"</span>, <span class="string">"psp"</span>: <span class="number">78</span>},
+]</pre></div>
+                    </div>
+                    <div class="comparison-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="comparison-card before">
+                            <h4 style="margin-bottom: 8px;">OOP</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="keyword">class</span> <span class="function">StudentList</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, data):
+        self.data = data
+    <span class="keyword">def</span> <span class="function">names</span>(self):
+        result = []
+        <span class="keyword">for</span> s <span class="keyword">in</span> self.data:
+            result.<span class="function">append</span>(
+                s[<span class="string">"name"</span>])
+        <span class="keyword">return</span> result
+
+sl = StudentList(students)
+sl.<span class="function">names</span>()</pre></div></div>
+                        </div>
+                        <div class="comparison-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-warning);">
+                            <h4 style="margin-bottom: 8px;">FP</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="function">list</span>(<span class="function">map</span>(
+    <span class="keyword">lambda</span> s: s[<span class="string">"name"</span>],
+    students
+))</pre></div></div>
+                        </div>
+                        <div class="comparison-card after">
+                            <h4 style="margin-bottom: 8px;">Comprehension &#9989;</h4>
+                            <div class="code-block"><div class="code-content"><pre>[s[<span class="string">"name"</span>]
+ <span class="keyword">for</span> s <span class="keyword">in</span> students]</pre></div></div>
+                        </div>
+                    </div>
+                    <div class="highlight-box success" style="margin-top: 10px;">
+                        <strong>Winner: Comprehension.</strong> Simple data extraction with no state to manage. One line, reads like English. No class needed, no lambda needed.
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- Example 2 -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128230; Example 2: Track an order through its lifecycle</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="comparison-grid">
+                        <div class="comparison-card after" style="border-color: var(--accent-success);">
+                            <h4 style="color: var(--accent-success); margin-bottom: 8px;">OOP &#9989;</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="keyword">class</span> <span class="function">Order</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, item, price):
+        self.item = item
+        self.price = price
+        self.status = <span class="string">"pending"</span>
+
+    <span class="keyword">def</span> <span class="function">confirm</span>(self):
+        self.status = <span class="string">"confirmed"</span>
+
+    <span class="keyword">def</span> <span class="function">ship</span>(self):
+        self.status = <span class="string">"shipped"</span>
+
+    <span class="keyword">def</span> <span class="function">deliver</span>(self):
+        self.status = <span class="string">"delivered"</span>
+
+order = Order(<span class="string">"Laptop"</span>, <span class="number">80000</span>)
+order.<span class="function">confirm</span>()
+order.<span class="function">ship</span>()
+<span class="function">print</span>(order.status)  <span class="comment"># "shipped"</span></pre></div></div>
+                        </div>
+                        <div class="comparison-card before" style="border-color: var(--accent-danger);">
+                            <h4 style="color: var(--accent-danger); margin-bottom: 8px;">FP &mdash; awkward here</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="comment"># FP would need you to pass state</span>
+<span class="comment"># around as function arguments...</span>
+order = {<span class="string">"item"</span>: <span class="string">"Laptop"</span>,
+         <span class="string">"price"</span>: <span class="number">80000</span>,
+         <span class="string">"status"</span>: <span class="string">"pending"</span>}
+
+<span class="keyword">def</span> <span class="function">confirm</span>(o):
+    <span class="keyword">return</span> {**o, <span class="string">"status"</span>: <span class="string">"confirmed"</span>}
+
+<span class="keyword">def</span> <span class="function">ship</span>(o):
+    <span class="keyword">return</span> {**o, <span class="string">"status"</span>: <span class="string">"shipped"</span>}
+
+order = ship(confirm(order))
+<span class="comment"># Clunky — state management is OOP's job</span></pre></div></div>
+                        </div>
+                    </div>
+                    <div class="highlight-box success" style="margin-top: 10px;">
+                        <strong>Winner: OOP.</strong> Orders have <strong>state that changes over time</strong> (pending &rarr; confirmed &rarr; shipped &rarr; delivered). Objects naturally model this with methods that modify internal state.
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- Example 3 -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128200; Example 3: Process sales data &mdash; filter, transform, aggregate</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Data</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre>sales = [
+    {<span class="string">"product"</span>: <span class="string">"Laptop"</span>, <span class="string">"amount"</span>: <span class="number">80000</span>, <span class="string">"category"</span>: <span class="string">"electronics"</span>},
+    {<span class="string">"product"</span>: <span class="string">"Pen"</span>, <span class="string">"amount"</span>: <span class="number">50</span>, <span class="string">"category"</span>: <span class="string">"stationery"</span>},
+    {<span class="string">"product"</span>: <span class="string">"Phone"</span>, <span class="string">"amount"</span>: <span class="number">45000</span>, <span class="string">"category"</span>: <span class="string">"electronics"</span>},
+    {<span class="string">"product"</span>: <span class="string">"Notebook"</span>, <span class="string">"amount"</span>: <span class="number">200</span>, <span class="string">"category"</span>: <span class="string">"stationery"</span>},
+]
+<span class="comment"># Task: total revenue from electronics only</span></pre></div>
+                    </div>
+                    <div class="comparison-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="comparison-card before">
+                            <h4 style="margin-bottom: 8px;">OOP</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="keyword">class</span> <span class="function">SalesReport</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, data):
+        self.data = data
+
+    <span class="keyword">def</span> <span class="function">by_category</span>(self, cat):
+        <span class="keyword">return</span> [s <span class="keyword">for</span> s <span class="keyword">in</span>
+                self.data
+                <span class="keyword">if</span> s[<span class="string">"category"</span>] == cat]
+
+    <span class="keyword">def</span> <span class="function">total</span>(self, items):
+        <span class="keyword">return</span> <span class="function">sum</span>(
+            s[<span class="string">"amount"</span>]
+            <span class="keyword">for</span> s <span class="keyword">in</span> items)
+
+r = SalesReport(sales)
+e = r.<span class="function">by_category</span>(<span class="string">"electronics"</span>)
+<span class="function">print</span>(r.<span class="function">total</span>(e))
+<span class="comment"># 125000</span></pre></div></div>
+                        </div>
+                        <div class="comparison-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-warning);">
+                            <h4 style="margin-bottom: 8px;">FP</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="keyword">from</span> functools <span class="keyword">import</span> reduce
+
+reduce(
+    <span class="keyword">lambda</span> acc, s:
+        acc + s[<span class="string">"amount"</span>],
+    <span class="function">filter</span>(
+        <span class="keyword">lambda</span> s:
+            s[<span class="string">"category"</span>]
+            == <span class="string">"electronics"</span>,
+        sales
+    ), <span class="number">0</span>
+)
+<span class="comment"># 125000 — hard to read!</span></pre></div></div>
+                        </div>
+                        <div class="comparison-card after">
+                            <h4 style="margin-bottom: 8px;">Comprehension &#9989;</h4>
+                            <div class="code-block"><div class="code-content"><pre><span class="function">sum</span>(
+    s[<span class="string">"amount"</span>]
+    <span class="keyword">for</span> s <span class="keyword">in</span> sales
+    <span class="keyword">if</span> s[<span class="string">"category"</span>]
+       == <span class="string">"electronics"</span>
+)
+<span class="comment"># 125000 — clean!</span></pre></div></div>
+                        </div>
+                    </div>
+                    <div class="highlight-box success" style="margin-top: 10px;">
+                        <strong>Winner: Comprehension.</strong> Data pipeline = filter + transform + aggregate. Comprehension + <code>sum()</code> does it in one readable expression. OOP is overkill for a one-off query. FP chain is inside-out and hard to read.
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- Example 4 -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127829; Example 4: Django-style &mdash; OOP structure + FP data transforms</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Best of both worlds</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content"><pre><span class="keyword">class</span> <span class="function">Restaurant</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name):
+        self.name = name
+        self.menu = []   <span class="comment"># OOP: state lives in the object</span>
+
+    <span class="keyword">def</span> <span class="function">add_dish</span>(self, name, price, veg=<span class="keyword">False</span>):
+        self.menu.<span class="function">append</span>({<span class="string">"name"</span>: name, <span class="string">"price"</span>: price, <span class="string">"veg"</span>: veg})
+
+    <span class="keyword">def</span> <span class="function">veg_dishes</span>(self):
+        <span class="comment"># Comprehension inside OOP method</span>
+        <span class="keyword">return</span> [d[<span class="string">"name"</span>] <span class="keyword">for</span> d <span class="keyword">in</span> self.menu <span class="keyword">if</span> d[<span class="string">"veg"</span>]]
+
+    <span class="keyword">def</span> <span class="function">avg_price</span>(self):
+        <span class="comment"># Generator expression inside OOP method</span>
+        <span class="keyword">return</span> <span class="function">sum</span>(d[<span class="string">"price"</span>] <span class="keyword">for</span> d <span class="keyword">in</span> self.menu) / <span class="function">len</span>(self.menu)
+
+    <span class="keyword">def</span> <span class="function">sorted_menu</span>(self):
+        <span class="comment"># Lambda inside OOP method</span>
+        <span class="keyword">return</span> <span class="function">sorted</span>(self.menu, key=<span class="keyword">lambda</span> d: d[<span class="string">"price"</span>])
+
+r = Restaurant(<span class="string">"Scaler Bites"</span>)
+r.<span class="function">add_dish</span>(<span class="string">"Paneer Tikka"</span>, <span class="number">250</span>, veg=<span class="keyword">True</span>)
+r.<span class="function">add_dish</span>(<span class="string">"Chicken Biryani"</span>, <span class="number">350</span>)
+r.<span class="function">add_dish</span>(<span class="string">"Dal Makhani"</span>, <span class="number">200</span>, veg=<span class="keyword">True</span>)
+
+<span class="function">print</span>(r.<span class="function">veg_dishes</span>())     <span class="comment"># ['Paneer Tikka', 'Dal Makhani']</span>
+<span class="function">print</span>(r.<span class="function">avg_price</span>())      <span class="comment"># 266.67</span>
+<span class="function">print</span>(r.<span class="function">sorted_menu</span>())    <span class="comment"># sorted by price ascending</span></pre></div>
+                    </div>
+                    <div class="highlight-box success" style="margin-top: 10px;">
+                        <strong>This is Pythonic.</strong> The <code>Restaurant</code> class manages state (menu items). But inside the methods, we use comprehensions and lambda for data transforms. OOP for structure, FP for computation. This is exactly how Django works &mdash; OOP models + FP-style querysets.
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Pythonic = mix both.</strong> Use classes for structure and state management. Use comprehensions and built-ins for data transformations. Don't force everything into one paradigm. The best Python code uses the right tool for each job.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11b. MAP vs FILTER vs REDUCE — COMPARED ===== -->
+    <section id="map-filter-reduce-compared">
+        <div class="section-container">
+            <span class="section-label blue">Quick Reference</span>
+            <h2 class="section-title">map vs filter vs reduce &mdash; At a Glance</h2>
+            <p class="section-subtitle">Click each cell to reveal the answer. Test yourself first!</p>
+
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr>
+                        <th style="width: 18%;"></th>
+                        <th style="width: 27%;">map()</th>
+                        <th style="width: 27%;">filter()</th>
+                        <th style="width: 28%;">reduce()</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Purpose</strong></td>
+                        <td class="revealable" data-answer="Transform every element" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Keep elements that pass a test" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Combine all elements into one value" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Input</strong></td>
+                        <td class="revealable" data-answer="function + iterable" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="predicate (returns True/False) + iterable" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="function(acc, item) + iterable + optional initial" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Output</strong></td>
+                        <td class="revealable" data-answer="Iterator (same number of items, transformed)" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Iterator (fewer or equal items, unchanged)" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Single value (not an iterator)" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Lazy?</strong></td>
+                        <td class="revealable" data-answer="Yes — returns iterator, needs list()" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Yes — returns iterator, needs list()" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="No — computes immediately, returns the value" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Built-in?</strong></td>
+                        <td class="revealable" data-answer="Yes — no import needed" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Yes — no import needed" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="No — from functools import reduce" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Example</strong></td>
+                        <td class="revealable" data-answer="map(lambda x: x*2, [1,2,3]) → [2,4,6]" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="filter(lambda x: x>0, [-1,2,-3,4]) → [2,4]" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="reduce(lambda a,x: a+x, [1,2,3,4]) → 10" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pythonic alternative</strong></td>
+                        <td class="revealable" data-answer="[x*2 for x in nums]" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="[x for x in nums if x>0]" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="sum(), max(), min(), ''.join() for common cases" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Think of it as</strong></td>
+                        <td class="revealable" data-answer="Conveyor belt — every item goes through the machine" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Gatekeeper — only matching items pass through" onclick="revealCell(this)">click to reveal</td>
+                        <td class="revealable" data-answer="Snowball — rolls through the list, growing bigger" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="diagram-box" style="margin-top: 25px;">
+                <div style="text-align: center; font-weight: 700; margin-bottom: 15px;">Visual summary</div>
+                <div class="flow-row">
+                    <div class="flow-box blue" style="min-width: 200px;">
+                        <strong>map(f, [a, b, c])</strong>
+                        <small>&darr;</small>
+                        <small>[f(a), f(b), f(c)]</small>
+                        <small>Same count, new values</small>
+                    </div>
+                    <div class="flow-box green" style="min-width: 200px;">
+                        <strong>filter(f, [a, b, c])</strong>
+                        <small>&darr;</small>
+                        <small>[a, c] (if f(a), f(c) = True)</small>
+                        <small>Fewer items, same values</small>
+                    </div>
+                    <div class="flow-box purple" style="min-width: 200px;">
+                        <strong>reduce(f, [a, b, c])</strong>
+                        <small>&darr;</small>
+                        <small>f(f(a, b), c) &rarr; one value</small>
+                        <small>Everything &rarr; single result</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11c. EXERCISES ===== -->
+    <section id="exercises">
+        <div class="section-container">
+            <span class="section-label warning">Practice</span>
+            <h2 class="section-title">Exercises &mdash; Your Turn</h2>
+            <p class="section-subtitle">Try each one yourself before revealing the solution. Use map, filter, reduce as indicated.</p>
+
+            <!-- Exercise 1: map isolated -->
+            <div class="quiz-box" id="ex-1" style="border-color: var(--accent-blue);">
+                <h4>Exercise 1: map() &mdash; Add 18% GST to all prices</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre>prices = [<span class="number">1200</span>, <span class="number">450</span>, <span class="number">3200</span>, <span class="number">890</span>, <span class="number">150</span>]
+
+<span class="comment"># Use map() to multiply each price by 1.18</span>
+with_gst = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre>with_gst = <span class="function">list</span>(<span class="function">map</span>(<span class="keyword">lambda</span> p: <span class="function">round</span>(p * <span class="number">1.18</span>, <span class="number">2</span>), prices))
+<span class="comment"># [1416.0, 531.0, 3776.0, 1050.2, 177.0]</span>
+
+<span class="comment"># Comprehension alternative:</span>
+with_gst = [<span class="function">round</span>(p * <span class="number">1.18</span>, <span class="number">2</span>) <span class="keyword">for</span> p <span class="keyword">in</span> prices]</pre></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- Exercise 2: filter isolated -->
+            <div class="quiz-box" id="ex-2" style="border-color: var(--accent-blue);">
+                <h4>Exercise 2: filter() &mdash; Students with attendance &gt;= 85%</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre>students = [
+    {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"psp"</span>: <span class="number">85</span>, <span class="string">"attendance"</span>: <span class="number">92</span>},
+    {<span class="string">"name"</span>: <span class="string">"Kaarthik"</span>, <span class="string">"psp"</span>: <span class="number">92</span>, <span class="string">"attendance"</span>: <span class="number">88</span>},
+    {<span class="string">"name"</span>: <span class="string">"Ajit"</span>, <span class="string">"psp"</span>: <span class="number">78</span>, <span class="string">"attendance"</span>: <span class="number">95</span>},
+    {<span class="string">"name"</span>: <span class="string">"Gobi"</span>, <span class="string">"psp"</span>: <span class="number">45</span>, <span class="string">"attendance"</span>: <span class="number">60</span>},
+    {<span class="string">"name"</span>: <span class="string">"Sneha"</span>, <span class="string">"psp"</span>: <span class="number">91</span>, <span class="string">"attendance"</span>: <span class="number">85</span>},
+]
+
+<span class="comment"># Use filter() to keep only students with attendance >= 85</span>
+regular = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre>regular = <span class="function">list</span>(<span class="function">filter</span>(<span class="keyword">lambda</span> s: s[<span class="string">"attendance"</span>] >= <span class="number">85</span>, students))
+<span class="comment"># Vipul(92%), Kaarthik(88%), Ajit(95%), Sneha(85%)</span>
+
+<span class="comment"># Comprehension alternative:</span>
+regular = [s <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"attendance"</span>] >= <span class="number">85</span>]</pre></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- Exercise 3: reduce isolated -->
+            <div class="quiz-box" id="ex-3" style="border-color: var(--accent-blue);">
+                <h4>Exercise 3: reduce() &mdash; Total PSP of all students</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre><span class="keyword">from</span> functools <span class="keyword">import</span> reduce
+
+<span class="comment"># Use reduce() to sum up all PSP values from the students list above</span>
+total_psp = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre>total_psp = reduce(<span class="keyword">lambda</span> acc, s: acc + s[<span class="string">"psp"</span>], students, <span class="number">0</span>)
+<span class="comment"># 391</span>
+
+<span class="comment"># Pythonic alternative (just use sum!):</span>
+total_psp = <span class="function">sum</span>(s[<span class="string">"psp"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students)
+<span class="comment"># 391 — much cleaner</span></pre></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- Exercise 4: filter + map combined -->
+            <div class="quiz-box" id="ex-4" style="border-color: var(--accent-purple);">
+                <h4>Exercise 4: filter + map &mdash; Get NAMES of students with PSP &gt;= 70</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre><span class="comment"># Step 1: filter students where PSP >= 70</span>
+<span class="comment"># Step 2: map to extract just the name</span>
+<span class="comment"># Do it with filter+map, then try the comprehension way</span>
+strong_names = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre><span class="comment"># FP way (filter + map):</span>
+strong_names = <span class="function">list</span>(<span class="function">map</span>(
+    <span class="keyword">lambda</span> s: s[<span class="string">"name"</span>],
+    <span class="function">filter</span>(<span class="keyword">lambda</span> s: s[<span class="string">"psp"</span>] >= <span class="number">70</span>, students)
+))
+<span class="comment"># ['Vipul', 'Kaarthik', 'Ajit', 'Sneha']</span>
+
+<span class="comment"># Comprehension (much more readable!):</span>
+strong_names = [s[<span class="string">"name"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span>]</pre></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- Exercise 5: map + reduce combined -->
+            <div class="quiz-box" id="ex-5" style="border-color: var(--accent-purple);">
+                <h4>Exercise 5: map + reduce &mdash; Total revenue after 18% GST</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre>prices = [<span class="number">1200</span>, <span class="number">450</span>, <span class="number">3200</span>, <span class="number">890</span>, <span class="number">150</span>]
+
+<span class="comment"># Step 1: map each price to price * 1.18 (add GST)</span>
+<span class="comment"># Step 2: reduce to get the total</span>
+total_revenue = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre><span class="comment"># FP way (map + reduce):</span>
+total_revenue = reduce(
+    <span class="keyword">lambda</span> acc, p: acc + p,
+    <span class="function">map</span>(<span class="keyword">lambda</span> p: p * <span class="number">1.18</span>, prices)
+)
+<span class="comment"># 6948.2</span>
+
+<span class="comment"># Pythonic way (just use sum!):</span>
+total_revenue = <span class="function">sum</span>(p * <span class="number">1.18</span> <span class="keyword">for</span> p <span class="keyword">in</span> prices)
+<span class="comment"># 6948.2 — one line, crystal clear</span></pre></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- Exercise 6: filter + map + reduce — all three -->
+            <div class="quiz-box" id="ex-6" style="border-color: var(--accent-danger);">
+                <h4>&#127942; Exercise 6: filter + map + reduce &mdash; Total PSP of students with attendance &gt;= 80%</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre><span class="comment"># Combine all three!</span>
+<span class="comment"># Step 1: filter — keep students with attendance >= 80</span>
+<span class="comment"># Step 2: map — extract their PSP values</span>
+<span class="comment"># Step 3: reduce — sum them up</span>
+<span class="comment"># Then write the Pythonic version too</span>
+total_psp_regular = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre><span class="comment"># FP way (all three chained — hard to read!):</span>
+total_psp_regular = reduce(
+    <span class="keyword">lambda</span> acc, psp: acc + psp,
+    <span class="function">map</span>(
+        <span class="keyword">lambda</span> s: s[<span class="string">"psp"</span>],
+        <span class="function">filter</span>(<span class="keyword">lambda</span> s: s[<span class="string">"attendance"</span>] >= <span class="number">80</span>, students)
+    ), <span class="number">0</span>
+)
+<span class="comment"># 346  (Vipul:85 + Kaarthik:92 + Ajit:78 + Sneha:91)</span>
+
+<span class="comment"># Pythonic way (comprehension + sum):</span>
+total_psp_regular = <span class="function">sum</span>(
+    s[<span class="string">"psp"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"attendance"</span>] >= <span class="number">80</span>
+)
+<span class="comment"># 346 — same result, MUCH more readable</span></pre></div>
+                        </div>
+                        <div class="highlight-box warning" style="margin-top: 10px;">
+                            <strong>Notice the pattern?</strong> Every time we chain map/filter/reduce, the comprehension version is shorter and clearer. That's why Python prefers comprehensions for most cases. But knowing map/filter/reduce helps you: (1) read FP code in other languages, (2) understand what comprehensions are doing under the hood.
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- Exercise 7: Sort with lambda -->
+            <div class="quiz-box" id="ex-7" style="border-color: var(--accent-blue);">
+                <h4>Exercise 7: sorted + lambda &mdash; Rank students by PSP (highest first)</h4>
+                <div class="code-block" style="margin: 15px 0;">
+                    <div class="code-content"><pre><span class="comment"># Sort the students list by PSP in descending order</span>
+<span class="comment"># Print each with their rank: #1 Kaarthik: PSP=92, ...</span>
+ranked = <span class="comment">???</span></pre></div>
+                </div>
+                <div class="collapsible">
+                    <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                        <h4>&#128161; Reveal Solution</h4>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-content"><pre>ranked = <span class="function">sorted</span>(students, key=<span class="keyword">lambda</span> s: s[<span class="string">"psp"</span>], reverse=<span class="keyword">True</span>)
+
+<span class="keyword">for</span> i, s <span class="keyword">in</span> <span class="function">enumerate</span>(ranked, <span class="number">1</span>):
+    <span class="function">print</span>(<span class="string">f"#{i} {s['name']}: PSP={s['psp']}"</span>)
+<span class="comment"># #1 Kaarthik: PSP=92</span>
+<span class="comment"># #2 Sneha: PSP=91</span>
+<span class="comment"># #3 Vipul: PSP=85</span>
+<span class="comment"># #4 Ajit: PSP=78</span>
+<span class="comment"># #5 Gobi: PSP=45</span></pre></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11d. COMPREHENSIONS DEEP DIVE ===== -->
+    <section id="comprehensions-deep-dive">
+        <div class="section-container">
+            <span class="section-label success">Deep Dive</span>
+            <h2 class="section-title">Comprehensions &mdash; The Full Picture</h2>
+            <p class="section-subtitle">We've seen comprehensions beat map/filter all class. Let's master the syntax &mdash; from basic to advanced.</p>
+
+            <!-- === SYNTAX BREAKDOWN === -->
+            <h3 style="margin: 30px 0 15px;">The anatomy of a list comprehension</h3>
+
+            <div class="diagram-box">
+                <div style="text-align: center; font-weight: 700; margin-bottom: 15px;">Syntax breakdown</div>
+                <div class="flow-row">
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace; font-weight: 700;">[</div>
+                    <div class="flow-box green" style="font-family: 'Fira Code', monospace; min-width: 120px;"><strong>expression</strong><small>what to produce</small></div>
+                    <div class="flow-box blue" style="font-family: 'Fira Code', monospace; min-width: 160px;"><strong>for item in iterable</strong><small>where to get data</small></div>
+                    <div class="flow-box purple" style="font-family: 'Fira Code', monospace; min-width: 120px;"><strong>if condition</strong><small>(optional filter)</small></div>
+                    <div class="flow-box" style="font-family: 'Fira Code', monospace; font-weight: 700;">]</div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">Read it like English: <em>"give me <strong>expression</strong> for each <strong>item</strong> in <strong>iterable</strong> if <strong>condition</strong>"</em></div>
+            </div>
+
+            <!-- === LEVEL 1: BASIC === -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">1</span> Basic &mdash; Transform every element</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> [expression for item in iterable]</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Square every number</span>
+nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]
+squares = [n ** <span class="number">2</span> <span class="keyword">for</span> n <span class="keyword">in</span> nums]
+<span class="comment"># [1, 4, 9, 16, 25]</span>
+
+<span class="comment"># Convert to uppercase</span>
+names = [<span class="string">"vipul"</span>, <span class="string">"kaarthik"</span>, <span class="string">"ajit"</span>]
+upper = [name.<span class="function">upper</span>() <span class="keyword">for</span> name <span class="keyword">in</span> names]
+<span class="comment"># ['VIPUL', 'KAARTHIK', 'AJIT']</span>
+
+<span class="comment"># Add GST to prices</span>
+prices = [<span class="number">100</span>, <span class="number">250</span>, <span class="number">500</span>]
+with_gst = [p * <span class="number">1.18</span> <span class="keyword">for</span> p <span class="keyword">in</span> prices]
+<span class="comment"># [118.0, 295.0, 590.0]</span>
+
+<span class="comment"># Equivalent to: list(map(lambda n: n**2, nums))</span>
+<span class="comment"># But more readable!</span></pre></div>
+            </div>
+
+            <!-- === LEVEL 2: WITH FILTER === -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> With filter &mdash; Keep only matching elements</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> [expression for item in iterable if condition]</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Only even numbers</span>
+evens = [n <span class="keyword">for</span> n <span class="keyword">in</span> <span class="function">range</span>(<span class="number">1</span>, <span class="number">11</span>) <span class="keyword">if</span> n % <span class="number">2</span> == <span class="number">0</span>]
+<span class="comment"># [2, 4, 6, 8, 10]</span>
+
+<span class="comment"># Students with PSP >= 70</span>
+students = [
+    {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"psp"</span>: <span class="number">85</span>},
+    {<span class="string">"name"</span>: <span class="string">"Gobi"</span>, <span class="string">"psp"</span>: <span class="number">45</span>},
+    {<span class="string">"name"</span>: <span class="string">"Kaarthik"</span>, <span class="string">"psp"</span>: <span class="number">92</span>},
+]
+strong = [s[<span class="string">"name"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span>]
+<span class="comment"># ['Vipul', 'Kaarthik']</span>
+
+<span class="comment"># Filter + transform in ONE line</span>
+<span class="comment"># "give me name for each student if PSP >= 70"</span>
+
+<span class="comment"># Equivalent to:</span>
+<span class="comment"># list(map(lambda s: s["name"], filter(lambda s: s["psp"] >= 70, students)))</span>
+<span class="comment"># Which one would you rather read? 😄</span></pre></div>
+            </div>
+
+            <!-- === LEVEL 3: WITH TERNARY === -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> With ternary &mdash; Transform differently based on condition</h3>
+
+            <div class="highlight-box warning">
+                <strong>Don't confuse <code>if</code> at the END (filter) vs <code>if/else</code> in the EXPRESSION (ternary).</strong><br>
+                &bull; <code>[x for x in nums <strong>if x > 0</strong>]</code> &mdash; filter: keeps only positives, drops the rest<br>
+                &bull; <code>[<strong>x if x > 0 else 0</strong> for x in nums]</code> &mdash; ternary: keeps ALL items, replaces negatives with 0
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> [expr_if_true if condition else expr_if_false for item in iterable]</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Label each number</span>
+nums = [<span class="number">1</span>, -<span class="number">3</span>, <span class="number">5</span>, -<span class="number">7</span>, <span class="number">10</span>]
+labels = [<span class="string">"positive"</span> <span class="keyword">if</span> n > <span class="number">0</span> <span class="keyword">else</span> <span class="string">"negative"</span> <span class="keyword">for</span> n <span class="keyword">in</span> nums]
+<span class="comment"># ['positive', 'negative', 'positive', 'negative', 'positive']</span>
+
+<span class="comment"># Replace negatives with zero</span>
+cleaned = [n <span class="keyword">if</span> n > <span class="number">0</span> <span class="keyword">else</span> <span class="number">0</span> <span class="keyword">for</span> n <span class="keyword">in</span> nums]
+<span class="comment"># [1, 0, 5, 0, 10]</span>
+
+<span class="comment"># Pass/fail based on PSP</span>
+results = [
+    <span class="string">f"</span>{s[<span class="string">'name'</span>]}<span class="string">: Pass"</span> <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span> <span class="keyword">else</span> <span class="string">f"</span>{s[<span class="string">'name'</span>]}<span class="string">: Needs Improvement"</span>
+    <span class="keyword">for</span> s <span class="keyword">in</span> students
+]
+<span class="comment"># ['Vipul: Pass', 'Gobi: Needs Improvement', 'Kaarthik: Pass']</span></pre></div>
+            </div>
+
+            <div class="quiz-box" id="q-if-position">
+                <h4>What's the difference between these two?</h4>
+                <div class="code-block" style="margin-bottom: 15px;">
+                    <div class="code-content"><pre><span class="comment"># Version A:</span>
+[x ** <span class="number">2</span> <span class="keyword">for</span> x <span class="keyword">in</span> nums <span class="keyword">if</span> x > <span class="number">0</span>]
+
+<span class="comment"># Version B:</span>
+[x ** <span class="number">2</span> <span class="keyword">if</span> x > <span class="number">0</span> <span class="keyword">else</span> <span class="number">0</span> <span class="keyword">for</span> x <span class="keyword">in</span> nums]</pre></div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('q-if-position', this, false)">They're the same thing</button>
+                <button class="quiz-option" onclick="checkQuiz('q-if-position', this, true)">A filters out non-positives (fewer items); B replaces them with 0 (same count)</button>
+                <button class="quiz-option" onclick="checkQuiz('q-if-position', this, false)">A is invalid syntax</button>
+                <div class="quiz-explanation">
+                    <strong>They produce different results!</strong><br>
+                    For <code>nums = [1, -3, 5, -7]</code>:<br>
+                    &bull; <strong>A:</strong> <code>[1, 25]</code> &mdash; only 2 items (negatives dropped)<br>
+                    &bull; <strong>B:</strong> <code>[1, 0, 25, 0]</code> &mdash; 4 items (negatives replaced with 0)<br><br>
+                    <strong>Position of <code>if</code> matters:</strong> at the END = filter. In the EXPRESSION (before <code>for</code>) with <code>else</code> = ternary transform.
+                </div>
+            </div>
+
+            <!-- === LEVEL 4: NESTED LOOPS === -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">4</span> Nested loops &mdash; Multiple <code>for</code> clauses</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> [expression for x in iter1 for y in iter2]</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># All combinations of two lists</span>
+colors = [<span class="string">"red"</span>, <span class="string">"blue"</span>]
+sizes = [<span class="string">"S"</span>, <span class="string">"M"</span>, <span class="string">"L"</span>]
+
+combos = [<span class="string">f"</span>{c}-{s}<span class="string">"</span> <span class="keyword">for</span> c <span class="keyword">in</span> colors <span class="keyword">for</span> s <span class="keyword">in</span> sizes]
+<span class="comment"># ['red-S', 'red-M', 'red-L', 'blue-S', 'blue-M', 'blue-L']</span>
+
+<span class="comment"># This is equivalent to:</span>
+<span class="comment"># combos = []</span>
+<span class="comment"># for c in colors:</span>
+<span class="comment">#     for s in sizes:</span>
+<span class="comment">#         combos.append(f"{c}-{s}")</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Flatten a nested list</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Flatten [[1,2], [3,4], [5,6]] → [1, 2, 3, 4, 5, 6]</span>
+nested = [[<span class="number">1</span>, <span class="number">2</span>], [<span class="number">3</span>, <span class="number">4</span>], [<span class="number">5</span>, <span class="number">6</span>]]
+
+flat = [item <span class="keyword">for</span> sublist <span class="keyword">in</span> nested <span class="keyword">for</span> item <span class="keyword">in</span> sublist]
+<span class="comment"># [1, 2, 3, 4, 5, 6]</span>
+
+<span class="comment"># Read order: outer for first, then inner for</span>
+<span class="comment"># "for each sublist in nested, for each item in sublist, give me item"</span>
+
+<span class="comment"># Equivalent to:</span>
+<span class="comment"># flat = []</span>
+<span class="comment"># for sublist in nested:</span>
+<span class="comment">#     for item in sublist:</span>
+<span class="comment">#         flat.append(item)</span></pre></div>
+            </div>
+
+            <!-- === LEVEL 5: DICT & SET === -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">5</span> Dict &amp; Set comprehensions</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Same syntax, different brackets: <code>{}</code> for dict/set instead of <code>[]</code> for list.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Dict comprehension: {key: value for item in iterable}</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Student name → PSP lookup</span>
+students = [
+    {<span class="string">"name"</span>: <span class="string">"Vipul"</span>, <span class="string">"psp"</span>: <span class="number">85</span>},
+    {<span class="string">"name"</span>: <span class="string">"Kaarthik"</span>, <span class="string">"psp"</span>: <span class="number">92</span>},
+    {<span class="string">"name"</span>: <span class="string">"Ajit"</span>, <span class="string">"psp"</span>: <span class="number">78</span>},
+]
+
+name_to_psp = {s[<span class="string">"name"</span>]: s[<span class="string">"psp"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students}
+<span class="comment"># {'Vipul': 85, 'Kaarthik': 92, 'Ajit': 78}</span>
+
+<span class="comment"># With filter — only strong performers</span>
+strong_lookup = {s[<span class="string">"name"</span>]: s[<span class="string">"psp"</span>] <span class="keyword">for</span> s <span class="keyword">in</span> students <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">80</span>}
+<span class="comment"># {'Vipul': 85, 'Kaarthik': 92}</span>
+
+<span class="comment"># Swap keys and values</span>
+psp_to_name = {v: k <span class="keyword">for</span> k, v <span class="keyword">in</span> name_to_psp.<span class="function">items</span>()}
+<span class="comment"># {85: 'Vipul', 92: 'Kaarthik', 78: 'Ajit'}</span></pre></div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Set comprehension: {expression for item in iterable}</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># Unique first letters</span>
+names = [<span class="string">"Vipul"</span>, <span class="string">"Kaarthik"</span>, <span class="string">"Ajit"</span>, <span class="string">"Gobi"</span>, <span class="string">"Sneha"</span>, <span class="string">"Kavya"</span>]
+first_letters = {name[<span class="number">0</span>] <span class="keyword">for</span> name <span class="keyword">in</span> names}
+<span class="comment"># {'V', 'K', 'A', 'G', 'S'} — 'K' appears once even though 2 names start with K</span>
+
+<span class="comment"># Unique word lengths in a sentence</span>
+sentence = <span class="string">"the quick brown fox jumps over the lazy dog"</span>
+lengths = {<span class="function">len</span>(word) <span class="keyword">for</span> word <span class="keyword">in</span> sentence.<span class="function">split</span>()}
+<span class="comment"># {3, 4, 5} — only unique lengths</span></pre></div>
+            </div>
+
+            <!-- === LEVEL 6: GENERATOR EXPRESSION === -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">6</span> Generator expression &mdash; Lazy comprehension</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Replace <code>[]</code> with <code>()</code> and you get a <strong>generator</strong> &mdash; an iterator that computes values one at a time instead of building the whole list in memory.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> (expression for item in iterable) — lazy!</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content"><pre><span class="comment"># List comprehension — builds entire list in memory</span>
+total = <span class="function">sum</span>([x ** <span class="number">2</span> <span class="keyword">for</span> x <span class="keyword">in</span> <span class="function">range</span>(<span class="number">1_000_000</span>)])  <span class="comment"># 1M items in memory!</span>
+
+<span class="comment"># Generator expression — computes one at a time</span>
+total = <span class="function">sum</span>(x ** <span class="number">2</span> <span class="keyword">for</span> x <span class="keyword">in</span> <span class="function">range</span>(<span class="number">1_000_000</span>))   <span class="comment"># almost zero memory!</span>
+<span class="comment">#          ^ no brackets — that makes it a generator</span>
+
+<span class="comment"># Use generators when:</span>
+<span class="comment"># 1. You're passing to sum(), max(), min(), any(), all()</span>
+<span class="comment"># 2. You have large data and only need one pass</span>
+<span class="comment"># 3. You don't need to index or reuse the result</span></pre></div>
+            </div>
+
+            <!-- === CHEAT SHEET === -->
+            <h3 style="margin: 30px 0 15px;">Comprehension cheat sheet</h3>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr>
+                        <th>Type</th>
+                        <th>Syntax</th>
+                        <th>Result</th>
+                    </tr>
+                    <tr>
+                        <td><strong>List</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">[expr for x in iter]</td>
+                        <td class="revealable" data-answer="[value, value, value, ...]" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>List + filter</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">[expr for x in iter if cond]</td>
+                        <td class="revealable" data-answer="[value, value] — only matching items" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>List + ternary</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">[a if cond else b for x in iter]</td>
+                        <td class="revealable" data-answer="[a, b, a, b, ...] — all items, 2 possible values" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nested</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">[expr for x in iter1 for y in iter2]</td>
+                        <td class="revealable" data-answer="Flat list — like 2 nested for loops" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dict</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">{k: v for x in iter}</td>
+                        <td class="revealable" data-answer="{key: value, key: value, ...}" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Set</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">{expr for x in iter}</td>
+                        <td class="revealable" data-answer="{value, value} — unique values only" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Generator</strong></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.82rem;">(expr for x in iter)</td>
+                        <td class="revealable" data-answer="Iterator — lazy, one value at a time" onclick="revealCell(this)">click to reveal</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- === WHEN NOT TO === -->
+            <div class="highlight-box danger" style="margin-top: 25px;">
+                <strong>When NOT to use comprehensions:</strong><br><br>
+                &bull; <strong>More than 2 conditions or nested loops</strong> &mdash; if you can't read it in 5 seconds, use a regular loop<br>
+                &bull; <strong>Side effects</strong> (printing, writing to file, modifying external state) &mdash; use a <code>for</code> loop instead<br>
+                &bull; <strong>Complex multi-step logic</strong> &mdash; break it into readable steps<br><br>
+                <div class="code-block" style="margin-top: 10px;">
+                    <div class="code-content"><pre><span class="comment"># ✗ BAD — too complex, nobody can read this</span>
+result = [f(x, y) <span class="keyword">for</span> x <span class="keyword">in</span> a <span class="keyword">if</span> g(x) <span class="keyword">for</span> y <span class="keyword">in</span> b <span class="keyword">if</span> h(x, y) <span class="keyword">if</span> y != x]
+
+<span class="comment"># ✓ GOOD — just use a loop</span>
+result = []
+<span class="keyword">for</span> x <span class="keyword">in</span> a:
+    <span class="keyword">if</span> <span class="keyword">not</span> g(x):
+        <span class="keyword">continue</span>
+    <span class="keyword">for</span> y <span class="keyword">in</span> b:
+        <span class="keyword">if</span> h(x, y) <span class="keyword">and</span> y != x:
+            result.<span class="function">append</span>(f(x, y))</pre></div>
+                </div>
+            </div>
+
+            <!-- === PRACTICE QUIZ === -->
+            <div class="quiz-box" id="q-comp-practice1">
+                <h4>Convert this loop to a comprehension:</h4>
+                <div class="code-block" style="margin-bottom: 15px;">
+                    <div class="code-content"><pre>result = []
+<span class="keyword">for</span> s <span class="keyword">in</span> students:
+    <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span>:
+        result.<span class="function">append</span>(s[<span class="string">"name"</span>].<span class="function">upper</span>())</pre></div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('q-comp-practice1', this, false)"><code>[s.upper() for s in students if s["psp"] >= 70]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-comp-practice1', this, true)"><code>[s["name"].upper() for s in students if s["psp"] >= 70]</code></button>
+                <button class="quiz-option" onclick="checkQuiz('q-comp-practice1', this, false)"><code>{s["name"].upper() for s in students if s["psp"] >= 70}</code></button>
+                <div class="quiz-explanation"><strong><code>[s["name"].upper() for s in students if s["psp"] >= 70]</code></strong><br>
+                Read it: "give me <code>s["name"].upper()</code> for each <code>s</code> in students if <code>s["psp"] >= 70</code>".<br>
+                Option A is wrong because <code>s</code> is a dict, not a string. Option C would give a <em>set</em> (curly braces), not a list.</div>
+            </div>
+
+            <div class="quiz-box" id="q-comp-practice2">
+                <h4>What does this produce?</h4>
+                <div class="code-block" style="margin-bottom: 15px;">
+                    <div class="code-content"><pre>{s[<span class="string">"name"</span>]: <span class="string">"Pass"</span> <span class="keyword">if</span> s[<span class="string">"psp"</span>] >= <span class="number">70</span> <span class="keyword">else</span> <span class="string">"Fail"</span> <span class="keyword">for</span> s <span class="keyword">in</span> students}</pre></div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('q-comp-practice2', this, false)">A list of "Pass"/"Fail" strings</button>
+                <button class="quiz-option" onclick="checkQuiz('q-comp-practice2', this, false)">A set of student names</button>
+                <button class="quiz-option" onclick="checkQuiz('q-comp-practice2', this, true)">A dict mapping names to "Pass"/"Fail"</button>
+                <div class="quiz-explanation"><strong><code>{'Vipul': 'Pass', 'Gobi': 'Fail', 'Kaarthik': 'Pass'}</code></strong><br>
+                It's a <strong>dict comprehension</strong> (curly braces with <code>key: value</code>). The ternary <code>"Pass" if psp >= 70 else "Fail"</code> is the value expression. Each student name maps to their pass/fail status.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 12. SUMMARY ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label success">Wrap Up</span>
+            <h2 class="section-title">Key Takeaways</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128736;</div>
+                    <div class="card-title">Functions as Objects</div>
+                    <div class="card-desc">Functions can be stored in variables, passed as arguments, and returned from other functions. This is the foundation for everything else.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#955;</div>
+                    <div class="card-title">Lambda</div>
+                    <div class="card-desc">Anonymous, one-expression functions. Use inline with <code>sorted(key=...)</code>, <code>map()</code>, <code>filter()</code>. Don't assign to a variable &mdash; use <code>def</code> instead.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9881;</div>
+                    <div class="card-title">map / filter / reduce</div>
+                    <div class="card-desc"><strong>map</strong> transforms, <strong>filter</strong> selects, <strong>reduce</strong> combines. All return iterators (lazy). Comprehensions are usually more Pythonic.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">Closures</div>
+                    <div class="card-desc">Inner functions that remember outer variables. Each closure gets its own copy. Watch out for the loop variable gotcha (<code>lambda i=i: i</code>).</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127873;</div>
+                    <div class="card-title">Decorators</div>
+                    <div class="card-desc"><code>@decorator</code> = <code>func = decorator(func)</code>. Just closures with syntactic sugar. Used everywhere: <code>@cache</code>, <code>@login_required</code>, <code>@app.route</code>.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 40px;">
+                <strong>Next class:</strong> Python Advanced-4 &mdash; Exception Handling
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 13. FOOTER ===== -->
+    <footer>
+        <p>LLD-11: Lambda &amp; Functional Programming &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    function revealCell(cell) {
+        if (cell.classList.contains('revealed')) return;
+        cell.classList.add('revealed');
+        cell.classList.remove('revealable');
+        cell.textContent = cell.getAttribute('data-answer');
+        cell.style.cursor = 'default';
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
