@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-12: Exception Handling &amp; Misc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+
+        /* Reveal table styles */
+        .reveal-table td.revealable { cursor: pointer; background: var(--bg-tertiary); text-align: center; color: var(--text-muted); font-style: italic; transition: all 0.3s; user-select: none; }
+        .reveal-table td.revealable:hover { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-primary); }
+        .reveal-table td.revealed { background: rgba(16, 185, 129, 0.08); color: var(--text-primary); font-style: normal; cursor: default; font-weight: 500; }
+
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-12: Exception Handling</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#hierarchy">Hierarchy</a></li>
+            <li><a href="#custom">Custom</a></li>
+            <li><a href="#context-managers">With</a></li>
+            <li><a href="#chaining">Chaining</a></li>
+            <li><a href="#eafp">EAFP</a></li>
+            <li><a href="#i18n">i18n</a></li>
+            <li><a href="#copy">Copy</a></li>
+            <li><a href="#best-practices">Practices</a></li>
+            <li><a href="#summary">Summary</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#9888;&#65039;</div>
+        <h1>Exception Handling &amp; Misc</h1>
+        <p class="hero-meta">LLD-12 &bull; Python Advanced-4</p>
+        <p class="hero-tagline">You learned try/except in Django. Now let's master it &mdash; <strong>custom exceptions</strong>, <strong>context managers</strong>, <strong>EAFP</strong>, <strong>i18n</strong>, and <strong>copy semantics</strong>.</p>
+    </section>
+
+    <!-- ===== 2. RECAP ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label">Recap</span>
+            <h2 class="section-title">Django Exception Handling + Lambda/FP</h2>
+            <p class="section-subtitle">You already used try/except in Django middleware and decorators. Let's make sure you remember.</p>
+
+            <!-- Quiz 1 -->
+            <div class="quiz-box" id="recap-q1">
+                <h4>Quiz 1: What happens when this Django view runs?</h4>
+                <div class="code-block">
+                    <div class="code-header" onclick="toggleCode(this)">
+                        <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> views.py</div>
+                        <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                    </div>
+                    <div class="code-content">
+<pre><span class="keyword">from</span> menu.models <span class="keyword">import</span> MenuItem
+
+<span class="keyword">def</span> <span class="function">get_dish</span>(request, dish_id):
+    dish = MenuItem.objects.<span class="function">get</span>(id=<span class="number">99999</span>)  <span class="comment"># does not exist</span>
+    <span class="keyword">return</span> <span class="function">JsonResponse</span>({<span class="string">"name"</span>: dish.name})</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">A) Returns an empty JSON response {}</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">B) Returns None</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, true)">C) Raises MenuItem.DoesNotExist &mdash; 500 Server Error</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">D) Returns a 404 automatically</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>.get()</code> raises <code>Model.DoesNotExist</code> when no matching row exists. Without try/except, Django returns a 500 error to the user &mdash; showing the full traceback in DEBUG mode.</div>
+            </div>
+
+            <!-- Quiz 2 -->
+            <div class="quiz-box" id="recap-q2">
+                <h4>Quiz 2: When does the <code>else</code> block run?</h4>
+                <div class="code-block">
+                    <div class="code-header" onclick="toggleCode(this)">
+                        <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> try/except/else/finally</div>
+                        <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                    </div>
+                    <div class="code-content">
+<pre><span class="keyword">try</span>:
+    dish = MenuItem.objects.<span class="function">get</span>(id=dish_id)
+<span class="keyword">except</span> MenuItem.DoesNotExist:
+    <span class="function">print</span>(<span class="string">"Not found!"</span>)
+<span class="keyword">else</span>:
+    <span class="function">print</span>(<span class="string">"Found it!"</span>)   <span class="comment"># when does this run?</span>
+<span class="keyword">finally</span>:
+    <span class="function">print</span>(<span class="string">"Always runs"</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">A) Always, after try</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, true)">B) Only if try succeeded with NO exception</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">C) Only if an exception was caught</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">D) Only if finally runs first</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> The <code>else</code> block runs only when the <code>try</code> block completes without raising any exception. It lets you separate "happy path" code from the try block, keeping the try block minimal.</div>
+            </div>
+
+            <!-- Quiz 3 -->
+            <div class="quiz-box" id="recap-q3">
+                <h4>Quiz 3: What does <code>get_object_or_404(MenuItem, id=99)</code> do?</h4>
+                <div class="code-block">
+                    <div class="code-header" onclick="toggleCode(this)">
+                        <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Django shortcut</div>
+                        <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                    </div>
+                    <div class="code-content">
+<pre><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> get_object_or_404
+
+dish = <span class="function">get_object_or_404</span>(MenuItem, id=<span class="number">99</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">A) Returns None if not found</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, true)">B) Returns the object if found, raises Http404 if not</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">C) Returns an empty queryset</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">D) Raises DoesNotExist (500 error)</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>get_object_or_404</code> wraps the try/except pattern for you &mdash; it catches <code>DoesNotExist</code> and raises <code>Http404</code> instead, giving the user a proper 404 page.</div>
+            </div>
+
+            <!-- Quiz 5: map vs filter vs reduce -->
+            <div class="quiz-box" id="recap-q5">
+                <h4>Quiz 5: What does each one do?</h4>
+                <div class="code-block">
+                    <div class="code-header" onclick="toggleCode(this)">
+                        <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> map, filter, reduce</div>
+                        <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                    </div>
+                    <div class="code-content">
+<pre>nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]
+
+a = <span class="function">list</span>(<span class="function">map</span>(<span class="keyword">lambda</span> x: x * <span class="number">10</span>, nums))
+b = <span class="function">list</span>(<span class="function">filter</span>(<span class="keyword">lambda</span> x: x > <span class="number">3</span>, nums))
+c = reduce(<span class="keyword">lambda</span> acc, x: acc + x, nums)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q5', this, false)">A) a=[10,20,30,40,50], b=[1,2,3], c=15</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q5', this, true)">B) a=[10,20,30,40,50], b=[4,5], c=15</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q5', this, false)">C) a=[4,5], b=[10,20,30,40,50], c=15</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q5', this, false)">D) a=[10,20,30,40,50], b=[4,5], c=120</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>map</code> <strong>transforms</strong> every element (×10). <code>filter</code> <strong>keeps</strong> only elements where the condition is True (&gt;3 keeps 4,5). <code>reduce</code> <strong>combines</strong> all elements into one value (1+2+3+4+5=15, not 120 which would be product).</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 3. EXCEPTION HIERARCHY ===== -->
+    <section id="hierarchy">
+        <div class="section-container">
+            <span class="section-label danger">Exception Hierarchy</span>
+            <h2 class="section-title">What Inherits What</h2>
+            <p class="section-subtitle">Every exception in Python is part of a class hierarchy. Understanding this tree is the key to writing correct except blocks.</p>
+
+            <div class="question-box">
+                <p><strong>Question:</strong> You write <code>except:</code> (with nothing after it). What does it catch? Just errors? Or something more?</p>
+            </div>
+
+            <h3 style="margin-bottom: 15px;">The Full Picture</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box red" style="font-weight:700; font-size:1rem;">BaseException</div>
+                </div>
+                <div class="flow-row">
+                    <span class="flow-arrow">&#8595;</span>
+                    <span style="width:80px"></span>
+                    <span class="flow-arrow">&#8595;</span>
+                    <span style="width:80px"></span>
+                    <span class="flow-arrow">&#8595;</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box red">SystemExit<small>sys.exit()</small></div>
+                    <div class="flow-box red">KeyboardInterrupt<small>Ctrl+C</small></div>
+                    <div class="flow-box green" style="font-weight:700;">Exception<small>All normal errors</small></div>
+                </div>
+                <div class="flow-row">
+                    <span style="width:200px"></span>
+                    <span class="flow-arrow">&#8595;</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">ValueError</div>
+                    <div class="flow-box blue">TypeError</div>
+                    <div class="flow-box blue">KeyError</div>
+                    <div class="flow-box blue">IOError</div>
+                    <div class="flow-box purple">RuntimeError</div>
+                </div>
+                <small style="display:block; text-align:center; margin-top:15px; color:var(--text-muted);">SystemExit and KeyboardInterrupt are NOT subclasses of Exception &mdash; they inherit directly from BaseException.</small>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Order Matters &mdash; Specific Before General</h3>
+
+            <!-- Quiz 6: misordered exceptions with code -->
+            <div class="quiz-box" id="hierarchy-q1">
+                <h4>Quiz 6: What gets printed when a <code>KeyError</code> is raised?</h4>
+                <div class="code-block" style="margin-bottom: 15px;">
+                    <div class="code-content">
+<pre>config = {}
+
+<span class="keyword">try</span>:
+    host = config[<span class="string">"database"</span>]
+<span class="keyword">except</span> <span class="function">Exception</span> <span class="keyword">as</span> e:
+    <span class="function">print</span>(<span class="string">"A: caught by Exception"</span>)
+<span class="keyword">except</span> <span class="function">KeyError</span> <span class="keyword">as</span> e:
+    <span class="function">print</span>(<span class="string">"B: caught by KeyError"</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('hierarchy-q1', this, false)">B: caught by KeyError</button>
+                <button class="quiz-option" onclick="checkQuiz('hierarchy-q1', this, true)">A: caught by Exception</button>
+                <button class="quiz-option" onclick="checkQuiz('hierarchy-q1', this, false)">Both A and B print</button>
+                <button class="quiz-option" onclick="checkQuiz('hierarchy-q1', this, false)">Error &mdash; Python doesn't allow two except blocks</button>
+                <div class="quiz-explanation">
+                    <strong>"A: caught by Exception" prints.</strong> Python checks <code>except</code> blocks <strong>top to bottom</strong> and stops at the first match. Since <code>KeyError</code> is a subclass of <code>Exception</code>, the <code>except Exception</code> block catches it first &mdash; the <code>except KeyError</code> below it <strong>never runs</strong>.<br><br>
+                    <strong>Fix:</strong> always put specific exceptions first:
+                    <div class="code-block" style="margin-top: 10px;">
+                        <div class="code-content">
+<pre><span class="keyword">try</span>:
+    host = config[<span class="string">"database"</span>]
+<span class="keyword">except</span> <span class="function">KeyError</span> <span class="keyword">as</span> e:        <span class="comment"># specific first ✓</span>
+    <span class="function">print</span>(<span class="string">f"Missing key: </span>{e}<span class="string">"</span>)
+<span class="keyword">except</span> <span class="function">Exception</span> <span class="keyword">as</span> e:      <span class="comment"># general last (catch-all) ✓</span>
+    <span class="function">print</span>(<span class="string">f"Unexpected: </span>{e}<span class="string">"</span>)</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. CUSTOM EXCEPTIONS ===== -->
+    <section id="custom">
+        <div class="section-container">
+            <span class="section-label purple">Custom Exceptions</span>
+            <h2 class="section-title">Build Your Own</h2>
+            <p class="section-subtitle">When ValueError means ten different things, it's time to create your own exception classes.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> Your app raises <code>ValueError("Insufficient stock")</code> in one place and <code>ValueError("Invalid email")</code> in another. How does the caller tell them apart? Parsing the string message? That's fragile.</p>
+            </div>
+
+            <h3 style="margin-bottom:15px;"><span class="step-number">1</span> The Simplest Custom Exception</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> simple custom exception</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">PaymentError</span>(<span class="function">Exception</span>):
+    <span class="string">"""Base exception for all payment-related errors."""</span>
+    <span class="keyword">pass</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> Build a Hierarchy with Data</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> payment exception hierarchy</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">PaymentError</span>(<span class="function">Exception</span>):
+    <span class="string">"""Base for payment errors."""</span>
+    <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">InsufficientFundsError</span>(<span class="function">PaymentError</span>):
+    <span class="string">"""Raised when account balance is too low."""</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, balance, amount):
+        self.balance = balance
+        self.amount = amount
+        self.deficit = amount - balance
+        <span class="function">super</span>().<span class="function">__init__</span>(
+            <span class="string">f"Cannot charge </span>${amount}<span class="string">. Balance: </span>${balance}<span class="string"> (short </span>${self.deficit}<span class="string">)"</span>
+        )
+
+<span class="keyword">class</span> <span class="function">PaymentGatewayError</span>(<span class="function">PaymentError</span>):
+    <span class="string">"""Raised when the payment gateway is unreachable."""</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, gateway_name, status_code):
+        self.gateway_name = gateway_name
+        self.status_code = status_code
+        <span class="function">super</span>().<span class="function">__init__</span>(
+            <span class="string">f"Gateway '</span>{gateway_name}<span class="string">' returned status </span>{status_code}<span class="string">"</span>
+        )</pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> Using It &mdash; Catching the Parent Catches All Children</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> catching custom exceptions</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">process_payment</span>(user, amount):
+    <span class="keyword">if</span> user.balance < amount:
+        <span class="keyword">raise</span> <span class="function">InsufficientFundsError</span>(user.balance, amount)
+
+<span class="keyword">try</span>:
+    <span class="function">process_payment</span>(user, <span class="number">150.00</span>)
+<span class="keyword">except</span> <span class="function">InsufficientFundsError</span> <span class="keyword">as</span> e:
+    <span class="function">print</span>(<span class="string">f"Short by </span>${e.deficit}<span class="string">. Top up?"</span>)  <span class="comment"># access structured data!</span>
+<span class="keyword">except</span> <span class="function">PaymentError</span> <span class="keyword">as</span> e:
+    <span class="function">print</span>(<span class="string">f"Payment failed: </span>{e}<span class="string">"</span>)            <span class="comment"># catches any PaymentError subclass</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Hierarchy Visual</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green" style="font-weight:700;">Exception</div>
+                </div>
+                <div class="flow-row"><span class="flow-arrow">&#8595;</span></div>
+                <div class="flow-row">
+                    <div class="flow-box purple" style="font-weight:700;">PaymentError</div>
+                </div>
+                <div class="flow-row">
+                    <span class="flow-arrow">&#8595;</span>
+                    <span style="width:60px"></span>
+                    <span class="flow-arrow">&#8595;</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box red">InsufficientFundsError<small>balance, amount, deficit</small></div>
+                    <div class="flow-box red">PaymentGatewayError<small>gateway_name, status_code</small></div>
+                </div>
+                <small style="display:block; text-align:center; margin-top:12px; color:var(--text-muted);">Catching PaymentError catches BOTH children. Data attributes let callers react specifically.</small>
+            </div>
+
+            <!-- Quiz 8 -->
+            <div class="quiz-box" id="custom-q1">
+                <h4>Quiz 8: You write <code>except PaymentError</code>. Will it catch <code>InsufficientFundsError</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('custom-q1', this, true)">A) Yes &mdash; InsufficientFundsError is a subclass of PaymentError</button>
+                <button class="quiz-option" onclick="checkQuiz('custom-q1', this, false)">B) No &mdash; you must catch InsufficientFundsError explicitly</button>
+                <button class="quiz-option" onclick="checkQuiz('custom-q1', this, false)">C) Only if you use bare except:</button>
+                <button class="quiz-option" onclick="checkQuiz('custom-q1', this, false)">D) Only if PaymentError defines __subclasshook__</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> Since <code>InsufficientFundsError</code> inherits from <code>PaymentError</code>, catching the parent catches all children. This is the power of exception hierarchies &mdash; catch broadly or narrowly as needed.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. CONTEXT MANAGERS ===== -->
+    <section id="context-managers">
+        <div class="section-container">
+            <span class="section-label success">Context Managers</span>
+            <h2 class="section-title">The <code>with</code> Statement</h2>
+            <p class="section-subtitle">Guarantee cleanup happens even when exceptions blow up your code.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> What happens when an exception occurs between <code>open()</code> and <code>close()</code>? The file handle leaks.</p>
+            </div>
+
+            <h3 style="margin-bottom:15px;"><span class="step-number">1</span> The Bug &mdash; Forgetting to Close</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">BUG: File Never Closed</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> broken</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre>f = <span class="function">open</span>(<span class="string">"data.csv"</span>)
+data = f.<span class="function">read</span>()
+<span class="function">process</span>(data)  <span class="comment"># if this crashes...</span>
+f.<span class="function">close</span>()       <span class="comment"># ...this never runs!</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">FIX: with Statement</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> correct</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">with</span> <span class="function">open</span>(<span class="string">"data.csv"</span>) <span class="keyword">as</span> f:
+    data = f.<span class="function">read</span>()
+    <span class="function">process</span>(data)
+<span class="comment"># f.close() called automatically</span>
+<span class="comment"># even if process() crashes!</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> How It Works: __enter__ and __exit__</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> custom context manager (class-based)</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">DatabaseConnection</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, db_url):
+        self.db_url = db_url
+        self.connection = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">__enter__</span>(self):
+        <span class="function">print</span>(<span class="string">"Connecting..."</span>)
+        self.connection = <span class="function">connect</span>(self.db_url)
+        <span class="keyword">return</span> self.connection  <span class="comment"># this becomes the 'as' variable</span>
+
+    <span class="keyword">def</span> <span class="function">__exit__</span>(self, exc_type, exc_val, exc_tb):
+        <span class="function">print</span>(<span class="string">"Closing connection..."</span>)
+        self.connection.<span class="function">close</span>()    <span class="comment"># ALWAYS runs, even on exception</span>
+        <span class="keyword">return</span> <span class="keyword">False</span>               <span class="comment"># don't suppress the exception</span>
+
+<span class="comment"># Usage:</span>
+<span class="keyword">with</span> <span class="function">DatabaseConnection</span>(<span class="string">"postgres://..."</span>) <span class="keyword">as</span> conn:
+    conn.<span class="function">execute</span>(<span class="string">"SELECT * FROM menu"</span>)
+<span class="comment"># connection is closed here, no matter what</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Key Point:</strong> <code>__enter__</code> runs at the start of the <code>with</code> block and returns the value for <code>as</code>. <code>__exit__</code> runs at the end &mdash; even if an exception was raised. If <code>__exit__</code> returns <code>True</code>, the exception is suppressed.
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> contextlib.suppress &mdash; Silencing Expected Exceptions</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> suppress()</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> contextlib <span class="keyword">import</span> suppress
+
+<span class="comment"># Instead of:</span>
+<span class="keyword">try</span>:
+    os.<span class="function">remove</span>(<span class="string">"temp.log"</span>)
+<span class="keyword">except</span> <span class="function">FileNotFoundError</span>:
+    <span class="keyword">pass</span>
+
+<span class="comment"># Write:</span>
+<span class="keyword">with</span> <span class="function">suppress</span>(FileNotFoundError):
+    os.<span class="function">remove</span>(<span class="string">"temp.log"</span>)  <span class="comment"># no crash if file doesn't exist</span></pre>
+                </div>
+            </div>
+
+            <!-- Quiz 9 -->
+            <div class="quiz-box" id="ctx-q1">
+                <h4>Quiz 9: What does <code>__exit__</code> do in a context manager?</h4>
+                <button class="quiz-option" onclick="checkQuiz('ctx-q1', this, false)">A) It runs only when an exception occurs</button>
+                <button class="quiz-option" onclick="checkQuiz('ctx-q1', this, false)">B) It initializes the resource</button>
+                <button class="quiz-option" onclick="checkQuiz('ctx-q1', this, true)">C) It performs cleanup and runs even if an exception was raised</button>
+                <button class="quiz-option" onclick="checkQuiz('ctx-q1', this, false)">D) It catches all exceptions automatically</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>__exit__</code> is the cleanup method. It always runs when the <code>with</code> block finishes &mdash; whether it completed normally or an exception was raised. It receives the exception info (or None) and can choose to suppress it by returning <code>True</code>.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 6. EXCEPTION CHAINING ===== -->
+    <section id="chaining">
+        <div class="section-container">
+            <span class="section-label blue">Exception Chaining</span>
+            <h2 class="section-title">raise X from Y</h2>
+            <p class="section-subtitle">When you catch one exception and raise another, keep the original cause visible.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> You catch a <code>ConnectionError</code> from the database and raise <code>UserNotFoundError</code>. Now a developer debugging sees <code>UserNotFoundError</code> but has <strong>no idea</strong> it was caused by a connection problem.</p>
+            </div>
+
+            <h3 style="margin-bottom:15px;"><span class="step-number">1</span> Without Chaining &mdash; Cause is Lost</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> cause lost</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">get_user</span>(user_id):
+    <span class="keyword">try</span>:
+        <span class="keyword">return</span> db.<span class="function">query</span>(<span class="string">f"SELECT * FROM users WHERE id = </span>{user_id}<span class="string">"</span>)
+    <span class="keyword">except</span> <span class="function">ConnectionError</span>:
+        <span class="keyword">raise</span> <span class="function">UserNotFoundError</span>(<span class="string">f"User </span>{user_id}<span class="string"> not found"</span>)
+        <span class="comment"># Original ConnectionError is shown in traceback as</span>
+        <span class="comment"># "During handling of the above exception, another exception occurred"</span>
+        <span class="comment"># but it's an implicit chain, and misleading</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> With Chaining &mdash; <code>raise X from Y</code></h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> explicit chaining</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">get_user</span>(user_id):
+    <span class="keyword">try</span>:
+        <span class="keyword">return</span> db.<span class="function">query</span>(<span class="string">f"SELECT * FROM users WHERE id = </span>{user_id}<span class="string">"</span>)
+    <span class="keyword">except</span> <span class="function">ConnectionError</span> <span class="keyword">as</span> original_error:
+        <span class="keyword">raise</span> <span class="function">UserNotFoundError</span>(<span class="string">f"User </span>{user_id}<span class="string"> not found"</span>) <span class="keyword">from</span> original_error</pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 15px 0;">When this crashes, Python prints a <strong>traceback</strong> &mdash; a full report of what went wrong and where. Here's what it looks like:</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> What Python prints when this crashes (the traceback)</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Python prints this error report (called a "traceback"):</span>
+
+Traceback (most recent call last):        <span class="comment"># ← "here's what happened"</span>
+  File <span class="string">"app.py"</span>, line <span class="number">4</span>, in <span class="function">get_user</span>
+    <span class="keyword">return</span> db.query(...)
+<span class="function">ConnectionError</span>: database connection refused  <span class="comment"># ← original error</span>
+
+The above exception was the <strong>direct cause</strong> of the following exception:
+
+Traceback (most recent call last):        <span class="comment"># ← "which caused this"</span>
+  File <span class="string">"app.py"</span>, line <span class="number">10</span>, in <span class="function">&lt;module&gt;</span>
+    user = get_user(<span class="number">42</span>)
+  File <span class="string">"app.py"</span>, line <span class="number">6</span>, in <span class="function">get_user</span>
+    <span class="keyword">raise</span> UserNotFoundError(...) from original_error
+<span class="function">UserNotFoundError</span>: User 42 not found       <span class="comment"># ← new error you raised</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>What is a traceback?</strong> It's Python's error report &mdash; printed when an unhandled exception crashes your program. It shows:<br>
+                &bull; <strong>Which file and line</strong> the error happened on<br>
+                &bull; <strong>The call chain</strong> &mdash; which function called which (bottom = where it crashed)<br>
+                &bull; <strong>The exception type and message</strong><br><br>
+                With <code>raise X from Y</code>, the traceback shows <strong>both</strong> exceptions linked together &mdash; so when you're debugging at 2am, you see the <em>real</em> cause (ConnectionError) not just the symptom (UserNotFoundError).
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> Suppress the Chain: <code>from None</code></h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> from None</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">parse_config</span>(raw):
+    <span class="keyword">try</span>:
+        <span class="keyword">return</span> json.<span class="function">loads</span>(raw)
+    <span class="keyword">except</span> json.<span class="function">JSONDecodeError</span>:
+        <span class="keyword">raise</span> <span class="function">ConfigError</span>(<span class="string">"Invalid config format"</span>) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="comment"># 'from None' intentionally hides the JSONDecodeError</span>
+        <span class="comment"># Use when the original error would confuse end users</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">4</span> Accessing the Cause Programmatically</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> __cause__ attribute</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">try</span>:
+    <span class="function">get_user</span>(<span class="number">42</span>)
+<span class="keyword">except</span> <span class="function">UserNotFoundError</span> <span class="keyword">as</span> e:
+    <span class="function">print</span>(<span class="string">f"Error: </span>{e}<span class="string">"</span>)
+    <span class="keyword">if</span> e.__cause__:
+        <span class="function">print</span>(<span class="string">f"Root cause: </span>{e.__cause__}<span class="string">"</span>)
+        <span class="comment"># Root cause: database connection refused</span></pre>
+                </div>
+            </div>
+
+            <!-- Quiz 10 -->
+            <div class="quiz-box" id="chain-q1">
+                <h4>Quiz 10: What does <code>raise AppError("msg") from original</code> do?</h4>
+                <button class="quiz-option" onclick="checkQuiz('chain-q1', this, false)">A) Replaces original with AppError</button>
+                <button class="quiz-option" onclick="checkQuiz('chain-q1', this, true)">B) Raises AppError but links original as __cause__ for traceback</button>
+                <button class="quiz-option" onclick="checkQuiz('chain-q1', this, false)">C) Raises both exceptions simultaneously</button>
+                <button class="quiz-option" onclick="checkQuiz('chain-q1', this, false)">D) Suppresses original and only shows AppError</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>raise X from Y</code> sets <code>X.__cause__ = Y</code>. The traceback explicitly says "The above exception was the direct cause of the following exception" &mdash; giving debuggers full context.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. EAFP vs LBYL ===== -->
+    <section id="eafp">
+        <div class="section-container">
+            <span class="section-label warning">EAFP vs LBYL</span>
+            <h2 class="section-title">Two Philosophies of Error Handling</h2>
+            <p class="section-subtitle">Should you check first, or just try and handle failure?</p>
+
+            <div class="highlight-box">
+                <strong>EAFP</strong> = <strong>E</strong>asier to <strong>A</strong>sk <strong>F</strong>orgiveness than <strong>P</strong>ermission &mdash; <em>"just do it, handle the error if it happens"</em><br>
+                <strong>LBYL</strong> = <strong>L</strong>ook <strong>B</strong>efore <strong>Y</strong>ou <strong>L</strong>eap &mdash; <em>"check everything before doing it"</em>
+            </div>
+
+            <!-- Comparison table -->
+            <h3 style="margin: 30px 0 15px;">At a glance</h3>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <tr><th></th><th>LBYL (Look Before You Leap)</th><th>EAFP (Easier to Ask Forgiveness)</th></tr>
+                    <tr><td><strong>Approach</strong></td><td class="revealable" data-answer="Check conditions first, then act" onclick="revealCell(this)">click to reveal</td><td class="revealable" data-answer="Just try it, catch exceptions if it fails" onclick="revealCell(this)">click to reveal</td></tr>
+                    <tr><td><strong>Uses</strong></td><td class="revealable" data-answer="if/else checks" onclick="revealCell(this)">click to reveal</td><td class="revealable" data-answer="try/except blocks" onclick="revealCell(this)">click to reveal</td></tr>
+                    <tr><td><strong>Race conditions?</strong></td><td class="revealable" data-answer="Yes — state can change between check and use" onclick="revealCell(this)">click to reveal</td><td class="revealable" data-answer="No — check and use happen atomically" onclick="revealCell(this)">click to reveal</td></tr>
+                    <tr><td><strong>Readability</strong></td><td class="revealable" data-answer="Clear when conditions are simple" onclick="revealCell(this)">click to reveal</td><td class="revealable" data-answer="Clean when the 'happy path' is the common case" onclick="revealCell(this)">click to reveal</td></tr>
+                    <tr><td><strong>Performance</strong></td><td class="revealable" data-answer="Faster if exceptions are very frequent" onclick="revealCell(this)">click to reveal</td><td class="revealable" data-answer="Faster if exceptions are rare (the common case)" onclick="revealCell(this)">click to reveal</td></tr>
+                    <tr><td><strong>Pythonic?</strong></td><td class="revealable" data-answer="Common in C/Java" onclick="revealCell(this)">click to reveal</td><td class="revealable" data-answer="✅ Yes — the Python way" onclick="revealCell(this)">click to reveal</td></tr>
+                </table>
+            </div>
+
+            <!-- Example 1: Dict access -->
+            <h3 style="margin: 30px 0 15px;">Example 1: Dictionary access</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">LBYL</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Check first</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">if</span> <span class="string">"name"</span> <span class="keyword">in</span> user_dict:
+    name = user_dict[<span class="string">"name"</span>]
+<span class="keyword">else</span>:
+    name = <span class="string">"Unknown"</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">EAFP</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Try it</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">try</span>:
+    name = user_dict[<span class="string">"name"</span>]
+<span class="keyword">except</span> <span class="function">KeyError</span>:
+    name = <span class="string">"Unknown"</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Best of both worlds:</strong> For dict access, use <code>user_dict.get("name", "Unknown")</code> &mdash; clean and no exception overhead.
+            </div>
+
+            <!-- Example 2: Type conversion -->
+            <h3 style="margin: 30px 0 15px;">Example 2: Converting user input to int</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">LBYL</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Check first</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre>user_input = <span class="string">"42abc"</span>
+
+<span class="keyword">if</span> user_input.<span class="function">isdigit</span>():
+    age = <span class="function">int</span>(user_input)
+<span class="keyword">else</span>:
+    age = <span class="number">0</span>
+
+<span class="comment"># Problem: isdigit() doesn't handle</span>
+<span class="comment"># "-5" or "3.14" correctly</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">EAFP</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Try it</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre>user_input = <span class="string">"42abc"</span>
+
+<span class="keyword">try</span>:
+    age = <span class="function">int</span>(user_input)
+<span class="keyword">except</span> <span class="function">ValueError</span>:
+    age = <span class="number">0</span>
+
+<span class="comment"># Handles everything: "abc", "-5",</span>
+<span class="comment"># "3.14", "" — all caught cleanly</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example 3: List access -->
+            <h3 style="margin: 30px 0 15px;">Example 3: Accessing a list index</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">LBYL</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Check first</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre>items = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]
+index = <span class="number">5</span>
+
+<span class="keyword">if</span> index < <span class="function">len</span>(items):
+    val = items[index]
+<span class="keyword">else</span>:
+    val = <span class="keyword">None</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">EAFP</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Try it</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre>items = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]
+index = <span class="number">5</span>
+
+<span class="keyword">try</span>:
+    val = items[index]
+<span class="keyword">except</span> <span class="function">IndexError</span>:
+    val = <span class="keyword">None</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example 4: File access with race condition -->
+            <h3 style="margin: 30px 0 15px;">Example 4: File access &mdash; LBYL has a race condition!</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">LBYL &mdash; Race Condition Bug</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> LBYL race condition</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">import</span> os
+
+<span class="keyword">if</span> os.path.<span class="function">exists</span>(<span class="string">"data.csv"</span>):
+    <span class="comment"># Another process deletes</span>
+    <span class="comment"># the file RIGHT HERE!</span>
+    f = <span class="function">open</span>(<span class="string">"data.csv"</span>)  <span class="comment"># BOOM!</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">EAFP &mdash; No Race Condition</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> EAFP safe</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">try</span>:
+    f = <span class="function">open</span>(<span class="string">"data.csv"</span>)
+<span class="keyword">except</span> <span class="function">FileNotFoundError</span>:
+    <span class="function">print</span>(<span class="string">"File not found"</span>)
+<span class="comment"># No gap between check and use</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>TOCTOU Bug:</strong> "Time Of Check vs Time Of Use" &mdash; between checking <code>os.path.exists()</code> and calling <code>open()</code>, another process can delete the file. EAFP eliminates this race condition entirely.
+            </div>
+
+            <!-- Example 5: Object attribute -->
+            <h3 style="margin: 30px 0 15px;">Example 5: Accessing an object attribute</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">LBYL</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Check first</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">if</span> <span class="function">hasattr</span>(user, <span class="string">"email"</span>):
+    email = user.email
+<span class="keyword">else</span>:
+    email = <span class="string">"no-email@example.com"</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">EAFP</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Try it</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">try</span>:
+    email = user.email
+<span class="keyword">except</span> <span class="function">AttributeError</span>:
+    email = <span class="string">"no-email@example.com"</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz 11 -->
+            <div class="quiz-box" id="eafp-q1">
+                <h4>Quiz 11: Which approach is considered more "Pythonic"?</h4>
+                <button class="quiz-option" onclick="checkQuiz('eafp-q1', this, false)">A) LBYL &mdash; always check before acting</button>
+                <button class="quiz-option" onclick="checkQuiz('eafp-q1', this, true)">B) EAFP &mdash; try it and handle exceptions</button>
+                <button class="quiz-option" onclick="checkQuiz('eafp-q1', this, false)">C) Neither &mdash; Python has no preference</button>
+                <button class="quiz-option" onclick="checkQuiz('eafp-q1', this, false)">D) LBYL for files, EAFP for everything else</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> EAFP is the Pythonic idiom. Python exceptions are fast (C-level), and EAFP avoids race conditions. The official Python glossary explicitly says: <em>"This clean and fast style is characterized by the presence of many try and except statements."</em></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. i18n IN EXCEPTION MESSAGES ===== -->
+    <section id="i18n">
+        <div class="section-container">
+            <span class="section-label blue">i18n in Exceptions</span>
+            <h2 class="section-title">Django i18n in Exception Messages</h2>
+            <p class="section-subtitle">When your error messages face users, they need to be translatable.</p>
+
+            <div class="question-box">
+                <p><strong>Problem:</strong> Your API returns <code>"Order not found"</code> to users worldwide. A user in France sees English. A user in India sees English. How do you make Django return <code>"Commande introuvable"</code> for French and <code>"ऑर्डर नहीं मिला"</code> for Hindi &mdash; without hardcoding every language?</p>
+            </div>
+
+            <!-- FLOW: How it works end-to-end -->
+            <h3 style="margin: 30px 0 15px;">How it works: end-to-end flow</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When an API request comes in, here's what happens step by step:</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; font-weight: 700; margin-bottom: 15px;">Request &rarr; Language Detection &rarr; Translated Response</div>
+                <div class="flow-row">
+                    <div class="flow-box blue" style="min-width: 140px;"><strong>1. Client sends request</strong><small>Accept-Language: fr</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box purple" style="min-width: 160px;"><strong>2. Django middleware</strong><small>LocaleMiddleware detects "fr"</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box" style="min-width: 140px;"><strong>3. View raises error</strong><small>_("Order not found")</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green" style="min-width: 160px;"><strong>4. Django looks up .po file</strong><small>locale/fr/django.po</small></div>
+                </div>
+                <div class="flow-row" style="margin-top: 15px;">
+                    <div class="flow-box green" style="min-width: 300px;"><strong>5. Response: "Commande introuvable"</strong><small>French translation returned to client</small></div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128218; Where are the translations stored?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># Your project structure:</span>
+restaurant_project/
+├── locale/                      <span class="comment"># ← translations live here</span>
+│   ├── fr/                      <span class="comment"># French</span>
+│   │   └── LC_MESSAGES/
+│   │       ├── django.po        <span class="comment"># ← human-editable translation file</span>
+│   │       └── django.mo        <span class="comment"># ← compiled binary (auto-generated)</span>
+│   └── hi/                      <span class="comment"># Hindi</span>
+│       └── LC_MESSAGES/
+│           ├── django.po
+│           └── django.mo
+├── orders/
+│   └── views.py                 <span class="comment"># ← uses _("Order not found")</span>
+└── restaurant_project/
+    └── settings.py              <span class="comment"># ← LOCALE_PATHS, LANGUAGES config</span></pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 15px;">The <code>.po</code> file is a simple text file with pairs like:</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># locale/fr/LC_MESSAGES/django.po</span>
+msgid <span class="string">"Order not found"</span>          <span class="comment"># ← original English string</span>
+msgstr <span class="string">"Commande introuvable"</span>     <span class="comment"># ← French translation</span>
+
+msgid <span class="string">"Item not on the menu"</span>
+msgstr <span class="string">"Article non disponible"</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <h3 style="margin-bottom:15px;"><span class="step-number">1</span> gettext_lazy for Translatable Strings</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> translatable exception</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> django.utils.translation <span class="keyword">import</span> gettext_lazy <span class="keyword">as</span> _
+
+<span class="keyword">class</span> <span class="function">AppError</span>(<span class="function">Exception</span>):
+    <span class="string">"""Base exception with i18n and API-friendly output."""</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, message, error_code=<span class="keyword">None</span>, status_code=<span class="number">400</span>):
+        self.message = message          <span class="comment"># translatable string</span>
+        self.error_code = error_code    <span class="comment"># machine-readable code</span>
+        self.status_code = status_code  <span class="comment"># HTTP status</span>
+        <span class="function">super</span>().<span class="function">__init__</span>(<span class="function">str</span>(message))
+
+    <span class="keyword">def</span> <span class="function">to_dict</span>(self):
+        <span class="keyword">return</span> {
+            <span class="string">"error"</span>: <span class="function">str</span>(self.message),
+            <span class="string">"error_code"</span>: self.error_code,
+            <span class="string">"status"</span>: self.status_code,
+        }</pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> Using It with Translatable Messages</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> InsufficientStockError with i18n</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">InsufficientStockError</span>(<span class="function">AppError</span>):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, available, requested):
+        self.available = available
+        self.requested = requested
+        message = <span class="function">_</span>(
+            <span class="string">"Only %(available)s items in stock. You requested %(requested)s."</span>
+        ) % {<span class="string">"available"</span>: available, <span class="string">"requested"</span>: requested}
+        <span class="function">super</span>().<span class="function">__init__</span>(
+            message=message,
+            error_code=<span class="string">"INSUFFICIENT_STOCK"</span>,
+            status_code=<span class="number">400</span>,
+        )
+
+<span class="comment"># In a view:</span>
+<span class="keyword">try</span>:
+    <span class="function">place_order</span>(item, qty=<span class="number">10</span>)
+<span class="keyword">except</span> <span class="function">AppError</span> <span class="keyword">as</span> e:
+    <span class="keyword">return</span> <span class="function">JsonResponse</span>(e.<span class="function">to_dict</span>(), status=e.status_code)
+<span class="comment"># {"error": "Only 3 items in stock. You requested 10.",</span>
+<span class="comment">#  "error_code": "INSUFFICIENT_STOCK", "status": 400}</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> Django i18n Setup</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> settings.py &amp; commands</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># settings.py</span>
+LANGUAGE_CODE = <span class="string">"en-us"</span>
+USE_I18N = <span class="keyword">True</span>
+LOCALE_PATHS = [BASE_DIR / <span class="string">"locale"</span>]
+
+<span class="comment"># Terminal commands:</span>
+<span class="comment"># 1. Extract translatable strings:</span>
+<span class="comment">#    python manage.py makemessages -l fr</span>
+<span class="comment">#</span>
+<span class="comment"># 2. Translate in locale/fr/LC_MESSAGES/django.po</span>
+<span class="comment">#</span>
+<span class="comment"># 3. Compile translations:</span>
+<span class="comment">#    python manage.py compilemessages</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">4</span> How Django Selects the Language</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box blue">1. URL prefix<small>/fr/menu/</small></div>
+                    <span class="flow-arrow">&#8594;</span>
+                    <div class="flow-box blue">2. Session/Cookie<small>django_language</small></div>
+                    <span class="flow-arrow">&#8594;</span>
+                    <div class="flow-box blue">3. Accept-Language<small>HTTP header</small></div>
+                    <span class="flow-arrow">&#8594;</span>
+                    <div class="flow-box green">4. LANGUAGE_CODE<small>settings.py default</small></div>
+                </div>
+                <small style="display:block; text-align:center; margin-top:10px; color:var(--text-muted);">Django checks each source in order, using the first match found.</small>
+            </div>
+
+            <!-- LIVE DEMO -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">5</span> Live Demo &mdash; Try it in the restaurant project</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Here are the exact steps to add i18n to your <code>restaurant_project</code> and see it work:</p>
+
+            <div class="collapsible open">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127939; 5 steps to demo i18n live</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;"><strong>Step 1:</strong> Add <code>LocaleMiddleware</code> and <code>LOCALE_PATHS</code> to <code>settings.py</code></p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> settings.py changes</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment"># restaurant_project/settings.py</span>
+
+MIDDLEWARE = [
+    <span class="string">'django.middleware.security.SecurityMiddleware'</span>,
+    <span class="string">'django.contrib.sessions.middleware.SessionMiddleware'</span>,
+    <span class="string">'django.middleware.locale.LocaleMiddleware'</span>,      <span class="comment"># ← ADD THIS (after SessionMiddleware)</span>
+    <span class="string">'django.middleware.common.CommonMiddleware'</span>,
+    ...
+]
+
+<span class="comment"># Add these at the bottom:</span>
+LOCALE_PATHS = [BASE_DIR / <span class="string">'locale'</span>]
+
+LANGUAGES = [
+    (<span class="string">'en'</span>, <span class="string">'English'</span>),
+    (<span class="string">'fr'</span>, <span class="string">'French'</span>),
+    (<span class="string">'hi'</span>, <span class="string">'Hindi'</span>),
+]</pre>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); margin: 15px 0 10px;"><strong>Step 2:</strong> Use <code>_()</code> in your view's error messages</p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> orders/views.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> django.utils.translation <span class="keyword">import</span> gettext <span class="keyword">as</span> _    <span class="comment"># ← ADD THIS</span>
+
+<span class="keyword">def</span> <span class="function">get_order</span>(request, order_id):
+    <span class="keyword">try</span>:
+        order = Order.objects.get(id=order_id)
+    <span class="keyword">except</span> Order.DoesNotExist:
+        <span class="keyword">return</span> JsonResponse(
+            {<span class="string">'error'</span>: <span class="function">_</span>(<span class="string">'Order not found'</span>)},   <span class="comment"># ← wrap in _()</span>
+            status=<span class="number">404</span>
+        )
+    ...</pre>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); margin: 15px 0 10px;"><strong>Step 3:</strong> Generate translation files</p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> terminal commands</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment"># Create the locale directory</span>
+mkdir -p locale
+
+<span class="comment"># Generate .po file for French</span>
+python manage.py makemessages -l fr
+
+<span class="comment"># This creates: locale/fr/LC_MESSAGES/django.po</span></pre>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); margin: 15px 0 10px;"><strong>Step 4:</strong> Add translations in the <code>.po</code> file</p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> locale/fr/LC_MESSAGES/django.po</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment"># Find this line (auto-generated by makemessages):</span>
+msgid <span class="string">"Order not found"</span>
+msgstr <span class="string">""</span>                          <span class="comment"># ← empty by default</span>
+
+<span class="comment"># Fill in the French translation:</span>
+msgid <span class="string">"Order not found"</span>
+msgstr <span class="string">"Commande introuvable"</span>       <span class="comment"># ← add this</span></pre>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); margin: 15px 0 10px;"><strong>Step 5:</strong> Compile &amp; test</p>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> compile + test with curl</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment"># Compile .po → .mo (binary that Django reads)</span>
+python manage.py compilemessages
+
+<span class="comment"># Start server</span>
+python manage.py runserver
+
+<span class="comment"># Test in English (default):</span>
+curl http://localhost:8000/orders/99999/
+<span class="comment"># {"error": "Order not found"}</span>
+
+<span class="comment"># Test in French (send Accept-Language header):</span>
+curl -H <span class="string">"Accept-Language: fr"</span> http://localhost:8000/orders/99999/
+<span class="comment"># {"error": "Commande introuvable"}  ← translated!</span></pre>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box success" style="margin-top: 15px;">
+                        <strong>That's it!</strong> The same API endpoint, same code &mdash; but the error message changes based on the <code>Accept-Language</code> header the client sends. Mobile apps, browsers, and API clients all send this header automatically based on the user's device language.
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. COPY CONSTRUCTOR ===== -->
+    <section id="copy">
+        <div class="section-container">
+            <span class="section-label danger">Copy Semantics</span>
+            <h2 class="section-title">Shallow vs Deep Copy</h2>
+            <p class="section-subtitle">Assignment is NOT copying. Understand the difference or debug mysterious shared-state bugs forever.</p>
+
+            <div class="question-box">
+                <p><strong>Question:</strong> If you write <code>b = a</code> and then modify <code>b</code>, does <code>a</code> change too? Sometimes yes, sometimes no. Why?</p>
+            </div>
+
+            <h3 style="margin-bottom:15px;"><span class="step-number">1</span> Assignment is NOT Copying</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> assignment = same object</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]
+b = a             <span class="comment"># b is NOT a copy &mdash; it's the SAME list</span>
+
+b.<span class="function">append</span>(<span class="number">99</span>)
+<span class="function">print</span>(a)           <span class="comment"># [1, 2, 3, 99]  &mdash; a changed too!</span>
+<span class="function">print</span>(a <span class="keyword">is</span> b)      <span class="comment"># True &mdash; same object in memory</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">
+                <p style="text-align:center; font-weight:600; margin-bottom:12px;">Assignment: Two Names, One Object</p>
+                <div class="flow-row">
+                    <div class="flow-box red">a</div>
+                    <span class="flow-arrow">&#8594;</span>
+                    <div class="flow-box green" style="font-weight:700;">[1, 2, 3, 99]</div>
+                    <span class="flow-arrow">&#8592;</span>
+                    <div class="flow-box red">b</div>
+                </div>
+                <small style="display:block; text-align:center; margin-top:8px; color:var(--text-muted);">Both variables point to the exact same list object in memory.</small>
+            </div>
+
+            <!-- Step 2a: copy that WORKS (flat list) -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">2</span> So how DO you make a real copy?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Use <code>.copy()</code> or <code>list()</code> &mdash; this creates a <strong>new, independent</strong> list:</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> .copy() creates a new object</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]
+b = a.<span class="function">copy</span>()        <span class="comment"># or: b = list(a)</span>
+
+b.<span class="function">append</span>(<span class="number">99</span>)
+<span class="function">print</span>(a)             <span class="comment"># [1, 2, 3]     &mdash; original is SAFE!</span>
+<span class="function">print</span>(b)             <span class="comment"># [1, 2, 3, 99] &mdash; only b changed</span>
+<span class="function">print</span>(a <span class="keyword">is</span> b)        <span class="comment"># False &mdash; two separate objects</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Great, problem solved?</strong> For simple (flat) lists &mdash; yes. But what happens when there's a <strong>list inside a list</strong>?
+            </div>
+
+            <!-- Step 2b: The surprise — nested objects -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">3</span> The surprise &mdash; objects inside objects</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">This is where it gets tricky. <code>.copy()</code> creates a new outer object, but the things <em>inside</em> are still shared:</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Wait, what?</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre>original = [[<span class="number">1</span>, <span class="number">2</span>], [<span class="number">3</span>, <span class="number">4</span>]]
+copied = original.<span class="function">copy</span>()
+
+<span class="comment"># Outer list IS separate:</span>
+<span class="function">print</span>(original <span class="keyword">is</span> copied)       <span class="comment"># False ✓</span>
+
+<span class="comment"># But inner lists are SHARED:</span>
+<span class="function">print</span>(original[<span class="number">0</span>] <span class="keyword">is</span> copied[<span class="number">0</span>]) <span class="comment"># True ← same object!</span>
+
+<span class="comment"># So if you modify the inner list through one...</span>
+copied[<span class="number">0</span>].<span class="function">append</span>(<span class="number">99</span>)
+<span class="function">print</span>(original[<span class="number">0</span>])               <span class="comment"># [1, 2, 99] ← original changed too!</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>This is called a "shallow copy".</strong> It copies the container (the outer list), but the items inside are still the <strong>same objects</strong>. Think of it like photocopying a folder of documents &mdash; you get a new folder, but the documents inside are the same sheets of paper.
+            </div>
+
+            <div class="diagram-box">
+                <p style="text-align:center; font-weight:600; margin-bottom:12px;">Shallow Copy: New Folder, Same Documents</p>
+                <div class="flow-row">
+                    <div class="flow-box red">original</div>
+                    <span class="flow-arrow">&#8594;</span>
+                    <div class="flow-box" style="background: rgba(245,158,11,0.1); border-color: var(--accent-warning);">[ref, ref]</div>
+                </div>
+                <div class="flow-row">
+                    <span style="width:100px"></span>
+                    <span class="flow-arrow">&#8595;</span>
+                    <span style="width:30px"></span>
+                    <span class="flow-arrow">&#8595;</span>
+                </div>
+                <div class="flow-row">
+                    <span style="width:100px"></span>
+                    <div class="flow-box green">[1, 2, 99]</div>
+                    <div class="flow-box green">[3, 4]</div>
+                </div>
+                <div class="flow-row">
+                    <span style="width:100px"></span>
+                    <span class="flow-arrow">&#8593;</span>
+                    <span style="width:30px"></span>
+                    <span class="flow-arrow">&#8593;</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">copied</div>
+                    <span class="flow-arrow">&#8594;</span>
+                    <div class="flow-box" style="background: rgba(59,130,246,0.1); border-color: var(--accent-blue);">[ref, ref]</div>
+                </div>
+                <small style="display:block; text-align:center; margin-top:8px; color:var(--text-muted);">Different outer lists, but both point to the SAME inner lists.</small>
+            </div>
+
+            <!-- Step 3: Real-world bug -->
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">4</span> Real bug: Shopping cart duplication</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Here's a practical scenario where shallow copy creates a nasty bug:</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The bug: customer carts leak into each other</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># A "template" cart with default items</span>
+default_cart = {
+    <span class="string">"items"</span>: [{<span class="string">"name"</span>: <span class="string">"Welcome Drink"</span>, <span class="string">"qty"</span>: <span class="number">1</span>}],
+    <span class="string">"discount"</span>: <span class="number">0</span>,
+}
+
+<span class="comment"># Give each new customer a copy of the template</span>
+cart_a = default_cart.<span class="function">copy</span>()     <span class="comment"># shallow copy!</span>
+cart_b = default_cart.<span class="function">copy</span>()
+
+<span class="comment"># Customer A adds Paneer Tikka</span>
+cart_a[<span class="string">"items"</span>].<span class="function">append</span>({<span class="string">"name"</span>: <span class="string">"Paneer Tikka"</span>, <span class="string">"qty"</span>: <span class="number">2</span>})
+
+<span class="comment"># Customer B checks their cart...</span>
+<span class="function">print</span>(cart_b[<span class="string">"items"</span>])
+<span class="comment"># [{'name': 'Welcome Drink', 'qty': 1}, {'name': 'Paneer Tikka', 'qty': 2}]</span>
+<span class="comment"># BUG! Customer B sees Customer A's Paneer Tikka!</span>
+
+<span class="comment"># Fix: use copy.deepcopy(default_cart) instead</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">5</span> Deep Copy &mdash; Completely Independent</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> deep copy</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> copy
+
+original = [[<span class="number">1</span>, <span class="number">2</span>], [<span class="number">3</span>, <span class="number">4</span>]]
+deep = copy.<span class="function">deepcopy</span>(original)
+
+deep[<span class="number">0</span>].<span class="function">append</span>(<span class="number">99</span>)
+<span class="function">print</span>(original[<span class="number">0</span>])  <span class="comment"># [1, 2] &mdash; original is UNAFFECTED!</span>
+<span class="function">print</span>(deep[<span class="number">0</span>])      <span class="comment"># [1, 2, 99] &mdash; completely independent</span></pre>
+                </div>
+            </div>
+
+            <!-- Quiz 12 -->
+            <div class="quiz-box" id="copy-q1">
+                <h4>Quiz 12: What is <code>original[0]</code> after this code runs?</h4>
+                <div class="code-block">
+                    <div class="code-header" onclick="toggleCode(this)">
+                        <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> quiz</div>
+                        <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                    </div>
+                    <div class="code-content">
+<pre>original = [[<span class="number">1</span>, <span class="number">2</span>], [<span class="number">3</span>, <span class="number">4</span>]]
+shallow = original.<span class="function">copy</span>()
+shallow[<span class="number">0</span>].<span class="function">append</span>(<span class="number">99</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('copy-q1', this, false)">A) [1, 2] &mdash; original is unaffected</button>
+                <button class="quiz-option" onclick="checkQuiz('copy-q1', this, true)">B) [1, 2, 99] &mdash; inner list is shared</button>
+                <button class="quiz-option" onclick="checkQuiz('copy-q1', this, false)">C) [[1, 2, 99], [3, 4]] &mdash; entire list changes</button>
+                <button class="quiz-option" onclick="checkQuiz('copy-q1', this, false)">D) Error &mdash; .copy() is not a valid method</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>.copy()</code> creates a shallow copy. The outer list is new, but the inner lists are shared references. When you <code>append(99)</code> to the inner list via <code>shallow[0]</code>, <code>original[0]</code> sees it too because they point to the same inner list.</div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">6</span> Copy with Objects</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Student with shared grades</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> copy
+
+<span class="keyword">class</span> <span class="function">Student</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, grades):
+        self.name = name
+        self.grades = grades   <span class="comment"># mutable list!</span>
+
+alice = <span class="function">Student</span>(<span class="string">"Alice"</span>, [<span class="number">90</span>, <span class="number">85</span>, <span class="number">92</span>])
+
+<span class="comment"># Shallow copy:</span>
+clone = copy.<span class="function">copy</span>(alice)
+clone.grades.<span class="function">append</span>(<span class="number">100</span>)
+<span class="function">print</span>(alice.grades)   <span class="comment"># [90, 85, 92, 100] &mdash; SHARED!</span>
+
+<span class="comment"># Deep copy:</span>
+clone2 = copy.<span class="function">deepcopy</span>(alice)
+clone2.grades.<span class="function">append</span>(<span class="number">50</span>)
+<span class="function">print</span>(alice.grades)   <span class="comment"># [90, 85, 92, 100] &mdash; unaffected</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;"><span class="step-number">7</span> Custom __copy__ and __deepcopy__</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> custom copy behavior</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> copy
+
+<span class="keyword">class</span> <span class="function">CachedConfig</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, settings, cache=<span class="keyword">None</span>):
+        self.settings = settings    <span class="comment"># should be copied</span>
+        self._cache = cache or {}   <span class="comment"># should NOT be copied</span>
+
+    <span class="keyword">def</span> <span class="function">__copy__</span>(self):
+        <span class="comment"># Shallow copy settings, but start with fresh cache</span>
+        <span class="keyword">return</span> <span class="function">CachedConfig</span>(self.settings.copy(), cache={})
+
+    <span class="keyword">def</span> <span class="function">__deepcopy__</span>(self, memo):
+        <span class="comment"># Deep copy settings, fresh cache</span>
+        <span class="keyword">return</span> <span class="function">CachedConfig</span>(
+            copy.<span class="function">deepcopy</span>(self.settings, memo),
+            cache={},
+        )</pre>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Summary Table <span style="font-size: 0.8rem; color: var(--text-muted);">(click cells to reveal)</span></h3>
+            <div class="table-container">
+                <table class="reveal-table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Syntax</th>
+                            <th>Outer Object</th>
+                            <th>Inner Objects</th>
+                            <th>Use When</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Assignment (alias)</strong></td>
+                            <td><code>b = a</code></td>
+                            <td class="revealable" data-answer="Same" onclick="revealCell(this)">click to reveal</td>
+                            <td class="revealable" data-answer="Same" onclick="revealCell(this)">click to reveal</td>
+                            <td class="revealable" data-answer="You want two names for the same thing" onclick="revealCell(this)">click to reveal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shallow copy</strong></td>
+                            <td><code>copy.copy(a)</code></td>
+                            <td class="revealable" data-answer="New" onclick="revealCell(this)">click to reveal</td>
+                            <td class="revealable" data-answer="Shared ⚠️" onclick="revealCell(this)">click to reveal</td>
+                            <td class="revealable" data-answer="Flat data, no nested mutables" onclick="revealCell(this)">click to reveal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Deep copy</strong></td>
+                            <td><code>copy.deepcopy(a)</code></td>
+                            <td class="revealable" data-answer="New" onclick="revealCell(this)">click to reveal</td>
+                            <td class="revealable" data-answer="New (recursive copy)" onclick="revealCell(this)">click to reveal</td>
+                            <td class="revealable" data-answer="Nested mutables, need full independence" onclick="revealCell(this)">click to reveal</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Quiz 13 -->
+            <div class="quiz-box" id="copy-q2">
+                <h4>Quiz 13: You have a list of dictionaries. You use <code>.copy()</code>. You change a value inside one dict. Does the original see the change?</h4>
+                <button class="quiz-option" onclick="checkQuiz('copy-q2', this, true)">A) Yes &mdash; shallow copy shares inner objects (the dicts)</button>
+                <button class="quiz-option" onclick="checkQuiz('copy-q2', this, false)">B) No &mdash; .copy() makes everything independent</button>
+                <button class="quiz-option" onclick="checkQuiz('copy-q2', this, false)">C) Only for lists, not dicts</button>
+                <button class="quiz-option" onclick="checkQuiz('copy-q2', this, false)">D) Only if you use copy.copy()</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>.copy()</code> is a shallow copy. The outer list is new, but each dict inside is still the same object. Modifying a dict's value through either reference affects both. Use <code>copy.deepcopy()</code> if you need full independence.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. BEST PRACTICES ===== -->
+    <section id="best-practices">
+        <div class="section-container">
+            <span class="section-label success">Best Practices</span>
+            <h2 class="section-title">DO and DON'T</h2>
+            <p class="section-subtitle">Rules that will save you from common exception handling mistakes.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 15px;">DON'T</h4>
+                    <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 2;">
+                        <li>Write bare <code>except:</code></li>
+                        <li>Catch <code>Exception</code> and silently <code>pass</code></li>
+                        <li>Use exceptions for normal flow control</li>
+                        <li>Put too much code inside <code>try</code> blocks</li>
+                        <li>Raise generic <code>Exception("msg")</code></li>
+                        <li>Lose the original cause when re-raising</li>
+                        <li>Forget to close resources (files, connections)</li>
+                    </ul>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 15px;">DO</h4>
+                    <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 2;">
+                        <li>Catch specific exception types</li>
+                        <li>Log errors, then handle or re-raise</li>
+                        <li>Use EAFP for Pythonic patterns</li>
+                        <li>Keep <code>try</code> blocks minimal</li>
+                        <li>Create custom exception hierarchies</li>
+                        <li>Use <code>raise X from Y</code> to preserve cause</li>
+                        <li>Use <code>with</code> statements for resource cleanup</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">Decision Table</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Situation</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Opening files, DB connections, locks</td><td><code>with</code> statement (context manager)</td></tr>
+                        <tr><td>Multiple related error types</td><td>Custom exception hierarchy</td></tr>
+                        <tr><td>Dict key might not exist</td><td><code>dict.get(key, default)</code></td></tr>
+                        <tr><td>File might not exist</td><td>EAFP: <code>try/except FileNotFoundError</code></td></tr>
+                        <tr><td>Catching and re-raising different error</td><td><code>raise NewError from original</code></td></tr>
+                        <tr><td>Ignoring an expected exception</td><td><code>contextlib.suppress()</code></td></tr>
+                        <tr><td>Error messages for end users</td><td><code>gettext_lazy</code> for i18n</td></tr>
+                        <tr><td>Need fully independent copy of nested data</td><td><code>copy.deepcopy()</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Interview Summary:</strong> Python uses an exception hierarchy rooted at <strong>BaseException</strong>. Always catch <strong>Exception</strong>, never bare except. Use <strong>custom exceptions</strong> with data attributes for structured error handling. <strong>Context managers</strong> guarantee cleanup via <code>__enter__</code>/<code>__exit__</code>. <strong>EAFP</strong> is more Pythonic than LBYL and avoids TOCTOU race conditions. Use <strong>raise X from Y</strong> to chain exceptions. Understand <strong>shallow vs deep copy</strong> &mdash; shallow shares inner mutable objects.</p>
+            </div>
+
+            <!-- Quiz 14 -->
+            <div class="quiz-box" id="bp-q1">
+                <h4>Quiz 14: You catch an exception and want to log it, then re-raise without changing the traceback. What do you write?</h4>
+                <button class="quiz-option" onclick="checkQuiz('bp-q1', this, false)">A) <code>raise Exception(e)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('bp-q1', this, true)">B) <code>raise</code> (bare raise, no argument)</button>
+                <button class="quiz-option" onclick="checkQuiz('bp-q1', this, false)">C) <code>raise e from e</code></button>
+                <button class="quiz-option" onclick="checkQuiz('bp-q1', this, false)">D) <code>return e</code></button>
+                <div class="quiz-explanation"><strong>Correct!</strong> A bare <code>raise</code> inside an except block re-raises the current exception with its original traceback intact. <code>raise Exception(e)</code> would create a NEW exception and lose the original traceback.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. SUMMARY ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">What We Covered</h2>
+            <p class="section-subtitle">Five major topics in one class &mdash; all connected by the theme of writing robust, production-quality Python.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#127970;</div>
+                    <div class="card-title">Exception Hierarchy</div>
+                    <div class="card-desc">BaseException &rarr; Exception &rarr; specific errors. Catch specific first, general last. Never bare except.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128295;</div>
+                    <div class="card-title">Custom Exceptions</div>
+                    <div class="card-desc">Build your own hierarchy with data attributes. Catching the parent catches all children.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">Context Managers</div>
+                    <div class="card-desc">__enter__ + __exit__ = guaranteed cleanup. Use with statements for files, connections, locks.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9878;&#65039;</div>
+                    <div class="card-title">EAFP &amp; Chaining</div>
+                    <div class="card-desc">Try first, handle failure (EAFP). Use raise X from Y to preserve exception causes.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128203;</div>
+                    <div class="card-title">Copy Semantics</div>
+                    <div class="card-desc">Assignment = alias. Shallow copy = new outer, shared inner. Deep copy = fully independent.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top:40px;">
+                <strong>Advanced Programming Concepts module complete!</strong> You've now covered iterators/generators, collections, functional programming, and exception handling. <strong>Next up: SOLID Principles.</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 12. RESOURCES ===== -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label blue">Resources</span>
+            <h2 class="section-title">Python Documentation</h2>
+            <p class="section-subtitle">Official references to go deeper on every topic from this class.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Topic</th><th>Link</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Built-in Exceptions</strong></td><td><a href="https://docs.python.org/3/library/exceptions.html" target="_blank" style="color: var(--accent-primary);">docs.python.org/3/library/exceptions.html</a></td></tr>
+                        <tr><td><strong>Exception Hierarchy Tree</strong></td><td><a href="https://docs.python.org/3/library/exceptions.html#exception-hierarchy" target="_blank" style="color: var(--accent-primary);">exceptions.html#exception-hierarchy</a></td></tr>
+                        <tr><td><strong>contextlib</strong></td><td><a href="https://docs.python.org/3/library/contextlib.html" target="_blank" style="color: var(--accent-primary);">docs.python.org/3/library/contextlib.html</a></td></tr>
+                        <tr><td><strong>with statement (PEP 343)</strong></td><td><a href="https://peps.python.org/pep-0343/" target="_blank" style="color: var(--accent-primary);">peps.python.org/pep-0343/</a></td></tr>
+                        <tr><td><strong>copy module</strong></td><td><a href="https://docs.python.org/3/library/copy.html" target="_blank" style="color: var(--accent-primary);">docs.python.org/3/library/copy.html</a></td></tr>
+                        <tr><td><strong>Django i18n</strong></td><td><a href="https://docs.djangoproject.com/en/5.0/topics/i18n/translation/" target="_blank" style="color: var(--accent-primary);">docs.djangoproject.com/.../i18n/translation/</a></td></tr>
+                        <tr><td><strong>EAFP Glossary</strong></td><td><a href="https://docs.python.org/3/glossary.html#term-EAFP" target="_blank" style="color: var(--accent-primary);">glossary.html#term-EAFP</a></td></tr>
+                        <tr><td><strong>Exception Chaining (PEP 3134)</strong></td><td><a href="https://peps.python.org/pep-3134/" target="_blank" style="color: var(--accent-primary);">peps.python.org/pep-3134/</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <p>LLD-12: Exception Handling &amp; Misc &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    function revealCell(cell) {
+        if (cell.classList.contains('revealed')) return;
+        cell.classList.add('revealed');
+        cell.classList.remove('revealable');
+        cell.textContent = cell.getAttribute('data-answer');
+        cell.style.cursor = 'default';
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
