@@ -1,0 +1,2575 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-13: SOLID Principles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+
+        /* Reveal table styles */
+        .reveal-table td.revealable { cursor: pointer; background: var(--bg-tertiary); text-align: center; color: var(--text-muted); font-style: italic; transition: all 0.3s; user-select: none; }
+        .reveal-table td.revealable:hover { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-primary); }
+        .reveal-table td.revealed { background: rgba(16, 185, 129, 0.08); color: var(--text-primary); font-style: normal; cursor: default; font-weight: 500; }
+
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-13: SOLID Principles</div>
+        <ul class="nav-links">
+            <li><a href="#why-solid">Why SOLID</a></li>
+            <li><a href="#srp">SRP</a></li>
+            <li><a href="#ocp">OCP</a></li>
+            <li><a href="#lsp">LSP</a></li>
+            <li><a href="#isp">ISP</a></li>
+            <li><a href="#lsp-vs-isp">LSP vs ISP</a></li>
+            <li><a href="#dip">DIP</a></li>
+            <li><a href="#summary">Summary</a></li>
+            <li><a href="#exercises">Exercises</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#128736;</div>
+        <h1>SOLID Principles</h1>
+        <p class="hero-meta">LLD-13 &bull; Design Principles</p>
+        <p class="hero-tagline">Five principles that separate code that survives from code that rots. <strong>Every design pattern you will ever learn is built on these.</strong></p>
+    </section>
+
+    <!-- ===== 2. WHY SOLID? ===== -->
+    <section id="why-solid">
+        <div class="section-container">
+            <span class="section-label warning">Motivation</span>
+            <h2 class="section-title">Why SOLID?</h2>
+            <p class="section-subtitle">You have written code that works. But six months later, adding one feature breaks three others. Why?</p>
+
+            <div class="highlight-box">
+                <strong>&#128218; Recall from <a href="../LLD-01-Intro-to-LLD-Module-Overview/index.html" style="color: var(--accent-primary);">LLD-01</a>: The Four Qualities of Good Code</strong><br><br>
+                We talked about four qualities every codebase should have:<br>
+                <strong>1. Readability</strong> &mdash; can a new dev understand it in a day?<br>
+                <strong>2. Extensibility</strong> &mdash; can you add features without rewriting?<br>
+                <strong>3. Maintainability</strong> &mdash; can you fix bugs without breaking other things?<br>
+                <strong>4. Testability</strong> &mdash; can you test pieces in isolation?<br><br>
+                SOLID is how we <em>achieve</em> these qualities. Each principle directly fixes one or more of them &mdash; SRP enables testability, OCP enables extensibility, DIP enables both, and so on.
+            </div>
+
+            <div class="question-box">
+                <p><strong>Kaarthik built a Restaurant class that handles menu management, order processing, billing, notifications, and reporting &mdash; all in one 500-line file.</strong> Now Ajit needs to add SMS notifications. He touches the Restaurant class and accidentally breaks billing. Why did this happen?</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> The God Class Anti-Pattern</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Restaurant</span>:
+    <span class="comment"># 500+ lines that does EVERYTHING</span>
+
+    <span class="keyword">def</span> <span class="function">add_menu_item</span>(self, name, price): ...
+    <span class="keyword">def</span> <span class="function">remove_menu_item</span>(self, item_id): ...
+    <span class="keyword">def</span> <span class="function">update_price</span>(self, item_id, price): ...
+
+    <span class="keyword">def</span> <span class="function">create_order</span>(self, customer, items): ...
+    <span class="keyword">def</span> <span class="function">cancel_order</span>(self, order_id): ...
+    <span class="keyword">def</span> <span class="function">update_order_status</span>(self, order_id, status): ...
+
+    <span class="keyword">def</span> <span class="function">calculate_bill</span>(self, order_id): ...
+    <span class="keyword">def</span> <span class="function">apply_discount</span>(self, order_id, code): ...
+    <span class="keyword">def</span> <span class="function">process_payment</span>(self, order_id, method): ...
+
+    <span class="keyword">def</span> <span class="function">send_email_notification</span>(self, customer, msg): ...
+    <span class="keyword">def</span> <span class="function">send_sms_notification</span>(self, phone, msg): ...
+
+    <span class="keyword">def</span> <span class="function">generate_daily_report</span>(self): ...
+    <span class="keyword">def</span> <span class="function">generate_monthly_report</span>(self): ...</pre>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>The Problem:</strong> This class has at least 5 reasons to change (menu logic, order logic, billing logic, notification logic, reporting logic). Any change risks breaking unrelated functionality. This is called a <strong>God Class</strong> and it is the #1 sign of code rot.
+            </div>
+
+            <p style="margin-top: 30px; color: var(--text-secondary);">SOLID gives you <strong>5 rules</strong> to prevent this rot. Each letter stands for one principle:</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">S</div>
+                    <div class="card-title" style="color: var(--accent-primary);">Single Responsibility</div>
+                    <div class="card-desc">One class, one reason to change</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">O</div>
+                    <div class="card-title" style="color: var(--accent-warning);">Open/Closed</div>
+                    <div class="card-desc">Open for extension, closed for modification</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">L</div>
+                    <div class="card-title" style="color: var(--accent-purple);">Liskov Substitution</div>
+                    <div class="card-desc">Subtypes must be substitutable for base types</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">I</div>
+                    <div class="card-title" style="color: var(--accent-blue);">Interface Segregation</div>
+                    <div class="card-desc">No client forced to depend on unused methods</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">D</div>
+                    <div class="card-title" style="color: var(--accent-danger);">Dependency Inversion</div>
+                    <div class="card-desc">Depend on abstractions, not concretions</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. SRP ===== -->
+    <section id="srp">
+        <div class="section-container">
+            <span class="section-label success">Principle 1</span>
+            <h2 class="section-title">S &mdash; Single Responsibility Principle</h2>
+            <p class="section-subtitle">&ldquo;A class should have only <strong>one reason to change.</strong>&rdquo; &mdash; Robert C. Martin</p>
+
+            <div class="question-box">
+                <p><strong>If you need to change the billing logic, should you be touching the notification code?</strong> If yes, your class is doing too much.</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Violation</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Before: One class does everything</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> order_processor.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">OrderProcessor</span>:
+    <span class="keyword">def</span> <span class="function">validate_order</span>(self, order):
+        <span class="comment"># validation logic</span>
+        ...
+
+    <span class="keyword">def</span> <span class="function">save_to_database</span>(self, order):
+        <span class="comment"># DB persistence logic</span>
+        ...
+
+    <span class="keyword">def</span> <span class="function">send_confirmation_email</span>(self, order):
+        <span class="comment"># email sending logic</span>
+        ...
+
+    <span class="keyword">def</span> <span class="function">generate_invoice</span>(self, order):
+        <span class="comment"># PDF generation logic</span>
+        ...
+
+    <span class="keyword">def</span> <span class="function">update_inventory</span>(self, order):
+        <span class="comment"># stock management logic</span>
+        ...</pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">5 reasons to change = 5 responsibilities = SRP violation</p>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; After: Each class has one job</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> separated_classes.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">OrderValidator</span>:
+    <span class="keyword">def</span> <span class="function">validate</span>(self, order): ...
+
+<span class="keyword">class</span> <span class="function">OrderRepository</span>:
+    <span class="keyword">def</span> <span class="function">save</span>(self, order): ...
+
+<span class="keyword">class</span> <span class="function">EmailNotifier</span>:
+    <span class="keyword">def</span> <span class="function">send_confirmation</span>(self, order): ...
+
+<span class="keyword">class</span> <span class="function">InvoiceGenerator</span>:
+    <span class="keyword">def</span> <span class="function">generate</span>(self, order): ...
+
+<span class="keyword">class</span> <span class="function">InventoryService</span>:
+    <span class="keyword">def</span> <span class="function">update_stock</span>(self, order): ...</pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Each class has exactly one reason to change. Easy to test, easy to maintain.</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Restaurant Project Example</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> SRP in our restaurant_project</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># Instead of one giant view that does everything:</span>
+
+<span class="comment"># orders/services.py - each service has ONE job</span>
+<span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="string">"""Only responsible for order creation and status transitions."""</span>
+    <span class="keyword">def</span> <span class="function">create_order</span>(self, customer, items): ...
+    <span class="keyword">def</span> <span class="function">update_status</span>(self, order_id, new_status): ...
+
+<span class="keyword">class</span> <span class="function">BillingService</span>:
+    <span class="string">"""Only responsible for price calculations and discounts."""</span>
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(self, order): ...
+    <span class="keyword">def</span> <span class="function">apply_coupon</span>(self, order, coupon_code): ...
+
+<span class="keyword">class</span> <span class="function">NotificationService</span>:
+    <span class="string">"""Only responsible for sending notifications."""</span>
+    <span class="keyword">def</span> <span class="function">notify_customer</span>(self, order, message): ...
+    <span class="keyword">def</span> <span class="function">notify_kitchen</span>(self, order): ...</pre>
+                </div>
+            </div>
+
+            <!-- SRP Quiz -->
+            <div class="quiz-box" id="srp-q1">
+                <h4>Quiz: Which of these classes violates SRP?</h4>
+                <button class="quiz-option" onclick="checkQuiz('srp-q1', this, false)">A) <code>class PasswordHasher</code> &mdash; hashes and verifies passwords</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-q1', this, true)">B) <code>class UserManager</code> &mdash; creates users, sends welcome emails, generates reports</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-q1', this, false)">C) <code>class MenuSerializer</code> &mdash; converts MenuItem to JSON and back</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-q1', this, false)">D) <code>class OrderRepository</code> &mdash; saves and retrieves orders from the database</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> UserManager has 3 unrelated responsibilities: user creation, email sending, and report generation. If the email provider changes, you should not be touching user creation code.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128681; Signs of Violation</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Look at this class &mdash; spot the smell:</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Red Flag Pattern</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">UserManager</span>:
+    <span class="keyword">def</span> <span class="function">create_user</span>(self):      <span class="comment"># User management</span>
+        <span class="keyword">pass</span>
+
+    <span class="keyword">def</span> <span class="function">send_email</span>(self):       <span class="comment"># Email handling</span>
+        <span class="keyword">pass</span>
+
+    <span class="keyword">def</span> <span class="function">log_activity</span>(self):     <span class="comment"># Logging</span>
+        <span class="keyword">pass</span>
+
+    <span class="keyword">def</span> <span class="function">validate_data</span>(self):    <span class="comment"># Validation</span>
+        <span class="keyword">pass</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>Spot the violations:</strong>
+                <ul style="margin-top: 10px; padding-left: 25px; color: var(--text-secondary);">
+                    <li>Class name with <strong>"Manager", "Handler", "Service", "Processor"</strong> (often god classes)</li>
+                    <li>Methods doing <strong>unrelated things</strong></li>
+                    <li><strong>Many import statements</strong> (uses many dependencies)</li>
+                    <li>Class description that uses <strong>"AND"</strong> multiple times: &ldquo;creates orders AND sends emails AND generates invoices&rdquo;</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <strong>&#128300; Quick Test:</strong> Ask &ldquo;How many reasons would this class have to change?&rdquo;
+                <ul style="margin-top: 10px; padding-left: 25px; color: var(--text-secondary);">
+                    <li>Discount logic changes? &rarr; Class changes!</li>
+                    <li>Database changes? &rarr; Class changes!</li>
+                    <li>Email provider changes? &rarr; Class changes!</li>
+                </ul>
+                <strong style="display:block; margin-top: 10px;">If the answer is &gt; 1, it violates SRP.</strong>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128300; Myth vs Reality &mdash; SRP <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;">(True or False?)</span></h3>
+
+            <div class="quiz-box" id="srp-tf1">
+                <h4>True or False: &ldquo;Every class should have only one method.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf1', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf1', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> SRP says one <em>reason to change</em>, not one method. A <code>UserRepository</code> with <code>find_by_id()</code>, <code>find_by_email()</code>, <code>save()</code>, <code>delete()</code> is fine &mdash; all serve the same responsibility (user persistence).</div>
+            </div>
+
+            <div class="quiz-box" id="srp-tf2">
+                <h4>True or False: &ldquo;SRP means tiny classes everywhere.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf2', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf2', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Over-splitting is just as bad. If two things always change together, they belong together. SRP is about <em>cohesion</em>, not class size.</div>
+            </div>
+
+            <div class="quiz-box" id="srp-tf3">
+                <h4>True or False: &ldquo;A class with 10 methods automatically violates SRP.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf3', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf3', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Method count is irrelevant. A <code>Calculator</code> with 50 math methods has <em>one</em> responsibility &mdash; arithmetic. Count <em>reasons to change</em>, not methods.</div>
+            </div>
+
+            <div class="quiz-box" id="srp-tf4">
+                <h4>True or False: &ldquo;SRP is exactly the same as separation of concerns.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf4', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('srp-tf4', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Related but not identical. Separation of concerns is about <em>modules / layers</em>; SRP is the same idea applied at the <em>class</em> level.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. OCP ===== -->
+    <section id="ocp">
+        <div class="section-container">
+            <span class="section-label warning">Principle 2</span>
+            <h2 class="section-title">O &mdash; Open/Closed Principle</h2>
+            <p class="section-subtitle">&ldquo;Software entities should be <strong>open for extension</strong> but <strong>closed for modification.</strong>&rdquo;</p>
+
+            <div class="question-box">
+                <p><strong>Every time Sneha adds a new discount type, she edits the DiscountCalculator class.</strong> Student discount, premium discount, employee discount, festival discount... The class now has 20 elif branches. What happens when she introduces a bug in the &ldquo;premium&rdquo; branch while adding &ldquo;festival&rdquo;?</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Violation</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Before: Modify existing code for every new type</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> discount_calculator.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">DiscountCalculator</span>:
+    <span class="keyword">def</span> <span class="function">calculate</span>(self, order, discount_type):
+        <span class="keyword">if</span> discount_type == <span class="string">"student"</span>:
+            <span class="keyword">return</span> order.total * <span class="number">0.15</span>
+        <span class="keyword">elif</span> discount_type == <span class="string">"premium"</span>:
+            <span class="keyword">return</span> order.total * <span class="number">0.20</span>
+        <span class="keyword">elif</span> discount_type == <span class="string">"employee"</span>:
+            <span class="keyword">return</span> order.total * <span class="number">0.30</span>
+        <span class="keyword">elif</span> discount_type == <span class="string">"festival"</span>:
+            <span class="keyword">return</span> order.total * <span class="number">0.25</span>
+        <span class="comment"># Every new discount = modify this class</span>
+        <span class="comment"># Risk breaking existing discounts!</span>
+        <span class="keyword">else</span>:
+            <span class="keyword">return</span> <span class="number">0</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; After: Extend without modifying</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> discount_strategy.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Discount</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">calculate</span>(self, order):
+        <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">StudentDiscount</span>(Discount):
+    <span class="keyword">def</span> <span class="function">calculate</span>(self, order):
+        <span class="keyword">return</span> order.total * <span class="number">0.15</span>
+
+<span class="keyword">class</span> <span class="function">PremiumDiscount</span>(Discount):
+    <span class="keyword">def</span> <span class="function">calculate</span>(self, order):
+        <span class="keyword">return</span> order.total * <span class="number">0.20</span>
+
+<span class="comment"># Adding a new discount = new class, ZERO changes to existing code</span>
+<span class="keyword">class</span> <span class="function">FestivalDiscount</span>(Discount):
+    <span class="keyword">def</span> <span class="function">calculate</span>(self, order):
+        <span class="keyword">return</span> order.total * <span class="number">0.25</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Restaurant Example: Adding a New Cuisine</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> menu/pricing.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">PricingRule</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">apply</span>(self, base_price: float) -> float:
+        <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IndianCuisinePricing</span>(PricingRule):
+    <span class="keyword">def</span> <span class="function">apply</span>(self, base_price):
+        <span class="keyword">return</span> base_price  <span class="comment"># standard pricing</span>
+
+<span class="keyword">class</span> <span class="function">ItalianCuisinePricing</span>(PricingRule):
+    <span class="keyword">def</span> <span class="function">apply</span>(self, base_price):
+        <span class="keyword">return</span> base_price * <span class="number">1.2</span>  <span class="comment"># 20% premium for imported ingredients</span>
+
+<span class="comment"># Gobi wants to add Japanese cuisine pricing?</span>
+<span class="comment"># Just add a new class. Existing pricing rules are UNTOUCHED.</span>
+<span class="keyword">class</span> <span class="function">JapaneseCuisinePricing</span>(PricingRule):
+    <span class="keyword">def</span> <span class="function">apply</span>(self, base_price):
+        <span class="keyword">return</span> base_price * <span class="number">1.35</span>  <span class="comment"># premium for fresh fish imports</span></pre>
+                </div>
+            </div>
+
+            <!-- OCP Quiz -->
+            <div class="quiz-box" id="ocp-q1">
+                <h4>Quiz: Which design follows the Open/Closed Principle?</h4>
+                <button class="quiz-option" onclick="checkQuiz('ocp-q1', this, false)">A) Adding a new payment method by adding an <code>elif</code> in <code>process_payment()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-q1', this, true)">B) Adding a new payment method by creating a new <code>PayPalPayment</code> class that implements <code>PaymentGateway</code></button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-q1', this, false)">C) Modifying the base <code>PaymentGateway</code> class to add PayPal-specific logic</button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-q1', this, false)">D) Adding PayPal support by editing the existing <code>StripePayment</code> class</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> OCP says we extend behavior by adding NEW classes, not by modifying existing ones. Creating a new class that implements an interface = extension without modification.</div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>Key insight:</strong> If adding a feature requires modifying existing working code, OCP is violated. The fix is almost always: define an abstraction (interface/base class) and let new behavior come from new subclasses.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128681; Signs of Violation</h3>
+            <div class="highlight-box danger">
+                <strong>Red Flags &mdash; if you see these, OCP is being violated:</strong>
+                <ul style="margin-top: 10px; padding-left: 25px; color: var(--text-secondary);">
+                    <li><strong>Growing <code>if/elif</code> chains</strong> on a string/type parameter (&ldquo;credit_card&rdquo;, &ldquo;paypal&rdquo;, &ldquo;crypto&rdquo;...)</li>
+                    <li><strong><code>isinstance()</code> type checks</strong> that branch on subclass: <code>if isinstance(shape, Circle)</code></li>
+                    <li><strong>Switch-on-type</strong> serialization or dispatch: <code>if obj.type == "json"</code></li>
+                    <li>Every new feature requires <strong>editing an existing class</strong> (not adding one)</li>
+                    <li>You find yourself repeatedly opening the <em>same file</em> to add a new branch</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Red Flag in Code: <code>isinstance</code> Dispatch</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Before: <code>isinstance</code> dispatch</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> shapes_area.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">import</span> math
+
+<span class="keyword">class</span> <span class="function">Circle</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, radius): self.radius = radius
+
+<span class="keyword">class</span> <span class="function">Rectangle</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, w, h): self.w, self.h = w, h
+
+
+<span class="keyword">def</span> <span class="function">total_area</span>(shapes):
+    total = <span class="number">0</span>
+    <span class="keyword">for</span> shape <span class="keyword">in</span> shapes:
+        <span class="keyword">if</span> <span class="function">isinstance</span>(shape, Circle):
+            total += math.pi * shape.radius ** <span class="number">2</span>
+        <span class="keyword">elif</span> <span class="function">isinstance</span>(shape, Rectangle):
+            total += shape.w * shape.h
+        <span class="comment"># Add Triangle? Edit this function.</span>
+        <span class="comment"># Add Pentagon? Edit this function.</span>
+    <span class="keyword">return</span> total</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; After: polymorphic <code>.area()</code></h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> shapes_area_fixed.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+<span class="keyword">import</span> math
+
+<span class="keyword">class</span> <span class="function">Shape</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">area</span>(self) -> float: ...
+
+<span class="keyword">class</span> <span class="function">Circle</span>(Shape):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, radius): self.radius = radius
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">return</span> math.pi * self.radius ** <span class="number">2</span>
+
+<span class="keyword">class</span> <span class="function">Rectangle</span>(Shape):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, w, h): self.w, self.h = w, h
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">return</span> self.w * self.h
+
+
+<span class="keyword">def</span> <span class="function">total_area</span>(shapes):
+    <span class="keyword">return</span> <span class="function">sum</span>(s.<span class="function">area</span>() <span class="keyword">for</span> s <span class="keyword">in</span> shapes)
+
+<span class="comment"># Add Triangle? Just a new class with .area()</span>
+<span class="comment"># total_area() never changes.</span>
+<span class="keyword">class</span> <span class="function">Triangle</span>(Shape):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, b, h): self.b, self.h = b, h
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">return</span> <span class="number">0.5</span> * self.b * self.h</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128161; How to Apply OCP &mdash; Worked Example: Report Exporter</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Suppose we have a function that exports a report in multiple formats. Today it supports PDF and HTML. Marketing wants CSV next week, and Sales wants Excel after that. Let's walk the 5 steps:</p>
+
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 1:</strong> Find the <em>variable behavior</em> (the thing that keeps changing)</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 2:</strong> Define an <em>abstraction</em> (ABC) for it</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 3:</strong> Each existing branch becomes a <em>subclass</em></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 4:</strong> The caller accepts the abstraction &mdash; never the concrete type</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><strong>Step 5:</strong> Adding a new behavior = <em>new class</em>, zero edits to existing files</div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Before: starting point</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">ReportExporter</span>:
+    <span class="keyword">def</span> <span class="function">export</span>(self, data, fmt):
+        <span class="keyword">if</span> fmt == <span class="string">"pdf"</span>:
+            <span class="keyword">return</span> self.<span class="function">_to_pdf</span>(data)
+        <span class="keyword">elif</span> fmt == <span class="string">"html"</span>:
+            <span class="keyword">return</span> self.<span class="function">_to_html</span>(data)
+        <span class="comment"># CSV? Edit. Excel? Edit. JSON? Edit.</span>
+        <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"unknown format"</span>)</pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;"><strong>Step 1</strong> diagnosis: the <em>format</em> is the variable behavior. The class is forced open every time a new format arrives.</p>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; After: 5 steps applied</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="comment"># Step 2: abstraction for the variable behavior</span>
+<span class="keyword">class</span> <span class="function">ReportFormat</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">render</span>(self, data) -> bytes: ...
+
+<span class="comment"># Step 3: each existing branch becomes a subclass</span>
+<span class="keyword">class</span> <span class="function">PdfFormat</span>(ReportFormat):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> <span class="function">make_pdf</span>(data)
+
+<span class="keyword">class</span> <span class="function">HtmlFormat</span>(ReportFormat):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> <span class="function">make_html</span>(data)
+
+<span class="comment"># Step 4: caller depends on the abstraction</span>
+<span class="keyword">class</span> <span class="function">ReportExporter</span>:
+    <span class="keyword">def</span> <span class="function">export</span>(self, data, fmt: ReportFormat):
+        <span class="keyword">return</span> fmt.<span class="function">render</span>(data)
+
+<span class="comment"># Step 5: new format = new class, zero edits</span>
+<span class="keyword">class</span> <span class="function">CsvFormat</span>(ReportFormat):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> <span class="function">make_csv</span>(data)
+
+<span class="keyword">class</span> <span class="function">ExcelFormat</span>(ReportFormat):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> <span class="function">make_xlsx</span>(data)</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128300; Myth vs Reality &mdash; OCP <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;">(True or False?)</span></h3>
+
+            <div class="quiz-box" id="ocp-tf1">
+                <h4>True or False: &ldquo;You should NEVER modify existing code.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf1', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf1', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Bug fixes, refactoring, and requirement changes are fine. OCP is about <em>adding new features</em> &mdash; adding a new payment method should not require editing <code>PaymentProcessor</code>. Your code is not frozen forever.</div>
+            </div>
+
+            <div class="quiz-box" id="ocp-tf2">
+                <h4>True or False: &ldquo;Every if/else is an OCP violation.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf2', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf2', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Simple, stable conditionals are fine. OCP matters when the if/elif chain <em>keeps growing</em> with each new feature.</div>
+            </div>
+
+            <div class="quiz-box" id="ocp-tf3">
+                <h4>True or False: &ldquo;OCP means you must use inheritance everywhere.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf3', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf3', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> OCP is about <em>abstraction</em>, not inheritance specifically. Composition, callbacks, plugins, and configuration all achieve OCP. The point is: extend without modifying. See the four examples below.</div>
+            </div>
+
+            <h4 style="margin-top: 20px; margin-bottom: 10px; color: var(--text-primary);">Four ways to honor OCP without inheritance</h4>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#129520; 1. Composition &mdash; inject a behavior object</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Hold a list of validators. Adding a new validator = appending a new object &mdash; no class hierarchy needed.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># Validator is just a plain class - no ABC required</span>
+<span class="keyword">class</span> <span class="function">MinLengthValidator</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, n): self.n = n
+    <span class="keyword">def</span> <span class="function">check</span>(self, s): <span class="keyword">return</span> <span class="function">len</span>(s) &gt;= self.n
+
+<span class="keyword">class</span> <span class="function">NoSpacesValidator</span>:
+    <span class="keyword">def</span> <span class="function">check</span>(self, s): <span class="keyword">return</span> <span class="string">" "</span> <span class="keyword">not in</span> s
+
+<span class="keyword">class</span> <span class="function">PasswordChecker</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, validators):
+        self.validators = validators       <span class="comment"># composition!</span>
+
+    <span class="keyword">def</span> <span class="function">is_valid</span>(self, pw):
+        <span class="keyword">return</span> <span class="function">all</span>(v.<span class="function">check</span>(pw) <span class="keyword">for</span> v <span class="keyword">in</span> self.validators)
+
+<span class="comment"># Adding a new rule = new validator object, no PasswordChecker edits</span>
+checker = <span class="function">PasswordChecker</span>([
+    <span class="function">MinLengthValidator</span>(<span class="number">8</span>),
+    <span class="function">NoSpacesValidator</span>(),
+])</pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#9889; 2. Callbacks / first-class functions</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">No class at all &mdash; just pass a function. Sorting <code>key=</code> is OCP-in-the-standard-library.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># sorted() is closed for modification, open via the key callback.</span>
+people = [<span class="function">User</span>(<span class="string">"A"</span>, <span class="number">30</span>), <span class="function">User</span>(<span class="string">"B"</span>, <span class="number">22</span>)]
+<span class="function">sorted</span>(people, key=<span class="keyword">lambda</span> u: u.age)        <span class="comment"># by age</span>
+<span class="function">sorted</span>(people, key=<span class="keyword">lambda</span> u: u.name.lower())  <span class="comment"># by name</span>
+<span class="comment"># A new sort criterion = a new lambda. sorted() never changes.</span>
+
+
+<span class="comment"># Event bus: subscribers register callbacks</span>
+<span class="keyword">class</span> <span class="function">EventBus</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self): self.handlers = []
+    <span class="keyword">def</span> <span class="function">on</span>(self, fn): self.handlers.<span class="function">append</span>(fn)
+    <span class="keyword">def</span> <span class="function">emit</span>(self, ev):
+        <span class="keyword">for</span> h <span class="keyword">in</span> self.handlers: <span class="function">h</span>(ev)
+
+bus = <span class="function">EventBus</span>()
+bus.<span class="function">on</span>(<span class="keyword">lambda</span> e: <span class="function">print</span>(<span class="string">"log:"</span>, e))
+bus.<span class="function">on</span>(<span class="keyword">lambda</span> e: <span class="function">send_metric</span>(e))
+<span class="comment"># Adding a new reaction = bus.on(...) - no EventBus edits</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128268; 3. Plugins / registry pattern</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A registry collects handlers by name. New plugins register themselves &mdash; the dispatcher never learns about them.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre>EXPORTERS = {}
+
+<span class="keyword">def</span> <span class="function">register_exporter</span>(name):
+    <span class="keyword">def</span> <span class="function">wrap</span>(fn):
+        EXPORTERS[name] = fn
+        <span class="keyword">return</span> fn
+    <span class="keyword">return</span> wrap
+
+
+<span class="decorator">@register_exporter</span>(<span class="string">"pdf"</span>)
+<span class="keyword">def</span> <span class="function">_pdf</span>(data): <span class="keyword">return</span> <span class="function">make_pdf</span>(data)
+
+<span class="decorator">@register_exporter</span>(<span class="string">"csv"</span>)
+<span class="keyword">def</span> <span class="function">_csv</span>(data): <span class="keyword">return</span> <span class="function">make_csv</span>(data)
+
+
+<span class="keyword">def</span> <span class="function">export</span>(name, data):
+    <span class="keyword">return</span> EXPORTERS[name](data)   <span class="comment"># closed for modification</span>
+
+<span class="comment"># Adding "json" exporter = just write a new file with @register_exporter</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#9881;&#65039; 4. Configuration-driven dispatch</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A dictionary maps inputs to behaviors. The behavior set is changed by editing the table, not the dispatcher.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># Tax rules per country - data, not code branches</span>
+TAX_RULES = {
+    <span class="string">"IN"</span>: <span class="keyword">lambda</span> p: p * <span class="number">0.18</span>,
+    <span class="string">"US"</span>: <span class="keyword">lambda</span> p: p * <span class="number">0.07</span>,
+    <span class="string">"GB"</span>: <span class="keyword">lambda</span> p: p * <span class="number">0.20</span>,
+}
+
+<span class="keyword">def</span> <span class="function">tax_for</span>(country, price):
+    <span class="keyword">return</span> TAX_RULES[country](price)   <span class="comment"># dispatcher unchanged</span>
+
+<span class="comment"># Adding Germany? Add one line to the dict. No tax_for() edit.</span>
+TAX_RULES[<span class="string">"DE"</span>] = <span class="keyword">lambda</span> p: p * <span class="number">0.19</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="quiz-box" id="ocp-tf4">
+                <h4>True or False: &ldquo;Make every class extensible, just in case.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf4', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('ocp-tf4', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Premature abstraction is its own anti-pattern. Apply OCP <em>where change is happening</em> &mdash; usually after the second or third edit to the same file.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5.5 Pre-LSP Concept Quiz ===== -->
+    <section id="pre-lsp-quiz">
+        <div class="section-container">
+            <span class="section-label purple">Before LSP</span>
+            <h2 class="section-title">Concept Check: Polymorphism &amp; Substitution</h2>
+            <p class="section-subtitle">4 quick questions to set up LSP. These warm up the muscle &mdash; if you get the last one right, you have already grasped LSP.</p>
+
+            <!-- Pre-LSP Quiz 1 -->
+            <div class="quiz-box" id="pre-lsp-q1">
+                <h4>Question 1: What does this print?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Animal</span>:
+    <span class="keyword">def</span> <span class="function">sound</span>(self):
+        <span class="keyword">return</span> <span class="string">"Some sound"</span>
+
+<span class="keyword">class</span> <span class="function">Dog</span>(Animal):
+    <span class="keyword">def</span> <span class="function">sound</span>(self):
+        <span class="keyword">return</span> <span class="string">"Bark"</span>
+
+pet: Animal = <span class="function">Dog</span>()
+<span class="function">print</span>(pet.<span class="function">sound</span>())</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q1', this, false)">A) <code>Some sound</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q1', this, true)">B) <code>Bark</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q1', this, false)">C) Error: Type mismatch</button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q1', this, false)">D) Both methods are called</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> The reference type is <code>Animal</code> but the actual object is <code>Dog</code>. At runtime, Python resolves <code>.sound()</code> on the <em>actual object type</em> &mdash; this is <strong>dynamic / runtime polymorphism</strong>.</div>
+            </div>
+
+            <!-- Pre-LSP Quiz 2 -->
+            <div class="quiz-box" id="pre-lsp-q2">
+                <h4>Question 2: What does this print?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Parent</span>:
+    <span class="keyword">def</span> <span class="function">display</span>(self):
+        <span class="keyword">return</span> <span class="string">"Parent"</span>
+
+<span class="keyword">class</span> <span class="function">Child</span>(Parent):
+    <span class="keyword">pass</span>
+
+obj = <span class="function">Child</span>()
+<span class="function">print</span>(obj.<span class="function">display</span>())</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q2', this, true)">A) <code>Parent</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q2', this, false)">B) Error: Method not found in Child</button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q2', this, false)">C) <code>None</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q2', this, false)">D) <code>Child</code></button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>Child</code> doesn't override <code>display()</code>. Python's <strong>MRO</strong> walks the chain: Child &rarr; Parent &rarr; object, finds it on Parent, calls it. This is method inheritance.</div>
+            </div>
+
+            <!-- Pre-LSP Quiz 3 -->
+            <div class="quiz-box" id="pre-lsp-q3">
+                <h4>Question 3: What happens?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Vehicle</span>:
+    <span class="keyword">def</span> <span class="function">start</span>(self):
+        <span class="keyword">return</span> <span class="string">"Vehicle starting"</span>
+
+<span class="keyword">class</span> <span class="function">Car</span>(Vehicle):
+    <span class="keyword">def</span> <span class="function">honk</span>(self):
+        <span class="keyword">return</span> <span class="string">"Beep beep!"</span>
+
+v: Vehicle = <span class="function">Car</span>()
+<span class="function">print</span>(v.<span class="function">honk</span>())</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q3', this, true)">A) Prints <code>Beep beep!</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q3', this, false)">B) <code>AttributeError: 'Vehicle' object has no attribute 'honk'</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q3', this, false)">C) Compile-time error</button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q3', this, false)">D) Returns <code>None</code></button>
+                <div class="quiz-explanation"><strong>Correct!</strong> Python is dynamically typed &mdash; <code>v: Vehicle</code> is just a hint, not enforced at runtime. The actual object is a <code>Car</code>, which has <code>honk()</code>, so it runs. Mypy would flag this, but Python itself does not.</div>
+            </div>
+
+            <!-- Pre-LSP Quiz 4 (The LSP setup) -->
+            <div class="quiz-box" id="pre-lsp-q4">
+                <h4>Question 4 &mdash; the punchline: What happens?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Calculator</span>:
+    <span class="keyword">def</span> <span class="function">divide</span>(self, a, b):
+        <span class="keyword">if</span> b == <span class="number">0</span>:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"Cannot divide by zero"</span>)
+        <span class="keyword">return</span> a / b
+
+<span class="keyword">class</span> <span class="function">StrictCalculator</span>(Calculator):
+    <span class="keyword">def</span> <span class="function">divide</span>(self, a, b):
+        <span class="keyword">if</span> b == <span class="number">0</span>:
+            <span class="keyword">raise</span> <span class="function">ZeroDivisionError</span>(<span class="string">"Division by zero"</span>)
+        <span class="keyword">return</span> a / b
+
+<span class="keyword">def</span> <span class="function">compute</span>(calc: Calculator):
+    <span class="keyword">try</span>:
+        result = calc.<span class="function">divide</span>(<span class="number">10</span>, <span class="number">0</span>)
+    <span class="keyword">except</span> ValueError:
+        <span class="function">print</span>(<span class="string">"Handled"</span>)
+
+<span class="function">compute</span>(<span class="function">StrictCalculator</span>())</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q4', this, false)">A) Prints <code>Handled</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q4', this, false)">B) Returns <code>None</code></button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q4', this, true)">C) Uncaught <code>ZeroDivisionError</code> &mdash; program crashes!</button>
+                <button class="quiz-option" onclick="checkQuiz('pre-lsp-q4', this, false)">D) Prints nothing</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> Parent contract: throws <code>ValueError</code>. Child changed it to <code>ZeroDivisionError</code>. The client caught only <code>ValueError</code> &mdash; so the substitution <em>silently broke</em> the caller. <strong>This is exactly what LSP prevents.</strong> We can substitute syntactically, but the child must honor the parent's contract (return types, exceptions, pre/post-conditions, invariants).</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>The journey to LSP, in 4 steps:</strong><br>
+                Q1 &rarr; Method calls resolve at runtime on the actual object.<br>
+                Q2 &rarr; If a subclass doesn't override, MRO finds the parent's version.<br>
+                Q3 &rarr; Python <em>allows</em> substitution dynamically &mdash; type hints are not enforced.<br>
+                Q4 &rarr; But just because we <em>can</em> substitute doesn't mean we <em>should</em>. If the child breaks the parent's contract, callers crash. <strong>LSP is the rule that says: do this right.</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 6. LSP ===== -->
+    <section id="lsp">
+        <div class="section-container">
+            <span class="section-label purple">Principle 3</span>
+            <h2 class="section-title">L &mdash; Liskov Substitution Principle</h2>
+            <p class="section-subtitle">&ldquo;Subtypes must be <strong>substitutable</strong> for their base types without altering program correctness.&rdquo;</p>
+
+            <div class="question-box">
+                <p><strong>If <code>FinalSaleOrder</code> extends <code>Order</code>, can every function that works with <code>Order</code> also work with <code>FinalSaleOrder</code> without breaking?</strong> If not, your inheritance is lying.</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Restaurant Example: Discountable vs Final-Sale Orders</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">In our restaurant, regular orders can have a discount applied. The team decides: &ldquo;Festival-special orders are final &mdash; no discounts allowed.&rdquo; A natural-but-wrong instinct is to make <code>FinalSaleOrder</code> extend <code>Order</code> and reject discounts.</p>
+
+            <div class="question-box">
+                <p><strong>Read the code below carefully. What is the problem here?</strong> The coupon code worked perfectly yesterday for every kind of order. Today, festival orders go live in production. What breaks &mdash; and why?</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> orders/models.py &mdash; spot the problem</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Order</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, items):
+        self.items = items
+        self.discount = <span class="number">0</span>
+
+    <span class="keyword">def</span> <span class="function">set_discount</span>(self, percent):
+        self.discount = percent
+
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(self):
+        subtotal = <span class="function">sum</span>(i.price <span class="keyword">for</span> i <span class="keyword">in</span> self.items)
+        <span class="keyword">return</span> subtotal * (<span class="number">1</span> - self.discount)
+
+
+<span class="keyword">class</span> <span class="function">FinalSaleOrder</span>(Order):
+    <span class="string">"""Festival specials &mdash; no discounts allowed"""</span>
+    <span class="keyword">def</span> <span class="function">set_discount</span>(self, percent):
+        <span class="keyword">raise</span> <span class="function">Exception</span>(<span class="string">"Final sale &mdash; no discounts!"</span>)
+
+
+<span class="comment"># Coupon system: works on any Order</span>
+<span class="keyword">def</span> <span class="function">apply_promo</span>(order: Order):
+    order.<span class="function">set_discount</span>(<span class="number">0.10</span>)   <span class="comment"># 10% off</span>
+    <span class="keyword">return</span> order.<span class="function">calculate_total</span>()
+
+
+regular = <span class="function">Order</span>([Item(<span class="number">100</span>)])
+<span class="function">apply_promo</span>(regular)        <span class="comment"># works -> 90</span>
+
+festival = <span class="function">FinalSaleOrder</span>([Item(<span class="number">100</span>)])
+<span class="function">apply_promo</span>(festival)       <span class="comment"># ??? what happens here</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>The diagnosis:</strong> <code>FinalSaleOrder</code> claims to be an <code>Order</code> (it inherits from it), so <code>apply_promo</code> happily accepts it. But the moment <code>apply_promo</code> calls <code>set_discount</code>, the child throws an exception the parent never threw. <strong>Result:</strong> the entire promo flow crashes for festival orders &mdash; a caller written against <code>Order</code> cannot trust a <code>FinalSaleOrder</code>. The substitution is broken. <strong>This is the LSP violation.</strong>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Fix: Restructure the Hierarchy</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Now compare the broken design side-by-side with the corrected one. The fix isn't to patch the exception &mdash; it's to admit that &ldquo;final-sale&rdquo; is a <em>sibling</em> of &ldquo;discountable&rdquo;, not a subtype of it.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; LSP Violation</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Order</span>:
+    <span class="keyword">def</span> <span class="function">set_discount</span>(self, percent):
+        self.discount = percent
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(self): ...
+
+
+<span class="keyword">class</span> <span class="function">FinalSaleOrder</span>(Order):
+    <span class="keyword">def</span> <span class="function">set_discount</span>(self, percent):
+        <span class="keyword">raise</span> <span class="function">Exception</span>(<span class="string">"No discounts!"</span>)
+
+
+<span class="keyword">def</span> <span class="function">apply_promo</span>(order: Order):
+    order.<span class="function">set_discount</span>(<span class="number">0.10</span>)
+    <span class="keyword">return</span> order.<span class="function">calculate_total</span>()
+
+<span class="function">apply_promo</span>(<span class="function">FinalSaleOrder</span>(...))
+<span class="comment"># CRASH at runtime!</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; Proper Design</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Order</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">DiscountableOrder</span>(Order):
+    <span class="keyword">def</span> <span class="function">set_discount</span>(self, percent):
+        self.discount = percent
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(self): ...
+
+<span class="keyword">class</span> <span class="function">FinalSaleOrder</span>(Order):
+    <span class="keyword">def</span> <span class="function">calculate_total</span>(self): ...
+
+
+<span class="comment"># Promo targets only the right contract</span>
+<span class="keyword">def</span> <span class="function">apply_promo</span>(order: DiscountableOrder):
+    order.<span class="function">set_discount</span>(<span class="number">0.10</span>)
+    <span class="keyword">return</span> order.<span class="function">calculate_total</span>()
+
+<span class="comment"># FinalSaleOrder is never passed to apply_promo</span>
+<span class="comment"># at the type level - the bug becomes impossible.</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The 4 Contracts a Subclass Must Honor</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box red"><strong>1. Preconditions</strong><br><small>Cannot be strengthened</small></div>
+                    <div class="flow-box blue"><strong>2. Postconditions</strong><br><small>Cannot be weakened</small></div>
+                    <div class="flow-box purple"><strong>3. Exceptions</strong><br><small>Cannot throw new ones</small></div>
+                    <div class="flow-box green"><strong>4. Invariants</strong><br><small>Must be preserved</small></div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128290; 1. Preconditions cannot be <em>strengthened</em></h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A precondition is what the method requires from the caller. The child cannot demand <em>more</em> than the parent did &mdash; otherwise calls that worked on the parent suddenly fail on the child.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">User</span>:
+    <span class="keyword">def</span> <span class="function">set_email</span>(self, email):
+        <span class="comment"># Parent accepts ANY non-empty string</span>
+        self.email = email
+
+<span class="keyword">class</span> <span class="function">AdminUser</span>(User):
+    <span class="keyword">def</span> <span class="function">set_email</span>(self, email):
+        <span class="comment"># Child demands MORE: must end with @company.com</span>
+        <span class="comment"># This is a tightened precondition - LSP violation!</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> email.<span class="function">endswith</span>(<span class="string">"@company.com"</span>):
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"company email required"</span>)
+        self.email = email
+
+<span class="keyword">def</span> <span class="function">register</span>(u: User, email):
+    u.<span class="function">set_email</span>(email)        <span class="comment"># works for User</span>
+
+<span class="function">register</span>(<span class="function">AdminUser</span>(), <span class="string">"alice@gmail.com"</span>)  <span class="comment"># CRASH</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128290; 2. Postconditions cannot be <em>weakened</em></h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A postcondition is what the method guarantees to the caller. The child cannot promise <em>less</em>.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">UserRepo</span>:
+    <span class="keyword">def</span> <span class="function">find_all</span>(self):
+        <span class="comment"># Parent guarantees: returns a list sorted by name</span>
+        <span class="keyword">return</span> <span class="function">sorted</span>(self._users, key=<span class="keyword">lambda</span> u: u.name)
+
+<span class="keyword">class</span> <span class="function">FastUserRepo</span>(UserRepo):
+    <span class="keyword">def</span> <span class="function">find_all</span>(self):
+        <span class="comment"># Child guarantees LESS: returns unsorted</span>
+        <span class="comment"># Postcondition weakened - LSP violation!</span>
+        <span class="keyword">return</span> self._users
+
+<span class="comment"># Caller relied on parent's sorted guarantee:</span>
+<span class="keyword">def</span> <span class="function">first_user</span>(repo: UserRepo):
+    <span class="keyword">return</span> repo.<span class="function">find_all</span>()[<span class="number">0</span>]   <span class="comment"># expects alphabetical first</span>
+
+<span class="function">first_user</span>(<span class="function">FastUserRepo</span>())   <span class="comment"># returns RANDOM user - silent bug</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128290; 3. No new exceptions <em>(the LSP smoking gun)</em></h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">The child cannot throw exception types the parent never promised. This is exactly the Q4 pre-LSP quiz pattern.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">PaymentGateway</span>:
+    <span class="keyword">def</span> <span class="function">charge</span>(self, amount):
+        <span class="comment"># Parent's contract: throws PaymentError on failure</span>
+        <span class="keyword">if</span> amount &lt; <span class="number">0</span>:
+            <span class="keyword">raise</span> <span class="function">PaymentError</span>(<span class="string">"invalid amount"</span>)
+        ...
+
+<span class="keyword">class</span> <span class="function">CryptoGateway</span>(PaymentGateway):
+    <span class="keyword">def</span> <span class="function">charge</span>(self, amount):
+        <span class="comment"># Child throws a DIFFERENT exception type - LSP violation</span>
+        <span class="keyword">if</span> amount &lt; <span class="number">0</span>:
+            <span class="keyword">raise</span> <span class="function">CryptoNetworkError</span>(<span class="string">"bad amount"</span>)
+        ...
+
+<span class="keyword">def</span> <span class="function">process</span>(gw: PaymentGateway, amt):
+    <span class="keyword">try</span>:
+        gw.<span class="function">charge</span>(amt)
+    <span class="keyword">except</span> PaymentError:
+        <span class="function">log</span>(<span class="string">"refunding..."</span>)
+
+<span class="function">process</span>(<span class="function">CryptoGateway</span>(), -<span class="number">5</span>)   <span class="comment"># CryptoNetworkError escapes</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128290; 4. Invariants must be <em>preserved</em></h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">An invariant is a property of the object that is <em>always true</em>. The child cannot break it.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">BankAccount</span>:
+    <span class="string">"""Invariant: balance is never negative."""</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, balance=<span class="number">0</span>):
+        self.balance = balance
+
+    <span class="keyword">def</span> <span class="function">withdraw</span>(self, amount):
+        <span class="keyword">if</span> amount &gt; self.balance:
+            <span class="keyword">raise</span> <span class="function">InsufficientFundsError</span>()
+        self.balance -= amount
+
+
+<span class="keyword">class</span> <span class="function">OverdraftAccount</span>(BankAccount):
+    <span class="keyword">def</span> <span class="function">withdraw</span>(self, amount):
+        <span class="comment"># Allows negative balance - INVARIANT BROKEN</span>
+        self.balance -= amount       <span class="comment"># can go below 0</span>
+
+<span class="comment"># Any code that assumed balance >= 0 now has a silent corruption.</span>
+<span class="keyword">def</span> <span class="function">render_ui</span>(acc: BankAccount):
+    <span class="function">assert</span> acc.balance &gt;= <span class="number">0</span>     <span class="comment"># used to be safe; now fails</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Restaurant Example</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> menu/models.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">MenuItem</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">get_price</span>(self) -> float: ...
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">get_preparation_time</span>(self) -> int: ...
+
+<span class="keyword">class</span> <span class="function">VegDish</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">get_price</span>(self):
+        <span class="keyword">return</span> self.base_price
+
+    <span class="keyword">def</span> <span class="function">get_preparation_time</span>(self):
+        <span class="keyword">return</span> <span class="number">15</span>  <span class="comment"># minutes</span>
+
+<span class="keyword">class</span> <span class="function">NonVegDish</span>(MenuItem):
+    <span class="keyword">def</span> <span class="function">get_price</span>(self):
+        <span class="keyword">return</span> self.base_price + <span class="number">50</span>  <span class="comment"># non-veg surcharge</span>
+
+    <span class="keyword">def</span> <span class="function">get_preparation_time</span>(self):
+        <span class="keyword">return</span> <span class="number">25</span>  <span class="comment"># minutes</span>
+
+<span class="comment"># Any function that takes MenuItem works with BOTH:</span>
+<span class="keyword">def</span> <span class="function">display_menu_item</span>(item: MenuItem):
+    <span class="function">print</span>(f<span class="string">"Price: {item.get_price()}, Time: {item.get_preparation_time()} min"</span>)
+    <span class="comment"># Works perfectly with VegDish OR NonVegDish</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>Classic LSP violation sign:</strong> A collection that claims to be a List but throws <code>NotImplementedError</code> on <code>.add()</code>. Or a &ldquo;ReadOnlyUser&rdquo; that extends &ldquo;User&rdquo; but raises errors on <code>.save()</code>.
+            </div>
+
+            <!-- LSP Quiz -->
+            <div class="quiz-box" id="lsp-q1">
+                <h4>Quiz: Ajit creates a <code>FreeUser</code> class that extends <code>User</code>. The <code>FreeUser.download()</code> method raises <code>PermissionError</code> instead of downloading. Is this an LSP violation?</h4>
+                <button class="quiz-option" onclick="checkQuiz('lsp-q1', this, true)">A) Yes &mdash; code expecting User.download() to work will break with FreeUser</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-q1', this, false)">B) No &mdash; it is fine to restrict behavior in subclasses</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-q1', this, false)">C) No &mdash; raising exceptions is normal polymorphism</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-q1', this, false)">D) Only if FreeUser is used in a list of Users</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> If you need to check <code>isinstance(user, FreeUser)</code> before calling <code>.download()</code>, then FreeUser is NOT a proper substitute for User. LSP is violated. The fix: restructure the hierarchy so FreeUser does not promise behavior it cannot deliver.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128681; Signs of Violation</h3>
+            <div class="highlight-box danger">
+                <ul style="margin-top: 5px; padding-left: 25px; color: var(--text-secondary);">
+                    <li><strong>Override raises <code>NotImplementedError</code> or a custom exception</strong> the parent never threw</li>
+                    <li><strong>Empty / no-op override</strong>: subclass quietly does nothing where the parent did something</li>
+                    <li><strong>Tightened precondition</strong>: subclass rejects inputs the parent accepted</li>
+                    <li><strong>Weakened postcondition</strong>: subclass returns a less specific / less guaranteed result</li>
+                    <li>Callers need <code>isinstance(x, SubClass)</code> <strong>before</strong> calling a method</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128300; Myth vs Reality &mdash; LSP <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;">(True or False?)</span></h3>
+
+            <div class="quiz-box" id="lsp-tf1">
+                <h4>True or False: &ldquo;Subclasses must be identical to the parent.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf1', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf1', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Subclasses <em>can</em> add new behavior and override methods. LSP only requires they don't <em>break</em> the parent's contract. A <code>PremiumOrder</code> can have extra methods &mdash; it just cannot break the ones from <code>Order</code>.</div>
+            </div>
+
+            <div class="quiz-box" id="lsp-tf2">
+                <h4>True or False: &ldquo;If <code>isinstance()</code> passes, LSP is satisfied.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf2', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf2', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> LSP is about <em>behavioral</em> substitutability, not type identity. <code>FinalSaleOrder</code> IS-A <code>Order</code> by type, but it <em>behaves</em> differently when <code>set_discount()</code> is called.</div>
+            </div>
+
+            <div class="quiz-box" id="lsp-tf3">
+                <h4>True or False: &ldquo;LSP is the same as polymorphism.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf3', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf3', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Polymorphism is the <em>mechanism</em> (different objects respond to the same call). LSP is the <em>rule</em> that says they must respond in a way that doesn't surprise the caller.</div>
+            </div>
+
+            <div class="quiz-box" id="lsp-tf4">
+                <h4>True or False: &ldquo;If <code>Square IS-A Rectangle</code> in real life, the code can inherit too.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf4', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('lsp-tf4', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Real-world IS-A is not the same as behavioral IS-A. Always ask: &ldquo;Can my subclass replace the parent <em>everywhere</em> without breaking callers?&rdquo; If no, use composition or a sibling hierarchy. See the two code fixes below.</div>
+            </div>
+
+            <h4 style="margin-top: 20px; margin-bottom: 10px; color: var(--text-primary);">When inheritance is wrong, what do we use instead?</h4>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127968; Option A: Sibling hierarchy</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Don't put Square <em>under</em> Rectangle. Put them <em>next to</em> each other &mdash; both are kinds of <code>Shape</code>. Neither claims to be a substitute for the other.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Shape</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">area</span>(self) -> float: ...
+
+<span class="comment"># SIBLINGS, not parent/child</span>
+<span class="keyword">class</span> <span class="function">Rectangle</span>(Shape):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, w, h):
+        self.w, self.h = w, h
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">return</span> self.w * self.h
+
+<span class="keyword">class</span> <span class="function">Square</span>(Shape):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, side):
+        self.side = side
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">return</span> self.side ** <span class="number">2</span>
+
+<span class="comment"># Both work where Shape is expected.</span>
+<span class="comment"># Neither pretends to substitute for the other.</span>
+<span class="keyword">def</span> <span class="function">total_area</span>(shapes: <span class="function">list</span>[Shape]):
+    <span class="keyword">return</span> <span class="function">sum</span>(s.<span class="function">area</span>() <span class="keyword">for</span> s <span class="keyword">in</span> shapes)</pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#129520; Option B: Composition (&ldquo;has-a&rdquo; instead of &ldquo;is-a&rdquo;)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">If a Square really does need Rectangle's storage logic, give it a Rectangle as a <em>field</em>, not a parent. Square then exposes only the operations that make sense for a square.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Rectangle</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, w, h):
+        self.w, self.h = w, h
+    <span class="keyword">def</span> <span class="function">area</span>(self): <span class="keyword">return</span> self.w * self.h
+
+<span class="keyword">class</span> <span class="function">Square</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, side):
+        <span class="comment"># Square HAS-A Rectangle internally</span>
+        self._rect = <span class="function">Rectangle</span>(side, side)
+
+    <span class="keyword">def</span> <span class="function">area</span>(self):
+        <span class="keyword">return</span> self._rect.<span class="function">area</span>()
+
+    <span class="keyword">def</span> <span class="function">resize</span>(self, side):
+        <span class="comment"># Only ONE setter - matches a square's behavior</span>
+        self._rect = <span class="function">Rectangle</span>(side, side)
+
+<span class="comment"># No inheritance lie. Square reuses Rectangle without</span>
+<span class="comment"># promising to be substitutable for one.</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. ISP ===== -->
+    <section id="isp">
+        <div class="section-container">
+            <span class="section-label blue">Principle 4</span>
+            <h2 class="section-title">I &mdash; Interface Segregation Principle</h2>
+            <p class="section-subtitle">&ldquo;No client should be forced to depend on methods it does not use.&rdquo;</p>
+
+            <div class="question-box">
+                <p><strong>Should a KitchenDisplay class be forced to implement <code>send_email()</code> just because it implements the <code>INotification</code> interface?</strong> That makes no sense. The kitchen display only needs <code>show_order()</code>.</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Fat Interface Problem</h3>
+
+            <div class="question-box">
+                <p><strong>Read the code below. Spot the problem.</strong> A waiter at the restaurant is being told to <code>cook()</code>, manage inventory, and generate reports &mdash; even though no real waiter ever does those things. What is the smell here, and what does it cost us?</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> fat_interface.py &mdash; spot the problem</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">IWorker</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">cook</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">serve</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">clean</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">manage_inventory</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">generate_report</span>(self): <span class="keyword">pass</span>
+
+
+<span class="comment"># A Waiter is forced to implement cook()??</span>
+<span class="keyword">class</span> <span class="function">Waiter</span>(IWorker):
+    <span class="keyword">def</span> <span class="function">cook</span>(self):
+        <span class="keyword">raise</span> NotImplementedError       <span class="comment"># dead method</span>
+    <span class="keyword">def</span> <span class="function">serve</span>(self): ...
+    <span class="keyword">def</span> <span class="function">clean</span>(self): ...
+    <span class="keyword">def</span> <span class="function">manage_inventory</span>(self):
+        <span class="keyword">raise</span> NotImplementedError       <span class="comment"># dead method</span>
+    <span class="keyword">def</span> <span class="function">generate_report</span>(self):
+        <span class="keyword">raise</span> NotImplementedError       <span class="comment"># dead method</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>The diagnosis:</strong> <code>IWorker</code> bundles cooking, serving, cleaning, inventory, and reporting into one interface. Every concrete class is forced to implement methods it has no business implementing &mdash; the <code>NotImplementedError</code> blocks are the smell. Worse, any caller that takes an <code>IWorker</code> can&apos;t trust the methods it calls. <strong>This is an ISP violation: clients depend on methods they do not use.</strong>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Fix: Split the Interface</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Each role gets its own small interface. A class composes the ones it actually needs.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; One bloated interface</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">IWorker</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">cook</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">serve</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">clean</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">manage_inventory</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">generate_report</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">Waiter</span>(IWorker):
+    <span class="keyword">def</span> <span class="function">cook</span>(self):
+        <span class="keyword">raise</span> NotImplementedError
+    <span class="keyword">def</span> <span class="function">serve</span>(self): ...
+    <span class="keyword">def</span> <span class="function">clean</span>(self): ...
+    <span class="keyword">def</span> <span class="function">manage_inventory</span>(self):
+        <span class="keyword">raise</span> NotImplementedError
+    <span class="keyword">def</span> <span class="function">generate_report</span>(self):
+        <span class="keyword">raise</span> NotImplementedError</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; Segregated interfaces</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">ICook</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">cook</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IServer</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">serve</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">ICleaner</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">clean</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IManager</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">manage_inventory</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">generate_report</span>(self): <span class="keyword">pass</span>
+
+<span class="comment"># Each role implements ONLY what it needs</span>
+<span class="keyword">class</span> <span class="function">Waiter</span>(IServer, ICleaner):
+    <span class="keyword">def</span> <span class="function">serve</span>(self): ...
+    <span class="keyword">def</span> <span class="function">clean</span>(self): ...
+
+<span class="keyword">class</span> <span class="function">Chef</span>(ICook, ICleaner):
+    <span class="keyword">def</span> <span class="function">cook</span>(self): ...
+    <span class="keyword">def</span> <span class="function">clean</span>(self): ...</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Restaurant Notification Example</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> notifications/interfaces.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="comment"># Split by audience, not one giant INotification</span>
+
+<span class="keyword">class</span> <span class="function">IKitchenNotifier</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">notify_new_order</span>(self, order): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">notify_order_cancelled</span>(self, order): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">ICustomerNotifier</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send_order_confirmation</span>(self, order): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send_delivery_update</span>(self, order): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IAdminNotifier</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send_daily_summary</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">alert_low_inventory</span>(self, item): <span class="keyword">pass</span>
+
+<span class="comment"># KitchenDisplay only implements IKitchenNotifier</span>
+<span class="comment"># No send_email() forced on it!</span>
+<span class="keyword">class</span> <span class="function">KitchenDisplay</span>(IKitchenNotifier):
+    <span class="keyword">def</span> <span class="function">notify_new_order</span>(self, order):
+        self.screen.<span class="function">show</span>(f<span class="string">"NEW: {order.items}"</span>)
+    <span class="keyword">def</span> <span class="function">notify_order_cancelled</span>(self, order):
+        self.screen.<span class="function">remove</span>(order.id)</pre>
+                </div>
+            </div>
+
+            <!-- ISP Quiz -->
+            <div class="quiz-box" id="isp-q1">
+                <h4>Quiz: Vipul sees a class with 3 methods that raise <code>NotImplementedError</code>. Which SOLID principle is most likely violated?</h4>
+                <button class="quiz-option" onclick="checkQuiz('isp-q1', this, false)">A) Single Responsibility Principle</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-q1', this, false)">B) Open/Closed Principle</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-q1', this, true)">C) Interface Segregation Principle</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-q1', this, false)">D) Dependency Inversion Principle</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> When a class is forced to implement methods it cannot fulfill (raising NotImplementedError), the interface is too fat. Split it into smaller, focused interfaces so each class only implements what it actually uses.</div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Prefer many small interfaces over one big one.</strong> In Python, this often means using multiple abstract base classes with multiple inheritance, or using Protocols (structural subtyping) from the <code>typing</code> module.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128681; Signs of Violation</h3>
+            <div class="highlight-box danger">
+                <ul style="margin-top: 5px; padding-left: 25px; color: var(--text-secondary);">
+                    <li><strong>Empty / stub implementations</strong>: methods that just <code>pass</code> or raise <code>NotImplementedError</code></li>
+                    <li><strong>One ABC with too many methods</strong> &mdash; not all clients use all of them</li>
+                    <li>Clients <strong>only use a subset</strong> of the interface but are forced to depend on the whole thing</li>
+                    <li>Interface names like <code>IService</code>, <code>IManager</code> &mdash; usually fat-by-default</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128161; How to Apply ISP &mdash; Worked Example: Order Service</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Imagine an e-commerce backend where one fat <code>OrderService</code> interface has grown to 6 methods. Three different clients depend on it: the customer-facing portal, the warehouse system, and the accounting team. Let's walk the steps.</p>
+
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 1:</strong> List every client and the methods <em>that client</em> actually uses</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 2:</strong> Group methods by <em>client role</em> (creator, shipper, accountant)</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 3:</strong> Each group becomes its own small ABC / Protocol</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><strong>Step 4:</strong> A concrete class can implement <em>multiple</em> small interfaces &mdash; clients only see the one they need</div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Before: one fat interface</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">IOrderService</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_order</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">cancel_order</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">ship_order</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">track_shipment</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">generate_invoice</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">process_refund</span>(self): <span class="keyword">pass</span>
+
+
+<span class="comment"># Every client depends on ALL 6 methods,</span>
+<span class="comment"># even if it only uses 2 of them.</span>
+<span class="keyword">def</span> <span class="function">customer_portal</span>(svc: IOrderService):
+    svc.<span class="function">create_order</span>()
+    <span class="comment"># never touches ship_order/generate_invoice/...</span>
+
+<span class="keyword">def</span> <span class="function">warehouse</span>(svc: IOrderService):
+    svc.<span class="function">ship_order</span>()
+    <span class="comment"># never touches create_order/refund/...</span>
+
+<span class="keyword">def</span> <span class="function">accounting</span>(svc: IOrderService):
+    svc.<span class="function">generate_invoice</span>()
+    <span class="comment"># never touches shipping/...</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; After: 4 steps applied</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># Step 1 (audit on left):</span>
+<span class="comment">#   portal     -> create_order, cancel_order</span>
+<span class="comment">#   warehouse  -> ship_order, track_shipment</span>
+<span class="comment">#   accounting -> generate_invoice, process_refund</span>
+
+<span class="comment"># Step 2 + 3: each role -> its own small ABC</span>
+<span class="keyword">class</span> <span class="function">IOrderCreation</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_order</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">cancel_order</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IOrderShipping</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">ship_order</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">track_shipment</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IOrderAccounting</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">generate_invoice</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">process_refund</span>(self): <span class="keyword">pass</span>
+
+
+<span class="comment"># Step 4: concrete class composes all three</span>
+<span class="keyword">class</span> <span class="function">OrderService</span>(IOrderCreation, IOrderShipping, IOrderAccounting):
+    <span class="keyword">def</span> <span class="function">create_order</span>(self): ...
+    <span class="keyword">def</span> <span class="function">cancel_order</span>(self): ...
+    <span class="keyword">def</span> <span class="function">ship_order</span>(self): ...
+    <span class="keyword">def</span> <span class="function">track_shipment</span>(self): ...
+    <span class="keyword">def</span> <span class="function">generate_invoice</span>(self): ...
+    <span class="keyword">def</span> <span class="function">process_refund</span>(self): ...
+
+<span class="comment"># Clients see only the slim interface they need</span>
+<span class="keyword">def</span> <span class="function">customer_portal</span>(svc: IOrderCreation): ...
+<span class="keyword">def</span> <span class="function">warehouse</span>(svc: IOrderShipping): ...
+<span class="keyword">def</span> <span class="function">accounting</span>(svc: IOrderAccounting): ...</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128300; Myth vs Reality &mdash; ISP <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;">(True or False?)</span></h3>
+
+            <div class="quiz-box" id="isp-tf1">
+                <h4>True or False: &ldquo;Every interface should have exactly one method.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf1', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf1', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> ISP says no client should depend on methods it <em>doesn't use</em>. An interface with <code>read()</code>, <code>readline()</code>, <code>readlines()</code> is fine if every client uses all three.</div>
+            </div>
+
+            <div class="quiz-box" id="isp-tf2">
+                <h4>True or False: &ldquo;Python doesn't have interfaces, so ISP doesn't apply.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf2', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf2', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Python has <code>abc.ABC</code> and <code>typing.Protocol</code>. ISP applies to any base class or mixin that forces subclasses to implement unnecessary methods.</div>
+            </div>
+
+            <div class="quiz-box" id="isp-tf3">
+                <h4>True or False: &ldquo;ISP just means split everything into tiny interfaces.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf3', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf3', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> ISP is <em>client-driven</em>. The split is determined by which methods <em>real callers</em> use together &mdash; not by your aesthetic preference.</div>
+            </div>
+
+            <div class="quiz-box" id="isp-tf4">
+                <h4>True or False: &ldquo;ISP is the same as SRP.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf4', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('isp-tf4', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> SRP is about <em>classes</em> having one reason to change. ISP is about <em>interfaces</em> being slim enough that clients don't drag along unused methods. They are siblings, not synonyms.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7.5 LSP vs ISP clarification ===== -->
+    <section id="lsp-vs-isp">
+        <div class="section-container">
+            <span class="section-label blue">Clarification</span>
+            <h2 class="section-title">LSP vs ISP &mdash; They Are Not the Same</h2>
+            <p class="section-subtitle">Both can be triggered by the same code smell (<code>NotImplementedError</code> in a subclass). But they fix different things. Learn to tell them apart.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th>LSP (Liskov)</th>
+                            <th>ISP (Interface Segregation)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>What it cares about</strong></td>
+                            <td>Behavior of <em>subclasses</em></td>
+                            <td>Size of the <em>interface</em></td>
+                        </tr>
+                        <tr>
+                            <td><strong>The question it asks</strong></td>
+                            <td>Can I use the child anywhere the parent is expected, without breaking callers?</td>
+                            <td>Is this client being forced to depend on methods it never calls?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Typical smell</strong></td>
+                            <td>Child overrides a method and changes its contract (raises new exception, weakens output, etc.)</td>
+                            <td>Class implements an interface but several methods are <code>pass</code> / <code>NotImplementedError</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Typical fix</strong></td>
+                            <td>Restructure the inheritance hierarchy so subclasses only claim contracts they can honor</td>
+                            <td>Split the fat interface into smaller ones &mdash; each class implements only what it needs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Direction of pain</strong></td>
+                            <td>The <em>caller</em> gets surprised by subclass behavior</td>
+                            <td>The <em>implementer</em> is forced to write methods it doesn't need</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Penguin Example &mdash; Both at Once</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> penguin_problem.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Bird</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">fly</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">Penguin</span>(Bird):
+    <span class="keyword">def</span> <span class="function">fly</span>(self):
+        <span class="keyword">raise</span> <span class="function">NotImplementedError</span>(<span class="string">"Penguins can't fly!"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-purple); margin-bottom: 10px;">&#129313; ISP perspective</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">The <code>Bird</code> interface is too fat. It forces every bird to implement <code>fly()</code>. <strong>Fix:</strong> Split into <code>IFlyable</code>, <code>ISwimmable</code>, <code>IWalkable</code> &mdash; Penguin only implements the ones it can actually do.</p>
+                </div>
+                <div class="comparison-card before" style="background: rgba(168, 85, 247, 0.1); border-color: var(--accent-purple);">
+                    <h4 style="color: var(--accent-purple); margin-bottom: 10px;">&#128270; LSP perspective</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Penguin claims to be a Bird but breaks <code>fly()</code>'s contract by throwing an exception the parent never threw. Any function <code>def takeoff(b: Bird): b.fly()</code> will crash when given a Penguin. <strong>Fix:</strong> Restructure so Penguin isn't a Bird-that-flies.</p>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 20px; margin-bottom: 10px;">&#128221; The fix in code</h4>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> penguin_fixed.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="comment"># Step 1 (ISP): split the fat Bird interface into capabilities</span>
+<span class="keyword">class</span> <span class="function">IFlyable</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">fly</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">ISwimmable</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">swim</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IWalkable</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">walk</span>(self): <span class="keyword">pass</span>
+
+
+<span class="comment"># Step 2 (LSP): each bird only claims what it can deliver</span>
+<span class="keyword">class</span> <span class="function">Sparrow</span>(IFlyable, IWalkable):
+    <span class="keyword">def</span> <span class="function">fly</span>(self):  <span class="keyword">return</span> <span class="string">"flapping"</span>
+    <span class="keyword">def</span> <span class="function">walk</span>(self): <span class="keyword">return</span> <span class="string">"hopping"</span>
+
+<span class="keyword">class</span> <span class="function">Penguin</span>(ISwimmable, IWalkable):
+    <span class="comment"># NOT IFlyable - no fly() at all</span>
+    <span class="keyword">def</span> <span class="function">swim</span>(self): <span class="keyword">return</span> <span class="string">"swimming"</span>
+    <span class="keyword">def</span> <span class="function">walk</span>(self): <span class="keyword">return</span> <span class="string">"waddling"</span>
+
+<span class="keyword">class</span> <span class="function">Duck</span>(IFlyable, ISwimmable, IWalkable):
+    <span class="keyword">def</span> <span class="function">fly</span>(self):  <span class="keyword">return</span> <span class="string">"flying"</span>
+    <span class="keyword">def</span> <span class="function">swim</span>(self): <span class="keyword">return</span> <span class="string">"paddling"</span>
+    <span class="keyword">def</span> <span class="function">walk</span>(self): <span class="keyword">return</span> <span class="string">"walking"</span>
+
+
+<span class="comment"># Callers now target the capability they need:</span>
+<span class="keyword">def</span> <span class="function">takeoff</span>(b: IFlyable):
+    <span class="function">print</span>(b.<span class="function">fly</span>())
+
+<span class="comment"># Type checker (and your brain) catches this at the call site:</span>
+<span class="function">takeoff</span>(<span class="function">Duck</span>())       <span class="comment"># OK</span>
+<span class="function">takeoff</span>(<span class="function">Penguin</span>())    <span class="comment"># type error - Penguin is not IFlyable</span></pre>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 20px; margin-bottom: 10px;">&#127911; Another example: the multi-function printer</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">Same smell appears in real systems. A <code>Printer</code> interface that bundles printing, scanning, and faxing forces a basic inkjet to throw <code>NotImplementedError</code> on the methods it doesn&apos;t support.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; The smell</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">IMultiFunction</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">print</span>(self, doc): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">scan</span>(self): <span class="keyword">pass</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">fax</span>(self, num): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">BasicInkjet</span>(IMultiFunction):
+    <span class="keyword">def</span> <span class="function">print</span>(self, doc): ...
+    <span class="keyword">def</span> <span class="function">scan</span>(self):
+        <span class="keyword">raise</span> NotImplementedError   <span class="comment"># LSP + ISP smell</span>
+    <span class="keyword">def</span> <span class="function">fax</span>(self, num):
+        <span class="keyword">raise</span> NotImplementedError</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; The fix</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">IPrinter</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">print</span>(self, doc): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IScanner</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">scan</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">IFax</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">fax</span>(self, num): <span class="keyword">pass</span>
+
+
+<span class="keyword">class</span> <span class="function">BasicInkjet</span>(IPrinter):
+    <span class="keyword">def</span> <span class="function">print</span>(self, doc): ...
+
+<span class="keyword">class</span> <span class="function">OfficeMFP</span>(IPrinter, IScanner, IFax):
+    <span class="keyword">def</span> <span class="function">print</span>(self, doc): ...
+    <span class="keyword">def</span> <span class="function">scan</span>(self): ...
+    <span class="keyword">def</span> <span class="function">fax</span>(self, num): ...</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>&#127919; Final verdict:</strong> When you see <code>NotImplementedError</code> in an override, both LSP and ISP are usually being violated at once. The fix is always the same shape: <em>split capabilities into smaller interfaces, and let each class claim only the ones it actually delivers.</em>
+                <ul style="margin-top: 10px; padding-left: 25px;">
+                    <li><strong>ISP says:</strong> &ldquo;Stop forcing Penguin to depend on <code>fly()</code>.&rdquo;</li>
+                    <li><strong>LSP says:</strong> &ldquo;Stop letting Penguin pretend to honor <code>fly()</code>.&rdquo;</li>
+                    <li>Same smell &mdash; different diagnostic angle. Real codebases usually need both fixes together.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. DIP ===== -->
+    <section id="dip">
+        <div class="section-container">
+            <span class="section-label danger">Principle 5</span>
+            <h2 class="section-title">D &mdash; Dependency Inversion Principle</h2>
+            <p class="section-subtitle">&ldquo;High-level modules should not depend on low-level modules. Both should depend on <strong>abstractions.</strong>&rdquo;</p>
+
+            <div class="question-box">
+                <p><strong>If <code>OrderService</code> directly creates <code>MySQLDatabase()</code> inside its constructor, what happens when you switch to PostgreSQL?</strong> You have to rewrite OrderService. But OrderService should not care WHICH database it uses.</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Tight Coupling Problem</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; High-level depends on low-level</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> tightly_coupled.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MySQLDatabase</span>:
+    <span class="keyword">def</span> <span class="function">save</span>(self, data):
+        <span class="comment"># MySQL-specific save logic</span>
+        ...
+
+<span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="comment"># Directly creates the dependency!</span>
+        self.db = <span class="function">MySQLDatabase</span>()  <span class="comment"># TIGHT COUPLING</span>
+
+    <span class="keyword">def</span> <span class="function">place_order</span>(self, order):
+        <span class="comment"># ... business logic ...</span>
+        self.db.<span class="function">save</span>(order)
+
+<span class="comment"># Problems:</span>
+<span class="comment"># 1. Cannot switch to PostgreSQL without editing OrderService</span>
+<span class="comment"># 2. Cannot test without a real MySQL connection</span>
+<span class="comment"># 3. OrderService "knows" it is using MySQL</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; Both depend on abstraction</h4>
+                    <div class="code-block">
+                        <div class="code-header" onclick="toggleCode(this)">
+                            <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> dependency_injection.py</div>
+                            <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Database</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">save</span>(self, data): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">MySQLDatabase</span>(Database):
+    <span class="keyword">def</span> <span class="function">save</span>(self, data): ...
+
+<span class="keyword">class</span> <span class="function">PostgreSQLDatabase</span>(Database):
+    <span class="keyword">def</span> <span class="function">save</span>(self, data): ...
+
+<span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, db: Database):
+        <span class="comment"># Dependency is INJECTED from outside</span>
+        self.db = db
+
+    <span class="keyword">def</span> <span class="function">place_order</span>(self, order):
+        self.db.<span class="function">save</span>(order)
+
+<span class="comment"># Usage: inject whatever you want</span>
+service = <span class="function">OrderService</span>(<span class="function">PostgreSQLDatabase</span>())
+<span class="comment"># For testing:</span>
+test_service = <span class="function">OrderService</span>(<span class="function">MockDatabase</span>())</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Restaurant Example: Notification Service</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> orders/services.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Notifier</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send</span>(self, recipient: str, message: str): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">SMSNotifier</span>(Notifier):
+    <span class="keyword">def</span> <span class="function">send</span>(self, recipient, message):
+        <span class="comment"># Twilio API call</span>
+        ...
+
+<span class="keyword">class</span> <span class="function">EmailNotifier</span>(Notifier):
+    <span class="keyword">def</span> <span class="function">send</span>(self, recipient, message):
+        <span class="comment"># SMTP logic</span>
+        ...
+
+<span class="keyword">class</span> <span class="function">PushNotifier</span>(Notifier):
+    <span class="keyword">def</span> <span class="function">send</span>(self, recipient, message):
+        <span class="comment"># Firebase push notification</span>
+        ...
+
+<span class="keyword">class</span> <span class="function">OrderNotificationService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, notifier: Notifier):
+        <span class="comment"># Does NOT know or care if it is SMS, Email, or Push</span>
+        self.notifier = notifier
+
+    <span class="keyword">def</span> <span class="function">order_placed</span>(self, order):
+        self.notifier.<span class="function">send</span>(
+            order.customer.phone,
+            f<span class="string">"Your order #{order.id} has been placed!"</span>
+        )
+
+<span class="comment"># Gobi can switch from SMS to Push without touching OrderNotificationService</span>
+sms_service = <span class="function">OrderNotificationService</span>(<span class="function">SMSNotifier</span>())
+push_service = <span class="function">OrderNotificationService</span>(<span class="function">PushNotifier</span>())</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">
+                <h4 style="margin-bottom: 15px;">Dependency Direction</h4>
+                <div class="flow-row">
+                    <div class="flow-box red">OrderService<br><small>(High-level)</small></div>
+                    <div class="flow-arrow">&#10060; depends on &#8594;</div>
+                    <div class="flow-box red">MySQLDatabase<br><small>(Low-level concrete)</small></div>
+                </div>
+                <p style="text-align: center; margin: 15px 0; color: var(--text-muted);">vs.</p>
+                <div class="flow-row">
+                    <div class="flow-box green">OrderService<br><small>(High-level)</small></div>
+                    <div class="flow-arrow">&#8594;</div>
+                    <div class="flow-box blue">Database (ABC)<br><small>(Abstraction)</small></div>
+                    <div class="flow-arrow">&#8592;</div>
+                    <div class="flow-box green">MySQLDatabase<br><small>(Low-level)</small></div>
+                </div>
+                <p style="text-align: center; margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">Both high-level and low-level depend on the abstraction. Neither knows about the other.</p>
+            </div>
+
+            <!-- DIP Quiz -->
+            <div class="quiz-box" id="dip-q1">
+                <h4>Quiz: Which of these follows the Dependency Inversion Principle?</h4>
+                <button class="quiz-option" onclick="checkQuiz('dip-q1', this, false)">A) <code>class ReportGenerator: def __init__(self): self.db = SQLite3Connection()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('dip-q1', this, true)">B) <code>class ReportGenerator: def __init__(self, data_source: DataSource): self.source = data_source</code></button>
+                <button class="quiz-option" onclick="checkQuiz('dip-q1', this, false)">C) <code>class ReportGenerator: def get_data(self): return requests.get("http://api.internal/data")</code></button>
+                <button class="quiz-option" onclick="checkQuiz('dip-q1', this, false)">D) <code>class ReportGenerator(SQLite3Connection): ...</code> (inherits from concrete class)</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> Option B accepts an abstract <code>DataSource</code> via its constructor. It does not create or know about any concrete implementation. This is Dependency Injection &mdash; the primary technique for achieving DIP.</div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Depend on abstractions, not concretions. Pass dependencies IN, do not create them inside.</strong>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128681; Signs of Violation</h3>
+            <div class="highlight-box danger">
+                <ul style="margin-top: 5px; padding-left: 25px; color: var(--text-secondary);">
+                    <li><strong>Concrete instantiation inside <code>__init__</code></strong>: <code>self.db = MySQLDatabase()</code>, <code>self.smtp = smtplib.SMTP(...)</code></li>
+                    <li><strong>Importing concrete classes</strong> from a low-level module in your business logic file</li>
+                    <li><strong>Hard-coded configuration</strong>: host names, ports, API keys baked into a class</li>
+                    <li>Test setup needs <strong>a real database / real API</strong> &mdash; you can't mock</li>
+                    <li>Switching one library forces edits across <strong>unrelated business classes</strong></li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128161; How to Apply DIP &mdash; Worked Example: Signup Flow</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Imagine a <code>SignupService</code> that saves a user to Postgres, sends a welcome email via SendGrid, and logs to a file. Today it works. Tomorrow we need to test it (without hitting Postgres / SendGrid) and migrate to a different email provider. Let's walk the 4 steps.</p>
+
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 1:</strong> List every concrete dependency the class touches (DB, email, payment, cache, clock, ...)</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 2:</strong> Create an ABC / Protocol for each one &mdash; named after the <em>role</em>, not the technology (<code>Database</code>, not <code>MySQLClient</code>)</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>Step 3:</strong> Inject via constructor: <code>def __init__(self, db: Database, notifier: Notifier)</code></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><strong>Step 4:</strong> Wire concrete implementations at the <em>composition root</em> (main.py / app factory) &mdash; never inside business logic</div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Before: concrete dependencies hard-coded</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">import</span> psycopg2
+<span class="keyword">import</span> sendgrid
+
+<span class="keyword">class</span> <span class="function">SignupService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="comment"># Step 1: concrete deps the class touches</span>
+        self.db = psycopg2.<span class="function">connect</span>(<span class="string">"..."</span>)
+        self.email = sendgrid.<span class="function">Client</span>(<span class="string">"API_KEY"</span>)
+        self.logfile = <span class="function">open</span>(<span class="string">"signup.log"</span>, <span class="string">"a"</span>)
+
+    <span class="keyword">def</span> <span class="function">signup</span>(self, user):
+        self.db.<span class="function">execute</span>(<span class="string">"INSERT ..."</span>, user)
+        self.email.<span class="function">send</span>(user.email, <span class="string">"Welcome"</span>)
+        self.logfile.<span class="function">write</span>(f<span class="string">"signed up {user.id}"</span>)
+
+<span class="comment"># Can't test without real Postgres + SendGrid.</span>
+<span class="comment"># Migrating away from SendGrid = editing SignupService.</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; After: 4 steps applied</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="comment"># Step 2: role-named abstractions</span>
+<span class="keyword">class</span> <span class="function">UserRepository</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">save</span>(self, user): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">EmailSender</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send</span>(self, to, msg): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">Logger</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">info</span>(self, msg): <span class="keyword">pass</span>
+
+
+<span class="comment"># Step 3: inject through the constructor</span>
+<span class="keyword">class</span> <span class="function">SignupService</span>:
+    <span class="keyword">def</span> <span class="function">__init</span>__(self,
+                 repo: UserRepository,
+                 mail: EmailSender,
+                 log:  Logger):
+        self.repo, self.mail, self.log = repo, mail, log
+
+    <span class="keyword">def</span> <span class="function">signup</span>(self, user):
+        self.repo.<span class="function">save</span>(user)
+        self.mail.<span class="function">send</span>(user.email, <span class="string">"Welcome"</span>)
+        self.log.<span class="function">info</span>(f<span class="string">"signed up {user.id}"</span>)
+
+
+<span class="comment"># Step 4: wire concretes at the composition root</span>
+<span class="comment"># main.py</span>
+<span class="keyword">def</span> <span class="function">build_app</span>():
+    <span class="keyword">return</span> <span class="function">SignupService</span>(
+        repo=<span class="function">PostgresUserRepo</span>(<span class="string">"..."</span>),
+        mail=<span class="function">SendGridSender</span>(<span class="string">"KEY"</span>),
+        log =<span class="function">FileLogger</span>(<span class="string">"signup.log"</span>),
+    )
+
+<span class="comment"># tests/test_signup.py</span>
+<span class="keyword">def</span> <span class="function">test_signup</span>():
+    svc = <span class="function">SignupService</span>(
+        repo=<span class="function">FakeRepo</span>(),
+        mail=<span class="function">InMemoryMailer</span>(),
+        log =<span class="function">NullLogger</span>(),
+    )
+    svc.<span class="function">signup</span>(<span class="function">User</span>(<span class="number">1</span>, <span class="string">"x@y.com"</span>))
+    <span class="function">assert</span> svc.mail.<span class="function">sent_count</span>() == <span class="number">1</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128300; Myth vs Reality &mdash; DIP <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;">(True or False?)</span></h3>
+
+            <div class="quiz-box" id="dip-tf1">
+                <h4>True or False: &ldquo;DIP means you need a Dependency Injection framework.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf1', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf1', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> In Python, constructor injection is enough: <code>def __init__(self, db: Database)</code>. You don't need Spring or a DI container. Just pass dependencies in instead of creating them inside.</div>
+            </div>
+
+            <div class="quiz-box" id="dip-tf2">
+                <h4>True or False: &ldquo;Every class needs an abstract interface.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf2', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf2', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> Only create abstractions at <em>boundaries</em> &mdash; database, external APIs, email, payment. Internal helpers that are unlikely to change don't need an interface.</div>
+            </div>
+
+            <div class="quiz-box" id="dip-tf3">
+                <h4>True or False: &ldquo;DIP and Dependency Injection are the same thing.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf3', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf3', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> DI is one <em>technique</em> for achieving DIP. The principle says &ldquo;depend on abstractions&rdquo;; injection is the most common way to honor that, but factories, service locators, and config-based wiring also count.</div>
+            </div>
+
+            <div class="quiz-box" id="dip-tf4">
+                <h4>True or False: &ldquo;DIP is just OCP renamed.&rdquo;</h4>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf4', this, false)">True</button>
+                <button class="quiz-option" onclick="checkQuiz('dip-tf4', this, true)">False &mdash; this is a myth</button>
+                <div class="quiz-explanation"><strong>Reality:</strong> They overlap but differ in focus. OCP is about <em>extending behavior</em> without modifying. DIP is about <em>which direction your dependencies point</em> &mdash; high-level policy must not import low-level details.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. SUMMARY ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label success">Summary</span>
+            <h2 class="section-title">SOLID at a Glance</h2>
+            <p class="section-subtitle">Click each cell to reveal the content.</p>
+
+            <div class="table-container">
+                <table class="reveal-table">
+                    <thead>
+                        <tr>
+                            <th>Principle</th>
+                            <th>What It Says</th>
+                            <th>Violation Smell</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>S</strong> &mdash; SRP</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="A class should have only one reason to change">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Class description uses 'AND' multiple times">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Extract separate classes for each responsibility">Click to reveal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>O</strong> &mdash; OCP</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Open for extension, closed for modification">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Growing if/elif chains for each new type">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Use abstract base class + subclasses (Strategy pattern)">Click to reveal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>L</strong> &mdash; LSP</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Subtypes must be substitutable for their base types">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="isinstance() checks before using a subclass, or NotImplementedError in overrides">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Restructure hierarchy so subclasses honor the base contract">Click to reveal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>I</strong> &mdash; ISP</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="No client should depend on methods it does not use">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Classes with methods that raise NotImplementedError or pass">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Split fat interface into multiple small, focused interfaces">Click to reveal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>D</strong> &mdash; DIP</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Depend on abstractions, not concretions">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Concrete class instantiation inside __init__ (e.g., self.db = MySQL())">Click to reveal</td>
+                            <td class="revealable" onclick="revealCell(this)" data-answer="Inject dependencies via constructor parameters (Dependency Injection)">Click to reveal</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">Decision Guide: 5 Questions Before Building a Feature</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green"><span class="step-number">1</span>Does this class have only one reason to change? <small>(SRP)</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><span class="step-number">2</span>Can I add this feature WITHOUT modifying existing code? <small>(OCP)</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><span class="step-number">3</span>Can my subclass be used anywhere the parent is expected? <small>(LSP)</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><span class="step-number">4</span>Am I forcing implementors to write methods they do not need? <small>(ISP)</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green"><span class="step-number">5</span>Am I depending on an abstraction or a concrete class? <small>(DIP)</small></div>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#9874;</div>
+                    <div class="card-title">SRP</div>
+                    <div class="card-desc">One class = one job. If it has multiple reasons to change, split it.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">OCP</div>
+                    <div class="card-desc">Add new behavior via new classes, not by editing existing ones.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128260;</div>
+                    <div class="card-title">LSP</div>
+                    <div class="card-desc">Subclasses must work everywhere their parent works.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9986;</div>
+                    <div class="card-title">ISP</div>
+                    <div class="card-desc">Many small interfaces beat one large interface.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128268;</div>
+                    <div class="card-title">DIP</div>
+                    <div class="card-desc">Depend on abstractions. Inject dependencies from outside.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. EXERCISES ===== -->
+    <section id="exercises">
+        <div class="section-container">
+            <span class="section-label purple">Practice</span>
+            <h2 class="section-title">Exercises: Spot the Violation</h2>
+            <p class="section-subtitle">For each code snippet, identify which SOLID principle is violated. They're NOT in S-O-L-I-D order!</p>
+
+            <!-- Exercise 1: DIP -->
+            <div class="collapsible" onclick="this.classList.toggle('open')">
+                <div class="collapsible-header">
+                    <h4>&#128203; Exercise 1: What principle does this violate?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="event.stopPropagation(); toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> exercise1.py</div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">import</span> redis
+
+<span class="keyword">class</span> <span class="function">SessionManager</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.store = redis.<span class="function">Redis</span>(host=<span class="string">"localhost"</span>, port=<span class="number">6379</span>)
+
+    <span class="keyword">def</span> <span class="function">create_session</span>(self, user_id):
+        self.store.<span class="function">set</span>(<span class="string">f"session:</span>{user_id}<span class="string">"</span>, <span class="string">"active"</span>)
+
+    <span class="keyword">def</span> <span class="function">destroy_session</span>(self, user_id):
+        self.store.<span class="function">delete</span>(<span class="string">f"session:</span>{user_id}<span class="string">"</span>)</pre>
+                            </div>
+                        </div>
+                        <div class="highlight-box success">
+                            <strong>Answer: DIP Violation.</strong> <code>SessionManager</code> directly creates a concrete <code>redis.Redis</code> inside <code>__init__</code>. Switching to Memcached or an in-memory store for testing means rewriting the class. <strong>Fix:</strong> Define a <code>SessionStore</code> ABC and inject it: <code>def __init__(self, store: SessionStore)</code>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise 2: ISP + LSP -->
+            <div class="collapsible" onclick="this.classList.toggle('open')">
+                <div class="collapsible-header">
+                    <h4>&#128203; Exercise 2: What principle does this violate?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="event.stopPropagation(); toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> exercise2.py</div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Bird</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">fly</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">swim</span>(self): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">walk</span>(self): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">Penguin</span>(Bird):
+    <span class="keyword">def</span> <span class="function">fly</span>(self):
+        <span class="keyword">raise</span> NotImplementedError(<span class="string">"Penguins can't fly!"</span>)
+    <span class="keyword">def</span> <span class="function">swim</span>(self): ...
+    <span class="keyword">def</span> <span class="function">walk</span>(self): ...</pre>
+                            </div>
+                        </div>
+                        <div class="highlight-box success">
+                            <strong>Answer: ISP Violation (and LSP).</strong> The <code>Bird</code> interface forces Penguin to implement <code>fly()</code> which it cannot do &mdash; <code>NotImplementedError</code> is a red flag. <strong>Fix:</strong> Split into <code>IFlyable</code>, <code>ISwimmable</code>, <code>IWalkable</code>. Penguin implements only <code>ISwimmable</code> and <code>IWalkable</code>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise 3: SRP -->
+            <div class="collapsible" onclick="this.classList.toggle('open')">
+                <div class="collapsible-header">
+                    <h4>&#128203; Exercise 3: What principle does this violate?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="event.stopPropagation(); toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> exercise3.py</div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">UserService</span>:
+    <span class="keyword">def</span> <span class="function">register_user</span>(self, email, password):
+        <span class="comment"># Hash password, save to DB</span>
+        ...
+
+    <span class="keyword">def</span> <span class="function">send_welcome_email</span>(self, email):
+        <span class="comment"># Connect to SMTP server, send email</span>
+        ...
+
+    <span class="keyword">def</span> <span class="function">generate_usage_report</span>(self, user_id):
+        <span class="comment"># Query analytics DB, generate PDF</span>
+        ...</pre>
+                            </div>
+                        </div>
+                        <div class="highlight-box success">
+                            <strong>Answer: SRP Violation.</strong> <code>UserService</code> has 3 responsibilities: user management, email sending, and report generation. If the email provider changes, you're editing the same class that handles registration. <strong>Fix:</strong> Extract <code>EmailService</code> and <code>ReportService</code>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise 4: LSP -->
+            <div class="collapsible" onclick="this.classList.toggle('open')">
+                <div class="collapsible-header">
+                    <h4>&#128203; Exercise 4: What principle does this violate?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="event.stopPropagation(); toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> exercise4.py</div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">PaymentGateway</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">charge</span>(self, amount): <span class="keyword">pass</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">refund</span>(self, transaction_id): <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="function">CashOnDelivery</span>(PaymentGateway):
+    <span class="keyword">def</span> <span class="function">charge</span>(self, amount):
+        <span class="keyword">return</span> {<span class="string">"status"</span>: <span class="string">"collect_on_delivery"</span>}
+
+    <span class="keyword">def</span> <span class="function">refund</span>(self, transaction_id):
+        <span class="keyword">raise</span> NotImplementedError(<span class="string">"COD cannot be refunded online"</span>)</pre>
+                            </div>
+                        </div>
+                        <div class="highlight-box success">
+                            <strong>Answer: LSP Violation.</strong> <code>CashOnDelivery</code> claims to be a <code>PaymentGateway</code> but breaks the <code>refund()</code> contract. Any code expecting a gateway to support refunds will crash with COD. <strong>Fix:</strong> Split into <code>IChargeable</code> and <code>IRefundable</code>. COD implements only <code>IChargeable</code>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise 5: OCP -->
+            <div class="collapsible" onclick="this.classList.toggle('open')">
+                <div class="collapsible-header">
+                    <h4>&#128203; Exercise 5: What principle does this violate?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="code-block">
+                            <div class="code-header" onclick="event.stopPropagation(); toggleCode(this)">
+                                <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> exercise5.py</div>
+                                <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                            </div>
+                            <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">NotificationSender</span>:
+    <span class="keyword">def</span> <span class="function">send</span>(self, user, message, channel):
+        <span class="keyword">if</span> channel == <span class="string">"email"</span>:
+            self.<span class="function">_send_email</span>(user.email, message)
+        <span class="keyword">elif</span> channel == <span class="string">"sms"</span>:
+            self.<span class="function">_send_sms</span>(user.phone, message)
+        <span class="keyword">elif</span> channel == <span class="string">"push"</span>:
+            self.<span class="function">_send_push</span>(user.device_token, message)
+        <span class="keyword">elif</span> channel == <span class="string">"slack"</span>:
+            self.<span class="function">_send_slack</span>(user.slack_id, message)
+        <span class="comment"># Adding WhatsApp means modifying this class...</span></pre>
+                            </div>
+                        </div>
+                        <div class="highlight-box success">
+                            <strong>Answer: OCP Violation.</strong> Every new notification channel requires modifying <code>NotificationSender</code>. The if/elif chain keeps growing. <strong>Fix:</strong> Create a <code>NotificationChannel</code> ABC with <code>send()</code>. Each channel becomes its own class. Adding WhatsApp = new class, zero edits to existing code.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. KEY TAKEAWAYS ===== -->
+    <section id="takeaways">
+        <div class="section-container">
+            <span class="section-label">Takeaways</span>
+            <h2 class="section-title">Key Takeaways</h2>
+            <p class="section-subtitle">What to remember from today.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#9874;</div>
+                    <div class="card-title">SRP prevents God Classes</div>
+                    <div class="card-desc">If you use the word "AND" to describe a class, it needs splitting. One class, one reason to change, one owner.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">OCP prevents fragile code</div>
+                    <div class="card-desc">Use polymorphism (abstract base classes + subclasses) so new features are new classes, not edits to existing ones.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128260;</div>
+                    <div class="card-title">LSP prevents lying hierarchies</div>
+                    <div class="card-desc">If a subclass cannot honor the contract of its parent, the inheritance relationship is wrong. Restructure, do not patch.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9986;</div>
+                    <div class="card-title">ISP prevents bloated interfaces</div>
+                    <div class="card-desc">Many small interfaces (Python ABCs or Protocols) beat one fat interface. Clients should only see what they need.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128268;</div>
+                    <div class="card-title">DIP enables testability</div>
+                    <div class="card-desc">Inject dependencies via constructors. High-level policy should never import low-level details. Both point to abstractions.</div>
+                </div>
+            </div>
+
+            <div class="knowledge-block" style="margin-top: 40px;">
+                <p><strong>Interview tip:</strong> When asked &ldquo;How would you design X?&rdquo;, mention which SOLID principles guide your choices. For example: &ldquo;I would separate the payment processing from the notification logic (SRP), use a PaymentGateway interface so we can add new providers without modifying existing code (OCP/DIP), and ensure each gateway implementation can be used interchangeably (LSP).&rdquo;</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <p>LLD-13: SOLID Principles &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    function revealCell(cell) {
+        if (cell.classList.contains('revealed')) return;
+        cell.classList.add('revealed');
+        cell.classList.remove('revealable');
+        cell.textContent = cell.getAttribute('data-answer');
+        cell.style.cursor = 'default';
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
