@@ -7,8 +7,8 @@ Interactive course materials for the Python Backend Low Level Design module.
 | Module | Classes | Status |
 |--------|---------|--------|
 | [Backend Project](Class-01-Module-Overview-Intro-Backend/) | 16 | Completed |
-| [Advanced Programming Concepts](LLD-01-Intro-to-LLD-Module-Overview/) | 12 | In Progress |
-| Low Level Design | 18 | Upcoming |
+| [Advanced Programming Concepts](LLD-01-Intro-to-LLD-Module-Overview/) | 12 | Completed |
+| [Low Level Design](LLD-13-SOLID-Principles/) | 18 | In Progress |
 | Advanced Software Engineering | 10 | Upcoming |
 
 ## Module 1: Backend Project (Completed)
@@ -46,26 +46,27 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 8 | [Concurrency-4: Semaphores & Async I/O](LLD-08-Concurrency-4-Semaphores-AsyncIO/) | Semaphores, producer-consumer, async/await, event loop, asyncio |
 | 9 | [Python Advanced-1: Typing and Generics](LLD-09-Python-Advanced-1-Typing-Generics/) | Typing, generics, TypeVar, Protocol, mypy |
 | 10 | [Python Advanced-2: Collections](LLD-10-Python-Advanced-2-Collections/) | defaultdict, Counter, deque, namedtuple, frozenset, UserDict, thread safety |
-| 11 | Python Advanced-3: Lambda Functions and FP | Upcoming |
-| 12 | Python Advanced-4: Exception Handling | Upcoming |
+| 11 | [Python Advanced-3: Lambda Functions and FP](LLD-11-Python-Advanced-3-Lambda-FP/) | Functions as first-class objects, lambdas, map/filter/reduce, functools |
+| 12 | [Python Advanced-4: Exception Handling](LLD-12-Python-Advanced-4-Exception-Handling/) | try/except/else/finally, EAFP vs LBYL, custom exceptions, copy & deepcopy |
 
-## Module 3: Low Level Design (Upcoming)
+## Module 3: Low Level Design (In Progress)
 
-| # | Topics |
-|---|--------|
-| 1 | SOLID Principles |
-| 2 | Intro to Design Patterns, Singleton |
-| 3 | Builder Pattern |
-| 4 | Factory, Prototype |
-| 5 | Adapter, Strategy |
-| 6 | Observer, Decorator |
-| 7 | UML Diagrams |
-| 8 | Types of LLD Interviews, How to Approach LLD Problems |
-| 9-10 | Design & Code TicTacToe |
-| 11-12 | Design & Code Parking Lot |
-| 13-14 | Design & Code BookMyShow |
-| 15-16 | Design & Code Splitwise |
-| 17-18 | Design Google Calendar |
+| # | Class | Topics |
+|---|-------|--------|
+| 1 | [SOLID Principles &mdash; Part 1](LLD-13-SOLID-Principles/) | Why SOLID, God classes, SRP, OCP, LSP intro |
+| 2 | [SOLID Principles &mdash; Part 2](LLD-14-SOLID-Principles-2/) | OCP/LSP recap, ISP, composition, DIP, LSP vs ISP, SOLID critique |
+| 3 | Intro to Design Patterns, Singleton | Upcoming |
+| 4 | Builder Pattern | Upcoming |
+| 5 | Factory, Prototype | Upcoming |
+| 6 | Adapter, Strategy | Upcoming |
+| 7 | Observer, Decorator | Upcoming |
+| 8 | UML Diagrams | Upcoming |
+| 9 | Types of LLD Interviews, How to Approach LLD Problems | Upcoming |
+| 10-11 | Design & Code TicTacToe | Upcoming |
+| 12-13 | Design & Code Parking Lot | Upcoming |
+| 14-15 | Design & Code BookMyShow | Upcoming |
+| 16-17 | Design & Code Splitwise | Upcoming |
+| 18 | Design Google Calendar | Upcoming |
 
 ## Quick Start
 
