@@ -124,15 +124,10 @@
             <li><a href="#intro">Patterns</a></li>
             <li><a href="#prereq">Prereq</a></li>
             <li><a href="#problem">Problem</a></li>
-            <li><a href="#new-method">A1: __new__</a></li>
-            <li><a href="#thread-safety">A2: Thread-safe</a></li>
-            <li><a href="#checkpoint">Checkpoint</a></li>
-            <li><a href="#module">Opt A: Module</a></li>
-            <li><a href="#decorator">Opt B: Decorator</a></li>
-            <li><a href="#metaclass">Opt C: Metaclass</a></li>
-            <li><a href="#hardened">Hardened</a></li>
+            <li><a href="#new-method">Approaches</a></li>
             <li><a href="#use-cases">Use Cases</a></li>
             <li><a href="#summary">Summary</a></li>
+            <li><a href="#resources">Resources</a></li>
         </ul>
         <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
     </nav>
@@ -150,36 +145,92 @@
         <div class="section-container">
             <span class="section-label">What &amp; Why</span>
             <h2 class="section-title">What Are Design Patterns?</h2>
-            <p class="section-subtitle">Proven, named solutions to problems that keep showing up in software design.</p>
+            <p class="section-subtitle"><strong>Named, reusable solutions</strong> to problems that keep showing up in software design.</p>
 
-            <div class="highlight-box">
-                <strong>&#128218; The book that started it all:</strong> In 1994, four authors (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides &mdash; the <em>&ldquo;Gang of Four&rdquo;</em>) published <em>Design Patterns: Elements of Reusable Object-Oriented Software</em>. They catalogued <strong>23 patterns</strong> they had seen experienced engineers reinvent across projects, and gave each one a name. That book is still the reference 30 years later.
+            <!-- One-line "vocabulary" diagram -->
+            <div class="diagram-box" style="padding: 18px;">
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;">
+                    <div style="text-align: center; background: rgba(239,68,68,0.08); border: 1px solid var(--accent-danger); padding: 12px; border-radius: 10px;">
+                        <div style="font-weight: 700; color: var(--accent-danger);">&#128172; Without patterns</div>
+                        <div style="margin-top: 6px; font-size: 0.9rem; color: var(--text-secondary);">&ldquo;That class with a static factory that returns subclasses based on a string lookup...&rdquo;</div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 1.5rem;">&rarr;</div>
+                    <div style="text-align: center; background: rgba(16,185,129,0.08); border: 1px solid var(--accent-success); padding: 12px; border-radius: 10px;">
+                        <div style="font-weight: 700; color: var(--accent-success);">&#128172; With patterns</div>
+                        <div style="margin-top: 6px; font-size: 0.9rem; color: var(--text-secondary);">&ldquo;Use a <strong>Factory</strong>.&rdquo;</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">A pattern is <em>vocabulary</em> &mdash; not code to copy. Same idea, ten times the bandwidth.</div>
             </div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">Patterns Are <em>Vocabulary</em>, Not Code</h3>
-            <div class="comparison-grid">
-                <div class="comparison-card before">
-                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Without patterns</h4>
-                    <ul style="color: var(--text-secondary); padding-left: 20px;">
-                        <li>Reinvent the wheel every time</li>
-                        <li>Inconsistent solutions across the codebase</li>
-                        <li>Hard to communicate designs in reviews / interviews</li>
-                        <li>&ldquo;That class with the static factory method that returns&hellip;&rdquo; (10 sentences)</li>
-                    </ul>
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128218; Where they came from</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">In 1994 four authors &mdash; the <em>Gang of Four</em> &mdash; published <a href="https://en.wikipedia.org/wiki/Design_Patterns" target="_blank" rel="noopener" style="color: var(--accent-primary);"><em>Design Patterns: Elements of Reusable Object-Oriented Software</em></a>, cataloguing <strong>23 patterns</strong> seasoned engineers kept reinventing. Still the reference 30 years later.</p>
+
+            <!-- Gallery: the book + the four authors -->
+            <div style="display: grid; grid-template-columns: 220px 1fr; gap: 24px; margin-top: 20px; align-items: center;">
+                <!-- Book cover -->
+                <div style="text-align: center;">
+                    <a href="https://en.wikipedia.org/wiki/Design_Patterns" target="_blank" rel="noopener">
+                        <img src="media/esign Patterns- Elements of Reusable Object-Oriented Software.jpg"
+                             alt="Design Patterns: Elements of Reusable Object-Oriented Software (cover)"
+                             style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.15); border: 1px solid var(--border-color);">
+                    </a>
+                    <div style="margin-top: 8px; color: var(--text-muted); font-size: 0.8rem; font-style: italic;">The book that started it all (1994)</div>
                 </div>
-                <div class="comparison-card after">
-                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; With patterns</h4>
-                    <ul style="color: var(--text-secondary); padding-left: 20px;">
-                        <li>Proven solution, ready to apply</li>
-                        <li>Consistent shape across the codebase</li>
-                        <li>Common vocabulary: &ldquo;let's use a Strategy here&rdquo;</li>
-                        <li>Shorthand both readers and reviewers understand</li>
-                    </ul>
+
+                <!-- Four authors -->
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 10px;">&#128075; Meet the <strong>Gang of Four</strong>:</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+
+                        <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                            <img src="media/pro_erich_gamma.jpg" alt="Erich Gamma"
+                                 style="width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 2px solid var(--accent-primary);">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Erich Gamma</div>
+                                <div style="color: var(--text-muted); font-size: 0.78rem;">later: Eclipse, VS Code</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                            <img src="media/Richard Helm.jpg" alt="Richard Helm"
+                                 style="width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 2px solid var(--accent-blue);">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Richard Helm</div>
+                                <div style="color: var(--text-muted); font-size: 0.78rem;">IBM Object Tech</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                            <img src="media/Ralph Johnson.jpeg" alt="Ralph Johnson"
+                                 style="width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 2px solid var(--accent-purple);">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Ralph Johnson</div>
+                                <div style="color: var(--text-muted); font-size: 0.78rem;">UIUC, refactoring research</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                            <img src="media/John Vlissides.jpg" alt="John Vlissides"
+                                 style="width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 2px solid var(--accent-warning);">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">John Vlissides</div>
+                                <div style="color: var(--text-muted); font-size: 0.78rem;">IBM Watson (1961&ndash;2005)</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="knowledge-block">
-                <p><strong>Important framing:</strong> a pattern is a <em>recipe</em>, not source code. Two implementations of the same pattern in two languages can look totally different &mdash; what makes them &ldquo;the same pattern&rdquo; is the <em>shape of the problem they solve</em> and the <em>shape of the solution</em>. When you say &ldquo;I used Strategy here,&rdquo; you are pointing at a structure, not pasting code.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 24px;">
+                <div style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px; text-align: center; font-size: 0.85rem;"><strong>1994</strong><br><small>GoF book released</small></div>
+                <div style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px; text-align: center; font-size: 0.85rem;"><strong>23</strong><br><small>patterns catalogued</small></div>
+                <div style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px; text-align: center; font-size: 0.85rem;"><strong>3</strong><br><small>categories</small></div>
+                <div style="background: var(--bg-tertiary); padding: 10px 14px; border-radius: 8px; text-align: center; font-size: 0.85rem;"><strong>30+</strong><br><small>years still in use</small></div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>The key framing:</strong> a pattern is a <em>recipe</em>, not source code. Two implementations of the same pattern in two languages can look totally different. What makes them &ldquo;the same pattern&rdquo; is the <strong>shape of the problem</strong> and the <strong>shape of the solution</strong>.
             </div>
         </div>
     </section>
@@ -189,69 +240,112 @@
         <div class="section-container">
             <span class="section-label blue">The Map</span>
             <h2 class="section-title">The Three Categories</h2>
-            <p class="section-subtitle">The Gang of Four split the 23 patterns into three groups based on <em>what kind of problem</em> they solve.</p>
+            <p class="section-subtitle">23 patterns split by the kind of problem they solve.</p>
 
-            <div class="diagram-box">
-                <div class="flow-row">
-                    <div class="flow-box green">&#127757; <strong>Creational</strong><br><small>"How do I CREATE this?"</small></div>
-                    <div class="flow-box blue">&#127959;&#65039; <strong>Structural</strong><br><small>"How do I COMPOSE this?"</small></div>
-                    <div class="flow-box purple">&#129488; <strong>Behavioral</strong><br><small>"How do these COMMUNICATE?"</small></div>
+            <!-- The three categories as visual diagrams -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px;">
+
+                <!-- CREATIONAL -->
+                <div style="border: 2px solid var(--accent-success); border-radius: 12px; padding: 18px; background: rgba(16,185,129,0.05);">
+                    <div style="text-align: center; font-size: 1.5rem; margin-bottom: 6px;">&#127757;</div>
+                    <div style="text-align: center; font-weight: 800; color: var(--accent-success); font-size: 1.1rem;">CREATIONAL</div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">&ldquo;How do I CREATE this?&rdquo;</div>
+
+                    <!-- Visual: factory making objects -->
+                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-around; font-family: 'Fira Code', monospace; font-size: 0.8rem;">
+                            <div style="background: var(--accent-success); color: white; padding: 6px 10px; border-radius: 6px;">factory()</div>
+                            <div style="color: var(--text-muted);">&rarr;</div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div style="background: rgba(16,185,129,0.15); padding: 3px 8px; border-radius: 4px;">obj 1</div>
+                                <div style="background: rgba(16,185,129,0.15); padding: 3px 8px; border-radius: 4px;">obj 2</div>
+                                <div style="background: rgba(16,185,129,0.15); padding: 3px 8px; border-radius: 4px;">obj 3</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        <strong>Singleton</strong> &middot; <strong>Factory</strong> &middot; Builder &middot; Prototype
+                    </div>
+                </div>
+
+                <!-- STRUCTURAL -->
+                <div style="border: 2px solid var(--accent-blue); border-radius: 12px; padding: 18px; background: rgba(59,130,246,0.05);">
+                    <div style="text-align: center; font-size: 1.5rem; margin-bottom: 6px;">&#127959;&#65039;</div>
+                    <div style="text-align: center; font-weight: 800; color: var(--accent-blue); font-size: 1.1rem;">STRUCTURAL</div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">&ldquo;How do I COMPOSE this?&rdquo;</div>
+
+                    <!-- Visual: nested boxes -->
+                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                        <div style="border: 2px dashed var(--accent-blue); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                            <div style="color: var(--accent-blue); margin-bottom: 4px;">Logger(</div>
+                            <div style="border: 2px dashed var(--accent-blue); padding: 6px; border-radius: 4px; margin-left: 10px;">
+                                Auth(<span style="color: var(--text-muted);">Handler()</span>)
+                            </div>
+                            <div style="color: var(--accent-blue); margin-top: 4px;">)</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        Adapter &middot; <strong>Decorator</strong> &middot; Facade &middot; Proxy
+                    </div>
+                </div>
+
+                <!-- BEHAVIORAL -->
+                <div style="border: 2px solid var(--accent-purple); border-radius: 12px; padding: 18px; background: rgba(168,85,247,0.05);">
+                    <div style="text-align: center; font-size: 1.5rem; margin-bottom: 6px;">&#129488;</div>
+                    <div style="text-align: center; font-weight: 800; color: var(--accent-purple); font-size: 1.1rem;">BEHAVIORAL</div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">&ldquo;How do these TALK?&rdquo;</div>
+
+                    <!-- Visual: objects with arrows -->
+                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-around; font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                            <div style="background: rgba(168,85,247,0.18); padding: 6px 10px; border-radius: 6px;">A</div>
+                            <div style="display: flex; flex-direction: column; align-items: center; color: var(--accent-purple);">
+                                <div>&rarr;</div>
+                                <div style="font-size: 0.7rem;">notify</div>
+                                <div>&rarr;</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div style="background: rgba(168,85,247,0.12); padding: 4px 8px; border-radius: 4px;">B</div>
+                                <div style="background: rgba(168,85,247,0.12); padding: 4px 8px; border-radius: 4px;">C</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        <strong>Strategy</strong> &middot; <strong>Observer</strong> &middot; Command &middot; Iterator
+                    </div>
                 </div>
             </div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127757; 1. Creational &mdash; <em>Object Creation</em></h3>
-            <p style="color: var(--text-secondary); margin-bottom: 12px;">When the question is <em>&ldquo;how should objects come into existence?&rdquo;</em></p>
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">The 12 most-used patterns, one line each</h3>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Pattern</th><th>Purpose</th><th>Real-world example</th></tr></thead>
+                    <thead><tr><th style="width: 12%;">Category</th><th style="width: 18%;">Pattern</th><th>One-liner</th><th>Real-world hook</th></tr></thead>
                     <tbody>
-                        <tr><td><strong>Singleton</strong></td><td>Exactly one instance of a class</td><td>App config, connection pool, logger</td></tr>
-                        <tr><td>Factory</td><td>Create objects without naming the exact class</td><td>Different DB drivers, payment gateways</td></tr>
-                        <tr><td>Builder</td><td>Construct complex objects step-by-step</td><td>Query builders, HTTP request builders</td></tr>
-                        <tr><td>Prototype</td><td>Clone an existing object as a template</td><td>Cloning configurations, copying records</td></tr>
+                        <tr><td rowspan="4" style="vertical-align: top; color: var(--accent-success);"><strong>Creational</strong></td><td><strong>Singleton</strong></td><td>Exactly one instance</td><td>App config, DB pool, logger</td></tr>
+                        <tr><td>Factory</td><td>Create without naming the class</td><td>DB drivers, payment gateways</td></tr>
+                        <tr><td>Builder</td><td>Build complex objects step-by-step</td><td>Query builders, HTTP request builders</td></tr>
+                        <tr><td>Prototype</td><td>Clone an existing object</td><td>Copying configurations</td></tr>
+                        <tr><td rowspan="4" style="vertical-align: top; color: var(--accent-blue);"><strong>Structural</strong></td><td>Adapter</td><td>Fit a class into an unrelated interface</td><td>Wrapping a legacy API</td></tr>
+                        <tr><td>Decorator</td><td>Add behavior without changing the class</td><td>Logging, caching, auth wrappers</td></tr>
+                        <tr><td>Facade</td><td>One simple front for a complex subsystem</td><td>&ldquo;PaymentService&rdquo; over 5 vendor SDKs</td></tr>
+                        <tr><td>Proxy</td><td>A stand-in that controls access to the real object</td><td>Lazy load, access control, remoting</td></tr>
+                        <tr><td rowspan="4" style="vertical-align: top; color: var(--accent-purple);"><strong>Behavioral</strong></td><td>Strategy</td><td>Swap algorithms behind one interface</td><td>Payment methods, discount rules</td></tr>
+                        <tr><td>Observer</td><td>One-to-many notifications on change</td><td>Event systems, pub/sub</td></tr>
+                        <tr><td>Command</td><td>Wrap a request as an object</td><td>Undo/redo, action queues</td></tr>
+                        <tr><td>Iterator</td><td>Walk a collection without exposing internals</td><td><code>for x in collection:</code> in Python</td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127959;&#65039; 2. Structural &mdash; <em>Object Composition</em></h3>
-            <p style="color: var(--text-secondary); margin-bottom: 12px;">When the question is <em>&ldquo;how do I assemble objects into larger structures?&rdquo;</em></p>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Pattern</th><th>Purpose</th><th>Real-world example</th></tr></thead>
-                    <tbody>
-                        <tr><td>Adapter</td><td>Make a class fit an unrelated interface</td><td>Wrapping a legacy API</td></tr>
-                        <tr><td>Decorator</td><td>Add behavior to an object without changing its class</td><td>Logging, caching, auth wrappers</td></tr>
-                        <tr><td>Facade</td><td>One simple interface in front of a complex subsystem</td><td>A &ldquo;PaymentService&rdquo; over 5 vendor SDKs</td></tr>
-                        <tr><td>Proxy</td><td>A stand-in object that controls access to the real one</td><td>Lazy loading, access control, remoting</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#129488; 3. Behavioral &mdash; <em>Object Interaction</em></h3>
-            <p style="color: var(--text-secondary); margin-bottom: 12px;">When the question is <em>&ldquo;how should objects talk to each other?&rdquo;</em></p>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Pattern</th><th>Purpose</th><th>Real-world example</th></tr></thead>
-                    <tbody>
-                        <tr><td>Strategy</td><td>Swap algorithms behind a common interface</td><td>Payment methods, discount rules</td></tr>
-                        <tr><td>Observer</td><td>One-to-many notifications when something changes</td><td>Event systems, pub/sub</td></tr>
-                        <tr><td>Command</td><td>Wrap a request as an object you can pass around</td><td>Undo/redo, action queues</td></tr>
-                        <tr><td>Iterator</td><td>Walk a collection without exposing its structure</td><td><code>for x in collection:</code> in Python</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="highlight-box warning" style="margin-top: 30px;">
-                <strong>&#9888;&#65039; Patterns are tools, not rules.</strong> If a 10-line function solves your problem, do not force a pattern on it. Patterns earn their keep when:
-                <ul style="margin-top: 8px; padding-left: 25px;">
-                    <li>The same problem is recurring</li>
-                    <li>The team already knows the pattern (shared vocabulary)</li>
-                    <li>You're at a system boundary where flexibility actually matters</li>
-                </ul>
+            <div class="highlight-box warning" style="margin-top: 24px;">
+                <strong>&#9888;&#65039; Patterns are tools, not rules.</strong> Apply them when the same problem recurs, when the team shares the vocabulary, or at a system boundary where flexibility matters. Don't force them on a 10-line function.
             </div>
 
             <div class="knowledge-block">
-                <p><strong>Today's focus:</strong> Singleton &mdash; the most commonly used, most commonly <em>misused</em>, simplest pattern in the catalog. It's the right place to start because it forces you to confront object creation, Python's <code>__new__</code> vs <code>__init__</code>, thread safety, and how patterns interact with the language itself.</p>
+                <p><strong>Today's focus:</strong> <a href="#problem" style="color: var(--accent-primary);">Singleton</a> &mdash; the most commonly used and most commonly <em>misused</em> pattern. The right place to start because it forces you to confront object creation, <code>__new__</code> vs <code>__init__</code>, and thread safety all at once.</p>
             </div>
         </div>
     </section>
@@ -548,7 +642,7 @@ db2 = <span class="function">Database</span>()    <span class="comment"># "Creat
 
             <div class="code-block">
                 <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 01_new_singleton.py</div>
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 01a_new_basic.py</div>
                     <div class="code-toggle"><span class="arrow">&#9660;</span></div>
                 </div>
                 <div class="code-content">
@@ -582,6 +676,10 @@ db2 = <span class="function">Database</span>()
 
             <h3 style="margin-top: 30px; margin-bottom: 15px;">Fix: guard <code>__init__</code> with an initialized flag</h3>
             <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 01b_new_init_guard.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
                 <div class="code-content">
 <pre><span class="keyword">class</span> <span class="function">Database</span>:
     _instance = <span class="keyword">None</span>
@@ -640,6 +738,15 @@ db2 = <span class="function">Database</span>()
                 </div>
 
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> double-checked locking with <code>threading.Lock()</code> &mdash; the very next section.</p>
+            </div>
+
+            <div class="highlight-box">
+                <strong>&#128190; Want to see all the breaks in action?</strong> The <code>code/</code> directory has three runnable files for this approach:
+                <ul style="margin-top: 8px; padding-left: 25px;">
+                    <li><code>01a_new_basic.py</code> &mdash; just <code>_instance</code>; shows the <code>__init__</code>-runs-every-call problem</li>
+                    <li><code>01b_new_init_guard.py</code> &mdash; adds the <code>_initialized</code> flag (the fix above)</li>
+                    <li><code>01c_new_breaks.py</code> &mdash; runs every break (subclassing, <code>object.__new__</code>, pickle, threading) and a counter-intuitive "deepcopy actually survives" demo</li>
+                </ul>
             </div>
         </div>
     </section>
@@ -709,7 +816,7 @@ db2 = <span class="function">Database</span>()
             </div>
 
             <div class="knowledge-block">
-                <p><strong>Practical note:</strong> CPython has the GIL, so in pure-Python code the race window is small. But &ldquo;small&rdquo; is not &ldquo;impossible,&rdquo; and it bites under <code>asyncio</code>, threading with I/O, and most importantly on free-threaded Python (PEP 703) where the GIL is gone. If you write a Singleton intended to live in a threaded app, use the double-check pattern.</p>
+                <p><strong>Practical note:</strong> CPython has the <a href="https://wiki.python.org/moin/GlobalInterpreterLock" target="_blank" rel="noopener" style="color: var(--accent-primary);">GIL</a>, so in pure-Python code the race window is small. But &ldquo;small&rdquo; is not &ldquo;impossible,&rdquo; and it bites under <a href="https://docs.python.org/3/library/asyncio.html" target="_blank" rel="noopener" style="color: var(--accent-primary);"><code>asyncio</code></a>, threading with I/O, and most importantly on free-threaded Python (<a href="https://peps.python.org/pep-0703/" target="_blank" rel="noopener" style="color: var(--accent-primary);">PEP&nbsp;703</a>) where the GIL is gone. See <a href="https://docs.python.org/3/library/threading.html#threading.Lock" target="_blank" rel="noopener" style="color: var(--accent-primary);">the <code>threading.Lock</code> docs</a> for the primitive we used here.</p>
             </div>
         </div>
     </section>
@@ -731,7 +838,6 @@ db2 = <span class="function">Database</span>()
                         <tr><td><code>__init__</code> runs only once (guarded by flag)</td><td>&#9989;</td><td>&#9989;</td></tr>
                         <tr><td>Survives multi-threading</td><td>&#10060;</td><td>&#9989;</td></tr>
                         <tr><td>Fast path after first creation (no lock)</td><td>n/a</td><td>&#9989;</td></tr>
-                        <tr><td>Easy to teach &amp; reason about</td><td>&#9989;</td><td>&#9989;</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -908,7 +1014,7 @@ new = database.database
             <p class="section-subtitle">Keep the class clean. Bolt the Singleton-ness on from outside with a reusable decorator.</p>
 
             <h3 style="margin-top: 20px; margin-bottom: 15px;">First: recall function decorators</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 12px;">You've seen this pattern earlier &mdash; a function that takes another function and returns a wrapped version:</p>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">You've seen this pattern earlier &mdash; a function that takes another function and returns a wrapped version (refresher: <a href="https://realpython.com/primer-on-python-decorators/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Real Python &mdash; Primer on Decorators</a>):</p>
 
             <div class="code-block">
                 <div class="code-content">
@@ -1111,7 +1217,7 @@ test = <span class="function">Database</span>(<span class="string">"localhost"</
                         </div>
                     </div>
 
-                    <p style="margin-top: 10px;">A custom metaclass lets us <strong>intercept what happens when a class is called</strong> &mdash; that is, when someone writes <code>Dog()</code>. This is exactly the hook Singleton needs.</p>
+                    <p style="margin-top: 10px;">A custom metaclass lets us <strong>intercept what happens when a class is called</strong> &mdash; that is, when someone writes <code>Dog()</code>. This is exactly the hook Singleton needs. (Deeper dive: <a href="https://docs.python.org/3/reference/datamodel.html#metaclasses" target="_blank" rel="noopener" style="color: var(--accent-primary);">Python docs &mdash; Metaclasses</a> and <a href="https://realpython.com/python-metaclasses/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Real Python &mdash; Metaclasses</a>.)</p>
                 </div>
             </div>
 
@@ -1412,7 +1518,7 @@ Logger().<span class="function">info</span>(f<span class="string">"connecting to
                     <span class="collapsible-arrow">&#9660;</span>
                 </div>
                 <div class="collapsible-content"><div class="collapsible-inner">
-                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A Singleton class that grows methods over time until it has nothing in common. This is just a global variable with a fancy hat.</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A Singleton class that grows methods over time until it has nothing in common. This is just a <a href="https://wiki.c2.com/?GlobalVariablesAreBad" target="_blank" rel="noopener" style="color: var(--accent-primary);">global variable</a> with a fancy hat.</p>
                     <div class="code-block">
                         <div class="code-content">
 <pre><span class="decorator">@singleton</span>
@@ -1582,6 +1688,86 @@ Logger().<span class="function">info</span>(f<span class="string">"connecting to
             <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; The One-Line Summary</h3>
             <div class="highlight-box success">
                 <strong>Singleton</strong> ensures exactly one instance of a class <em>per process</em>. In Python you usually get it for free with a module-level instance. The other approaches exist for threading, <code>isinstance()</code>, inheritance, and framework-level control. Always ask first: <em>&ldquo;do I really need this, or is it just a global in disguise?&rdquo;</em>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RESOURCES & FURTHER READING ===== -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label blue">Further Reading</span>
+            <h2 class="section-title">Resources &amp; Further Reading</h2>
+            <p class="section-subtitle">Focused on what we covered today: the GoF intro, and Singleton in Python.</p>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">&#128218; The canonical reference</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://en.wikipedia.org/wiki/Design_Patterns" target="_blank" rel="noopener" style="color: var(--accent-primary);">Design Patterns (GoF, 1994)</a></div>
+                    <div class="card-desc">The foundational catalog of 23 patterns. Dense, still the canonical reference. Read it once after you've seen patterns in code &mdash; not before.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128300;</div>
+                    <div class="card-title"><a href="https://refactoring.guru/design-patterns/python" target="_blank" rel="noopener" style="color: var(--accent-primary);">Refactoring.Guru &mdash; Patterns in Python</a></div>
+                    <div class="card-desc">The best free reference for the same 23 patterns, with Python examples and UML diagrams. Use it as a lookup table while reading code.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128013; Singleton-specific deep dives</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128013;</div>
+                    <div class="card-title"><a href="https://python-patterns.guide/gang-of-four/singleton/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Singleton &mdash; python-patterns.guide (Brandon Rhodes)</a></div>
+                    <div class="card-desc">Sharp, well-argued: most Singletons in Python should just be modules. Pairs directly with today's "Optional A" approach.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9888;&#65039;</div>
+                    <div class="card-title"><a href="https://stackoverflow.com/questions/6760685/what-is-the-best-way-of-implementing-singleton-in-python" target="_blank" rel="noopener" style="color: var(--accent-primary);">SO: Best way to implement Singleton in Python</a></div>
+                    <div class="card-desc">The famous Stack Overflow thread &mdash; every approach we covered today, with the trade-offs argued in the comments.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128300;</div>
+                    <div class="card-title"><a href="https://refactoring.guru/design-patterns/singleton/python/example" target="_blank" rel="noopener" style="color: var(--accent-primary);">Refactoring.Guru &mdash; Singleton in Python</a></div>
+                    <div class="card-desc">Step-by-step build with UML and a clean metaclass implementation. Good visual companion to today's Approach C.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128293;</div>
+                    <div class="card-title"><a href="https://www.michaelsafyan.com/tech/design/patterns/singleton" target="_blank" rel="noopener" style="color: var(--accent-primary);">Why Singleton is an anti-pattern &mdash; Michael Safyan</a></div>
+                    <div class="card-desc">The case <em>against</em> Singleton. Read it for the counter-argument; you'll write better code knowing the critique.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://en.wikipedia.org/wiki/Singleton_pattern" target="_blank" rel="noopener" style="color: var(--accent-primary);">Singleton on Wikipedia</a></div>
+                    <div class="card-desc">History, critique, language-specific notes (C++, Java, Python). Useful for interview context.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127757; Singleton in real Python code</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128190;</div>
+                    <div class="card-title"><a href="https://github.com/python/cpython/blob/main/Lib/logging/__init__.py" target="_blank" rel="noopener" style="color: var(--accent-primary);">Python stdlib <code>logging</code> module</a></div>
+                    <div class="card-desc">Real Singleton at module scope &mdash; <code>logging.getLogger()</code> always returns the same root logger. The cleanest production example you can read.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127757;</div>
+                    <div class="card-title"><a href="https://github.com/django/django" target="_blank" rel="noopener" style="color: var(--accent-primary);">Django &mdash; <code>settings</code> &amp; app registry</a></div>
+                    <div class="card-desc">Two well-known Singletons inside one framework: the <code>settings</code> object (lazy-loaded module-level) and the app registry (<code>django.apps.apps</code>).</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128218; From this batch</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-13-SOLID-Principles/index.html" style="color: var(--accent-primary);">LLD-13: SOLID Part 1</a></div>
+                    <div class="card-desc">SRP, OCP, LSP &mdash; the principles that the GoF catalog operationalizes.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-14-SOLID-Principles-2/index.html" style="color: var(--accent-primary);">LLD-14: SOLID Part 2</a></div>
+                    <div class="card-desc">ISP, DIP, and the <a href="../LLD-14-SOLID-Principles-2/index.html#composition" style="color: var(--accent-primary);">composition primer</a>.</div>
+                </div>
             </div>
         </div>
     </section>

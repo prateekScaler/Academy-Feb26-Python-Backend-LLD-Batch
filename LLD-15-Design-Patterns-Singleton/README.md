@@ -28,8 +28,11 @@
 LLD-15-Design-Patterns-Singleton/
 ├── README.md                          ← you are here
 ├── index.html                         ← interactive class notes
+├── media/                             ← GoF author photos + book cover (used by index.html)
 └── code/
-    ├── 01_new_singleton.py            ← A1: __new__ (init gotcha + threading race)
+    ├── 01a_new_basic.py               ← A1: just __new__ + _instance (init runs every call)
+    ├── 01b_new_init_guard.py          ← A1: + _initialized guard (init runs only once)
+    ├── 01c_new_breaks.py              ← A1: demos every break of this approach
     ├── 02_thread_safe_singleton.py    ← A2: __new__ + double-checked locking
     ├── 03_module_singleton.py         ← Optional A: module-level (+ breaks)
     ├── 04_decorator_singleton.py      ← Optional B: decorator (+ breaks)
@@ -118,9 +121,36 @@ That answer signals you know the pattern *and* when not to over-engineer it.
 
 ## Related Reading
 
-- **In this repo:** [LLD-14: SOLID Principles Part 2](../LLD-14-SOLID-Principles-2/) — composition, DIP, Python DI ecosystem
-- *Design Patterns* (Gang of Four, 1994) — the original catalog
-- Brandon Rhodes — *Composition over Inheritance* — argues most singletons should be modules
+### From this batch
+- [LLD-13: SOLID Part 1](../LLD-13-SOLID-Principles/) — SRP, OCP, LSP intro
+- [LLD-14: SOLID Part 2](../LLD-14-SOLID-Principles-2/) — composition, DIP, Python DI ecosystem
+
+### Books
+- [*Design Patterns: Elements of Reusable Object-Oriented Software* (Gang of Four, 1994)](https://en.wikipedia.org/wiki/Design_Patterns) — the original catalog
+- [*Head First Design Patterns*](https://www.oreilly.com/library/view/head-first-design/0596007124/) — the friendliest intro
+- [*Dive Into Design Patterns* — Alexander Shvets](https://refactoring.guru/design-patterns/book) — modern, illustrated
+
+### Best web resources
+- [Refactoring.Guru — Patterns in Python](https://refactoring.guru/design-patterns/python) — every GoF pattern with code + UML
+- [python-patterns.guide — Brandon Rhodes](https://python-patterns.guide/) — opinionated; honest about which patterns Python solves natively
+- [faif/python-patterns (GitHub, 41k★)](https://github.com/faif/python-patterns) — runnable Python examples
+- [SourceMaking — Design Patterns](https://sourcemaking.com/design_patterns)
+- [Real Python — Design Patterns tutorials](https://realpython.com/tutorials/design-patterns/)
+
+### Singleton-specific
+- [Singleton in python-patterns.guide](https://python-patterns.guide/gang-of-four/singleton/) — "most Singletons in Python should just be modules"
+- [SO: Best way to implement Singleton in Python](https://stackoverflow.com/questions/6760685/what-is-the-best-way-of-implementing-singleton-in-python) — famous thread, every approach we covered with trade-offs
+- [Refactoring.Guru — Singleton in Python](https://refactoring.guru/design-patterns/singleton/python/example) — step-by-step build with UML
+
+### Open-source codebases worth exploring
+- [Django](https://github.com/django/django) — Singleton (settings), Strategy (auth backends), Observer (signals)
+- [FastAPI](https://github.com/fastapi/fastapi) — DI via `Depends()`, Decorator-heavy routes
+- [Celery](https://github.com/celery/celery) — Command (tasks), Strategy (brokers), Factory (backends)
+- [dependency-injector](https://github.com/python-dependency-injector/python-dependency-injector) — textbook DI container
+
+### Critical / counter-argument
+- [Steve Yegge — Execution in the Kingdom of Nouns](https://steve-yegge.blogspot.com/2006/03/execution-in-kingdom-of-nouns.html)
+- [Brandon Rhodes — Clean Architectures in Python (PyCon talk)](https://www.youtube.com/watch?v=o8VAqpa8frU)
 
 ---
 
