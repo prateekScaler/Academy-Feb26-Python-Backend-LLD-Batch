@@ -26,29 +26,44 @@
 
 ```
 LLD-15-Design-Patterns-Singleton/
-├── README.md                     ← you are here
-├── index.html                    ← interactive class notes
+├── README.md                          ← you are here
+├── index.html                         ← interactive class notes
 └── code/
-    ├── 01_new_singleton.py       ← __new__ + 4 ways it breaks
-    ├── 02_decorator_singleton.py ← decorator + 4 ways it breaks
-    ├── 03_metaclass_singleton.py ← metaclass + 3 ways it breaks
-    ├── 04_module_singleton.py    ← module-level + 3 ways it breaks
-    ├── 05_thread_safe_singleton.py ← double-checked locking
-    └── 06_use_cases.py           ← Config, Logger, ConnectionPool
+    ├── 01_new_singleton.py            ← A1: __new__ (init gotcha + threading race)
+    ├── 02_thread_safe_singleton.py    ← A2: __new__ + double-checked locking
+    ├── 03_module_singleton.py         ← Optional A: module-level (+ breaks)
+    ├── 04_decorator_singleton.py      ← Optional B: decorator (+ breaks)
+    ├── 05_metaclass_singleton.py      ← Optional C: metaclass (+ breaks)
+    ├── 06_use_cases.py                ← Config, Logger, ConnectionPool
+    └── 07_hardened_singleton.py       ← Combines every defense (verified at runtime)
 ```
 
 Each `.py` file is runnable: `python3 code/01_new_singleton.py`
 
 ---
 
-## The Four Implementations at a Glance
+## The Approaches at a Glance
 
-| Approach | Complexity | Pythonic | Thread-safe by default | Best for |
-|----------|-----------|----------|------------------------|----------|
-| **Module-level** | ⭐ lowest | ⭐⭐⭐ very | ✅ yes | **Default choice in Python** |
-| `__new__` | ⭐⭐ medium | ⭐⭐ moderate | ❌ needs lock | Teaching, fine control |
-| Decorator | ⭐⭐ medium | ⭐⭐⭐ very | ❌ needs lock | Bolt-on, clean classes |
-| Metaclass | ⭐⭐⭐ high | ⭐⭐ moderate | ❌ needs lock | Libraries, framework code |
+**Mandatory path (covered in depth):**
+
+| # | Approach | Thread-safe? | Notes |
+|---|---|---|---|
+| A1 | `__new__` (classic) | ❌ | Init gotcha + race condition shown |
+| A2 | `__new__` + double-checked locking | ✅ | The default working Singleton |
+
+**Optional alternatives (each with its own break modes):**
+
+| Letter | Approach | Best for |
+|---|---|---|
+| Opt A | Module-level instance | Default choice in plain Python apps |
+| Opt B | Decorator (`@singleton`) | Bolt-on, clean classes |
+| Opt C | Metaclass | Libraries, framework code, `isinstance()` |
+
+**Production-grade:**
+
+| | Approach | What it defends |
+|---|---|---|
+| 💎 | Hardened (metaclass + lock + `__copy__` + `__reduce__`) | Threading, deepcopy, pickle, subclassing |
 
 ---
 

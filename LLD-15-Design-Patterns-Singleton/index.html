@@ -121,17 +121,17 @@
     <nav class="nav">
         <div class="nav-brand">LLD-15: Design Patterns &amp; Singleton</div>
         <ul class="nav-links">
-            <li><a href="#intro">Patterns Intro</a></li>
-            <li><a href="#categories">Categories</a></li>
-            <li><a href="#prereq">Prerequisites</a></li>
-            <li><a href="#problem">The Problem</a></li>
-            <li><a href="#new-method">__new__</a></li>
-            <li><a href="#decorator">Decorator</a></li>
-            <li><a href="#metaclass">Metaclass</a></li>
-            <li><a href="#module">Module</a></li>
-            <li><a href="#thread-safety">Threading</a></li>
+            <li><a href="#intro">Patterns</a></li>
+            <li><a href="#prereq">Prereq</a></li>
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#new-method">A1: __new__</a></li>
+            <li><a href="#thread-safety">A2: Thread-safe</a></li>
+            <li><a href="#checkpoint">Checkpoint</a></li>
+            <li><a href="#module">Opt A: Module</a></li>
+            <li><a href="#decorator">Opt B: Decorator</a></li>
+            <li><a href="#metaclass">Opt C: Metaclass</a></li>
+            <li><a href="#hardened">Hardened</a></li>
             <li><a href="#use-cases">Use Cases</a></li>
-            <li><a href="#anti-patterns">Anti-Patterns</a></li>
             <li><a href="#summary">Summary</a></li>
         </ul>
         <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
@@ -261,7 +261,7 @@
         <div class="section-container">
             <span class="section-label purple">Pre-flight Check</span>
             <h2 class="section-title">Prerequisites &mdash; Quick Quiz</h2>
-            <p class="section-subtitle">Four warm-up questions. Singleton leans on these concepts hard &mdash; if you get them, the implementations to come will feel obvious.</p>
+            <p class="section-subtitle">Five warm-up questions. Singleton leans on these concepts hard &mdash; if you get them, the implementations to come will feel obvious.</p>
 
             <!-- Prereq Quiz 1: Class vs Instance Variables -->
             <div class="quiz-box" id="prereq-q1">
@@ -290,7 +290,32 @@ c2.<span class="function">increment</span>()
                 <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">B) <code>1, 1, 1</code></button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">C) <code>2, 2, 2</code></button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">D) <code>0, 1, 1</code></button>
-                <div class="quiz-explanation"><strong>Correct!</strong> <code>Counter.count</code> is a <em>class variable</em> &mdash; one copy shared by every instance. <code>self.instance_count</code> is an <em>instance variable</em> &mdash; one copy per object. Singleton implementations always use a class variable (like <code>_instance</code>) to store the shared instance, so this distinction is foundational.</div>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Class variable = <em>one copy, shared</em>. Instance variable = <em>one copy per object</em>.
+
+                    <div style="margin-top: 12px; background: var(--bg-tertiary); padding: 14px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.7; color: var(--text-primary);">
+                        <div style="text-align:center; color: var(--text-muted); margin-bottom: 8px;">Memory layout (one box per object)</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: stretch;">
+                            <div style="border: 2px solid var(--accent-blue); border-radius: 8px; padding: 10px; background: rgba(59,130,246,0.08);">
+                                <div style="color: var(--accent-blue); font-weight:700;">class Counter</div>
+                                <div style="margin-top: 6px;">count = 2 &nbsp;&#11013;&#65039; shared</div>
+                            </div>
+                            <div style="border: 2px solid var(--accent-success); border-radius: 8px; padding: 10px; background: rgba(16,185,129,0.08);">
+                                <div style="color: var(--accent-success); font-weight:700;">c1 (instance)</div>
+                                <div style="margin-top: 6px;">instance_count = 1</div>
+                            </div>
+                            <div style="border: 2px solid var(--accent-success); border-radius: 8px; padding: 10px; background: rgba(16,185,129,0.08);">
+                                <div style="color: var(--accent-success); font-weight:700;">c2 (instance)</div>
+                                <div style="margin-top: 6px;">instance_count = 1</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; color: var(--text-muted); font-size: 0.8rem;">
+                            &uarr; <code>c1.increment()</code> bumps the shared <code>count</code> on the class AND its own <code>instance_count</code>. <code>c2.increment()</code> bumps the same shared <code>count</code> but its <em>own</em> <code>instance_count</code>.
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 12px;"><strong>Why this matters for Singleton:</strong> we'll store the &ldquo;one and only&rdquo; instance as a <em>class variable</em> (<code>_instance</code>) &mdash; precisely because every instance / subclass / module of code that touches the class sees the same shared box.</p>
+                </div>
             </div>
 
             <!-- Prereq Quiz 2: Encapsulation in Python -->
@@ -313,12 +338,62 @@ account = <span class="function">BankAccount</span>(<span class="number">1000</s
                 <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, true)">B) First and third work; second raises <code>AttributeError</code></button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">C) All three work, Python enforces nothing</button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">D) None work &mdash; Python has true private members</button>
-                <div class="quiz-explanation"><strong>Correct!</strong> <code>_balance</code> is convention only (still accessible). <code>__secret</code> gets <em>name-mangled</em> to <code>_BankAccount__secret</code>, so the second line fails but the third (using the mangled name) succeeds. <strong>Takeaway:</strong> Python has no true private &mdash; it gives you hints and trust. Any Singleton implementation can be circumvented by a determined caller. Document intent; don't pretend it's a fortress.</div>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Here is the rule, compactly:
+
+                    <div style="margin-top: 10px; overflow-x: auto;">
+                        <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                            <thead>
+                                <tr><th>Prefix</th><th>What Python does</th><th>Accessible?</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>name</code></td><td>Nothing special &mdash; public</td><td>&#9989; Yes</td></tr>
+                                <tr><td><code>_name</code></td><td>Convention only: &ldquo;don't touch&rdquo;</td><td>&#9989; Yes (but rude)</td></tr>
+                                <tr><td><code>__name</code></td><td>Name-mangled to <code>_ClassName__name</code></td><td>&#9989; via mangled name</td></tr>
+                                <tr><td><code>__dunder__</code></td><td>Reserved for Python (e.g. <code>__init__</code>)</td><td>&#9989; Yes</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="margin-top: 10px;"><strong>Key takeaways for Singleton:</strong></p>
+                    <ul style="margin-top: 4px; padding-left: 22px;">
+                        <li>Python has <em>no true private</em> &mdash; only hints + trust</li>
+                        <li>Any Singleton can be bypassed by a determined caller</li>
+                        <li>Document intent; don't pretend it's a fortress</li>
+                    </ul>
+                </div>
             </div>
 
-            <!-- Prereq Quiz 3: __new__ vs __init__ -->
+            <!-- Prereq Quiz 3a: What is the constructor in Python? (warm-up to recall __new__) -->
+            <div class="quiz-box" id="prereq-q3a">
+                <h4>Question 3 &mdash; In Python, what is the &ldquo;constructor&rdquo;?</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Most languages have <em>one</em> thing called &ldquo;the constructor&rdquo; that both allocates memory and initializes the object. Python is different. Pause and recall &mdash; which method is responsible for what?</p>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3a', this, false)">A) Only <code>__init__</code> &mdash; it allocates memory and initializes</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3a', this, false)">B) Only <code>__new__</code> &mdash; it's the constructor; <code>__init__</code> is something else</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3a', this, true)">C) Both &mdash; <code>__new__</code> creates the object, <code>__init__</code> initializes it</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3a', this, false)">D) <code>__init__</code> creates and initializes; <code>__new__</code> only exists for metaclasses</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Construction in Python is a <em>two-step process</em>:
+
+                    <div style="margin-top: 10px; overflow-x: auto;">
+                        <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                            <thead>
+                                <tr><th>Step</th><th>Method</th><th>Job</th><th>First arg</th><th>Returns</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>1</td><td><code>__new__</code></td><td>Allocate memory for a new instance</td><td><code>cls</code> (the class)</td><td>The new instance</td></tr>
+                                <tr><td>2</td><td><code>__init__</code></td><td>Set up the instance's attributes</td><td><code>self</code> (the instance)</td><td><code>None</code></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="margin-top: 10px;">99% of Python code only ever defines <code>__init__</code> because the default <code>__new__</code> on <code>object</code> handles memory allocation just fine. <strong>Singleton is the rare case where we need to override <code>__new__</code></strong> &mdash; because we want to intercept &ldquo;create a new object&rdquo; and sometimes say &ldquo;no, give them the existing one.&rdquo;</p>
+                </div>
+            </div>
+
+            <!-- Prereq Quiz 3b: Object creation order -->
             <div class="quiz-box" id="prereq-q3">
-                <h4>Question 3 &mdash; Object creation order</h4>
+                <h4>Question 4 &mdash; Object creation order</h4>
                 <div class="code-block">
                     <div class="code-content">
 <pre><span class="keyword">class</span> <span class="function">MyClass</span>:
@@ -336,12 +411,30 @@ obj = <span class="function">MyClass</span>()</pre>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, true)">B) <code>__new__</code> then <code>__init__</code></button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">C) Only <code>__new__</code></button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">D) Only <code>__init__</code></button>
-                <div class="quiz-explanation"><strong>Correct!</strong> <code>__new__</code> creates the object (allocates memory, returns an instance). <code>__init__</code> initializes it. Most code only customizes <code>__init__</code>; Singleton needs to customize <code>__new__</code> because we want to <em>intercept creation</em> and sometimes return an existing instance. <em>This is the single most important insight for the classic Singleton implementation.</em></div>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> <code>__new__</code> first (creates the object), then <code>__init__</code> (initializes it). Now let's decode that <code>return super().__new__(cls)</code> line &mdash; you'll see it in every Singleton:
+
+                    <div style="margin-top: 10px; overflow-x: auto;">
+                        <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                            <thead>
+                                <tr><th>Bit of code</th><th>What it means</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>super()</code> (with parens)</td><td>The parent class as a usable proxy. <code>super</code> (no parens) is just the class &mdash; you can't call methods on it directly.</td></tr>
+                                <tr><td><code>super().__new__</code></td><td>Reach the parent's <code>__new__</code>. For most classes, the parent is <code>object</code>, and <code>object.__new__</code> is the one that <em>actually allocates memory</em>.</td></tr>
+                                <tr><td><code>__new__(cls)</code></td><td>We pass <code>cls</code> (our class, e.g. <code>Database</code>) so the new object is of <em>our</em> type, not of type <code>object</code>.</td></tr>
+                                <tr><td><code>return ...</code></td><td><code>__new__</code> must return an instance. If it forgets, <code>__init__</code> is never called.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="margin-top: 10px;"><strong>The mental model:</strong> <code>__new__</code> in your class doesn't allocate memory itself &mdash; it delegates that to <code>object.__new__</code> via <code>super()</code>. Our customisation is just <em>around</em> the allocation: &ldquo;before allocating, check if we already have one; after allocating, remember it for next time.&rdquo;</p>
+                </div>
             </div>
 
-            <!-- Prereq Quiz 4: When Singleton makes sense -->
+            <!-- Prereq Quiz 5: When Singleton makes sense -->
             <div class="quiz-box" id="prereq-q4">
-                <h4>Question 4 &mdash; Which scenario <em>genuinely</em> needs one instance?</h4>
+                <h4>Question 5 &mdash; Which scenario <em>genuinely</em> needs one instance?</h4>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, true)">A) Database connection pool manager</button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">B) <code>User</code> objects in a web app</button>
                 <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">C) Shopping cart items</button>
@@ -397,6 +490,43 @@ db2 = <span class="function">Database</span>()    <span class="comment"># "Creat
                 </ul>
             </div>
 
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">A Picture: Many Instances vs One Instance</h3>
+            <div class="diagram-box">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch;">
+                    <!-- BAD: many instances -->
+                    <div style="border: 2px solid var(--accent-danger); border-radius: 10px; padding: 14px; background: rgba(239,68,68,0.06);">
+                        <div style="text-align:center; color: var(--accent-danger); font-weight:700; margin-bottom: 10px;">&#10060; Without Singleton</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                            <div style="background: var(--bg-tertiary); border: 1px dashed var(--accent-danger); padding: 8px; border-radius: 6px; text-align:center; font-size: 0.8rem;">Module A<br><small>db = DB()</small></div>
+                            <div style="background: var(--bg-tertiary); border: 1px dashed var(--accent-danger); padding: 8px; border-radius: 6px; text-align:center; font-size: 0.8rem;">Module B<br><small>db = DB()</small></div>
+                            <div style="background: var(--bg-tertiary); border: 1px dashed var(--accent-danger); padding: 8px; border-radius: 6px; text-align:center; font-size: 0.8rem;">Module C<br><small>db = DB()</small></div>
+                        </div>
+                        <div style="text-align:center; color: var(--text-muted); font-size: 0.9rem;">&darr; each opens its own &darr;</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px;">
+                            <div style="background: rgba(239,68,68,0.15); padding: 8px; border-radius: 6px; text-align:center;">&#128190; conn 1</div>
+                            <div style="background: rgba(239,68,68,0.15); padding: 8px; border-radius: 6px; text-align:center;">&#128190; conn 2</div>
+                            <div style="background: rgba(239,68,68,0.15); padding: 8px; border-radius: 6px; text-align:center;">&#128190; conn 3</div>
+                        </div>
+                        <div style="text-align:center; color: var(--text-muted); margin-top: 10px; font-size: 0.85rem;">3 sockets, 3&times; the memory, 3 separate states.</div>
+                    </div>
+
+                    <!-- GOOD: single instance -->
+                    <div style="border: 2px solid var(--accent-success); border-radius: 10px; padding: 14px; background: rgba(16,185,129,0.06);">
+                        <div style="text-align:center; color: var(--accent-success); font-weight:700; margin-bottom: 10px;">&#10004; With Singleton</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                            <div style="background: var(--bg-tertiary); border: 1px dashed var(--accent-success); padding: 8px; border-radius: 6px; text-align:center; font-size: 0.8rem;">Module A<br><small>db = DB()</small></div>
+                            <div style="background: var(--bg-tertiary); border: 1px dashed var(--accent-success); padding: 8px; border-radius: 6px; text-align:center; font-size: 0.8rem;">Module B<br><small>db = DB()</small></div>
+                            <div style="background: var(--bg-tertiary); border: 1px dashed var(--accent-success); padding: 8px; border-radius: 6px; text-align:center; font-size: 0.8rem;">Module C<br><small>db = DB()</small></div>
+                        </div>
+                        <div style="text-align:center; color: var(--text-muted); font-size: 0.9rem;">&darr; all point to one &darr;</div>
+                        <div style="display: flex; justify-content: center; margin-top: 8px;">
+                            <div style="background: rgba(16,185,129,0.18); padding: 14px 30px; border-radius: 6px; font-weight: 700;">&#128190; conn (the only one)</div>
+                        </div>
+                        <div style="text-align:center; color: var(--text-muted); margin-top: 14px; font-size: 0.85rem;">1 socket, shared state, predictable.</div>
+                    </div>
+                </div>
+            </div>
+
             <h3 style="margin-top: 30px; margin-bottom: 15px;">What We Want</h3>
             <div class="highlight-box success">
                 A way to say: &ldquo;However many times anyone in this process calls <code>Database()</code>, give them the same one instance.&rdquo; That's the Singleton pattern in one sentence.
@@ -409,9 +539,9 @@ db2 = <span class="function">Database</span>()    <span class="comment"># "Creat
     <!-- ===== 6. IMPLEMENTATION 1: __new__ ===== -->
     <section id="new-method">
         <div class="section-container">
-            <span class="section-label success">Implementation 1</span>
+            <span class="section-label success">Approach 1</span>
             <h2 class="section-title">Approach 1 &mdash; The Classic <code>__new__</code></h2>
-            <p class="section-subtitle">The textbook implementation. Intercept object creation and return the same instance every time.</p>
+            <p class="section-subtitle">The textbook implementation. Intercept object creation and return the same instance every time. We'll meet its two drawbacks &mdash; one we fix here, one we fix in Approach 2.</p>
 
             <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
             <p style="color: var(--text-secondary); margin-bottom: 15px;">Recall from the prereq quiz: <code>__new__</code> runs <em>before</em> <code>__init__</code> and is what actually <em>creates</em> the object. If we override it, we can lie. The first time someone calls <code>Database()</code>, we genuinely create an object and stash it on the class. Every subsequent call, we just hand back the stashed one.</p>
@@ -470,100 +600,378 @@ db2 = <span class="function">Database</span>()
                 </div>
             </div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 15px;">The classic <code>__new__</code> singleton has <strong>four well-known failure modes</strong>. Each one is a real story from a real codebase.</p>
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; The Big Problem with This Approach: Threading</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">The <code>__init__</code> gotcha above is real, but easy to fix. The <em>structural</em> problem with the classic <code>__new__</code> implementation only shows up the moment more than one thread touches the class.</p>
 
             <div class="break-box">
-                <span class="break-title">&#128165; Break 1 &mdash; Subclassing leaks instances (common beginner mistake)</span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">A very common beginner version <strong>hardcodes the parent class name</strong> inside <code>__new__</code> instead of using <code>cls</code>. The first subclass that's instantiated wins; every subsequent call &mdash; even from a sibling subclass &mdash; returns that same instance with the wrong type.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="keyword">class</span> <span class="function">Database</span>:
-    _instance = <span class="keyword">None</span>
-    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
-        <span class="keyword">if</span> Database._instance <span class="keyword">is</span> <span class="keyword">None</span>:   <span class="comment"># MISTAKE: hardcoded `Database`</span>
-            Database._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
-        <span class="keyword">return</span> Database._instance
+                <span class="break-title">&#128165; The race &mdash; two threads see <code>_instance is None</code> at the same time</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">A classic race. Two threads both pass the <code>if cls._instance is None</code> check before either has a chance to assign &mdash; so both create an instance. The second assignment overwrites the first, leaving an orphan that one thread is still holding a reference to.</p>
 
-<span class="keyword">class</span> <span class="function">Postgres</span>(Database): <span class="keyword">pass</span>
-<span class="keyword">class</span> <span class="function">MySQL</span>(Database):    <span class="keyword">pass</span>
+                <div style="background: var(--bg-tertiary); padding: 14px; border-radius: 8px; font-size: 0.85rem; color: var(--text-primary); margin: 10px 0;">
+                    <div style="text-align:center; color: var(--text-muted); margin-bottom: 10px;">Timeline &mdash; time flows down &darr;</div>
+                    <div style="display: grid; grid-template-columns: 60px 1fr 1fr; gap: 10px; align-items: stretch; font-family: 'Fira Code', monospace;">
+                        <div style="font-weight:700; color: var(--text-muted); text-align:center;">time</div>
+                        <div style="font-weight:700; color: var(--accent-blue); text-align:center;">Thread A</div>
+                        <div style="font-weight:700; color: var(--accent-purple); text-align:center;">Thread B</div>
 
-a = <span class="function">Postgres</span>()
-b = <span class="function">MySQL</span>()
-<span class="function">print</span>(<span class="function">type</span>(a).__name__)   <span class="comment"># Postgres</span>
-<span class="function">print</span>(<span class="function">type</span>(b).__name__)   <span class="comment"># Postgres  !!! should be MySQL</span>
-<span class="function">print</span>(a <span class="keyword">is</span> b)             <span class="comment"># True - they share ONE instance</span></pre>
+                        <div style="text-align:center; color: var(--text-muted);">t1</div>
+                        <div style="background: rgba(59,130,246,0.12); padding: 6px 10px; border-radius: 4px;">check: <code>_instance is None</code> &rarr; True</div>
+                        <div></div>
+
+                        <div style="text-align:center; color: var(--text-muted);">t2</div>
+                        <div></div>
+                        <div style="background: rgba(168,85,247,0.12); padding: 6px 10px; border-radius: 4px;">check: <code>_instance is None</code> &rarr; True &nbsp;<span style="color: var(--accent-danger);">(!!)</span></div>
+
+                        <div style="text-align:center; color: var(--text-muted);">t3</div>
+                        <div style="background: rgba(59,130,246,0.18); padding: 6px 10px; border-radius: 4px;">create instance &#9398; &rarr; assign</div>
+                        <div></div>
+
+                        <div style="text-align:center; color: var(--text-muted);">t4</div>
+                        <div></div>
+                        <div style="background: rgba(168,85,247,0.18); padding: 6px 10px; border-radius: 4px;">create instance &#9399; &rarr; <em>overwrites</em> &#9398;</div>
+
+                        <div style="text-align:center; color: var(--text-muted);">t5</div>
+                        <div style="background: rgba(239,68,68,0.12); padding: 6px 10px; border-radius: 4px; color: var(--accent-danger);">returns &#9398; &mdash; orphan!</div>
+                        <div style="background: rgba(16,185,129,0.12); padding: 6px 10px; border-radius: 4px;">returns &#9399;</div>
+                    </div>
+                    <div style="margin-top: 10px; color: var(--text-muted); font-size: 0.8rem; text-align:center;">
+                        Now the class holds &#9399;, but Thread A is still using &#9398;. Two &ldquo;singletons&rdquo; coexist.
                     </div>
                 </div>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 8px;">Using <code>cls._instance</code> (instead of hardcoded <code>Database._instance</code>) avoids this particular bug, but introduces a different surprise: each subclass becomes its <em>own</em> singleton, which may not be what you wanted.</p>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> store instances per-class in a dict (<code>_instances = {}</code> keyed by <code>cls</code>) and be explicit about the intent: one-per-hierarchy or one-per-class.</p>
-            </div>
 
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 2 &mdash; <code>copy.deepcopy()</code> bypasses <code>__new__</code></span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;"><code>deepcopy</code> doesn't call your constructor &mdash; it walks the object graph and creates fresh objects directly. Your singleton check never runs.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="keyword">import</span> copy
-db1 = <span class="function">Database</span>()
-db2 = copy.<span class="function">deepcopy</span>(db1)
-
-<span class="function">print</span>(db1 <span class="keyword">is</span> db2)              <span class="comment"># False! Two instances exist</span>
-<span class="function">print</span>(<span class="function">type</span>(db1) <span class="keyword">is</span> <span class="function">type</span>(db2))  <span class="comment"># True - same class</span>
-<span class="comment"># You now have two "singletons". The invariant is broken silently.</span></pre>
-                    </div>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> implement <code>__copy__</code> and <code>__deepcopy__</code> to return <code>self</code>.</p>
-            </div>
-
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 3 &mdash; <code>pickle</code> creates a new instance on load</span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">Pickling serializes the object state; unpickling reconstructs it via <code>__new__</code> &mdash; but in another process, <code>cls._instance</code> is <code>None</code> again. Cross-process serialization quietly clones your singleton.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="keyword">import</span> pickle
-db1 = <span class="function">Database</span>()
-data = pickle.<span class="function">dumps</span>(db1)
-db2 = pickle.<span class="function">loads</span>(data)
-
-<span class="function">print</span>(db1 <span class="keyword">is</span> db2)    <span class="comment"># False if loaded in a fresh process</span>
-<span class="comment"># Distributed apps, Celery workers, multiprocessing - all hit this.</span></pre>
-                    </div>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> implement <code>__reduce__</code> so pickle routes through your factory.</p>
-            </div>
-
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 4 &mdash; Two threads see <code>_instance is None</code> at the same time</span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">A classic race condition. If two threads both pass the <code>if cls._instance is None</code> check before either assigns, both will create instances. The second assignment overwrites the first, and the first thread walks away with an orphan singleton that nobody else has.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="comment"># Timeline (interleaved execution):</span>
-<span class="comment"># Thread A: if cls._instance is None:  -&gt; True</span>
-<span class="comment"># Thread B: if cls._instance is None:  -&gt; True (still None!)</span>
-<span class="comment"># Thread A: cls._instance = super().__new__(cls)  # instance A</span>
-<span class="comment"># Thread B: cls._instance = super().__new__(cls)  # instance B (overwrites!)</span>
-<span class="comment"># Thread A held a reference to instance A; everyone else now uses B.</span></pre>
-                    </div>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> double-checked locking with <code>threading.Lock()</code> &mdash; covered in the Threading section below.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> double-checked locking with <code>threading.Lock()</code> &mdash; the very next section.</p>
             </div>
         </div>
     </section>
 
-    <!-- ===== 7. IMPLEMENTATION 2: DECORATOR ===== -->
+    <!-- ===== APPROACH 2: THREAD-SAFE DOUBLE-CHECKED LOCKING ===== -->
+    <section id="thread-safety">
+        <div class="section-container">
+            <span class="section-label warning">Approach 2</span>
+            <h2 class="section-title">Approach 2 &mdash; Thread-Safe via Double-Checked Locking</h2>
+            <p class="section-subtitle">Same Singleton, with a guard around the creation step. This is the implementation that actually holds up in a real (threaded) application.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">First attempt: naive lock (correct but slow)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">The obvious fix: wrap the whole <code>__new__</code> in a lock. Only one thread can be inside at a time, so the race vanishes. But now <em>every</em> call &mdash; including the millions that happen <em>after</em> the instance is created &mdash; pays for lock acquisition.</p>
+
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">import</span> threading
+
+<span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>
+    _lock = threading.<span class="function">Lock</span>()
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">with</span> cls._lock:                  <span class="comment"># EVERY call acquires the lock - slow</span>
+            <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+                cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+            <span class="keyword">return</span> cls._instance</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">The Refinement: Double-Checked Locking (fast <em>and</em> safe)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;"><strong>Check first (cheap, no lock).</strong> Only acquire the lock if the instance is missing. <strong>Inside the lock, check again</strong> &mdash; another thread may have built it while we were waiting.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 02_thread_safe_singleton.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> threading
+
+<span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>
+    _lock = threading.<span class="function">Lock</span>()
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:             <span class="comment"># 1st check (no lock - fast path)</span>
+            <span class="keyword">with</span> cls._lock:
+                <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:         <span class="comment"># 2nd check (inside lock)</span>
+                    cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> cls._instance</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">
+                <h4 style="margin-bottom: 12px;">&#9201;&#65039; What the three threads see</h4>
+                <div class="flow-row">
+                    <div class="flow-box red">Thread A &mdash; very first call<br><small>check 1: None &rarr; acquire lock &rarr; check 2: still None &rarr; CREATE &rarr; release</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Thread B &mdash; arrives during creation<br><small>check 1: None &rarr; wait for lock &rarr; <em>(A finished, B enters)</em> &rarr; check 2: EXISTS &rarr; return existing</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green">Thread C &mdash; arrives later<br><small>check 1: exists &rarr; return immediately. <strong>No lock acquired.</strong></small></div>
+                </div>
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">Only the very first concurrent threads pay for the lock. Everyone else uses the fast path.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Practical note:</strong> CPython has the GIL, so in pure-Python code the race window is small. But &ldquo;small&rdquo; is not &ldquo;impossible,&rdquo; and it bites under <code>asyncio</code>, threading with I/O, and most importantly on free-threaded Python (PEP 703) where the GIL is gone. If you write a Singleton intended to live in a threaded app, use the double-check pattern.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CHECKPOINT SUMMARY ===== -->
+    <section id="checkpoint">
+        <div class="section-container">
+            <span class="section-label success">Checkpoint</span>
+            <h2 class="section-title">Where We Are So Far</h2>
+            <p class="section-subtitle">Two approaches in. Let's pin down what we've actually solved.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>&nbsp;</th><th>Approach 1 &mdash; <code>__new__</code></th><th>Approach 2 &mdash; with double-checked lock</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Returns the same instance for every call</td><td>&#9989;</td><td>&#9989;</td></tr>
+                        <tr><td><code>__init__</code> runs only once (guarded by flag)</td><td>&#9989;</td><td>&#9989;</td></tr>
+                        <tr><td>Survives multi-threading</td><td>&#10060;</td><td>&#9989;</td></tr>
+                        <tr><td>Fast path after first creation (no lock)</td><td>n/a</td><td>&#9989;</td></tr>
+                        <tr><td>Easy to teach &amp; reason about</td><td>&#9989;</td><td>&#9989;</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>This is a perfectly good Singleton for most threaded apps.</strong> If you stop reading right here, you can implement a working, thread-safe Singleton in any Python codebase.
+            </div>
+
+            <p style="margin-top: 25px; color: var(--text-secondary);">But Approach 2 still isn't the <em>only</em> way to write a Singleton in Python &mdash; and it isn't always the <em>best</em> way either. There are three alternative styles each suited to a different situation:</p>
+
+            <ul style="margin-top: 12px; padding-left: 22px; color: var(--text-secondary);">
+                <li><strong>Module-level instance</strong> &mdash; the most Pythonic, often the simplest correct option</li>
+                <li><strong>Decorator</strong> &mdash; bolt singleton-ness onto a class without touching it</li>
+                <li><strong>Metaclass</strong> &mdash; the most powerful; library/framework code uses this</li>
+            </ul>
+
+            <p style="margin-top: 12px; color: var(--text-secondary);">Each one is interesting <em>and</em> each one has its own failure modes. We'll meet them as <em>optional alternatives</em>, then end with a single hardened singleton that defends against every break we've seen.</p>
+        </div>
+    </section>
+
+    <!-- ===== OPTIONAL ALTERNATIVES INTRO ===== -->
+    <section id="alternatives-intro">
+        <div class="section-container">
+            <span class="section-label blue">Optional &mdash; Alternative Implementations</span>
+            <h2 class="section-title">Three Other Ways to Build a Singleton</h2>
+            <p class="section-subtitle">Each alternative is shorter or cleaner than the locked <code>__new__</code> in some way &mdash; and breaks in a way <em>that</em> approach didn't. Read them as your toolbox, not your default.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title">A. Module-level instance</div>
+                    <div class="card-desc">The simplest Singleton in Python &mdash; just an object at module top-level. Thread-safe for free. Breaks under <code>importlib.reload</code> and multi-process.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128390;&#65039;</div>
+                    <div class="card-title">B. Decorator</div>
+                    <div class="card-desc">Reuse a tiny <code>@singleton</code> across many classes. Class file stays clean. Breaks <code>isinstance()</code> and silently drops constructor arguments.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129520;</div>
+                    <div class="card-title">C. Metaclass</div>
+                    <div class="card-desc">Hook into the <em>class of classes</em>. Most powerful &mdash; survives inheritance and <code>isinstance()</code>. Breaks via metaclass conflict and <code>object.__new__</code> bypass.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== OPTIONAL A: MODULE-LEVEL ===== -->
+    <section id="module">
+        <div class="section-container">
+            <span class="section-label success">Optional &mdash; A</span>
+            <h2 class="section-title">Optional A &mdash; Module-Level Instance <em>(the Pythonic way)</em></h2>
+            <p class="section-subtitle">Python imports a module <em>at most once per interpreter</em>. That's already a singleton. Often the simplest correct option.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When you write <code>import database</code>, Python runs the module top-to-bottom <em>once</em>, caches the result in <code>sys.modules</code>, and returns the cached module on every subsequent import. Any object you create at module top-level is therefore a singleton across your whole process &mdash; no <code>__new__</code> trickery, no decorator, no metaclass.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> database.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">_Database</span>:                  <span class="comment"># underscore prefix - see explanation below</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"Database initialized"</span>)
+        self.connection = <span class="string">"Connected"</span>
+
+    <span class="keyword">def</span> <span class="function">query</span>(self, sql):
+        <span class="keyword">return</span> f<span class="string">"Executing: {sql}"</span>
+
+
+<span class="comment"># Create THE instance at module load time</span>
+database = <span class="function">_Database</span>()</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> app.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> database <span class="keyword">import</span> database
+
+database.<span class="function">query</span>(<span class="string">"SELECT * FROM users"</span>)
+<span class="comment"># Every import in every module gets the SAME object.</span>
+<span class="comment"># No singleton machinery needed.</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>&#10071; About <code>class _Database</code> &mdash; what is the underscore doing?</strong><br>
+                The leading underscore is the <em>Python convention</em> from prereq Q2: &ldquo;don't touch this from outside the module.&rdquo; It's <strong>not</strong> a module-level mechanism, not a Python keyword, and not enforced by the interpreter.<br><br>
+                It's a <strong>signal to your colleagues</strong>: &ldquo;Don't instantiate <code>_Database()</code> directly &mdash; use the <code>database</code> instance I exported.&rdquo; Python won't stop them; the convention just makes the intent unambiguous in code review.
+
+                <div style="margin-top: 10px; overflow-x: auto;">
+                    <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                        <thead>
+                            <tr><th>Name in module</th><th>What it means in this pattern</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>_Database</code> (capital, _ prefix)</td><td>The class. Private to the module; do not instantiate.</td></tr>
+                            <tr><td><code>database</code> (lowercase, no prefix)</td><td>The one public instance everyone should import.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Why this is often the right choice in Python:</strong>
+                <ul style="margin-top: 8px; padding-left: 25px;">
+                    <li>Simplest possible code &mdash; no special pattern</li>
+                    <li>Thread-safe by default &mdash; the import lock guarantees one-time initialization</li>
+                    <li>Works with <code>isinstance()</code> against <code>_Database</code></li>
+                    <li>Lazy if you want it (move <code>database = _Database()</code> into a getter function)</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 1 &mdash; Someone instantiates <code>_Database</code> directly</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">The underscore is convention, not enforcement.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> database <span class="keyword">import</span> _Database     <span class="comment"># technically allowed</span>
+rogue = <span class="function">_Database</span>()              <span class="comment"># second instance!</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Mitigations:</strong> rename to <code>__Database</code> (name-mangling raises the bar), or guard <code>__init__</code> against re-creation, or just trust your teammates and document intent.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 2 &mdash; <code>importlib.reload()</code> creates a fresh instance</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">If something reloads the module (some IDEs, some test runners), the top-level <code>database = _Database()</code> runs again. You now have two instances coexisting &mdash; old references hold one, new imports get the other.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">import</span> importlib, database
+old = database.database
+importlib.<span class="function">reload</span>(database)
+new = database.database
+
+<span class="function">print</span>(old <span class="keyword">is</span> new)    <span class="comment"># False - two coexisting "singletons"</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 3 &mdash; Same file imported under two module names</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Python caches by module name in <code>sys.modules</code>. If a relative/absolute import mishap loads the same file twice, you get two module objects &mdash; two singletons.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> myapp.database <span class="keyword">import</span> database     <span class="comment"># sys.modules["myapp.database"]</span>
+<span class="keyword">from</span> database         <span class="keyword">import</span> database     <span class="comment"># sys.modules["database"]</span>
+<span class="comment"># Different module objects -&gt; different `database` instances</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> always use absolute imports; configure the project layout properly.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 4 &mdash; Multiprocessing breaks <em>every</em> singleton</span>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">A &ldquo;singleton&rdquo; is per-Python-process. The moment you fork or use <code>multiprocessing</code>, each child has its own memory and its own singleton. Same with multiple Gunicorn workers, multiple Celery processes, multiple containers. <strong>This is true for every implementation</strong> &mdash; not unique to modules.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== OPTIONAL B: DECORATOR ===== -->
     <section id="decorator">
         <div class="section-container">
-            <span class="section-label">Implementation 2</span>
-            <h2 class="section-title">Approach 2 &mdash; Decorator</h2>
+            <span class="section-label">Optional &mdash; B</span>
+            <h2 class="section-title">Optional B &mdash; Decorator</h2>
             <p class="section-subtitle">Keep the class clean. Bolt the Singleton-ness on from outside with a reusable decorator.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">First: recall function decorators</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">You've seen this pattern earlier &mdash; a function that takes another function and returns a wrapped version:</p>
+
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">log_calls</span>(fn):              <span class="comment"># takes a function</span>
+    <span class="keyword">def</span> <span class="function">wrapper</span>(*args):
+        <span class="function">print</span>(f<span class="string">"calling {fn.__name__}"</span>)
+        <span class="keyword">return</span> <span class="function">fn</span>(*args)
+    <span class="keyword">return</span> wrapper             <span class="comment"># returns a function</span>
+
+<span class="decorator">@log_calls</span>
+<span class="keyword">def</span> <span class="function">greet</span>(name):
+    <span class="function">print</span>(f<span class="string">"hi {name}"</span>)
+
+<span class="comment"># greet is now `wrapper`. greet("Alice") prints both lines.</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Now: a decorator on a class works the same way</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Classes are just objects too. <code>@singleton</code> on a class means: <em>take the class, return something else in its place</em>. We return a tiny factory function that caches the first instance.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 04_decorator_singleton.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">singleton</span>(cls):                  <span class="comment"># takes a class (just like log_calls takes a fn)</span>
+    instances = {}                          <span class="comment"># closure - per-decorator cache</span>
+
+    <span class="keyword">def</span> <span class="function">get_instance</span>(*args, **kwargs):
+        <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> instances:
+            instances[cls] = <span class="function">cls</span>(*args, **kwargs)
+        <span class="keyword">return</span> instances[cls]
+
+    <span class="keyword">return</span> get_instance                <span class="comment"># returns a function (!)</span>
+
+
+<span class="decorator">@singleton</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"Database initialized"</span>)
+        self.connection = <span class="string">"Connected"</span>
+
+<span class="comment"># After decoration: `Database` is no longer the class.</span>
+<span class="comment"># It's the function `get_instance` returned by singleton().</span>
+db1 = <span class="function">Database</span>()    <span class="comment"># "Database initialized"</span>
+db2 = <span class="function">Database</span>()    <span class="comment"># (silent - cached)</span>
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)    <span class="comment"># True</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Why teams like this:</strong> the class file looks like a normal class. Singleton behavior is one line: <code>@singleton</code>. The same decorator works for any class. Cleanest separation of concerns of the four approaches.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
 
             <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
             <p style="color: var(--text-secondary); margin-bottom: 15px;">A decorator is just a function that takes a class and returns something else. Our decorator replaces the class with a tiny <em>factory function</em> that caches the first instance and returns it every time. The class itself stays pristine &mdash; no <code>_instance</code>, no <code>__new__</code> tricks.</p>
 
             <div class="code-block">
                 <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 02_decorator_singleton.py</div>
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 04_decorator_singleton.py</div>
                     <div class="code-toggle"><span class="arrow">&#9660;</span></div>
                 </div>
                 <div class="code-content">
@@ -653,19 +1061,99 @@ test = <span class="function">Database</span>(<span class="string">"localhost"</
         </div>
     </section>
 
-    <!-- ===== 8. IMPLEMENTATION 3: METACLASS ===== -->
+    <!-- ===== METACLASS PRIMER ===== -->
+    <section id="metaclass-primer">
+        <div class="section-container">
+            <span class="section-label purple">Primer</span>
+            <h2 class="section-title">Quick Primer &mdash; What Is a Metaclass?</h2>
+            <p class="section-subtitle">Before we use a metaclass for Singleton, we need to know what a metaclass <em>is</em>. Two questions and one diagram.</p>
+
+            <!-- Primer Quiz 1 -->
+            <div class="quiz-box" id="meta-q1">
+                <h4>Question 1 &mdash; In Python, what kind of thing is a <em>class</em>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('meta-q1', this, false)">A) A blueprint, like a struct in C</button>
+                <button class="quiz-option" onclick="checkQuiz('meta-q1', this, false)">B) A function</button>
+                <button class="quiz-option" onclick="checkQuiz('meta-q1', this, true)">C) An object, just like a list or a dict</button>
+                <button class="quiz-option" onclick="checkQuiz('meta-q1', this, false)">D) A namespace, not an object</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> A class in Python is an <em>object</em> &mdash; you can assign it to a variable, pass it as an argument, store it in a list. Try this in your REPL:
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Dog</span>: <span class="keyword">pass</span>
+
+<span class="function">print</span>(<span class="function">type</span>(Dog))           <span class="comment"># &lt;class 'type'&gt;</span>
+<span class="function">print</span>(<span class="function">isinstance</span>(Dog, <span class="function">object</span>))  <span class="comment"># True</span>
+<span class="function">id</span>(Dog)                  <span class="comment"># a memory address, like any object</span></pre>
+                        </div>
+                    </div>
+                    <p style="margin-top: 8px;">So if <code>Dog</code> is an object, <em>what class is it an instance of?</em> &rarr; <code>type</code>. That's the metaclass.</p>
+                </div>
+            </div>
+
+            <!-- Primer Quiz 2 -->
+            <div class="quiz-box" id="meta-q2">
+                <h4>Question 2 &mdash; What is a <em>metaclass</em>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('meta-q2', this, false)">A) A class that inherits from another class</button>
+                <button class="quiz-option" onclick="checkQuiz('meta-q2', this, true)">B) The class whose instance is a <em>class</em></button>
+                <button class="quiz-option" onclick="checkQuiz('meta-q2', this, false)">C) A decorator applied to a class</button>
+                <button class="quiz-option" onclick="checkQuiz('meta-q2', this, false)">D) Same as an abstract base class</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Just as <code>Dog()</code> creates a Dog instance, <code>type(...)</code> creates a class. The class that creates classes is called a <em>metaclass</em>. <code>type</code> is the default metaclass for everything in Python.
+
+                    <div style="margin-top: 10px; background: var(--bg-tertiary); padding: 14px; border-radius: 8px; font-size: 0.85rem; color: var(--text-primary);">
+                        <div style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">The "instance of" chain</div>
+                        <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; text-align:center;">
+                            <div style="background: rgba(16,185,129,0.12); border: 1px solid var(--accent-success); padding: 10px; border-radius: 6px;"><code>fido = Dog()</code><br><small>fido is an instance of Dog</small></div>
+                            <div style="color: var(--text-muted);">&rarr;</div>
+                            <div style="background: rgba(168,85,247,0.12); border: 1px solid var(--accent-purple); padding: 10px; border-radius: 6px;"><code>Dog</code> (a class)<br><small>Dog is an instance of type</small></div>
+                            <div style="color: var(--text-muted);">&rarr;</div>
+                            <div style="background: rgba(59,130,246,0.12); border: 1px solid var(--accent-blue); padding: 10px; border-radius: 6px;"><code>type</code> (the metaclass)<br><small>type is an instance of type</small></div>
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 10px;">A custom metaclass lets us <strong>intercept what happens when a class is called</strong> &mdash; that is, when someone writes <code>Dog()</code>. This is exactly the hook Singleton needs.</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">A tiny metaclass example (not yet Singleton)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Just to anchor the idea: a metaclass that prints whenever any of its classes is instantiated.</p>
+
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">LoudMeta</span>(<span class="function">type</span>):
+    <span class="keyword">def</span> <span class="function">__call__</span>(cls, *args, **kwargs):
+        <span class="function">print</span>(f<span class="string">"someone is creating a {cls.__name__}"</span>)
+        <span class="keyword">return</span> <span class="function">super</span>().<span class="function">__call__</span>(*args, **kwargs)
+
+<span class="keyword">class</span> <span class="function">Dog</span>(metaclass=LoudMeta):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name): self.name = name
+
+d = <span class="function">Dog</span>(<span class="string">"Fido"</span>)
+<span class="comment"># Output: someone is creating a Dog</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Reading <code>__call__</code>:</strong> when Python sees <code>Dog("Fido")</code>, it asks the metaclass: &ldquo;hey <code>type</code> (or <code>LoudMeta</code>), please call this class.&rdquo; The metaclass's <code>__call__</code> is what then dispatches to <code>__new__</code> and <code>__init__</code>. By overriding it, we slip our own logic in <em>before</em> either runs.
+            </div>
+
+            <p style="margin-top: 20px; color: var(--text-secondary);">Now we have everything we need to build a Singleton with a metaclass &mdash; the cache lives <em>on the metaclass</em>, and the <code>__call__</code> returns the cached instance when it exists.</p>
+        </div>
+    </section>
+
+    <!-- ===== OPTIONAL C: METACLASS ===== -->
     <section id="metaclass">
         <div class="section-container">
-            <span class="section-label purple">Implementation 3</span>
-            <h2 class="section-title">Approach 3 &mdash; Metaclass</h2>
-            <p class="section-subtitle">The most powerful approach. Hook into the &ldquo;class of classes.&rdquo; Survives <code>isinstance()</code>, survives subclassing, but the heaviest machinery.</p>
+            <span class="section-label purple">Optional &mdash; C</span>
+            <h2 class="section-title">Optional C &mdash; Metaclass</h2>
+            <p class="section-subtitle">The most powerful approach. Survives <code>isinstance()</code>, survives subclassing, but the heaviest machinery.</p>
 
-            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition (in one paragraph)</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 15px;">Classes are objects too. Every class is an <em>instance</em> of some metaclass &mdash; usually <code>type</code>. When you write <code>Database()</code>, Python actually calls <code>type.__call__(Database)</code>. If we replace <code>type</code> with our own metaclass that overrides <code>__call__</code>, we get to control what happens at the call site &mdash; <em>before</em> <code>__new__</code> ever runs. So we cache the first instance there.</p>
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">From the primer to Singleton</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">From the primer: <code>__call__</code> on the metaclass is what runs when someone writes <code>Database()</code> &mdash; <em>before</em> <code>__new__</code> or <code>__init__</code>. So we cache the first instance inside <code>__call__</code> and return it on every subsequent call. That's the whole Singleton.</p>
 
             <div class="code-block">
                 <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 03_metaclass_singleton.py</div>
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 05_metaclass_singleton.py</div>
                     <div class="code-toggle"><span class="arrow">&#9660;</span></div>
                 </div>
                 <div class="code-content">
@@ -740,189 +1228,93 @@ db2 = <span class="function">object</span>.<span class="function">__new__</span>
         </div>
     </section>
 
-    <!-- ===== 9. IMPLEMENTATION 4: MODULE-LEVEL ===== -->
-    <section id="module">
+    <!-- ===== HARDENED SINGLETON ===== -->
+    <section id="hardened">
         <div class="section-container">
-            <span class="section-label success">Implementation 4 &mdash; Recommended</span>
-            <h2 class="section-title">Approach 4 &mdash; Module-Level Instance <em>(the Pythonic way)</em></h2>
-            <p class="section-subtitle">Python imports a module <em>at most once per interpreter</em>. That's already a singleton. Use it.</p>
+            <span class="section-label success">The Hardened Singleton</span>
+            <h2 class="section-title">A Singleton That Withstands Every Break We've Seen</h2>
+            <p class="section-subtitle">Combine the techniques. The result is verbose, but it survives subclassing, deepcopy, pickle, threading, and the "instantiate the underlying class" trick.</p>
 
-            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 15px;">When you write <code>import database</code>, Python runs the module top-to-bottom <em>once</em>, caches the result in <code>sys.modules</code>, and returns the cached module on every subsequent import. So any object you create at module top-level is automatically a singleton across your entire process. No <code>__new__</code> trickery, no decorator, no metaclass &mdash; just an import.</p>
-
-            <div class="code-block">
-                <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> database.py</div>
-                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
-                </div>
-                <div class="code-content">
-<pre><span class="keyword">class</span> <span class="function">_Database</span>:                  <span class="comment"># underscore = "don't instantiate me directly"</span>
-    <span class="keyword">def</span> <span class="function">__init__</span>(self):
-        <span class="function">print</span>(<span class="string">"Database initialized"</span>)
-        self.connection = <span class="string">"Connected"</span>
-
-    <span class="keyword">def</span> <span class="function">query</span>(self, sql):
-        <span class="keyword">return</span> f<span class="string">"Executing: {sql}"</span>
-
-
-<span class="comment"># Create THE instance at module load time</span>
-database = <span class="function">_Database</span>()</pre>
-                </div>
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">The recipe</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Break we saw</th><th>Defense in the hardened version</th></tr></thead>
+                    <tbody>
+                        <tr><td>Threading race</td><td>Double-checked locking with <code>threading.Lock()</code></td></tr>
+                        <tr><td><code>__init__</code> runs every call</td><td><code>_initialized</code> flag guards the body</td></tr>
+                        <tr><td>Subclassing leaks instances</td><td>Cache keyed by <code>cls</code> (per-class dict), defined on a metaclass</td></tr>
+                        <tr><td><code>copy.deepcopy</code> bypasses the cache</td><td>Implement <code>__copy__</code> and <code>__deepcopy__</code> to return <code>self</code></td></tr>
+                        <tr><td><code>pickle.loads</code> bypasses the cache</td><td>Implement <code>__reduce__</code> to return the class itself</td></tr>
+                        <tr><td><code>object.__new__</code> bypass</td><td>Cannot fully prevent in Python; document the contract</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="code-block">
                 <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> app.py</div>
-                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
-                </div>
-                <div class="code-content">
-<pre><span class="keyword">from</span> database <span class="keyword">import</span> database
-
-database.<span class="function">query</span>(<span class="string">"SELECT * FROM users"</span>)
-<span class="comment"># Every import in every module gets the SAME object.</span>
-<span class="comment"># No singleton machinery needed.</span></pre>
-                </div>
-            </div>
-
-            <div class="highlight-box success">
-                <strong>Why this is the recommended approach in Python:</strong>
-                <ul style="margin-top: 8px; padding-left: 25px;">
-                    <li>Simplest possible code &mdash; no special pattern</li>
-                    <li>Thread-safe by default &mdash; the import lock guarantees one-time initialization</li>
-                    <li>Works with <code>isinstance()</code> against <code>_Database</code></li>
-                    <li>Lazy if you want it (move <code>database = _Database()</code> into a function)</li>
-                </ul>
-            </div>
-
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
-
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 1 &mdash; Someone instantiates the underlying class directly</span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">The underscore on <code>_Database</code> is a convention, not enforcement. A teammate who imports the class can create more instances.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="keyword">from</span> database <span class="keyword">import</span> _Database     <span class="comment"># technically allowed</span>
-rogue = <span class="function">_Database</span>()              <span class="comment"># second instance!</span></pre>
-                    </div>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Mitigations:</strong> name it <code>__Database</code> (name-mangling makes it harder), or make <code>__init__</code> guard against re-creation, or just trust your teammates and document intent.</p>
-            </div>
-
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 2 &mdash; <code>importlib.reload()</code> creates a fresh instance</span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">If a tool (some IDEs, some test runners) reloads the module, the top-level <code>database = _Database()</code> runs again. You now have two instances coexisting &mdash; old references hold one, new imports get the other.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="keyword">import</span> importlib, database
-old = database.database
-importlib.<span class="function">reload</span>(database)
-new = database.database
-
-<span class="function">print</span>(old <span class="keyword">is</span> new)    <span class="comment"># False - two coexisting "singletons"</span></pre>
-                    </div>
-                </div>
-            </div>
-
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 3 &mdash; The same module imported under two paths</span>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">Python caches by module name (key in <code>sys.modules</code>). If your project structure (or a relative-vs-absolute import mishap) makes the same file load under two different names, you get two module objects &mdash; two singletons.</p>
-                <div class="code-block">
-                    <div class="code-content">
-<pre><span class="keyword">from</span> myapp.database <span class="keyword">import</span> database     <span class="comment"># sys.modules["myapp.database"]</span>
-<span class="keyword">from</span> database         <span class="keyword">import</span> database     <span class="comment"># sys.modules["database"]</span>
-<span class="comment"># Different module objects -&gt; different `database` instances</span></pre>
-                    </div>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> always use absolute imports; configure the project structure properly.</p>
-            </div>
-
-            <div class="break-box">
-                <span class="break-title">&#128165; Break 4 &mdash; Multiprocessing breaks every singleton, including this one</span>
-                <p style="color: var(--text-secondary); margin-bottom: 0;">A &ldquo;singleton&rdquo; is per-Python-process. The moment you fork or use <code>multiprocessing</code>, each child has its own copy of memory and its own singleton. Same with multiple Gunicorn workers, multiple Celery processes, multiple containers. <strong>This is true for every Singleton implementation</strong> &mdash; not unique to modules.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== 10. THREAD SAFETY ===== -->
-    <section id="thread-safety">
-        <div class="section-container">
-            <span class="section-label warning">Threading</span>
-            <h2 class="section-title">Making It Thread-Safe: Double-Checked Locking</h2>
-            <p class="section-subtitle">The race condition we saw in every approach has a standard fix &mdash; and a standard optimization.</p>
-
-            <h3 style="margin-top: 20px; margin-bottom: 15px;">Naive Lock: Correct but Slow</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 15px;">The obvious fix: wrap the whole <code>__new__</code> in a lock. Only one thread can be inside at a time, so the race vanishes. But now <em>every</em> call &mdash; including the millions of calls after the instance is created &mdash; pays for lock acquisition.</p>
-
-            <div class="code-block">
-                <div class="code-content">
-<pre><span class="keyword">import</span> threading
-
-<span class="keyword">class</span> <span class="function">Database</span>:
-    _instance = <span class="keyword">None</span>
-    _lock = threading.<span class="function">Lock</span>()
-
-    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
-        <span class="keyword">with</span> cls._lock:                  <span class="comment"># EVERY call acquires the lock - slow</span>
-            <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
-                cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
-            <span class="keyword">return</span> cls._instance</pre>
-                </div>
-            </div>
-
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">Double-Checked Locking: Fast <em>and</em> Safe</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 15px;">Check first (cheap, no lock). Only acquire the lock if the instance is missing. Inside the lock, <em>check again</em> &mdash; another thread may have built it while we were waiting.</p>
-
-            <div class="code-block">
-                <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 04_thread_safe_singleton.py</div>
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 07_hardened_singleton.py</div>
                     <div class="code-toggle"><span class="arrow">&#9660;</span></div>
                 </div>
                 <div class="code-content">
 <pre><span class="keyword">import</span> threading
 
-<span class="keyword">class</span> <span class="function">Database</span>:
-    _instance = <span class="keyword">None</span>
+<span class="keyword">class</span> <span class="function">SingletonMeta</span>(<span class="function">type</span>):
+    _instances = {}                                    <span class="comment"># per-class cache</span>
     _lock = threading.<span class="function">Lock</span>()
 
-    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
-        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:             <span class="comment"># 1st check (no lock)</span>
+    <span class="keyword">def</span> <span class="function">__call__</span>(cls, *args, **kwargs):
+        <span class="comment"># Double-checked locking for thread safety</span>
+        <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> cls._instances:
             <span class="keyword">with</span> cls._lock:
-                <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:         <span class="comment"># 2nd check (inside lock)</span>
-                    cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
-        <span class="keyword">return</span> cls._instance</pre>
+                <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> cls._instances:
+                    cls._instances[cls] = <span class="function">super</span>().<span class="function">__call__</span>(*args, **kwargs)
+        <span class="keyword">return</span> cls._instances[cls]
+
+
+<span class="keyword">class</span> <span class="function">Database</span>(metaclass=SingletonMeta):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.connection = <span class="string">"postgresql://localhost:5432"</span>
+
+    <span class="comment"># Defeat deepcopy</span>
+    <span class="keyword">def</span> <span class="function">__copy__</span>(self):     <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">__deepcopy__</span>(self, memo): <span class="keyword">return</span> self
+
+    <span class="comment"># Defeat pickle: tell pickle "to recreate me, call Database()"</span>
+    <span class="comment"># When loaded, our metaclass returns the existing singleton.</span>
+    <span class="keyword">def</span> <span class="function">__reduce__</span>(self):
+        <span class="keyword">return</span> (Database, ())</pre>
                 </div>
             </div>
 
-            <div class="diagram-box">
-                <h4 style="margin-bottom: 12px;">Timeline (interleaved threads):</h4>
-                <div class="flow-row">
-                    <div class="flow-box red">Thread A<br><small>check 1: None &rarr; acquire lock &rarr; check 2: None &rarr; create &rarr; release</small></div>
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">What this survives</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 8px;">&#10004; Defends against</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li>Threading races (lock)</li>
+                        <li>Per-class confusion in subclassing (cache keyed by <code>cls</code>)</li>
+                        <li><code>copy.deepcopy</code> (returns <code>self</code>)</li>
+                        <li><code>pickle.dumps</code>/<code>loads</code> (<code>__reduce__</code> hands the class back; metaclass re-resolves to cached instance)</li>
+                        <li><code>isinstance()</code> still works (<code>Database</code> is still a real class)</li>
+                    </ul>
                 </div>
-                <div class="flow-row">
-                    <div class="flow-box blue">Thread B<br><small>check 1: None &rarr; wait for lock &rarr; <em>(A finished, B enters)</em> &rarr; check 2: EXISTS &rarr; return</small></div>
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 8px;">&#10060; Still can't defend</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li>Determined caller using <code>object.__new__(Database)</code> &mdash; Python has no way to fully block this</li>
+                        <li>Multiple Python processes (singleton is per-process by definition)</li>
+                        <li>Module reloaded under two different paths</li>
+                    </ul>
                 </div>
-                <div class="flow-row">
-                    <div class="flow-box green">Thread C (later)<br><small>check 1: exists &rarr; return immediately (no lock acquired, fast path)</small></div>
-                </div>
-            </div>
-
-            <div class="highlight-box">
-                <strong>The same pattern works for every approach:</strong>
-                <ul style="margin-top: 8px; padding-left: 25px;">
-                    <li><code>__new__</code> approach: lock around the check inside <code>__new__</code></li>
-                    <li>Decorator: lock around the dict access inside <code>get_instance</code></li>
-                    <li>Metaclass: lock around the check inside <code>SingletonMeta.__call__</code></li>
-                    <li>Module-level: <strong>already thread-safe</strong> &mdash; Python's import lock guarantees one-time initialization</li>
-                </ul>
             </div>
 
             <div class="knowledge-block">
-                <p><strong>Practical note:</strong> CPython has the GIL, so in practice the race window is small. But &ldquo;small&rdquo; is not &ldquo;impossible,&rdquo; and it bites under <code>asyncio</code>, threading with I/O, and most importantly &mdash; on free-threaded Python (PEP 703) where the GIL is gone. If you write a Singleton intended to live in a threaded app, use the double-check pattern.</p>
+                <p><strong>The honest takeaway:</strong> there is no &ldquo;100% bulletproof&rdquo; Singleton in Python. The hardened version above defends against every accidental break we've discussed. The remaining gaps are <em>deliberate</em> &mdash; a colleague would have to write code that explicitly bypasses your design. At that point, the right answer is a code review, not more machinery.</p>
             </div>
         </div>
     </section>
 
-    <!-- ===== 11. USE CASES ===== -->
+    <!-- ===== USE CASES (originally section 11) ===== -->
     <section id="use-cases">
         <div class="section-container">
             <span class="section-label blue">In Practice</span>
@@ -965,7 +1357,7 @@ new = database.database
             <h3 style="margin-top: 30px; margin-bottom: 15px;">Pulled-together example: Config + Logger</h3>
             <div class="code-block">
                 <div class="code-header" onclick="toggleCode(this)">
-                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 05_use_cases.py</div>
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 06_use_cases.py</div>
                     <div class="code-toggle"><span class="arrow">&#9660;</span></div>
                 </div>
                 <div class="code-content">
@@ -1088,56 +1480,108 @@ Logger().<span class="function">info</span>(f<span class="string">"connecting to
         </div>
     </section>
 
-    <!-- ===== 13. SUMMARY ===== -->
+    <!-- ===== 13. SUMMARY (MINDMAP) ===== -->
     <section id="summary">
         <div class="section-container">
-            <span class="section-label success">Summary</span>
-            <h2 class="section-title">Comparison &amp; Decision Guide</h2>
-            <p class="section-subtitle">All four approaches, side by side, plus a quick decision tree.</p>
+            <span class="section-label success">Mindmap Summary</span>
+            <h2 class="section-title">Everything at a Glance</h2>
+            <p class="section-subtitle">One picture &mdash; each approach, what it gives you, and how it breaks.</p>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Approach</th><th>Complexity</th><th>Pythonic</th><th>Thread-safe by default</th><th>Best for</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><strong>Module-level</strong></td><td>&#11088; lowest</td><td>&#11088;&#11088;&#11088; very</td><td>&#9989; yes</td><td><strong>Default choice in Python</strong></td></tr>
-                        <tr><td><code>__new__</code></td><td>&#11088;&#11088; medium</td><td>&#11088;&#11088; moderate</td><td>&#10060; needs lock</td><td>Teaching the pattern, fine control</td></tr>
-                        <tr><td>Decorator</td><td>&#11088;&#11088; medium</td><td>&#11088;&#11088;&#11088; very</td><td>&#10060; needs lock</td><td>Bolt-on singleton for clean classes</td></tr>
-                        <tr><td>Metaclass</td><td>&#11088;&#11088;&#11088; high</td><td>&#11088;&#11088; moderate</td><td>&#10060; needs lock</td><td>Libraries, inheritance, framework code</td></tr>
-                    </tbody>
-                </table>
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 18px;">
+                    <div style="display:inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 1.05rem;">SINGLETON in Python<br><small style="font-weight: 400; opacity: 0.9;">one instance per process</small></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+                    <!-- Approach 1: __new__ -->
+                    <div style="border: 2px solid var(--accent-success); border-radius: 10px; padding: 14px; background: rgba(16,185,129,0.06);">
+                        <div style="color: var(--accent-success); font-weight: 700; margin-bottom: 6px;">A1 &mdash; <code>__new__</code></div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">Classic. Override <code>__new__</code> to cache the instance on the class.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-danger);">Breaks:</strong> <code>__init__</code> re-runs (use init flag), <strong>threading race</strong>
+                        </div>
+                    </div>
+
+                    <!-- Approach 2: thread-safe -->
+                    <div style="border: 2px solid var(--accent-warning); border-radius: 10px; padding: 14px; background: rgba(245,158,11,0.06);">
+                        <div style="color: var(--accent-warning); font-weight: 700; margin-bottom: 6px;">A2 &mdash; <code>__new__</code> + double-checked lock</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">Same idea, with <code>threading.Lock</code> + two-stage check. Fast path is lock-free.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-success);">Fixes:</strong> threading race. <strong style="color: var(--accent-danger);">Still breaks:</strong> deepcopy, pickle, subclassing.
+                        </div>
+                    </div>
+
+                    <!-- Optional A: module -->
+                    <div style="border: 2px solid var(--accent-blue); border-radius: 10px; padding: 14px; background: rgba(59,130,246,0.06);">
+                        <div style="color: var(--accent-blue); font-weight: 700; margin-bottom: 6px;">Optional A &mdash; module-level</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">Just <code>database = _Database()</code> at module top-level. Most Pythonic.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-success);">Free:</strong> thread-safe via import lock.<br>
+                            <strong style="color: var(--accent-danger);">Breaks:</strong> direct <code>_Database()</code> calls, <code>importlib.reload</code>, two import paths.
+                        </div>
+                    </div>
+
+                    <!-- Optional B: decorator -->
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 10px; padding: 14px; background: rgba(168,85,247,0.06);">
+                        <div style="color: var(--accent-purple); font-weight: 700; margin-bottom: 6px;">Optional B &mdash; decorator</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;"><code>@singleton</code> replaces the class with a caching factory.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-danger);">Breaks:</strong> <code>isinstance()</code> raises TypeError, can't subclass, args silently dropped on later calls.
+                        </div>
+                    </div>
+
+                    <!-- Optional C: metaclass -->
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 10px; padding: 14px; background: rgba(168,85,247,0.06); grid-column: span 2;">
+                        <div style="color: var(--accent-purple); font-weight: 700; margin-bottom: 6px;">Optional C &mdash; metaclass</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">Override <code>__call__</code> on a custom metaclass. Class stays a real class. Per-subclass singleton via cache keyed on <code>cls</code>.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-success);">Best for:</strong> libraries, frameworks, when <code>isinstance()</code> must work.
+                            <strong style="color: var(--accent-danger);">Breaks:</strong> metaclass conflict with <code>ABCMeta</code>, <code>object.__new__</code> bypass.
+                        </div>
+                    </div>
+
+                    <!-- Hardened -->
+                    <div style="border: 3px solid var(--accent-success); border-radius: 10px; padding: 14px; background: rgba(16,185,129,0.12); grid-column: span 2;">
+                        <div style="color: var(--accent-success); font-weight: 800; margin-bottom: 6px;">&#127919; Hardened &mdash; metaclass + lock + <code>__copy__</code> + <code>__reduce__</code></div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">Defends against threading, deepcopy, pickle, and subclassing-leak all at once. Verbose, but bulletproof in practice.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-danger);">Still can't defend:</strong> determined <code>object.__new__</code> bypass, multi-process, two import paths.
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; Quick Decision Tree</h3>
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; Decision Tree &mdash; pick by question</h3>
             <div class="diagram-box">
                 <div class="flow-row">
-                    <div class="flow-box green"><strong>Need exactly one instance?</strong></div>
+                    <div class="flow-box green"><strong>Q: Do you need exactly one instance?</strong></div>
                 </div>
                 <div class="flow-row">
-                    <div class="flow-box blue">Simple application code &rarr; <strong>module-level instance</strong></div>
+                    <div class="flow-box blue">Simple app, no threading &rarr; <strong>module-level instance</strong></div>
                 </div>
                 <div class="flow-row">
-                    <div class="flow-box blue">Threaded application &rarr; module-level <em>or</em> double-checked locking</div>
+                    <div class="flow-box blue">Threaded app &rarr; <strong>A2 (<code>__new__</code> + double-checked lock)</strong></div>
                 </div>
                 <div class="flow-row">
-                    <div class="flow-box purple">Library / framework / need <code>isinstance()</code> + subclassing &rarr; <strong>metaclass</strong></div>
+                    <div class="flow-box purple">Library / framework + <code>isinstance()</code> + subclassing &rarr; <strong>metaclass</strong></div>
                 </div>
                 <div class="flow-row">
-                    <div class="flow-box blue">Several classes need it, want clean code &rarr; <strong>decorator</strong></div>
+                    <div class="flow-box blue">Many classes, want one liner &rarr; <strong>decorator</strong></div>
                 </div>
                 <div class="flow-row">
-                    <div class="flow-box green">Learning / interview question &rarr; start with <code>__new__</code>, explain the gotchas</div>
+                    <div class="flow-box green">Production-grade, defends against everything &rarr; <strong>hardened singleton</strong></div>
                 </div>
             </div>
 
             <div class="knowledge-block">
-                <p><strong>Interview tip:</strong> If asked to implement Singleton, write <code>__new__</code> on the board first &mdash; it shows you understand object creation. Then mention thread-safety with double-checked locking. Then say: <em>&ldquo;In real Python code I'd usually just use a module-level instance &mdash; it's the simplest correct singleton in the language.&rdquo;</em> That answer signals you know the pattern <em>and</em> when not to over-engineer it.</p>
+                <p><strong>Interview tip:</strong> Write the classic <code>__new__</code> Singleton on the board first &mdash; it shows you understand object creation. Mention the <code>__init__</code> gotcha. Add double-checked locking when threading comes up. Then say: <em>&ldquo;In real Python code I'd usually just export a module-level instance &mdash; it's the simplest correct singleton in the language.&rdquo;</em> Mention the metaclass for libraries. That answer shows you know the pattern <em>and</em> when not to over-engineer it.</p>
             </div>
 
             <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; The One-Line Summary</h3>
             <div class="highlight-box success">
-                <strong>Singleton</strong> ensures exactly one instance of a class per process. In Python, you usually get it for free by exporting an instance at module level. The other three implementations exist for situations where you need <code>isinstance()</code> checks, inheritance, or framework-level control. Always ask first: <em>&ldquo;do I really need this, or is it just a global in disguise?&rdquo;</em>
+                <strong>Singleton</strong> ensures exactly one instance of a class <em>per process</em>. In Python you usually get it for free with a module-level instance. The other approaches exist for threading, <code>isinstance()</code>, inheritance, and framework-level control. Always ask first: <em>&ldquo;do I really need this, or is it just a global in disguise?&rdquo;</em>
             </div>
         </div>
     </section>
