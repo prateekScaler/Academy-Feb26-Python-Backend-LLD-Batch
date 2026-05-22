@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-15: Design Patterns Intro &amp; Singleton</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .copy-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        .break-box { background: rgba(239, 68, 68, 0.06); border-left: 4px solid var(--accent-danger); border-radius: 6px; padding: 16px 18px; margin: 12px 0; }
+        .break-box .break-title { color: var(--accent-danger); font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: block; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-15: Design Patterns &amp; Singleton</div>
+        <ul class="nav-links">
+            <li><a href="#intro">Patterns Intro</a></li>
+            <li><a href="#categories">Categories</a></li>
+            <li><a href="#prereq">Prerequisites</a></li>
+            <li><a href="#problem">The Problem</a></li>
+            <li><a href="#new-method">__new__</a></li>
+            <li><a href="#decorator">Decorator</a></li>
+            <li><a href="#metaclass">Metaclass</a></li>
+            <li><a href="#module">Module</a></li>
+            <li><a href="#thread-safety">Threading</a></li>
+            <li><a href="#use-cases">Use Cases</a></li>
+            <li><a href="#anti-patterns">Anti-Patterns</a></li>
+            <li><a href="#summary">Summary</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#127919;</div>
+        <h1>Design Patterns &amp; The Singleton</h1>
+        <p class="hero-meta">LLD-15 &bull; Low Level Design</p>
+        <p class="hero-tagline">Patterns are <strong>vocabulary</strong> &mdash; the shorthand experienced engineers use to communicate proven solutions. Today we meet the family, then go deep on the most famous (and most abused) member: <strong>Singleton</strong>.</p>
+    </section>
+
+    <!-- ===== 2. INTRO TO DESIGN PATTERNS ===== -->
+    <section id="intro">
+        <div class="section-container">
+            <span class="section-label">What &amp; Why</span>
+            <h2 class="section-title">What Are Design Patterns?</h2>
+            <p class="section-subtitle">Proven, named solutions to problems that keep showing up in software design.</p>
+
+            <div class="highlight-box">
+                <strong>&#128218; The book that started it all:</strong> In 1994, four authors (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides &mdash; the <em>&ldquo;Gang of Four&rdquo;</em>) published <em>Design Patterns: Elements of Reusable Object-Oriented Software</em>. They catalogued <strong>23 patterns</strong> they had seen experienced engineers reinvent across projects, and gave each one a name. That book is still the reference 30 years later.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Patterns Are <em>Vocabulary</em>, Not Code</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Without patterns</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li>Reinvent the wheel every time</li>
+                        <li>Inconsistent solutions across the codebase</li>
+                        <li>Hard to communicate designs in reviews / interviews</li>
+                        <li>&ldquo;That class with the static factory method that returns&hellip;&rdquo; (10 sentences)</li>
+                    </ul>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; With patterns</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li>Proven solution, ready to apply</li>
+                        <li>Consistent shape across the codebase</li>
+                        <li>Common vocabulary: &ldquo;let's use a Strategy here&rdquo;</li>
+                        <li>Shorthand both readers and reviewers understand</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Important framing:</strong> a pattern is a <em>recipe</em>, not source code. Two implementations of the same pattern in two languages can look totally different &mdash; what makes them &ldquo;the same pattern&rdquo; is the <em>shape of the problem they solve</em> and the <em>shape of the solution</em>. When you say &ldquo;I used Strategy here,&rdquo; you are pointing at a structure, not pasting code.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 3. THREE CATEGORIES ===== -->
+    <section id="categories">
+        <div class="section-container">
+            <span class="section-label blue">The Map</span>
+            <h2 class="section-title">The Three Categories</h2>
+            <p class="section-subtitle">The Gang of Four split the 23 patterns into three groups based on <em>what kind of problem</em> they solve.</p>
+
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green">&#127757; <strong>Creational</strong><br><small>"How do I CREATE this?"</small></div>
+                    <div class="flow-box blue">&#127959;&#65039; <strong>Structural</strong><br><small>"How do I COMPOSE this?"</small></div>
+                    <div class="flow-box purple">&#129488; <strong>Behavioral</strong><br><small>"How do these COMMUNICATE?"</small></div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127757; 1. Creational &mdash; <em>Object Creation</em></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">When the question is <em>&ldquo;how should objects come into existence?&rdquo;</em></p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Pattern</th><th>Purpose</th><th>Real-world example</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Singleton</strong></td><td>Exactly one instance of a class</td><td>App config, connection pool, logger</td></tr>
+                        <tr><td>Factory</td><td>Create objects without naming the exact class</td><td>Different DB drivers, payment gateways</td></tr>
+                        <tr><td>Builder</td><td>Construct complex objects step-by-step</td><td>Query builders, HTTP request builders</td></tr>
+                        <tr><td>Prototype</td><td>Clone an existing object as a template</td><td>Cloning configurations, copying records</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127959;&#65039; 2. Structural &mdash; <em>Object Composition</em></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">When the question is <em>&ldquo;how do I assemble objects into larger structures?&rdquo;</em></p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Pattern</th><th>Purpose</th><th>Real-world example</th></tr></thead>
+                    <tbody>
+                        <tr><td>Adapter</td><td>Make a class fit an unrelated interface</td><td>Wrapping a legacy API</td></tr>
+                        <tr><td>Decorator</td><td>Add behavior to an object without changing its class</td><td>Logging, caching, auth wrappers</td></tr>
+                        <tr><td>Facade</td><td>One simple interface in front of a complex subsystem</td><td>A &ldquo;PaymentService&rdquo; over 5 vendor SDKs</td></tr>
+                        <tr><td>Proxy</td><td>A stand-in object that controls access to the real one</td><td>Lazy loading, access control, remoting</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#129488; 3. Behavioral &mdash; <em>Object Interaction</em></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">When the question is <em>&ldquo;how should objects talk to each other?&rdquo;</em></p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Pattern</th><th>Purpose</th><th>Real-world example</th></tr></thead>
+                    <tbody>
+                        <tr><td>Strategy</td><td>Swap algorithms behind a common interface</td><td>Payment methods, discount rules</td></tr>
+                        <tr><td>Observer</td><td>One-to-many notifications when something changes</td><td>Event systems, pub/sub</td></tr>
+                        <tr><td>Command</td><td>Wrap a request as an object you can pass around</td><td>Undo/redo, action queues</td></tr>
+                        <tr><td>Iterator</td><td>Walk a collection without exposing its structure</td><td><code>for x in collection:</code> in Python</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="highlight-box warning" style="margin-top: 30px;">
+                <strong>&#9888;&#65039; Patterns are tools, not rules.</strong> If a 10-line function solves your problem, do not force a pattern on it. Patterns earn their keep when:
+                <ul style="margin-top: 8px; padding-left: 25px;">
+                    <li>The same problem is recurring</li>
+                    <li>The team already knows the pattern (shared vocabulary)</li>
+                    <li>You're at a system boundary where flexibility actually matters</li>
+                </ul>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Today's focus:</strong> Singleton &mdash; the most commonly used, most commonly <em>misused</em>, simplest pattern in the catalog. It's the right place to start because it forces you to confront object creation, Python's <code>__new__</code> vs <code>__init__</code>, thread safety, and how patterns interact with the language itself.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. PREREQUISITE QUIZ ===== -->
+    <section id="prereq">
+        <div class="section-container">
+            <span class="section-label purple">Pre-flight Check</span>
+            <h2 class="section-title">Prerequisites &mdash; Quick Quiz</h2>
+            <p class="section-subtitle">Four warm-up questions. Singleton leans on these concepts hard &mdash; if you get them, the implementations to come will feel obvious.</p>
+
+            <!-- Prereq Quiz 1: Class vs Instance Variables -->
+            <div class="quiz-box" id="prereq-q1">
+                <h4>Question 1 &mdash; Class vs Instance variables</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Counter</span>:
+    count = <span class="number">0</span>                       <span class="comment"># What kind of variable is this?</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.instance_count = <span class="number">0</span>
+
+    <span class="keyword">def</span> <span class="function">increment</span>(self):
+        Counter.count += <span class="number">1</span>
+        self.instance_count += <span class="number">1</span>
+
+c1 = <span class="function">Counter</span>()
+c2 = <span class="function">Counter</span>()
+c1.<span class="function">increment</span>()
+c2.<span class="function">increment</span>()
+
+<span class="function">print</span>(Counter.count, c1.instance_count, c2.instance_count)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, true)">A) <code>2, 1, 1</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">B) <code>1, 1, 1</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">C) <code>2, 2, 2</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">D) <code>0, 1, 1</code></button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>Counter.count</code> is a <em>class variable</em> &mdash; one copy shared by every instance. <code>self.instance_count</code> is an <em>instance variable</em> &mdash; one copy per object. Singleton implementations always use a class variable (like <code>_instance</code>) to store the shared instance, so this distinction is foundational.</div>
+            </div>
+
+            <!-- Prereq Quiz 2: Encapsulation in Python -->
+            <div class="quiz-box" id="prereq-q2">
+                <h4>Question 2 &mdash; Encapsulation in Python</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">BankAccount</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, balance):
+        self._balance = balance      <span class="comment"># single underscore</span>
+        self.__secret = <span class="string">"12345"</span>     <span class="comment"># double underscore</span>
+
+account = <span class="function">BankAccount</span>(<span class="number">1000</span>)
+<span class="function">print</span>(account._balance)              <span class="comment"># works?</span>
+<span class="function">print</span>(account.__secret)             <span class="comment"># works?</span>
+<span class="function">print</span>(account._BankAccount__secret) <span class="comment"># works?</span></pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">A) Only the first <code>print</code> works</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, true)">B) First and third work; second raises <code>AttributeError</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">C) All three work, Python enforces nothing</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">D) None work &mdash; Python has true private members</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>_balance</code> is convention only (still accessible). <code>__secret</code> gets <em>name-mangled</em> to <code>_BankAccount__secret</code>, so the second line fails but the third (using the mangled name) succeeds. <strong>Takeaway:</strong> Python has no true private &mdash; it gives you hints and trust. Any Singleton implementation can be circumvented by a determined caller. Document intent; don't pretend it's a fortress.</div>
+            </div>
+
+            <!-- Prereq Quiz 3: __new__ vs __init__ -->
+            <div class="quiz-box" id="prereq-q3">
+                <h4>Question 3 &mdash; Object creation order</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">MyClass</span>:
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="function">print</span>(<span class="string">"__new__ called"</span>)
+        <span class="keyword">return</span> <span class="function">super</span>().<span class="function">__new__</span>(cls)
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"__init__ called"</span>)
+
+obj = <span class="function">MyClass</span>()</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">A) <code>__init__</code> then <code>__new__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, true)">B) <code>__new__</code> then <code>__init__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">C) Only <code>__new__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">D) Only <code>__init__</code></button>
+                <div class="quiz-explanation"><strong>Correct!</strong> <code>__new__</code> creates the object (allocates memory, returns an instance). <code>__init__</code> initializes it. Most code only customizes <code>__init__</code>; Singleton needs to customize <code>__new__</code> because we want to <em>intercept creation</em> and sometimes return an existing instance. <em>This is the single most important insight for the classic Singleton implementation.</em></div>
+            </div>
+
+            <!-- Prereq Quiz 4: When Singleton makes sense -->
+            <div class="quiz-box" id="prereq-q4">
+                <h4>Question 4 &mdash; Which scenario <em>genuinely</em> needs one instance?</h4>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, true)">A) Database connection pool manager</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">B) <code>User</code> objects in a web app</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">C) Shopping cart items</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">D) Blog post records</button>
+                <div class="quiz-explanation"><strong>Correct!</strong> A connection pool manages a finite, shared resource &mdash; two pools = double the connections = blown DB limits. Users, carts, and blog posts are <em>domain objects</em> &mdash; you legitimately want many. <strong>Rule of thumb:</strong> Singleton is for <em>infrastructure</em> (config, log, pool, cache, registry). Never for things your domain naturally has many of.</div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>If you got all four:</strong> you're ready. The pieces &mdash; class variables to store the shared instance, <code>__new__</code> to intercept creation, no true privacy so we use conventions, and a clear list of when Singleton is actually appropriate &mdash; are exactly what the next sections build on.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. THE SINGLETON PROBLEM ===== -->
+    <section id="problem">
+        <div class="section-container">
+            <span class="section-label warning">Motivation</span>
+            <h2 class="section-title">The Problem Singleton Solves</h2>
+            <p class="section-subtitle">Some resources are expensive to create and dangerous to duplicate. Let's see what happens when we don't control creation.</p>
+
+            <div class="question-box">
+                <p><strong>Your team writes a <code>Database</code> class.</strong> Two engineers add features in different modules. Each instantiates <code>Database()</code> to use it. The DB has a hard cap of 50 simultaneous connections. By the end of the quarter, the app is OOM-ing in production and the DB is rejecting 30% of requests. <strong>What went wrong?</strong></p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> the_problem.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"Creating expensive DB connection..."</span>)
+        self.connection = <span class="string">"Connected to PostgreSQL"</span>
+
+<span class="comment"># Module A:</span>
+db1 = <span class="function">Database</span>()    <span class="comment"># "Creating expensive DB connection..."</span>
+
+<span class="comment"># Module B (someone else's code):</span>
+db2 = <span class="function">Database</span>()    <span class="comment"># "Creating expensive DB connection..."  AGAIN!</span>
+
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)    <span class="comment"># False - two separate connections, both alive</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box danger">
+                <strong>What just broke:</strong>
+                <ul style="margin-top: 8px; padding-left: 25px;">
+                    <li><strong>Resource exhaustion</strong> &mdash; every module that calls <code>Database()</code> opens a new socket</li>
+                    <li><strong>Memory waste</strong> &mdash; duplicate state, duplicate buffers</li>
+                    <li><strong>Inconsistent state</strong> &mdash; one connection's transaction can't see the other's</li>
+                    <li><strong>Hidden contention</strong> &mdash; you don't know which connection a query went through</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">What We Want</h3>
+            <div class="highlight-box success">
+                A way to say: &ldquo;However many times anyone in this process calls <code>Database()</code>, give them the same one instance.&rdquo; That's the Singleton pattern in one sentence.
+            </div>
+
+            <p style="margin-top: 20px; color: var(--text-secondary);">There are 4 standard ways to do this in Python, plus a thread-safety twist. We'll meet each one, and for each one we'll ask the uncomfortable question: <em>&ldquo;how could a colleague accidentally break this?&rdquo;</em></p>
+        </div>
+    </section>
+
+    <!-- ===== 6. IMPLEMENTATION 1: __new__ ===== -->
+    <section id="new-method">
+        <div class="section-container">
+            <span class="section-label success">Implementation 1</span>
+            <h2 class="section-title">Approach 1 &mdash; The Classic <code>__new__</code></h2>
+            <p class="section-subtitle">The textbook implementation. Intercept object creation and return the same instance every time.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Recall from the prereq quiz: <code>__new__</code> runs <em>before</em> <code>__init__</code> and is what actually <em>creates</em> the object. If we override it, we can lie. The first time someone calls <code>Database()</code>, we genuinely create an object and stash it on the class. Every subsequent call, we just hand back the stashed one.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 01_new_singleton.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>            <span class="comment"># class variable - holds the one instance</span>
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+            <span class="function">print</span>(<span class="string">"Creating the one and only instance"</span>)
+            cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> cls._instance       <span class="comment"># always the same object</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"__init__ called"</span>)
+        self.connection = <span class="string">"postgresql://localhost:5432"</span>
+
+db1 = <span class="function">Database</span>()
+<span class="comment"># Creating the one and only instance</span>
+<span class="comment"># __init__ called</span>
+
+db2 = <span class="function">Database</span>()
+<span class="comment"># __init__ called    &lt;-- !!! runs again on the SAME object</span>
+
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)    <span class="comment"># True - same object</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>The <code>__init__</code> gotcha:</strong> Even though <code>__new__</code> returned the existing instance, Python <em>still</em> calls <code>__init__</code> on it &mdash; every single time someone writes <code>Database()</code>. If <code>__init__</code> mutates state, you'll silently overwrite the data on each call.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Fix: guard <code>__init__</code> with an initialized flag</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+            cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+            cls._instance._initialized = <span class="keyword">False</span>
+        <span class="keyword">return</span> cls._instance
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="keyword">if</span> self._initialized:
+            <span class="keyword">return</span>          <span class="comment"># skip - already set up</span>
+        self.connection = <span class="string">"postgresql://localhost:5432"</span>
+        self._initialized = <span class="keyword">True</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">The classic <code>__new__</code> singleton has <strong>four well-known failure modes</strong>. Each one is a real story from a real codebase.</p>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 1 &mdash; Subclassing leaks instances (common beginner mistake)</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">A very common beginner version <strong>hardcodes the parent class name</strong> inside <code>__new__</code> instead of using <code>cls</code>. The first subclass that's instantiated wins; every subsequent call &mdash; even from a sibling subclass &mdash; returns that same instance with the wrong type.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> Database._instance <span class="keyword">is</span> <span class="keyword">None</span>:   <span class="comment"># MISTAKE: hardcoded `Database`</span>
+            Database._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> Database._instance
+
+<span class="keyword">class</span> <span class="function">Postgres</span>(Database): <span class="keyword">pass</span>
+<span class="keyword">class</span> <span class="function">MySQL</span>(Database):    <span class="keyword">pass</span>
+
+a = <span class="function">Postgres</span>()
+b = <span class="function">MySQL</span>()
+<span class="function">print</span>(<span class="function">type</span>(a).__name__)   <span class="comment"># Postgres</span>
+<span class="function">print</span>(<span class="function">type</span>(b).__name__)   <span class="comment"># Postgres  !!! should be MySQL</span>
+<span class="function">print</span>(a <span class="keyword">is</span> b)             <span class="comment"># True - they share ONE instance</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 8px;">Using <code>cls._instance</code> (instead of hardcoded <code>Database._instance</code>) avoids this particular bug, but introduces a different surprise: each subclass becomes its <em>own</em> singleton, which may not be what you wanted.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> store instances per-class in a dict (<code>_instances = {}</code> keyed by <code>cls</code>) and be explicit about the intent: one-per-hierarchy or one-per-class.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 2 &mdash; <code>copy.deepcopy()</code> bypasses <code>__new__</code></span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;"><code>deepcopy</code> doesn't call your constructor &mdash; it walks the object graph and creates fresh objects directly. Your singleton check never runs.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">import</span> copy
+db1 = <span class="function">Database</span>()
+db2 = copy.<span class="function">deepcopy</span>(db1)
+
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)              <span class="comment"># False! Two instances exist</span>
+<span class="function">print</span>(<span class="function">type</span>(db1) <span class="keyword">is</span> <span class="function">type</span>(db2))  <span class="comment"># True - same class</span>
+<span class="comment"># You now have two "singletons". The invariant is broken silently.</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> implement <code>__copy__</code> and <code>__deepcopy__</code> to return <code>self</code>.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 3 &mdash; <code>pickle</code> creates a new instance on load</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Pickling serializes the object state; unpickling reconstructs it via <code>__new__</code> &mdash; but in another process, <code>cls._instance</code> is <code>None</code> again. Cross-process serialization quietly clones your singleton.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">import</span> pickle
+db1 = <span class="function">Database</span>()
+data = pickle.<span class="function">dumps</span>(db1)
+db2 = pickle.<span class="function">loads</span>(data)
+
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)    <span class="comment"># False if loaded in a fresh process</span>
+<span class="comment"># Distributed apps, Celery workers, multiprocessing - all hit this.</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> implement <code>__reduce__</code> so pickle routes through your factory.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 4 &mdash; Two threads see <code>_instance is None</code> at the same time</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">A classic race condition. If two threads both pass the <code>if cls._instance is None</code> check before either assigns, both will create instances. The second assignment overwrites the first, and the first thread walks away with an orphan singleton that nobody else has.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="comment"># Timeline (interleaved execution):</span>
+<span class="comment"># Thread A: if cls._instance is None:  -&gt; True</span>
+<span class="comment"># Thread B: if cls._instance is None:  -&gt; True (still None!)</span>
+<span class="comment"># Thread A: cls._instance = super().__new__(cls)  # instance A</span>
+<span class="comment"># Thread B: cls._instance = super().__new__(cls)  # instance B (overwrites!)</span>
+<span class="comment"># Thread A held a reference to instance A; everyone else now uses B.</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> double-checked locking with <code>threading.Lock()</code> &mdash; covered in the Threading section below.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. IMPLEMENTATION 2: DECORATOR ===== -->
+    <section id="decorator">
+        <div class="section-container">
+            <span class="section-label">Implementation 2</span>
+            <h2 class="section-title">Approach 2 &mdash; Decorator</h2>
+            <p class="section-subtitle">Keep the class clean. Bolt the Singleton-ness on from outside with a reusable decorator.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">A decorator is just a function that takes a class and returns something else. Our decorator replaces the class with a tiny <em>factory function</em> that caches the first instance and returns it every time. The class itself stays pristine &mdash; no <code>_instance</code>, no <code>__new__</code> tricks.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 02_decorator_singleton.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">singleton</span>(cls):
+    instances = {}                          <span class="comment"># closure - per-decorator cache</span>
+
+    <span class="keyword">def</span> <span class="function">get_instance</span>(*args, **kwargs):
+        <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> instances:
+            instances[cls] = <span class="function">cls</span>(*args, **kwargs)
+        <span class="keyword">return</span> instances[cls]
+
+    <span class="keyword">return</span> get_instance
+
+
+<span class="decorator">@singleton</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"Database initialized"</span>)
+        self.connection = <span class="string">"Connected"</span>
+
+db1 = <span class="function">Database</span>()    <span class="comment"># "Database initialized"</span>
+db2 = <span class="function">Database</span>()    <span class="comment"># (silent - cached)</span>
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)    <span class="comment"># True</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Why teams like this:</strong> the class file looks like a normal class. Singleton behavior is one line: <code>@singleton</code>. The same decorator works for any class. Cleanest separation of concerns of the four approaches.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 1 &mdash; <code>isinstance()</code> stops working</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">After decoration, the name <code>Database</code> doesn't refer to a class anymore &mdash; it refers to <code>get_instance</code>, which is a function. Anyone calling <code>isinstance(x, Database)</code> gets a <code>TypeError</code>.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="decorator">@singleton</span>
+<span class="keyword">class</span> <span class="function">Database</span>: ...
+
+db = <span class="function">Database</span>()
+<span class="function">isinstance</span>(db, Database)
+<span class="comment"># TypeError: isinstance() arg 2 must be a type, not function</span>
+
+<span class="function">type</span>(Database)    <span class="comment"># &lt;class 'function'&gt; - NOT &lt;class 'type'&gt;</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">A teammate writes a type check; everything blows up in code that worked yesterday. <strong>Fix:</strong> use a class-based decorator or a metaclass (next approach).</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 2 &mdash; You can't subclass it sanely</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Since <code>Database</code> is now a function, <code>class ReadOnlyDatabase(Database)</code> errors out: you can't inherit from a function.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">ReadOnlyDatabase</span>(Database):    <span class="comment"># TypeError</span>
+    <span class="keyword">pass</span>
+<span class="comment"># TypeError: function() argument 'code' must be code, not str</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> avoid this decorator when you anticipate inheritance.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 3 &mdash; Different argument lists silently return the SAME instance</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">The decorator caches by class, not by args. A second caller passing different config silently gets the first caller's instance &mdash; and may believe it's been configured with the new values.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="decorator">@singleton</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host):
+        self.host = host
+
+prod = <span class="function">Database</span>(<span class="string">"prod.example.com"</span>)
+test = <span class="function">Database</span>(<span class="string">"localhost"</span>)        <span class="comment"># IGNORED - args silently dropped</span>
+
+<span class="function">print</span>(test.host)    <span class="comment"># "prod.example.com"  !!!</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> raise an error if a singleton is called with args after first creation, or document the behavior loudly.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 4 &mdash; Pickling/copying still doesn't go through the decorator</span>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">Same vulnerability as <code>__new__</code>: <code>deepcopy</code> and <code>pickle.loads</code> work on the underlying class object and bypass the cache.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. IMPLEMENTATION 3: METACLASS ===== -->
+    <section id="metaclass">
+        <div class="section-container">
+            <span class="section-label purple">Implementation 3</span>
+            <h2 class="section-title">Approach 3 &mdash; Metaclass</h2>
+            <p class="section-subtitle">The most powerful approach. Hook into the &ldquo;class of classes.&rdquo; Survives <code>isinstance()</code>, survives subclassing, but the heaviest machinery.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition (in one paragraph)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Classes are objects too. Every class is an <em>instance</em> of some metaclass &mdash; usually <code>type</code>. When you write <code>Database()</code>, Python actually calls <code>type.__call__(Database)</code>. If we replace <code>type</code> with our own metaclass that overrides <code>__call__</code>, we get to control what happens at the call site &mdash; <em>before</em> <code>__new__</code> ever runs. So we cache the first instance there.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 03_metaclass_singleton.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">SingletonMeta</span>(<span class="function">type</span>):
+    _instances = {}
+
+    <span class="keyword">def</span> <span class="function">__call__</span>(cls, *args, **kwargs):
+        <span class="comment"># __call__ runs when someone writes ClassName(...)</span>
+        <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> cls._instances:
+            cls._instances[cls] = <span class="function">super</span>().<span class="function">__call__</span>(*args, **kwargs)
+        <span class="keyword">return</span> cls._instances[cls]
+
+
+<span class="keyword">class</span> <span class="function">Database</span>(metaclass=SingletonMeta):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"Database initialized"</span>)
+        self.connection = <span class="string">"Connected"</span>
+
+
+db1 = <span class="function">Database</span>()      <span class="comment"># "Database initialized"</span>
+db2 = <span class="function">Database</span>()      <span class="comment"># (silent - same instance)</span>
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)      <span class="comment"># True</span>
+<span class="function">isinstance</span>(db1, Database)   <span class="comment"># True (works!)</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Why this wins for libraries:</strong> <code>Database</code> stays a real class. <code>isinstance()</code> works. Subclassing works (and each subclass gets its <em>own</em> singleton, since the cache key is <code>cls</code>). <code>__init__</code> only runs on the first call, naturally &mdash; because <code>__call__</code> only delegates to <code>super().__call__</code> the first time.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 1 &mdash; Metaclass conflict on multiple inheritance</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">If you try to mix a singleton class with another base that has a different metaclass (e.g. an <code>ABC</code>), Python refuses: <em>&ldquo;metaclass conflict&rdquo;</em>.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, ABCMeta
+
+<span class="keyword">class</span> <span class="function">Database</span>(ABC, metaclass=SingletonMeta):  <span class="comment"># BOOM</span>
+    <span class="keyword">pass</span>
+<span class="comment"># TypeError: metaclass conflict</span>
+<span class="comment"># Need a combined metaclass: class Combined(SingletonMeta, ABCMeta): ...</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> build a combined metaclass that inherits from both.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 2 &mdash; <code>deepcopy</code> / <code>pickle</code> still bypass it</span>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">Same root cause as the <code>__new__</code> approach. <code>deepcopy</code> goes through <code>__deepcopy__</code> if defined, otherwise constructs a new object directly. <code>pickle.loads</code> reconstructs via <code>__reduce__</code>. Neither calls <code>SingletonMeta.__call__</code>.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 3 &mdash; Bypass via <code>object.__new__</code></span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">A determined caller can call <code>object.__new__(Database)</code> directly &mdash; this skips the metaclass <code>__call__</code> entirely and produces a fresh, uninitialized object.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre>db1 = <span class="function">Database</span>()
+db2 = <span class="function">object</span>.<span class="function">__new__</span>(Database)   <span class="comment"># bypasses metaclass</span>
+<span class="function">print</span>(db1 <span class="keyword">is</span> db2)               <span class="comment"># False - rogue instance</span>
+<span class="function">isinstance</span>(db2, Database)         <span class="comment"># True - looks legit</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">Python gives you no way to prevent this; it's a reminder that Singleton is a <em>discipline</em>, not a security feature.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 4 &mdash; Threading race in <code>__call__</code></span>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">Same race as the <code>__new__</code> approach. Add a lock in <code>__call__</code> with double-checked locking.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. IMPLEMENTATION 4: MODULE-LEVEL ===== -->
+    <section id="module">
+        <div class="section-container">
+            <span class="section-label success">Implementation 4 &mdash; Recommended</span>
+            <h2 class="section-title">Approach 4 &mdash; Module-Level Instance <em>(the Pythonic way)</em></h2>
+            <p class="section-subtitle">Python imports a module <em>at most once per interpreter</em>. That's already a singleton. Use it.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">The Intuition</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">When you write <code>import database</code>, Python runs the module top-to-bottom <em>once</em>, caches the result in <code>sys.modules</code>, and returns the cached module on every subsequent import. So any object you create at module top-level is automatically a singleton across your entire process. No <code>__new__</code> trickery, no decorator, no metaclass &mdash; just an import.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> database.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">_Database</span>:                  <span class="comment"># underscore = "don't instantiate me directly"</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="function">print</span>(<span class="string">"Database initialized"</span>)
+        self.connection = <span class="string">"Connected"</span>
+
+    <span class="keyword">def</span> <span class="function">query</span>(self, sql):
+        <span class="keyword">return</span> f<span class="string">"Executing: {sql}"</span>
+
+
+<span class="comment"># Create THE instance at module load time</span>
+database = <span class="function">_Database</span>()</pre>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> app.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> database <span class="keyword">import</span> database
+
+database.<span class="function">query</span>(<span class="string">"SELECT * FROM users"</span>)
+<span class="comment"># Every import in every module gets the SAME object.</span>
+<span class="comment"># No singleton machinery needed.</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Why this is the recommended approach in Python:</strong>
+                <ul style="margin-top: 8px; padding-left: 25px;">
+                    <li>Simplest possible code &mdash; no special pattern</li>
+                    <li>Thread-safe by default &mdash; the import lock guarantees one-time initialization</li>
+                    <li>Works with <code>isinstance()</code> against <code>_Database</code></li>
+                    <li>Lazy if you want it (move <code>database = _Database()</code> into a function)</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#128165; How a Colleague Can Accidentally Break It</h3>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 1 &mdash; Someone instantiates the underlying class directly</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">The underscore on <code>_Database</code> is a convention, not enforcement. A teammate who imports the class can create more instances.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> database <span class="keyword">import</span> _Database     <span class="comment"># technically allowed</span>
+rogue = <span class="function">_Database</span>()              <span class="comment"># second instance!</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Mitigations:</strong> name it <code>__Database</code> (name-mangling makes it harder), or make <code>__init__</code> guard against re-creation, or just trust your teammates and document intent.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 2 &mdash; <code>importlib.reload()</code> creates a fresh instance</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">If a tool (some IDEs, some test runners) reloads the module, the top-level <code>database = _Database()</code> runs again. You now have two instances coexisting &mdash; old references hold one, new imports get the other.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">import</span> importlib, database
+old = database.database
+importlib.<span class="function">reload</span>(database)
+new = database.database
+
+<span class="function">print</span>(old <span class="keyword">is</span> new)    <span class="comment"># False - two coexisting "singletons"</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 3 &mdash; The same module imported under two paths</span>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Python caches by module name (key in <code>sys.modules</code>). If your project structure (or a relative-vs-absolute import mishap) makes the same file load under two different names, you get two module objects &mdash; two singletons.</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> myapp.database <span class="keyword">import</span> database     <span class="comment"># sys.modules["myapp.database"]</span>
+<span class="keyword">from</span> database         <span class="keyword">import</span> database     <span class="comment"># sys.modules["database"]</span>
+<span class="comment"># Different module objects -&gt; different `database` instances</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>Fix:</strong> always use absolute imports; configure the project structure properly.</p>
+            </div>
+
+            <div class="break-box">
+                <span class="break-title">&#128165; Break 4 &mdash; Multiprocessing breaks every singleton, including this one</span>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">A &ldquo;singleton&rdquo; is per-Python-process. The moment you fork or use <code>multiprocessing</code>, each child has its own copy of memory and its own singleton. Same with multiple Gunicorn workers, multiple Celery processes, multiple containers. <strong>This is true for every Singleton implementation</strong> &mdash; not unique to modules.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. THREAD SAFETY ===== -->
+    <section id="thread-safety">
+        <div class="section-container">
+            <span class="section-label warning">Threading</span>
+            <h2 class="section-title">Making It Thread-Safe: Double-Checked Locking</h2>
+            <p class="section-subtitle">The race condition we saw in every approach has a standard fix &mdash; and a standard optimization.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 15px;">Naive Lock: Correct but Slow</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">The obvious fix: wrap the whole <code>__new__</code> in a lock. Only one thread can be inside at a time, so the race vanishes. But now <em>every</em> call &mdash; including the millions of calls after the instance is created &mdash; pays for lock acquisition.</p>
+
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">import</span> threading
+
+<span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>
+    _lock = threading.<span class="function">Lock</span>()
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">with</span> cls._lock:                  <span class="comment"># EVERY call acquires the lock - slow</span>
+            <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+                cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+            <span class="keyword">return</span> cls._instance</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Double-Checked Locking: Fast <em>and</em> Safe</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">Check first (cheap, no lock). Only acquire the lock if the instance is missing. Inside the lock, <em>check again</em> &mdash; another thread may have built it while we were waiting.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 04_thread_safe_singleton.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">import</span> threading
+
+<span class="keyword">class</span> <span class="function">Database</span>:
+    _instance = <span class="keyword">None</span>
+    _lock = threading.<span class="function">Lock</span>()
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:             <span class="comment"># 1st check (no lock)</span>
+            <span class="keyword">with</span> cls._lock:
+                <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:         <span class="comment"># 2nd check (inside lock)</span>
+                    cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> cls._instance</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box">
+                <h4 style="margin-bottom: 12px;">Timeline (interleaved threads):</h4>
+                <div class="flow-row">
+                    <div class="flow-box red">Thread A<br><small>check 1: None &rarr; acquire lock &rarr; check 2: None &rarr; create &rarr; release</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Thread B<br><small>check 1: None &rarr; wait for lock &rarr; <em>(A finished, B enters)</em> &rarr; check 2: EXISTS &rarr; return</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green">Thread C (later)<br><small>check 1: exists &rarr; return immediately (no lock acquired, fast path)</small></div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>The same pattern works for every approach:</strong>
+                <ul style="margin-top: 8px; padding-left: 25px;">
+                    <li><code>__new__</code> approach: lock around the check inside <code>__new__</code></li>
+                    <li>Decorator: lock around the dict access inside <code>get_instance</code></li>
+                    <li>Metaclass: lock around the check inside <code>SingletonMeta.__call__</code></li>
+                    <li>Module-level: <strong>already thread-safe</strong> &mdash; Python's import lock guarantees one-time initialization</li>
+                </ul>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Practical note:</strong> CPython has the GIL, so in practice the race window is small. But &ldquo;small&rdquo; is not &ldquo;impossible,&rdquo; and it bites under <code>asyncio</code>, threading with I/O, and most importantly &mdash; on free-threaded Python (PEP 703) where the GIL is gone. If you write a Singleton intended to live in a threaded app, use the double-check pattern.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. USE CASES ===== -->
+    <section id="use-cases">
+        <div class="section-container">
+            <span class="section-label blue">In Practice</span>
+            <h2 class="section-title">Real-World Use Cases</h2>
+            <p class="section-subtitle">Three places where Singleton genuinely earns its keep.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#9881;&#65039;</div>
+                    <div class="card-title">Configuration Manager</div>
+                    <div class="card-desc">One source of truth for application settings: DB URLs, API keys, feature flags. Two configs = two views of the world = bugs.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Logger</div>
+                    <div class="card-desc">Centralize log writes. Multiple loggers fighting over the same file = interleaved / corrupted entries.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128268;</div>
+                    <div class="card-title">Connection Pool</div>
+                    <div class="card-desc">Bound the number of open sockets to the DB / Redis / message broker. One pool, shared cap.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128202;</div>
+                    <div class="card-title">In-Memory Cache</div>
+                    <div class="card-desc">Sharing data across modules requires one cache &mdash; otherwise each module has its own &ldquo;cache.&rdquo;</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128209;</div>
+                    <div class="card-title">Registry / Plugin Map</div>
+                    <div class="card-desc">Decorators that register handlers (recall the OCP plugin pattern) read/write a shared registry &mdash; a Singleton by nature.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9201;&#65039;</div>
+                    <div class="card-title">Thread / Worker Pool</div>
+                    <div class="card-desc">One pool = controlled concurrency. Multiple pools = uncontrolled fan-out.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Pulled-together example: Config + Logger</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 05_use_cases.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># config.py - module-level singleton</span>
+<span class="keyword">class</span> <span class="function">_Config</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.db_host    = <span class="string">"localhost"</span>
+        self.db_port    = <span class="number">5432</span>
+        self.debug      = <span class="keyword">True</span>
+        self.api_key    = <span class="string">"secret_123"</span>
+
+config = <span class="function">_Config</span>()
+
+
+<span class="comment"># logger.py - decorator singleton</span>
+<span class="keyword">def</span> <span class="function">singleton</span>(cls):
+    instances = {}
+    <span class="keyword">def</span> <span class="function">get</span>(*args, **kw):
+        <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> instances:
+            instances[cls] = <span class="function">cls</span>(*args, **kw)
+        <span class="keyword">return</span> instances[cls]
+    <span class="keyword">return</span> get
+
+<span class="decorator">@singleton</span>
+<span class="keyword">class</span> <span class="function">Logger</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.file = <span class="function">open</span>(<span class="string">"app.log"</span>, <span class="string">"a"</span>)
+    <span class="keyword">def</span> <span class="function">info</span>(self, msg):
+        self.file.<span class="function">write</span>(f<span class="string">"[INFO] {msg}\n"</span>)
+        self.file.<span class="function">flush</span>()
+
+
+<span class="comment"># anywhere in the app:</span>
+<span class="keyword">from</span> config <span class="keyword">import</span> config
+<span class="keyword">from</span> logger <span class="keyword">import</span> Logger
+Logger().<span class="function">info</span>(f<span class="string">"connecting to {config.db_host}"</span>)</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 12. ANTI-PATTERNS ===== -->
+    <section id="anti-patterns">
+        <div class="section-container">
+            <span class="section-label danger">Anti-Patterns</span>
+            <h2 class="section-title">When NOT to Use Singleton</h2>
+            <p class="section-subtitle">Singleton is the most misused pattern in software. Three concrete smells.</p>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#10060; Anti-pattern 1 &mdash; The "Utils" god object</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A Singleton class that grows methods over time until it has nothing in common. This is just a global variable with a fancy hat.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="decorator">@singleton</span>
+<span class="keyword">class</span> <span class="function">Utils</span>:
+    <span class="keyword">def</span> <span class="function">format_date</span>(self, d): ...
+    <span class="keyword">def</span> <span class="function">send_email</span>(self, to): ...
+    <span class="keyword">def</span> <span class="function">calculate_tax</span>(self, amt): ...
+    <span class="keyword">def</span> <span class="function">resize_image</span>(self, img): ...
+<span class="comment"># These have NOTHING to do with each other. Just use modules.</span></pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 6px;"><strong>Fix:</strong> separate modules; plain functions. Python is already organized around modules; you don't need a Singleton class to namespace utilities.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#10060; Anti-pattern 2 &mdash; Hidden dependencies (untestable code)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">A Singleton reached inside method bodies makes the dependency invisible. Tests can't substitute a fake. Refactoring is dangerous.</p>
+                    <div class="comparison-grid">
+                        <div class="comparison-card before">
+                            <h4 style="color: var(--accent-danger); margin-bottom: 6px;">&#10060; Hidden dependency</h4>
+                            <div class="code-block">
+                                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="keyword">def</span> <span class="function">place</span>(self, order):
+        Logger().<span class="function">info</span>(<span class="string">"placing"</span>)   <span class="comment"># hidden</span>
+        DB().<span class="function">save</span>(order)              <span class="comment"># hidden</span>
+
+<span class="comment"># Tests can't replace Logger or DB</span></pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comparison-card after">
+                            <h4 style="color: var(--accent-success); margin-bottom: 6px;">&#10004; Injected</h4>
+                            <div class="code-block">
+                                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, logger, db):
+        self.logger = logger
+        self.db = db
+    <span class="keyword">def</span> <span class="function">place</span>(self, order):
+        self.logger.<span class="function">info</span>(<span class="string">"placing"</span>)
+        self.db.<span class="function">save</span>(order)</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;"><strong>Rule:</strong> Singletons live <em>at the edge</em> (the composition root). Business code receives its dependencies, doesn't reach for them.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#10060; Anti-pattern 3 &mdash; Domain objects as Singletons</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary);">If your domain naturally has many instances &mdash; users, orders, products, blog posts &mdash; do not make them Singletons. The pattern exists for <em>infrastructure</em> (one connection pool, one config). A web app with one User object is not a web app.</p>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 13. SUMMARY ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label success">Summary</span>
+            <h2 class="section-title">Comparison &amp; Decision Guide</h2>
+            <p class="section-subtitle">All four approaches, side by side, plus a quick decision tree.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Approach</th><th>Complexity</th><th>Pythonic</th><th>Thread-safe by default</th><th>Best for</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Module-level</strong></td><td>&#11088; lowest</td><td>&#11088;&#11088;&#11088; very</td><td>&#9989; yes</td><td><strong>Default choice in Python</strong></td></tr>
+                        <tr><td><code>__new__</code></td><td>&#11088;&#11088; medium</td><td>&#11088;&#11088; moderate</td><td>&#10060; needs lock</td><td>Teaching the pattern, fine control</td></tr>
+                        <tr><td>Decorator</td><td>&#11088;&#11088; medium</td><td>&#11088;&#11088;&#11088; very</td><td>&#10060; needs lock</td><td>Bolt-on singleton for clean classes</td></tr>
+                        <tr><td>Metaclass</td><td>&#11088;&#11088;&#11088; high</td><td>&#11088;&#11088; moderate</td><td>&#10060; needs lock</td><td>Libraries, inheritance, framework code</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; Quick Decision Tree</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green"><strong>Need exactly one instance?</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Simple application code &rarr; <strong>module-level instance</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Threaded application &rarr; module-level <em>or</em> double-checked locking</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box purple">Library / framework / need <code>isinstance()</code> + subclassing &rarr; <strong>metaclass</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Several classes need it, want clean code &rarr; <strong>decorator</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box green">Learning / interview question &rarr; start with <code>__new__</code>, explain the gotchas</div>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Interview tip:</strong> If asked to implement Singleton, write <code>__new__</code> on the board first &mdash; it shows you understand object creation. Then mention thread-safety with double-checked locking. Then say: <em>&ldquo;In real Python code I'd usually just use a module-level instance &mdash; it's the simplest correct singleton in the language.&rdquo;</em> That answer signals you know the pattern <em>and</em> when not to over-engineer it.</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; The One-Line Summary</h3>
+            <div class="highlight-box success">
+                <strong>Singleton</strong> ensures exactly one instance of a class per process. In Python, you usually get it for free by exporting an instance at module level. The other three implementations exist for situations where you need <code>isinstance()</code> checks, inheritance, or framework-level control. Always ask first: <em>&ldquo;do I really need this, or is it just a global in disguise?&rdquo;</em>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-15: Design Patterns Intro &amp; Singleton &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>

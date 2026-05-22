@@ -55,7 +55,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 |---|-------|--------|
 | 1 | [SOLID Principles &mdash; Part 1](LLD-13-SOLID-Principles/) | Why SOLID, God classes, SRP, OCP, LSP intro |
 | 2 | [SOLID Principles &mdash; Part 2](LLD-14-SOLID-Principles-2/) | OCP/LSP recap, ISP, composition, DIP, LSP vs ISP, SOLID critique |
-| 3 | Intro to Design Patterns, Singleton | Upcoming |
+| 3 | [Intro to Design Patterns, Singleton](LLD-15-Design-Patterns-Singleton/) | GoF intro, 3 categories, Singleton (4 implementations + how each breaks) |
 | 4 | Builder Pattern | Upcoming |
 | 5 | Factory, Prototype | Upcoming |
 | 6 | Adapter, Strategy | Upcoming |
