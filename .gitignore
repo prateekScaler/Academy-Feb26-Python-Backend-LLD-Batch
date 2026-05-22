@@ -57,6 +57,12 @@ db.sqlite3
 **/db.sqlite3
 staticfiles/
 media/
+!LLD-15-Design-Patterns-Singleton/media/
+!LLD-15-Design-Patterns-Singleton/media/**
+
+# PDFs (generated locally from README.md, not pushed)
+*.pdf
+**/*.pdf
 
 # Claude Code
 .claude/
