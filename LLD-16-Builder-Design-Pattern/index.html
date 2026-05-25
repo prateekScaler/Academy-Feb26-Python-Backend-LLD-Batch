@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-16: Builder Design Pattern</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        .break-box { background: rgba(239, 68, 68, 0.06); border-left: 4px solid var(--accent-danger); border-radius: 6px; padding: 16px 18px; margin: 12px 0; }
+        .break-box .break-title { color: var(--accent-danger); font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: block; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-16: Builder Pattern</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#intro">Intro</a></li>
+            <li><a href="#prereq">Prereq</a></li>
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#solution">Solution</a></li>
+            <li><a href="#variations">Variations</a></li>
+            <li><a href="#examples">Examples</a></li>
+            <li><a href="#pitfalls">Pitfalls</a></li>
+            <li><a href="#summary">Summary</a></li>
+            <li><a href="#resources">Resources</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#127959;&#65039;</div>
+        <h1>Builder Design Pattern</h1>
+        <p class="hero-meta">LLD-16 &bull; Creational Patterns</p>
+        <p class="hero-tagline">Stop writing constructors that take ten boolean parameters in a row. <strong>Build complex objects step-by-step</strong> with a clean, fluent API &mdash; and keep validation out of <code>__init__</code>.</p>
+    </section>
+
+    <!-- ===== 2. RECAP (Singleton revision) ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label purple">Recap</span>
+            <h2 class="section-title">Quick Recall &mdash; Singleton</h2>
+            <p class="section-subtitle">Three quick checks from LLD-15 before we move on. Builder is the second creational pattern; Singleton was the first.</p>
+
+            <!-- Recap Q1: __init__ trap -->
+            <div class="quiz-box" id="recap-q1">
+                <h4>Quiz 1 &mdash; The <code>__init__</code> trap</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">DB</span>:
+    _instance = <span class="keyword">None</span>
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+            cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> cls._instance
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.count = <span class="number">0</span>
+        self.count += <span class="number">1</span>
+
+a = <span class="function">DB</span>()
+b = <span class="function">DB</span>()
+c = <span class="function">DB</span>()
+
+<span class="function">print</span>(a.count, b.count, c.count, a <span class="keyword">is</span> b)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, true)">A) <code>1, 1, 1, True</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">B) <code>3, 3, 3, True</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">C) <code>1, 2, 3, True</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">D) <code>1, 1, 1, False</code></button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Only one instance exists, but <code>__init__</code> runs on <em>every</em> <code>DB()</code> call &mdash; resetting <code>count</code> to 0 each time, then incrementing to 1.
+
+                    <p style="margin-top: 10px;"><strong>Step-by-step</strong>:</p>
+                    <ol style="margin-top: 4px; padding-left: 22px;">
+                        <li><code>a = DB()</code> &rarr; <code>__new__</code> creates the instance; <code>__init__</code> sets <code>count = 0</code>, then <code>+= 1</code> &rarr; <code>count = 1</code></li>
+                        <li><code>b = DB()</code> &rarr; <code>__new__</code> returns the <em>same</em> instance; but <code>__init__</code> runs again &mdash; resets to 0, then <code>+= 1</code> &rarr; <code>count = 1</code></li>
+                        <li><code>c = DB()</code> &rarr; same story. Every call clobbers the state.</li>
+                    </ol>
+
+                    <p style="margin-top: 10px;"><strong>Fix:</strong> guard <code>__init__</code> with an <code>_initialized</code> flag, set once on first call:</p>
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">DB</span>:
+    _instance = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+            cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+            cls._instance._initialized = <span class="keyword">False</span>     <span class="comment"># marker on the new instance</span>
+        <span class="keyword">return</span> cls._instance
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        <span class="keyword">if</span> self._initialized:                       <span class="comment"># bail on subsequent calls</span>
+            <span class="keyword">return</span>
+        self.count = <span class="number">0</span>
+        self._initialized = <span class="keyword">True</span>
+        self.count += <span class="number">1</span>
+
+a = <span class="function">DB</span>()
+b = <span class="function">DB</span>()
+c = <span class="function">DB</span>()
+
+<span class="function">print</span>(a.count, b.count, c.count)    <span class="comment"># 1 1 1 - but state preserved across calls</span></pre>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem;">Now <code>__init__</code> runs exactly once (on the first <code>DB()</code> call). Subsequent calls return the same instance untouched.</p>
+                </div>
+            </div>
+
+            <!-- Recap Q2: inheritance gotcha -->
+            <div class="quiz-box" id="recap-q2">
+                <h4>Quiz 2 &mdash; Inheritance + naive Singleton</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Singleton</span>:
+    _instance = <span class="keyword">None</span>
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> Singleton._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+            Singleton._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> Singleton._instance
+
+<span class="keyword">class</span> <span class="function">DB</span>(Singleton): <span class="keyword">pass</span>
+<span class="keyword">class</span> <span class="function">Cache</span>(Singleton): <span class="keyword">pass</span>
+
+db = <span class="function">DB</span>()
+cache = <span class="function">Cache</span>()
+
+<span class="function">print</span>(<span class="function">type</span>(db).__name__)
+<span class="function">print</span>(<span class="function">type</span>(cache).__name__)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">A) <code>DB</code> then <code>Cache</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, true)">B) <code>DB</code> then <code>DB</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">C) <code>Cache</code> then <code>Cache</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">D) <code>Singleton</code> then <code>Singleton</code></button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The bug lives in this one line:
+                    <div class="code-block" style="margin: 10px 0;">
+                        <div class="code-content">
+<pre><span class="keyword">if</span> Singleton._instance <span class="keyword">is</span> <span class="keyword">None</span>:    <span class="comment"># hardcoded - all subclasses share this slot</span>
+    Singleton._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+<span class="keyword">return</span> Singleton._instance</pre>
+                        </div>
+                    </div>
+                    <p><strong>Step-by-step</strong>:</p>
+                    <ol style="margin-top: 6px; padding-left: 22px;">
+                        <li><code>DB()</code> runs first. <code>Singleton._instance is None</code> &rarr; True. We create a <em>DB</em> instance and stash it on the parent class.</li>
+                        <li><code>Cache()</code> runs. <code>Singleton._instance is None</code> &rarr; <strong>False</strong> (we just set it). So we return the existing&hellip; <em>DB instance</em>. Cache never gets built.</li>
+                        <li><code>type(cache).__name__</code> is therefore <code>"DB"</code>, not <code>"Cache"</code>. Type-confusion bomb.</li>
+                    </ol>
+
+                    <p style="margin-top: 10px;"><strong>The fix:</strong> store one instance <em>per class</em> in a dict keyed by <code>cls</code> &mdash; not a single shared slot on the parent.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Singleton</span>:
+    _instances = {}                              <span class="comment"># dict, one slot per class</span>
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls <span class="keyword">not</span> <span class="keyword">in</span> cls._instances:        <span class="comment"># keyed by cls!</span>
+            cls._instances[cls] = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> cls._instances[cls]
+
+<span class="keyword">class</span> <span class="function">DB</span>(Singleton):    <span class="keyword">pass</span>
+<span class="keyword">class</span> <span class="function">Cache</span>(Singleton): <span class="keyword">pass</span>
+
+db = <span class="function">DB</span>()
+cache = <span class="function">Cache</span>()
+
+<span class="function">print</span>(<span class="function">type</span>(db).__name__)     <span class="comment"># DB</span>
+<span class="function">print</span>(<span class="function">type</span>(cache).__name__)  <span class="comment"># Cache</span>
+<span class="function">print</span>(db <span class="keyword">is</span> cache)                              <span class="comment"># False</span></pre>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem;">Now each subclass gets its own slot. <code>DB</code> instances are shared across calls; <code>Cache</code> instances are shared across calls; they don't collide.</p>
+                </div>
+            </div>
+
+            <!-- Recap Q3: pickle -->
+            <div class="quiz-box" id="recap-q3">
+                <h4>Quiz 3 &mdash; <code>pickle</code> + Singleton</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Vipul has a working Singleton. He pickles it (sends it to a Celery worker), then unpickles it on the other side. Is the loaded object the same Singleton instance?</p>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">A) Yes &mdash; pickle preserves identity</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, true)">B) No &mdash; pickle creates a fresh instance and bypasses <code>__new__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">C) Yes &mdash; only if the class has <code>__slots__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">D) No &mdash; pickle raises an error on Singleton classes</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Pickle creates a new instance via <code>__reduce_ex__</code>; the singleton check never runs on the receiving side. Before the fix, a quick refresher on the two terms in this question:
+
+                    <div style="margin-top: 10px; overflow-x: auto;">
+                        <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                            <thead>
+                                <tr><th>Term</th><th>What it is</th><th>Why it matters here</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>pickle</code></td><td>Python's stdlib module that <em>serializes</em> any Python object to bytes (<code>pickle.dumps</code>) and rebuilds it from those bytes (<code>pickle.loads</code>). Useful for caching, sending objects between processes, saving state to disk.</td><td>The <em>rebuild</em> step doesn't call <code>__init__</code> normally &mdash; it goes through <code>__reduce_ex__</code> / <code>__new__</code>. Our singleton guard never fires on the receiving end.</td></tr>
+                                <tr><td><strong>Celery worker</strong></td><td>A separate Python process that picks up background tasks from a queue (Redis / RabbitMQ). Your web server pickles a task + arguments &rarr; the worker process unpickles them and runs the task.</td><td>It's a different Python process, so its <code>cls._instance</code> starts as <code>None</code> regardless of what your web server has. Unpickle &rarr; brand-new instance &rarr; singleton invariant broken across the network.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="margin-top: 10px;">Same story for: caching with <code>pickle</code>, <code>multiprocessing</code> with <code>spawn</code>, <code>concurrent.futures.ProcessPoolExecutor</code>, RPC frameworks &mdash; anything that ships Python objects across process boundaries.</p>
+
+                    <p style="margin-top: 12px;"><strong>The fix &mdash; teach pickle how to reconstruct your Singleton:</strong></p>
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre><span class="keyword">import</span> pickle
+
+<span class="keyword">class</span> <span class="function">DB</span>:
+    _instance = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">__new__</span>(cls):
+        <span class="keyword">if</span> cls._instance <span class="keyword">is</span> <span class="keyword">None</span>:
+            cls._instance = <span class="function">super</span>().<span class="function">__new__</span>(cls)
+        <span class="keyword">return</span> cls._instance
+
+    <span class="keyword">def</span> <span class="function">__reduce__</span>(self):
+        <span class="comment"># Tells pickle: "to rebuild me, call DB() with no args."</span>
+        <span class="comment"># pickle.loads -&gt; DB() -&gt; __new__ -&gt; routes through our singleton check.</span>
+        <span class="keyword">return</span> (DB, ())
+
+
+a = <span class="function">DB</span>()
+blob = pickle.<span class="function">dumps</span>(a)
+
+<span class="comment"># Simulate a fresh worker process: same-process cls._instance is still set,</span>
+<span class="comment"># but in a *real* worker, this would be the very first DB() call.</span>
+b = pickle.<span class="function">loads</span>(blob)
+
+<span class="function">print</span>(a <span class="keyword">is</span> b)              <span class="comment"># True - singleton preserved</span></pre>
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 8px; font-size: 0.85rem;">Each format <code>__reduce__</code> returns has the shape <code>(callable, args_tuple)</code>. Pickle stores that, then on load does <code>callable(*args)</code> &mdash; here, <code>DB()</code> &mdash; which goes through our <code>__new__</code> and returns the existing singleton on that process. For a deeper guard against <code>copy.deepcopy</code> too, also define <code>__copy__</code> and <code>__deepcopy__</code> to <code>return self</code>.</p>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Going forward:</strong> Singleton controlled <em>how many</em> objects exist. Builder controls <em>how an object gets put together</em>. Different problem, same family (Creational). Today we'll see why a constructor with 10 booleans is a design smell &mdash; and how Builder makes the same code clean.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 3. INTRO (Builder, briefly) ===== -->
+    <section id="intro">
+        <div class="section-container">
+            <span class="section-label">What &amp; Why</span>
+            <h2 class="section-title">What is the Builder Pattern?</h2>
+            <p class="section-subtitle"><strong>Separate the construction of a complex object from its representation</strong> &mdash; so the same construction process can produce different objects, and the constructor stays small.</p>
+
+            <!-- One-line comparison: a Notification config that real services have to build -->
+            <div class="diagram-box" style="padding: 18px;">
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;">
+                    <div style="background: rgba(239,68,68,0.08); border: 1px solid var(--accent-danger); padding: 12px; border-radius: 10px;">
+                        <div style="font-weight: 700; color: var(--accent-danger); margin-bottom: 6px;">&#10060; Without Builder</div>
+                        <div style="font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">Notification(<span style="color: var(--accent-danger);">"alice@x.com",<br>"Welcome!", "Hello!",<br>True, False, True,<br>False, "high", None</span>)</div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 1.4rem;">&rarr;</div>
+                    <div style="background: rgba(16,185,129,0.08); border: 1px solid var(--accent-success); padding: 12px; border-radius: 10px;">
+                        <div style="font-weight: 700; color: var(--accent-success); margin-bottom: 6px;">&#10004; With Builder</div>
+                        <div style="font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">NotificationBuilder()<br>&nbsp;&nbsp;.to("alice@x.com")<br>&nbsp;&nbsp;.subject("Welcome!")<br>&nbsp;&nbsp;.html().high_priority()<br>&nbsp;&nbsp;.build()</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">Same outcome &mdash; one is a parameter cliff, the other speaks for itself.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127919; The four ingredients</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">Every Builder you'll ever write has the same four pieces. Memorize them:</p>
+
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box blue"><strong>1. Product</strong><br><small>The complex object. Simple constructor &mdash; just assigns fields.</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box purple"><strong>2. Builder</strong><br><small>Holds the in-progress state. Mutable.</small></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box purple"><strong>3. Setters that <code>return self</code></strong><br><small>One method per field. Enables chaining.</small></div>
+                    <div class="flow-arrow">&rarr;</div>
+                    <div class="flow-box green"><strong>4. <code>build()</code></strong><br><small>Validates everything, then constructs the Product.</small></div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>The promise:</strong> the Product's <code>__init__</code> stays trivial. All validation, business rules, defaults, and combinatorial logic move to the Builder. The user gets a clear, readable construction API; the codebase gets a maintainable, testable design.
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Builder is a Creational pattern (like Singleton).</strong> It joins the catalog of object-creation strategies: Singleton (one instance), <strong>Builder (step-by-step assembly)</strong>, Factory (delegate the class choice), Prototype (clone). All four solve different flavors of the same question: <em>how should objects come into existence?</em></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. PREREQUISITE QUIZ ===== -->
+    <section id="prereq">
+        <div class="section-container">
+            <span class="section-label purple">Pre-flight Check</span>
+            <h2 class="section-title">Prerequisites &mdash; Quick Quiz</h2>
+            <p class="section-subtitle">Seven warm-ups. Each one shows a specific pain point that Builder is designed to solve, or a Python idiom it relies on. If you can name what's going on in every question, you already understand why Builder exists.</p>
+
+            <!-- Q1: too many constructor parameters -->
+            <div class="quiz-box" id="prereq-q1">
+                <h4>Question 1 &mdash; The 10-parameter constructor</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">A real-world notification service class &mdash; the kind every backend has:</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Notification</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, recipient, subject, body, is_html, send_now,
+                 track_opens, archive_after_send, priority, schedule_at, retry):
+        ...
+
+welcome = <span class="function">Notification</span>(<span class="string">"alice@x.com"</span>, <span class="string">"Welcome!"</span>, <span class="string">"Hi Alice"</span>,
+                       <span class="keyword">True</span>, <span class="keyword">True</span>, <span class="keyword">False</span>, <span class="keyword">True</span>, <span class="string">"high"</span>, <span class="keyword">None</span>, <span class="number">3</span>)</pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">What's wrong with this construction?</p>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">A) Parameter order is hard to remember</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">B) <code>True, True, False, True</code> is unreadable &mdash; which flag is which?</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">C) Can't make some parameters optional easily</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, true)">D) All of the above</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> This is "boolean hell" &mdash; a real code smell that shows up in every notification service, payment client, and HTTP request library.
+                    <ul style="margin-top: 10px; padding-left: 22px;">
+                        <li>Swap two booleans by accident? Silent bug &mdash; the type checker can't help (all <code>bool</code>).</li>
+                        <li>Want a plain text notification with all defaults? Still 10 args.</li>
+                        <li>Add a new flag (e.g. <code>encrypted</code>)? <em>Every caller in the codebase breaks</em>.</li>
+                    </ul>
+                    <strong>Builder fixes all three</strong> by giving each field a named setter you can chain &mdash; <code>NotificationBuilder().to("alice@x.com").subject("Welcome!").html().high_priority().build()</code>.
+                </div>
+            </div>
+
+            <!-- Q2: mutable two-phase init -->
+            <div class="quiz-box" id="prereq-q2">
+                <h4>Question 2 &mdash; The two-phase construction trap</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">An engineer decides to make construction "flexible" by allowing field-by-field setting. What goes wrong?</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">User</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.name = <span class="keyword">None</span>
+        self.email = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">set_name</span>(self, n):  self.name = n
+    <span class="keyword">def</span> <span class="function">set_email</span>(self, e): self.email = e
+
+<span class="comment"># Caller:</span>
+u = <span class="function">User</span>()
+u.<span class="function">set_name</span>(<span class="string">"Alice"</span>)
+<span class="function">send_welcome_email</span>(u)        <span class="comment"># What happens here?</span>
+u.<span class="function">set_email</span>(<span class="string">"a@x.com"</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">A) Works fine &mdash; Python sets fields in order</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">B) <code>send_welcome_email</code> crashes because <code>email</code> is <code>None</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, false)">C) Another thread may see a half-built <code>User</code></button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q2', this, true)">D) Both B and C &mdash; the object can be used before it's ready</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The deeper problem is <em>two-phase construction</em>:
+                    <ul style="margin-top: 8px; padding-left: 22px;">
+                        <li>Phase 1: object exists but is incomplete</li>
+                        <li>Phase 2: someone "finishes" it later</li>
+                    </ul>
+                    Anyone who gets a reference between phase 1 and phase 2 sees a broken object. Builder solves this elegantly: the in-progress state lives on the <em>Builder</em>, not the Product. The Product only comes into existence (via <code>build()</code>) <strong>after</strong> everything is set and validated &mdash; so it's complete from the first instant.
+                </div>
+            </div>
+
+            <!-- Q3: telescoping constructor -->
+            <div class="quiz-box" id="prereq-q3">
+                <h4>Question 3 &mdash; Telescoping constructors</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">In Java/C++ you write multiple overloaded constructors:</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">HttpRequest</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url): ...
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url, method): ...
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url, method, headers): ...
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url, method, headers, body): ...
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url, method, headers, body, timeout): ...</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">A) Works fine in Python too</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, true)">B) Python <em>doesn't even support this</em> &mdash; later <code>__init__</code> definitions overwrite earlier ones</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">C) Works but only for at most 3 overloads</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q3', this, false)">D) Works only with type hints</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Python allows only <em>one</em> <code>__init__</code> per class. Each new definition silently replaces the previous one. So the &ldquo;telescoping constructor&rdquo; anti-pattern from Java/C++ is doubly broken in Python &mdash; it doesn't even compile in the form you wanted.
+
+                    <p style="margin-top: 10px;">The workaround &mdash; default arguments &mdash; helps but still hits combinatorial explosion: with 5 optional parameters there are <strong>2&sup5; = 32</strong> meaningful argument combinations. Builder lets each caller set <em>only</em> what they need without 32 constructor signatures.</p>
+                </div>
+            </div>
+
+            <!-- Q4: business logic in constructor -->
+            <div class="quiz-box" id="prereq-q4">
+                <h4>Question 4 &mdash; Business logic in the constructor</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, user, password):
+        <span class="keyword">if</span> <span class="keyword">not</span> self.<span class="function">_is_reachable</span>(host):    <span class="comment"># network call!</span>
+            <span class="keyword">raise</span> <span class="function">Exception</span>(<span class="string">"unreachable"</span>)
+        <span class="keyword">if</span> port &lt; <span class="number">1024</span>:                       <span class="comment"># validation</span>
+            <span class="keyword">raise</span> <span class="function">Exception</span>(<span class="string">"bad port"</span>)
+        self.host, self.port = host, port
+        self.user, self.password = user, password</pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Why is this a poor design?</p>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">A) Constructor does too much &mdash; validation + network call + assignment</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">B) Hard to test &mdash; every test needs network</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, false)">C) Can't build incrementally &mdash; all values needed upfront</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4', this, true)">D) All of the above</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The constructor should be a <em>simple ceremony</em> &mdash; just stash the values. The moment it starts validating, making network calls, or running business logic, it becomes:
+                    <ul style="margin-top: 8px; padding-left: 22px;">
+                        <li>Hard to test (mocking <code>_is_reachable</code> for every Database test)</li>
+                        <li>Slow to instantiate</li>
+                        <li>Annoying to inherit from (subclass <code>__init__</code> has to repeat all the checks)</li>
+                    </ul>
+                    Builder keeps the Product's <code>__init__</code> trivial. Validation, network checks, and business rules all live in <code>build()</code> &mdash; where they belong.
+                </div>
+            </div>
+
+            <!-- Q4b: which SOLID principle does the above constructor violate? -->
+            <div class="quiz-box" id="prereq-q4b">
+                <h4>Question 5 &mdash; Which SOLID principle does that constructor most clearly violate?</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Look back at the <code>Database.__init__</code> in Q4 (validation + network call + assignment all in one place). Which principle does it break first?</p>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4b', this, true)">A) SRP &mdash; the constructor has multiple reasons to change</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4b', this, false)">B) OCP &mdash; you can't extend it without modifying</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4b', this, false)">C) LSP &mdash; subclasses can't be substituted</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q4b', this, false)">D) ISP &mdash; the interface is too fat</button>
+                <div class="quiz-explanation">
+                    <strong>Correct! It's SRP.</strong> The constructor is doing at least three unrelated jobs &mdash; <em>validating</em> input, <em>making a network call</em>, and <em>assigning fields</em>. Each has its own reason to change:
+                    <ul style="margin-top: 8px; padding-left: 22px;">
+                        <li>Validation rules change &rarr; constructor changes</li>
+                        <li>Network library changes &rarr; constructor changes</li>
+                        <li>A new field is added &rarr; constructor changes</li>
+                    </ul>
+                    <p style="margin-top: 8px;">SRP says: <em>a class (or method) should have one reason to change</em>. Three reasons &rarr; three responsibilities &rarr; SRP violation.</p>
+
+                    <p style="margin-top: 10px;"><strong>How Builder fixes it:</strong></p>
+                    <ul style="margin-top: 4px; padding-left: 22px;">
+                        <li><code>Database.__init__</code> &rarr; only assigns fields. One reason to change: the field set itself.</li>
+                        <li><code>Builder.build()</code> &rarr; runs validation + business logic. Owns the &ldquo;is this object valid?&rdquo; question.</li>
+                        <li>The two concerns are physically separated &mdash; you can change one without touching the other.</li>
+                    </ul>
+
+                    <p style="margin-top: 10px; color: var(--text-muted); font-size: 0.85rem;"><em>(You could argue DIP too &mdash; <code>_is_reachable</code> is a hardcoded concrete dependency. SRP is the most direct violation; DIP is a secondary one.)</em></p>
+                </div>
+            </div>
+
+            <!-- Q6 (formerly Q5): @staticmethod - generic example -->
+            <div class="quiz-box" id="prereq-q5">
+                <h4>Question 6 &mdash; When does <code>@staticmethod</code> belong on a method?</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Look at <code>parse_temperature</code> below. It belongs <em>logically</em> with the <code>Temperature</code> class &mdash; but does it need <code>self</code> or <code>cls</code>?</p>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Temperature</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, celsius):
+        self.celsius = celsius
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">parse_temperature</span>(text):
+        <span class="comment"># e.g. parses "23.5C" -> 23.5</span>
+        <span class="keyword">return</span> <span class="function">float</span>(text.<span class="function">rstrip</span>(<span class="string">"C"</span>))
+
+celsius_value = Temperature.<span class="function">parse_temperature</span>(<span class="string">"23.5C"</span>)
+t = <span class="function">Temperature</span>(celsius_value)</pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Why is <code>@staticmethod</code> the right choice here?</p>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q5', this, false)">A) <code>@staticmethod</code> makes the method faster</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q5', this, true)">B) The method doesn't use <code>self</code> or <code>cls</code> &mdash; it's a utility logically grouped with the class</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q5', this, false)">C) Required because the method has no arguments</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q5', this, false)">D) Required to be callable on the class itself</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> <code>parse_temperature</code> doesn't read or write any instance state, and doesn't need the class either. It's just a utility &mdash; but conceptually it belongs to <code>Temperature</code>, so we namespace it there with <code>@staticmethod</code>.
+
+                    <div style="margin-top: 10px; overflow-x: auto;">
+                        <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                            <thead>
+                                <tr><th>Decorator</th><th>First arg</th><th>Use when</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>(none)</td><td><code>self</code></td><td>You need instance data</td></tr>
+                                <tr><td><code>@classmethod</code></td><td><code>cls</code></td><td>You need the class itself &mdash; e.g. alternative constructor that respects subclasses</td></tr>
+                                <tr><td><code>@staticmethod</code></td><td>nothing</td><td>Utility or factory; no instance and no class state needed</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="margin-top: 10px; color: var(--text-muted); font-size: 0.85rem;"><em>Why does this matter for Builder?</em> &mdash; you'll see in a moment that the entry point of a Builder (e.g. <code>Database.builder()</code>) is exactly this kind of method: called on the class, no <code>self</code>, no <code>cls</code>. <code>@staticmethod</code> is the natural fit.</p>
+                </div>
+            </div>
+
+            <!-- Q7 (formerly Q6): method chaining - with intuition first -->
+            <div class="quiz-box" id="prereq-q6">
+                <h4>Question 7 &mdash; What makes method chaining work?</h4>
+
+                <p style="color: var(--text-secondary); margin-bottom: 8px;">First, the intuition. You've already seen method chaining without knowing the term:</p>
+
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="comment"># pandas - each call returns a DataFrame</span>
+df.<span class="function">dropna</span>().<span class="function">sort_values</span>(<span class="string">"age"</span>).<span class="function">head</span>(<span class="number">10</span>)
+
+<span class="comment"># Django QuerySet - each call returns a QuerySet</span>
+User.objects.<span class="function">filter</span>(active=<span class="keyword">True</span>).<span class="function">exclude</span>(banned=<span class="keyword">True</span>).<span class="function">order_by</span>(<span class="string">"name"</span>)
+
+<span class="comment"># string methods - each call returns a str</span>
+<span class="string">"  Hello World  "</span>.<span class="function">strip</span>().<span class="function">lower</span>().<span class="function">replace</span>(<span class="string">" "</span>, <span class="string">"-"</span>)</pre>
+                    </div>
+                </div>
+
+                <p style="color: var(--text-secondary); margin: 10px 0;">In all three, every call <strong>returns something you can call the next method on</strong>. The "fluent" reading is just this trick.</p>
+
+                <p style="color: var(--text-secondary); margin-bottom: 8px;">From <a href="../LLD-11-Python-Advanced-3-Lambda-FP/index.html" style="color: var(--accent-primary);">LLD-11 (lambdas &amp; FP)</a> you also saw the <em>functional</em> cousin of this idea &mdash; chaining transformations on iterables. The exact same pattern (each step returns something the next step consumes) shows up with <code>map</code> / <code>filter</code> / <code>reduce</code> and lambdas:</p>
+
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> functools <span class="keyword">import</span> reduce
+
+nums = [-<span class="number">2</span>, <span class="number">3</span>, -<span class="number">1</span>, <span class="number">4</span>, <span class="number">5</span>]
+
+<span class="comment"># Filter -> square -> sum. Three steps, each fed by the previous one.</span>
+<span class="function">reduce</span>(<span class="keyword">lambda</span> a, b: a + b,
+       <span class="function">map</span>(<span class="keyword">lambda</span> x: x * x,
+           <span class="function">filter</span>(<span class="keyword">lambda</span> x: x &gt; <span class="number">0</span>, nums)))
+<span class="comment"># 50  (3*3 + 4*4 + 5*5)</span>
+
+<span class="comment"># sorted() with a lambda key - same shape: result feeds the next call</span>
+<span class="function">sorted</span>(users, key=<span class="keyword">lambda</span> u: u.age)[:<span class="number">3</span>]</pre>
+                    </div>
+                </div>
+
+                <p style="color: var(--text-secondary); margin: 10px 0;">In the functional style, each layer returns an iterable that the next layer consumes &mdash; the <em>pipeline</em> shape. In the OO style (pandas, Django, our Builder), each method returns the object itself so the next method can be called on it &mdash; the <em>fluent</em> shape. <strong>Different syntax, exact same mental model: each step hands something usable to the next step.</strong></p>
+
+                <p style="color: var(--text-secondary); margin-bottom: 8px;">Now look at our Builder &mdash; what makes <em>this</em> chain work?</p>
+
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Builder</span>:
+    <span class="keyword">def</span> <span class="function">set_name</span>(self, name):
+        self._name = name
+        <span class="keyword">return</span> self                <span class="comment"># &lt;--- this line</span>
+
+    <span class="keyword">def</span> <span class="function">set_age</span>(self, age):
+        self._age = age
+        <span class="keyword">return</span> self
+
+b = <span class="function">Builder</span>().<span class="function">set_name</span>(<span class="string">"Alice"</span>).<span class="function">set_age</span>(<span class="number">25</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q6', this, true)">A) <code>return self</code> &mdash; each setter returns the builder, so the next call has something to call on</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q6', this, false)">B) Python automatically returns <code>self</code> from any setter</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q6', this, false)">C) Method chaining is a Python keyword</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q6', this, false)">D) The setters share state via a global variable</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Without <code>return self</code>, the setter returns <code>None</code> (Python's implicit default). Then <code>.set_age(25)</code> tries to call a method on <code>None</code> &mdash; <code>AttributeError</code>.
+
+                    <p style="margin-top: 8px;"><strong>The "fluent interface" is just this one trick repeated.</strong> Remove <code>return self</code> from any setter in the chain and that link breaks. It's the same mechanic as <code>df.dropna().sort_values(...)</code> &mdash; only the returned type differs (Builder here, DataFrame there).</p>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>If you got all seven:</strong> you now know the smells Builder cures &mdash; boolean hell, two-phase construction, telescoping constructors, business logic in <code>__init__</code> (and the SRP violation it causes) &mdash; plus the two Python idioms it relies on: <code>@staticmethod</code> for the entry point, and <code>return self</code> for chaining. The pattern itself is the mechanical fix; the hard part was diagnosing the smell.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. THE PROBLEM ===== -->
+    <section id="problem">
+        <div class="section-container">
+            <span class="section-label warning">Motivation</span>
+            <h2 class="section-title">The Problem &mdash; A Concrete Scenario</h2>
+            <p class="section-subtitle">Let's watch a "simple" Pizza class grow into an unmaintainable mess.</p>
+
+            <div class="question-box">
+                <p><strong>Vipul is building the notification service for a SaaS product.</strong> A notification has a recipient, subject, body, plus a bunch of flags (HTML or plain, track opens, archive after send, send now vs. scheduled, priority, retry count). He writes the obvious constructor. Six months later he has 30 callers across the codebase and nobody can tell what any of them mean. <strong>Where did this go wrong?</strong></p>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Smell 1: Boolean hell in the constructor</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> notification_v1.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Notification</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, recipient, subject, body, is_html, send_now,
+                 track_opens, archive_after_send, priority, schedule_at, retry):
+        self.recipient          = recipient
+        self.subject            = subject
+        self.body               = body
+        self.is_html            = is_html
+        self.send_now           = send_now
+        self.track_opens        = track_opens
+        self.archive_after_send = archive_after_send
+        self.priority           = priority
+        self.schedule_at        = schedule_at
+        self.retry              = retry
+
+
+<span class="comment"># Callers in the wild:</span>
+welcome = <span class="function">Notification</span>(<span class="string">"alice@x.com"</span>, <span class="string">"Welcome!"</span>, <span class="string">"Hi Alice"</span>,
+                       <span class="keyword">True</span>, <span class="keyword">True</span>, <span class="keyword">False</span>, <span class="keyword">True</span>, <span class="string">"high"</span>, <span class="keyword">None</span>, <span class="number">3</span>)
+
+reminder = <span class="function">Notification</span>(<span class="string">"bob@x.com"</span>,  <span class="string">"Reminder"</span>, <span class="string">"Your trial ends..."</span>,
+                       <span class="keyword">True</span>, <span class="keyword">False</span>, <span class="keyword">True</span>, <span class="keyword">False</span>, <span class="string">"low"</span>, <span class="string">"2026-06-01"</span>, <span class="number">5</span>)
+
+<span class="comment"># Quick - did the reminder track opens? Was it sent now or scheduled? Count positions!</span></pre>
+                </div>
+            </div>
+            <div class="highlight-box danger">
+                <strong>Why this hurts:</strong>
+                <ul style="margin-top: 8px; padding-left: 22px;">
+                    <li><strong>No self-documenting code</strong> &mdash; a stream of <code>True, False, True</code> tells the reader nothing</li>
+                    <li><strong>Swap two args by accident</strong> &mdash; silent bug; type checker can't catch it (all booleans)</li>
+                    <li><strong>Adding a flag</strong> (e.g. <code>encrypted</code>) &mdash; <em>every single caller in the codebase breaks</em></li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Smell 2: Business logic creeping into the constructor</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> database_v1.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, username, password):
+        <span class="comment"># Validation</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> host:                          <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"host required"</span>)
+        <span class="keyword">if</span> port &lt; <span class="number">1024</span> <span class="keyword">or</span> port &gt; <span class="number">65535</span>:    <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"bad port"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> username <span class="keyword">or</span> <span class="keyword">not</span> password:     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"creds required"</span>)
+
+        <span class="comment"># Side effect: a network call!</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> self.<span class="function">_is_host_reachable</span>(host):
+            <span class="keyword">raise</span> <span class="function">ConnectionError</span>(<span class="string">"unreachable"</span>)
+
+        <span class="comment"># Finally, the actual init</span>
+        self.host, self.port = host, port
+        self.username, self.password = username, password
+        self.connection = self.<span class="function">_open_connection</span>()    <span class="comment"># another side effect</span></pre>
+                </div>
+            </div>
+            <div class="highlight-box danger">
+                <strong>What's wrong:</strong> four concrete pains the constructor causes. Each one is small in isolation; together they add up.
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128165; 1. Testing is painful &mdash; every <code>Database(...)</code> needs a reachable host</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;">You can't construct the object without a real network connection. So either every test is an integration test, or you monkey-patch around the constructor.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># What you WANT to write</span>
+<span class="keyword">def</span> <span class="function">test_query_formatting</span>():
+    db = <span class="function">Database</span>(<span class="string">"localhost"</span>, <span class="number">5432</span>, <span class="string">"u"</span>, <span class="string">"p"</span>)
+    <span class="function">assert</span> db.<span class="function">format_query</span>(<span class="string">"SELECT 1"</span>) == <span class="string">"SELECT 1;"</span>
+
+<span class="comment"># What ACTUALLY happens on a laptop with no DB running</span>
+<span class="comment"># ConnectionError: unreachable</span>
+<span class="comment"># - the test fails before it even gets to assert</span>
+
+
+<span class="comment"># Workaround #1: every test needs a real DB. CI is slow + flaky.</span>
+<span class="comment"># Workaround #2: monkey-patch is_reachable for every test (ugly).</span>
+<span class="keyword">def</span> <span class="function">test_query_formatting</span>(monkeypatch):
+    monkeypatch.<span class="function">setattr</span>(Database, <span class="string">"_is_reachable"</span>, <span class="keyword">lambda</span> *a: <span class="keyword">True</span>)
+    db = <span class="function">Database</span>(<span class="string">"localhost"</span>, <span class="number">5432</span>, <span class="string">"u"</span>, <span class="string">"p"</span>)
+    ...</pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>With Builder</strong>: the Product is a plain <code>@dataclass</code> &mdash; you construct it in tests with no network involved.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128165; 2. Subclassing is fragile &mdash; subclass <code>__init__</code> inherits all the baggage</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;">When the parent's <code>__init__</code> runs validation and a network call, every subclass has to either re-run all of that or carefully avoid calling <code>super().__init__()</code>.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># Subclass wants different validation rules (e.g. read-replica</span>
+<span class="comment"># doesn't need the same reachability check)</span>
+<span class="keyword">class</span> <span class="function">ReadReplica</span>(Database):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, user, password):
+        <span class="function">super</span>().<span class="function">__init__</span>(host, port, user, password)
+        <span class="comment"># oops - parent already ran _is_reachable, but we wanted a different host!</span>
+
+<span class="comment"># Option A: skip super and re-write all the logic (DRY violation)</span>
+<span class="keyword">class</span> <span class="function">ReadReplica</span>(Database):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, user, password):
+        <span class="keyword">if</span> <span class="keyword">not</span> self.<span class="function">_is_reachable_replica</span>(host):
+            <span class="keyword">raise</span> <span class="function">ConnectionError</span>(<span class="string">"replica unreachable"</span>)
+        self.host, self.port = host, port           <span class="comment"># duplicated</span>
+        self.user, self.password = user, password   <span class="comment"># duplicated</span>
+
+<span class="comment"># Option B: empty __init__ that skips super (silently bypasses parent's checks)</span>
+<span class="keyword">class</span> <span class="function">TestDB</span>(Database):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, user, password):
+        self.host, self.port = host, port
+        self.user, self.password = user, password
+        <span class="comment"># Did NOT call super - now parent invariants don't hold!</span></pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>With Builder</strong>: the Product is a plain data class &mdash; subclassing it has no behavioral surprises. Specialised validation goes in a specialised Builder.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128165; 3. Failures are opaque &mdash; what state was the object in when it crashed?</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;">If <code>__init__</code> raises midway through, you can't introspect the half-built object &mdash; it never makes it back to the caller. You also can't tell which check failed without parsing exception messages.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre>db = <span class="function">Database</span>(<span class="string">"db.example.com"</span>, <span class="number">5432</span>, <span class="string">"admin"</span>, <span class="string">"secret"</span>)
+<span class="comment"># ConnectionError: unreachable</span>
+
+<span class="comment"># What we CAN'T do at this point:</span>
+<span class="function">print</span>(db.host)              <span class="comment"># NameError - 'db' was never assigned</span>
+<span class="function">print</span>(db.<span class="function">_partial_state</span>())  <span class="comment"># no such thing</span>
+
+<span class="comment"># Did the host check fail? The port check? Was the network down briefly?</span>
+<span class="comment"># All we have is one exception. No state to inspect, no checks to introspect.</span></pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>With Builder</strong>: the Builder is a real, fully-formed object holding all the in-progress state. If <code>build()</code> fails, the Builder is still around &mdash; you can <code>print(b._host, b._port, ...)</code> and see exactly what you tried to construct.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#128165; 4. Can't build incrementally &mdash; everything needed upfront</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;">Some configuration comes from environment variables, some from a config file, some from CLI flags &mdash; arriving at different points in your code. With this constructor, you have to gather <em>all</em> of it before you can construct anything.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># Real-world startup: config arrives in pieces</span>
+
+config = <span class="function">load_config</span>(<span class="string">"app.yaml"</span>)             <span class="comment"># gives us host + port</span>
+secrets = <span class="function">fetch_from_vault</span>(<span class="string">"db-creds"</span>)        <span class="comment"># gives us user + password</span>
+flags = parse_cli()                            <span class="comment"># may override host</span>
+
+<span class="comment"># With business logic in __init__ we MUST have everything before this line.</span>
+db = <span class="function">Database</span>(
+    host=flags.db_host <span class="keyword">or</span> config.db_host,
+    port=config.db_port,
+    user=secrets[<span class="string">"user"</span>],
+    password=secrets[<span class="string">"password"</span>],
+)
+<span class="comment"># Network call happens HERE. If the vault is slow, we delay all of startup.</span></pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;"><strong>With Builder</strong>: assemble the configuration as it arrives, validate and connect at the very end:</p>
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre>builder = Database.<span class="function">builder</span>().<span class="function">set_host</span>(config.db_host).<span class="function">set_port</span>(config.db_port)
+<span class="keyword">if</span> flags.db_host: builder.<span class="function">set_host</span>(flags.db_host)
+secrets = <span class="function">fetch_from_vault</span>(<span class="string">"db-creds"</span>)
+builder.<span class="function">set_username</span>(secrets[<span class="string">"user"</span>]).<span class="function">set_password</span>(secrets[<span class="string">"password"</span>])
+
+db = builder.<span class="function">build</span>()        <span class="comment"># validation + connection happen HERE, when everything is ready</span></pre>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Smell 3: The keyword-args band-aid (and where it falls short)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Python doesn't allow overloaded constructors, so people reach for keyword arguments. It helps &mdash; but it has limits.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 8px;">&#10060; Keyword args with defaults</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">HttpRequest</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url, method=<span class="string">"GET"</span>,
+                 headers=<span class="keyword">None</span>, body=<span class="keyword">None</span>,
+                 timeout=<span class="number">30</span>, retries=<span class="number">3</span>,
+                 verify_ssl=<span class="keyword">True</span>, follow_redirects=<span class="keyword">True</span>):
+        ...
+
+req = <span class="function">HttpRequest</span>(<span class="string">"https://api.com"</span>,
+                  <span class="string">"POST"</span>,
+                  {<span class="string">"Auth"</span>: <span class="string">"token"</span>},
+                  {<span class="string">"data"</span>: <span class="number">1</span>},
+                  <span class="number">60</span>, <span class="number">5</span>, <span class="keyword">True</span>, <span class="keyword">True</span>)</pre>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">Better, but: 8 parameters still hard to read. Skipping a middle field means passing <code>None</code> explicitly. Validation still lives in <code>__init__</code>.</p>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 8px;">&#10004; Builder</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre>req = (HttpRequestBuilder()
+       .url(<span class="string">"https://api.com"</span>)
+       .method(<span class="string">"POST"</span>)
+       .add_header(<span class="string">"Auth"</span>, <span class="string">"token"</span>)
+       .body({<span class="string">"data"</span>: <span class="number">1</span>})
+       .timeout(<span class="number">60</span>)
+       .build())</pre>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">Reads top-to-bottom. Each setting is named. Skip what you don't need. Validation runs once in <code>build()</code>.</p>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                That's the problem in three smells. The Builder pattern's job is to <strong>kill all three at once</strong> &mdash; with a Product that has a trivial <code>__init__</code> and a separate Builder that handles the messy parts.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 6. THE SOLUTION (step-by-step) ===== -->
+    <section id="solution">
+        <div class="section-container">
+            <span class="section-label success">The Pattern</span>
+            <h2 class="section-title">Building the Builder &mdash; in 4 Steps</h2>
+            <p class="section-subtitle">Let's construct a <code>Database</code> Builder live. Four steps, each adds one piece. By the end we have the textbook implementation.</p>
+
+            <!-- Step 1 -->
+            <h3 style="margin-top: 20px; margin-bottom: 12px;"><span class="step-number">1</span>Start with a simple Product</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">No validation, no business logic. Just a class that holds four fields. Using <code>@dataclass</code> makes the boilerplate vanish.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>
+    port: <span class="function">int</span>
+    username: <span class="function">str</span>
+    password: <span class="function">str</span>
+
+    <span class="keyword">def</span> <span class="function">connect</span>(self):
+        <span class="function">print</span>(f<span class="string">"connecting to {self.host}:{self.port} as {self.username}"</span>)</pre>
+                </div>
+            </div>
+
+            <!-- @dataclass primer -->
+            <div class="highlight-box" style="margin-top: 16px;">
+                <strong>&#128218; A quick word on <code>@dataclass</code></strong> (Python 3.7+, <a href="https://peps.python.org/pep-0557/" target="_blank" rel="noopener" style="color: var(--accent-primary);">PEP 557</a>):
+                <br>
+                <p style="margin-top: 6px;">It's a decorator that <strong>generates boilerplate methods from the class's type-annotated fields</strong>. The 4 fields above (<code>host</code>, <code>port</code>, <code>username</code>, <code>password</code>) tell Python what the class holds &mdash; <code>@dataclass</code> writes the rest:</p>
+
+                <div style="margin-top: 10px; overflow-x: auto;">
+                    <table style="width: 100%; font-size: 0.85rem; color: var(--text-primary);">
+                        <thead>
+                            <tr><th>You write</th><th>You get for free</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>@dataclass</code></td><td><code>__init__</code> &mdash; assigns each field</td></tr>
+                            <tr><td>(same line)</td><td><code>__repr__</code> &mdash; <code>Database(host='x', port=5432, ...)</code></td></tr>
+                            <tr><td>(same line)</td><td><code>__eq__</code> &mdash; compares all fields</td></tr>
+                            <tr><td><code>@dataclass(frozen=True)</code></td><td>Above &mdash; <strong>plus</strong> the object is immutable after creation</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.85rem;">In other words: a 5-line dataclass is what a 20-line hand-written class would do. That's why it's such a good fit for the Product half of Builder &mdash; you want the Product to <em>be data</em>, nothing more.</p>
+            </div>
+
+            <!-- Quiz: dataclass -->
+            <div class="quiz-box" id="dataclass-q">
+                <h4>Quick check &mdash; what does <code>@dataclass</code> give you for free?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Point</span>:
+    x: <span class="function">int</span>
+    y: <span class="function">int</span>
+
+p1 = <span class="function">Point</span>(<span class="number">1</span>, <span class="number">2</span>)
+p2 = <span class="function">Point</span>(<span class="number">1</span>, <span class="number">2</span>)
+
+<span class="function">print</span>(p1)
+<span class="function">print</span>(p1 == p2)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('dataclass-q', this, false)">A) Only <code>__init__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('dataclass-q', this, false)">B) <code>__init__</code> and <code>__repr__</code></button>
+                <button class="quiz-option" onclick="checkQuiz('dataclass-q', this, true)">C) <code>__init__</code>, <code>__repr__</code>, and <code>__eq__</code> (compares by fields)</button>
+                <button class="quiz-option" onclick="checkQuiz('dataclass-q', this, false)">D) Nothing &mdash; <code>@dataclass</code> only enables type hints</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The output of the snippet is:
+                    <div class="code-block" style="margin: 8px 0;">
+                        <div class="code-content">
+<pre>Point(x=1, y=2)         <span class="comment"># &lt;-- __repr__ given for free</span>
+<span class="keyword">True</span>                    <span class="comment"># &lt;-- __eq__ compares the fields (1==1 and 2==2)</span></pre>
+                        </div>
+                    </div>
+                    <p>Without <code>@dataclass</code> you'd have to write <code>__init__</code>, <code>__repr__</code>, and <code>__eq__</code> by hand &mdash; 15+ lines of boilerplate. With it, you write the field declarations and the rest is generated. Plus you can add <code>frozen=True</code> to make instances immutable (a property the Builder pattern often wants for the Product).</p>
+                </div>
+            </div>
+
+            <!-- Under the hood: simplified @dataclass -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#129520; Under the hood &mdash; how <code>@dataclass</code> works (toy version)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Nothing magic. <code>@dataclass</code> is a <em>decorator</em> &mdash; the same thing we used in LLD-15 for <code>@singleton</code>, and the same thing we just used in Q6 (<code>@staticmethod</code>). A decorator is just a function that takes a class and returns a (modified) class.</p>
+
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Here's a <strong>~15-line toy version</strong> that captures the essence of what the real <code>@dataclass</code> does. The real one in <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noopener" style="color: var(--accent-primary);">the standard library</a> has many more knobs (<code>frozen</code>, <code>order</code>, <code>slots</code>, etc.) but the core mechanic is exactly this:</p>
+
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">my_dataclass</span>(cls):
+    <span class="comment"># Step 1: read the type hints written on the class</span>
+    <span class="comment">#         e.g. {'x': int, 'y': int}</span>
+    fields = cls.__annotations__
+
+    <span class="comment"># Step 2: generate an __init__ that assigns each annotated field</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, **kwargs):
+        <span class="keyword">for</span> name <span class="keyword">in</span> fields:
+            <span class="function">setattr</span>(self, name, kwargs[name])
+
+    <span class="comment"># Step 3: generate a __repr__ like "Point(x=1, y=2)"</span>
+    <span class="keyword">def</span> <span class="function">__repr__</span>(self):
+        parts = [f<span class="string">"{name}={getattr(self, name)!r}"</span> <span class="keyword">for</span> name <span class="keyword">in</span> fields]
+        <span class="keyword">return</span> f<span class="string">"{cls.__name__}({', '.join(parts)})"</span>
+
+    <span class="comment"># Step 4: generate __eq__ that compares all field values</span>
+    <span class="keyword">def</span> <span class="function">__eq__</span>(self, other):
+        <span class="keyword">if</span> <span class="keyword">not</span> <span class="function">isinstance</span>(other, cls): <span class="keyword">return</span> <span class="keyword">False</span>
+        <span class="keyword">return</span> <span class="function">all</span>(<span class="function">getattr</span>(self, n) == <span class="function">getattr</span>(other, n) <span class="keyword">for</span> n <span class="keyword">in</span> fields)
+
+    <span class="comment"># Step 5: attach the generated methods to the class and return it</span>
+    cls.__init__ = __init__
+    cls.__repr__ = __repr__
+    cls.__eq__   = __eq__
+    <span class="keyword">return</span> cls
+
+
+<span class="comment"># Usage - same as the real @dataclass</span>
+<span class="decorator">@my_dataclass</span>
+<span class="keyword">class</span> <span class="function">Point</span>:
+    x: <span class="function">int</span>
+    y: <span class="function">int</span>
+
+p = <span class="function">Point</span>(x=<span class="number">1</span>, y=<span class="number">2</span>)
+<span class="function">print</span>(p)                    <span class="comment"># Point(x=1, y=2)   - from our __repr__</span>
+<span class="function">print</span>(p == <span class="function">Point</span>(x=<span class="number">1</span>, y=<span class="number">2</span>))   <span class="comment"># True              - from our __eq__</span></pre>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box" style="margin-top: 12px;">
+                        <strong>The two ideas this rests on</strong> &mdash; both from earlier classes:
+                        <ul style="margin-top: 6px; padding-left: 22px;">
+                            <li><strong>Decorators</strong> (LLD-11 &amp; LLD-15): a decorator is a function that takes a class/function and returns a (modified) class/function. Same shape as <code>@singleton</code>.</li>
+                            <li><strong>Classes are objects</strong> (LLD-15 metaclass primer): we can read <code>cls.__annotations__</code>, attach new methods like <code>cls.__init__ = __init__</code>, and Python treats the result as a normal class. Nothing special about <code>@dataclass</code> &mdash; you could write this yourself in 15 lines.</li>
+                        </ul>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;"><strong>What the real <code>@dataclass</code> adds on top:</strong> <code>frozen=True</code> (raises <code>FrozenInstanceError</code> on attribute writes), <code>order=True</code> (generates <code>__lt__</code>/<code>__le__</code>/<code>__gt__</code>/<code>__ge__</code>), <code>slots=True</code> (generates <code>__slots__</code>), <code>field(default_factory=...)</code> for mutable defaults, and a lot of edge-case handling. But the <em>core trick</em> &mdash; "read annotations, generate methods, return the class" &mdash; is exactly what we just wrote.</p>
+
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">There's a full runnable version of this in <a href="code/06_dataclass_under_hood.py" style="color: var(--accent-primary);"><code>code/06_dataclass_under_hood.py</code></a>.</p>
+                </div></div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">Back to the recipe: the Product is trivial. Crucially: <strong>no validation in <code>__init__</code></strong>. We'll do that in the Builder.</p>
+
+            <!-- Step 2 -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;"><span class="step-number">2</span>Add an inner <code>Builder</code> class</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Holds the in-progress state. Living inside <code>Database</code> keeps the relationship obvious. A <code>@staticmethod</code> on the outer class is the entry point (no Database instance needed to start building).</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>
+    port: <span class="function">int</span>
+    username: <span class="function">str</span>
+    password: <span class="function">str</span>
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">builder</span>():
+        <span class="keyword">return</span> Database.<span class="function">Builder</span>()      <span class="comment"># entry point</span>
+
+    <span class="keyword">class</span> <span class="function">Builder</span>:
+        <span class="keyword">def</span> <span class="function">__init__</span>(self):
+            self._host = <span class="keyword">None</span>
+            self._port = <span class="keyword">None</span>
+            self._username = <span class="keyword">None</span>
+            self._password = <span class="keyword">None</span></pre>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;"><span class="step-number">3</span>Setters that <code>return self</code></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">One method per field. Each returns <code>self</code> so the next call in the chain has something to call on. This is the <em>only</em> trick behind the fluent API.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Builder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self): ...
+
+    <span class="keyword">def</span> <span class="function">set_host</span>(self, host):
+        self._host = host
+        <span class="keyword">return</span> self                  <span class="comment"># &lt;-- the chain trick</span>
+
+    <span class="keyword">def</span> <span class="function">set_port</span>(self, port):
+        self._port = port
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">set_username</span>(self, username):
+        self._username = username
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">set_password</span>(self, password):
+        self._password = password
+        <span class="keyword">return</span> self</pre>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;"><span class="step-number">4</span><code>build()</code> validates and constructs</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">All validation runs <em>here</em> &mdash; not in the Product. If anything is missing or wrong, the Product never gets created; the caller gets a clear error from <code>build()</code>.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Builder</span>:
+    ...
+
+    <span class="keyword">def</span> <span class="function">build</span>(self) -&gt; Database:
+        self.<span class="function">_validate</span>()
+        <span class="keyword">return</span> <span class="function">Database</span>(
+            host=self._host,
+            port=self._port,
+            username=self._username,
+            password=self._password,
+        )
+
+    <span class="keyword">def</span> <span class="function">_validate</span>(self):
+        <span class="keyword">if</span> <span class="keyword">not</span> self._host:                         <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"host required"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> self._port:                         <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"port required"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> (<span class="number">1024</span> &lt;= self._port &lt;= <span class="number">65535</span>):  <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"port out of range"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> self._username:                     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"username required"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> self._password:                     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"password required"</span>)</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127919; The complete implementation</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 01_database_builder.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>
+    port: <span class="function">int</span>
+    username: <span class="function">str</span>
+    password: <span class="function">str</span>
+
+    <span class="keyword">def</span> <span class="function">connect</span>(self):
+        <span class="function">print</span>(f<span class="string">"connecting to {self.host}:{self.port} as {self.username}"</span>)
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">builder</span>():
+        <span class="keyword">return</span> Database.<span class="function">Builder</span>()
+
+    <span class="keyword">class</span> <span class="function">Builder</span>:
+        <span class="keyword">def</span> <span class="function">__init__</span>(self):
+            self._host = <span class="keyword">None</span>
+            self._port = <span class="keyword">None</span>
+            self._username = <span class="keyword">None</span>
+            self._password = <span class="keyword">None</span>
+
+        <span class="keyword">def</span> <span class="function">set_host</span>(self, host):         self._host = host;         <span class="keyword">return</span> self
+        <span class="keyword">def</span> <span class="function">set_port</span>(self, port):         self._port = port;         <span class="keyword">return</span> self
+        <span class="keyword">def</span> <span class="function">set_username</span>(self, username): self._username = username; <span class="keyword">return</span> self
+        <span class="keyword">def</span> <span class="function">set_password</span>(self, password): self._password = password; <span class="keyword">return</span> self
+
+        <span class="keyword">def</span> <span class="function">build</span>(self) -&gt; <span class="string">"Database"</span>:
+            self.<span class="function">_validate</span>()
+            <span class="keyword">return</span> <span class="function">Database</span>(self._host, self._port, self._username, self._password)
+
+        <span class="keyword">def</span> <span class="function">_validate</span>(self):
+            <span class="keyword">if</span> <span class="keyword">not</span> self._host:                         <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"host required"</span>)
+            <span class="keyword">if</span> <span class="keyword">not</span> self._port:                         <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"port required"</span>)
+            <span class="keyword">if</span> <span class="keyword">not</span> (<span class="number">1024</span> &lt;= self._port &lt;= <span class="number">65535</span>):  <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"port out of range"</span>)
+            <span class="keyword">if</span> <span class="keyword">not</span> self._username:                     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"username required"</span>)
+            <span class="keyword">if</span> <span class="keyword">not</span> self._password:                     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"password required"</span>)</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Using it &mdash; the three cases</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="comment"># 1. Happy path</span>
+db = (Database.<span class="function">builder</span>()
+        .<span class="function">set_host</span>(<span class="string">"localhost"</span>)
+        .<span class="function">set_port</span>(<span class="number">5432</span>)
+        .<span class="function">set_username</span>(<span class="string">"admin"</span>)
+        .<span class="function">set_password</span>(<span class="string">"secret"</span>)
+        .<span class="function">build</span>())
+db.<span class="function">connect</span>()
+<span class="comment"># connecting to localhost:5432 as admin</span>
+
+
+<span class="comment"># 2. Invalid value - caught early, in build(), with a clear message</span>
+<span class="keyword">try</span>:
+    db = (Database.<span class="function">builder</span>()
+            .<span class="function">set_host</span>(<span class="string">"localhost"</span>)
+            .<span class="function">set_port</span>(<span class="number">80</span>)                  <span class="comment"># out of range</span>
+            .<span class="function">set_username</span>(<span class="string">"admin"</span>)
+            .<span class="function">set_password</span>(<span class="string">"secret"</span>)
+            .<span class="function">build</span>())
+<span class="keyword">except</span> ValueError <span class="keyword">as</span> e:
+    <span class="function">print</span>(e)
+<span class="comment"># port out of range</span>
+
+
+<span class="comment"># 3. Missing field - same place, same kind of error</span>
+<span class="keyword">try</span>:
+    db = (Database.<span class="function">builder</span>()
+            .<span class="function">set_host</span>(<span class="string">"localhost"</span>)
+            .<span class="function">set_port</span>(<span class="number">5432</span>)
+            .<span class="function">build</span>())                       <span class="comment"># forgot creds!</span>
+<span class="keyword">except</span> ValueError <span class="keyword">as</span> e:
+    <span class="function">print</span>(e)
+<span class="comment"># username required</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>Notice what just happened:</strong>
+                <ul style="margin-top: 8px; padding-left: 22px;">
+                    <li>The Product (<code>Database</code>) constructor is trivial &mdash; just <code>@dataclass</code></li>
+                    <li>All validation lives in <code>build()</code></li>
+                    <li>Each setter has a name &mdash; <strong>no boolean hell</strong></li>
+                    <li>You can skip optional fields by simply not calling their setter</li>
+                    <li>The same Builder can produce many Databases with different configs</li>
+                </ul>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Mental model:</strong> the Builder is a <em>mutable workspace</em> &mdash; you can add things, change things, validate things. The Product is <em>immutable, complete, and valid from the moment it exists</em>. Builder is the messy kitchen; the Product is the finished dish.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. PATTERN VARIATIONS ===== -->
+    <section id="variations">
+        <div class="section-container">
+            <span class="section-label blue">Variations</span>
+            <h2 class="section-title">Three Ways to Wire a Builder</h2>
+            <p class="section-subtitle">Same pattern, three placements. Pick the one that fits your codebase &mdash; or the one your team already uses.</p>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127919; Variation A &mdash; Builder as an inner class (recommended)</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Builder lives inside the Product. The relationship is obvious; the API is the cleanest. This is what we just built.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="comment"># ... product fields ...</span>
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">builder</span>():
+        <span class="keyword">return</span> Database.<span class="function">Builder</span>()
+
+    <span class="keyword">class</span> <span class="function">Builder</span>:
+        <span class="comment"># ... builder logic ...</span>
+
+<span class="comment"># Caller</span>
+db = Database.<span class="function">builder</span>().<span class="function">set_host</span>(<span class="string">"localhost"</span>).<span class="function">build</span>()</pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;"><strong>Pros:</strong> tight encapsulation, clear relationship, clean entry point.<br><strong>Cons:</strong> one big file when both classes are large.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#129520; Variation B &mdash; Separate Builder class</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Builder lives in a sibling class &mdash; often a separate file. Useful when the Builder grows large or has its own dependencies.</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="comment"># database.py</span>
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>
+    port: <span class="function">int</span>
+    username: <span class="function">str</span>
+    password: <span class="function">str</span>
+
+
+<span class="comment"># database_builder.py - separate file, separate testing surface</span>
+<span class="keyword">class</span> <span class="function">DatabaseBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._host = <span class="keyword">None</span>
+        <span class="comment"># ... etc ...</span>
+
+    <span class="keyword">def</span> <span class="function">set_host</span>(self, host):
+        self._host = host
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="comment"># ... validate then construct ...</span>
+        <span class="keyword">return</span> <span class="function">Database</span>(...)
+
+<span class="comment"># Caller</span>
+db = <span class="function">DatabaseBuilder</span>().<span class="function">set_host</span>(<span class="string">"localhost"</span>).<span class="function">build</span>()</pre>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;"><strong>Pros:</strong> separation of concerns; easier to test the Builder in isolation; the Product file stays tiny.<br><strong>Cons:</strong> two imports for callers; relationship less obvious without a naming convention.</p>
+                </div></div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                    <h4>&#127913; Variation C &mdash; Director for preset configurations</h4>
+                    <span class="collapsible-arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">After a few months of using a Builder, you notice the <em>same chain</em> appearing all over the codebase &mdash; the local-dev database setup, the test database setup, the production setup. <strong>Each is a recipe</strong>. The Director gives that recipe a name.</p>
+
+                    <!-- Mini class diagram showing the three roles -->
+                    <div class="diagram-box" style="margin: 14px 0;">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">How Director, Builder, and Product relate</div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <div style="background: rgba(168,85,247,0.15); border: 2px solid var(--accent-purple); padding: 10px 14px; border-radius: 8px; text-align: center;">
+                                <div style="color: var(--accent-purple); font-weight: 700;">Director</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); font-family: 'Fira Code', monospace; margin-top: 4px;">.local()<br>.test()<br>.production()</div>
+                            </div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">&nbsp;uses&nbsp;&rarr;&nbsp;</div>
+                            <div style="background: rgba(59,130,246,0.15); border: 2px solid var(--accent-blue); padding: 10px 14px; border-radius: 8px; text-align: center;">
+                                <div style="color: var(--accent-blue); font-weight: 700;">Builder</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); font-family: 'Fira Code', monospace; margin-top: 4px;">.set_host()<br>.set_port()<br>.build()</div>
+                            </div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">&nbsp;produces&nbsp;&rarr;&nbsp;</div>
+                            <div style="background: rgba(16,185,129,0.15); border: 2px solid var(--accent-success); padding: 10px 14px; border-radius: 8px; text-align: center;">
+                                <div style="color: var(--accent-success); font-weight: 700;">Product</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); font-family: 'Fira Code', monospace; margin-top: 4px;">Database<br>(immutable)</div>
+                            </div>
+                        </div>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.82rem; margin-top: 12px;">The <strong>Builder</strong> knows <em>how</em> to assemble a Database. The <strong>Director</strong> knows <em>which</em> assembly recipe to use for each named scenario.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">DatabaseDirector</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">local</span>():
+        <span class="keyword">return</span> (Database.<span class="function">builder</span>()
+                .<span class="function">set_host</span>(<span class="string">"localhost"</span>).<span class="function">set_port</span>(<span class="number">5432</span>)
+                .<span class="function">set_username</span>(<span class="string">"dev"</span>).<span class="function">set_password</span>(<span class="string">"dev"</span>)
+                .<span class="function">build</span>())
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">production</span>(host: <span class="function">str</span>):
+        <span class="keyword">return</span> (Database.<span class="function">builder</span>()
+                .<span class="function">set_host</span>(host).<span class="function">set_port</span>(<span class="number">5432</span>)
+                .<span class="function">set_username</span>(<span class="function">os</span>.<span class="function">environ</span>[<span class="string">"DB_USER"</span>])
+                .<span class="function">set_password</span>(<span class="function">os</span>.<span class="function">environ</span>[<span class="string">"DB_PASS"</span>])
+                .<span class="function">build</span>())
+
+<span class="comment"># Caller - no setter chain visible at the call site</span>
+db   = DatabaseDirector.<span class="function">local</span>()
+prod = DatabaseDirector.<span class="function">production</span>(<span class="string">"db.example.com"</span>)</pre>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 18px; margin-bottom: 8px; font-size: 1rem;">More examples &mdash; same shape, different product</h4>
+
+                    <p style="color: var(--text-secondary); margin-bottom: 6px;"><strong>Logger preset</strong>:</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">LoggerDirector</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">development</span>():
+        <span class="keyword">return</span> (LoggerBuilder()
+                .<span class="function">level</span>(<span class="string">"DEBUG"</span>).<span class="function">format</span>(<span class="string">"pretty"</span>).<span class="function">to_stdout</span>().<span class="function">build</span>())
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">production</span>():
+        <span class="keyword">return</span> (LoggerBuilder()
+                .<span class="function">level</span>(<span class="string">"INFO"</span>).<span class="function">format</span>(<span class="string">"json"</span>)
+                .<span class="function">to_file</span>(<span class="string">"/var/log/app.log"</span>).<span class="function">to_remote</span>(<span class="string">"datadog"</span>).<span class="function">build</span>())</pre>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); margin: 10px 0 6px;"><strong>HTTP client preset</strong>:</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">HttpClientDirector</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">internal_api</span>():
+        <span class="keyword">return</span> (HttpClientBuilder()
+                .<span class="function">base_url</span>(<span class="string">"https://internal.example.com"</span>)
+                .<span class="function">timeout</span>(<span class="number">5</span>).<span class="function">retries</span>(<span class="number">3</span>).<span class="function">build</span>())
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">scraper</span>():
+        <span class="keyword">return</span> (HttpClientBuilder()
+                .<span class="function">timeout</span>(<span class="number">30</span>).<span class="function">retries</span>(<span class="number">5</span>)
+                .<span class="function">user_agent</span>(<span class="string">"Mozilla/5.0 ..."</span>).<span class="function">follow_redirects</span>().<span class="function">build</span>())</pre>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box" style="margin-top: 14px;">
+                        <strong>When to add a Director:</strong>
+                        <ul style="margin-top: 8px; padding-left: 22px;">
+                            <li>The same setter chain appears in <strong>three or more places</strong> in your codebase</li>
+                            <li>The chain represents a <strong>named real-world scenario</strong> (&ldquo;local dev&rdquo;, &ldquo;test&rdquo;, &ldquo;scraper&rdquo;)</li>
+                            <li>You want callers to <strong>not see the assembly details</strong> &mdash; just &ldquo;give me the production DB&rdquo;</li>
+                        </ul>
+                        <p style="margin-top: 8px;"><strong>When to skip it:</strong> if you have only one or two presets and no reuse, the Director is just a wrapper. Use the Builder directly.</p>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 0.85rem;"><strong>Pros:</strong> named contract for common configurations; callers don't see the assembly.<br><strong>Cons:</strong> one more layer to read through &mdash; only worth it when presets repeat.</p>
+                </div></div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Which to pick?</strong>
+                <ul style="margin-top: 8px; padding-left: 22px;">
+                    <li><strong>Default to A</strong> (inner class) &mdash; cleanest API, clearest relationship</li>
+                    <li><strong>Reach for B</strong> when Builder is non-trivial and benefits from its own file/tests</li>
+                    <li><strong>Add C on top</strong> only when you have <em>real</em> recurring presets &mdash; not speculation</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. REAL-WORLD EXAMPLES ===== -->
+    <section id="examples">
+        <div class="section-container">
+            <span class="section-label">In Practice</span>
+            <h2 class="section-title">Three Real-World Builders</h2>
+            <p class="section-subtitle">Order for variable composition, HTTP request for optional knobs, SQL query for accumulated state. Same pattern, three flavors.</p>
+
+            <!-- Order Builder -->
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">&#128722; Order Builder &mdash; variable composition</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">An <code>Order</code> in any e-commerce backend has a <em>list</em> of items, an <em>optional</em> list of discount codes, and a few flags (gift wrap, expedited shipping). The Builder lets each caller add as many items and discounts as they need &mdash; without growing the constructor.</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 02_order_builder.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass, field
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Tuple
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Order</span>:
+    customer: <span class="function">str</span>
+    items: List[Tuple[<span class="function">str</span>, <span class="function">int</span>]]               <span class="comment"># [(product, qty), ...]</span>
+    discount_codes: List[<span class="function">str</span>] = field(default_factory=<span class="function">list</span>)
+    gift_wrap: <span class="function">bool</span> = <span class="keyword">False</span>
+    expedited: <span class="function">bool</span> = <span class="keyword">False</span>
+
+
+<span class="keyword">class</span> <span class="function">OrderBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._customer = <span class="keyword">None</span>
+        self._items = []
+        self._discounts = []
+        self._gift_wrap = <span class="keyword">False</span>           <span class="comment"># sensible defaults</span>
+        self._expedited = <span class="keyword">False</span>
+
+    <span class="keyword">def</span> <span class="function">for_customer</span>(self, name):
+        self._customer = name
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">add_item</span>(self, product, quantity=<span class="number">1</span>):     <span class="comment"># call many times!</span>
+        self._items.<span class="function">append</span>((product, quantity))
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">apply_discount</span>(self, code):              <span class="comment"># call many times!</span>
+        self._discounts.<span class="function">append</span>(code)
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">enable_gift_wrap</span>(self):
+        self._gift_wrap = <span class="keyword">True</span>
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">expedite</span>(self):
+        self._expedited = <span class="keyword">True</span>
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">if</span> <span class="keyword">not</span> self._customer:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"customer required"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> self._items:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"at least one item required"</span>)
+        <span class="keyword">return</span> <span class="function">Order</span>(self._customer, <span class="function">list</span>(self._items),
+                     <span class="function">list</span>(self._discounts), self._gift_wrap, self._expedited)
+
+
+<span class="comment"># Usage</span>
+simple_order = (<span class="function">OrderBuilder</span>()
+                  .<span class="function">for_customer</span>(<span class="string">"alice@x.com"</span>)
+                  .<span class="function">add_item</span>(<span class="string">"book-101"</span>, <span class="number">2</span>)
+                  .<span class="function">build</span>())
+
+birthday_gift = (<span class="function">OrderBuilder</span>()
+                  .<span class="function">for_customer</span>(<span class="string">"bob@x.com"</span>)
+                  .<span class="function">add_item</span>(<span class="string">"book-101"</span>, <span class="number">1</span>)
+                  .<span class="function">add_item</span>(<span class="string">"pen-set"</span>, <span class="number">1</span>)
+                  .<span class="function">add_item</span>(<span class="string">"card"</span>, <span class="number">1</span>)
+                  .<span class="function">apply_discount</span>(<span class="string">"BDAY20"</span>)
+                  .<span class="function">enable_gift_wrap</span>()
+                  .<span class="function">expedite</span>()
+                  .<span class="function">build</span>())</pre>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem;"><strong>Why this is nicer than a 7-parameter constructor:</strong> the simple order has zero noise; the birthday gift order reads top-to-bottom like an order ticket &mdash; customer, items, discount, options. Two more items? Add two more <code>.add_item()</code> calls. No constructor signature to update.</p>
+
+            <!-- HTTP Request Builder -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127760; HTTP Request Builder &mdash; lots of optional knobs</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Some calls need just a URL. Others need headers, body, timeout, auth, retries. Every caller pays only for what they use.</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 03_http_request_builder.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass, field
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">HttpRequest</span>:
+    url: <span class="function">str</span>
+    method: <span class="function">str</span> = <span class="string">"GET"</span>
+    headers: <span class="function">dict</span> = field(default_factory=<span class="function">dict</span>)
+    body: <span class="function">dict</span> | <span class="keyword">None</span> = <span class="keyword">None</span>
+    timeout: <span class="function">int</span> = <span class="number">30</span>
+
+
+<span class="keyword">class</span> <span class="function">HttpRequestBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._url, self._method, self._timeout = <span class="keyword">None</span>, <span class="string">"GET"</span>, <span class="number">30</span>
+        self._headers, self._body = {}, <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">url</span>(self, url):              self._url = url; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">method</span>(self, method):        self._method = method.<span class="function">upper</span>(); <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">add_header</span>(self, k, v):       self._headers[k] = v; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">body</span>(self, body):            self._body = body; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">timeout</span>(self, s):            self._timeout = s; <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">if</span> <span class="keyword">not</span> self._url:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"url required"</span>)
+        <span class="keyword">return</span> <span class="function">HttpRequest</span>(self._url, self._method, <span class="function">dict</span>(self._headers),
+                           self._body, self._timeout)
+
+
+<span class="comment"># Usage</span>
+simple = <span class="function">HttpRequestBuilder</span>().<span class="function">url</span>(<span class="string">"https://api.example.com"</span>).<span class="function">build</span>()
+
+with_auth = (<span class="function">HttpRequestBuilder</span>()
+              .<span class="function">url</span>(<span class="string">"https://api.example.com/users"</span>)
+              .<span class="function">method</span>(<span class="string">"POST"</span>)
+              .<span class="function">add_header</span>(<span class="string">"Content-Type"</span>, <span class="string">"application/json"</span>)
+              .<span class="function">add_header</span>(<span class="string">"Authorization"</span>, <span class="string">"Bearer xyz"</span>)
+              .<span class="function">body</span>({<span class="string">"name"</span>: <span class="string">"Alice"</span>})
+              .<span class="function">timeout</span>(<span class="number">60</span>)
+              .<span class="function">build</span>())</pre>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">This is exactly the shape of <code>requests.PreparedRequest</code>, <code>urllib3.Request</code>, and most HTTP client builders in the wild.</p>
+
+            <!-- SQL Query Builder -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128202; SQL Query Builder &mdash; accumulated state</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">A query is built up clause by clause. The Builder accumulates the parts; <code>build()</code> assembles them in the right SQL order.</p>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> 04_query_builder.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Query</span>:
+    columns: <span class="function">str</span>
+    table:   <span class="function">str</span>
+    where:   <span class="function">str</span> | <span class="keyword">None</span>
+    order_by: <span class="function">str</span> | <span class="keyword">None</span>
+    limit:   <span class="function">int</span> | <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">to_sql</span>(self):
+        sql = f<span class="string">"SELECT {self.columns} FROM {self.table}"</span>
+        <span class="keyword">if</span> self.where:    sql += f<span class="string">" WHERE {self.where}"</span>
+        <span class="keyword">if</span> self.order_by: sql += f<span class="string">" ORDER BY {self.order_by}"</span>
+        <span class="keyword">if</span> self.limit:    sql += f<span class="string">" LIMIT {self.limit}"</span>
+        <span class="keyword">return</span> sql
+
+
+<span class="keyword">class</span> <span class="function">QueryBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._cols, self._table = <span class="string">"*"</span>, <span class="keyword">None</span>
+        self._where = self._order = self._limit = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">select</span>(self, *cols):       self._cols = <span class="string">", "</span>.<span class="function">join</span>(cols); <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">from_</span>(self, table):       self._table = table; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">where</span>(self, cond):         self._where = cond; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">order_by</span>(self, col):       self._order = col; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">limit</span>(self, n):            self._limit = n; <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">if</span> <span class="keyword">not</span> self._table:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"from_() required"</span>)
+        <span class="keyword">return</span> <span class="function">Query</span>(self._cols, self._table, self._where, self._order, self._limit)
+
+
+<span class="comment"># Usage</span>
+q = (<span class="function">QueryBuilder</span>()
+      .<span class="function">select</span>(<span class="string">"name"</span>, <span class="string">"email"</span>, <span class="string">"age"</span>)
+      .<span class="function">from_</span>(<span class="string">"users"</span>)
+      .<span class="function">where</span>(<span class="string">"age &gt;= 18"</span>)
+      .<span class="function">order_by</span>(<span class="string">"name"</span>)
+      .<span class="function">limit</span>(<span class="number">10</span>)
+      .<span class="function">build</span>())
+
+<span class="function">print</span>(q.<span class="function">to_sql</span>())
+<span class="comment"># SELECT name, email, age FROM users WHERE age &gt;= 18 ORDER BY name LIMIT 10</span></pre>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Django's <code>QuerySet</code>, SQLAlchemy's <code>select()</code>, and most ORM query APIs are essentially this pattern &mdash; immutable products built by chained, named setters.</p>
+
+            <div class="knowledge-block">
+                <p><strong>Notice the shape:</strong> in all three examples the API reads <em>top to bottom like English</em>. <code>large pizza with thin crust, pepperoni, sausage, bacon</code>. <code>POST to URL with header X, body Y, timeout 60</code>. <code>SELECT these columns FROM this table WHERE this condition</code>. That's not a coincidence &mdash; it's why fluent builders are so easy to read.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. COMMON PITFALLS & BEST PRACTICES ===== -->
+    <section id="pitfalls">
+        <div class="section-container">
+            <span class="section-label danger">Pitfalls</span>
+            <h2 class="section-title">Common Mistakes &amp; Best Practices</h2>
+            <p class="section-subtitle">Four traps that bite even experienced engineers, and five habits that keep your Builders clean.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">&#128300; Spot the issue &mdash; can you find each one?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 14px;">Four short snippets, each with one common bug. Read carefully and pick the issue before checking your answer.</p>
+
+            <!-- Mistake 1 quiz -->
+            <div class="quiz-box" id="mistake-q1">
+                <h4>Mistake 1 &mdash; what's wrong with this Builder?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">UserBuilder</span>:
+    <span class="keyword">def</span> <span class="function">set_name</span>(self, name):
+        self._name = name
+
+    <span class="keyword">def</span> <span class="function">set_age</span>(self, age):
+        self._age = age
+        <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">return</span> <span class="function">User</span>(self._name, self._age)
+
+b = <span class="function">UserBuilder</span>().<span class="function">set_name</span>(<span class="string">"Alice"</span>).<span class="function">set_age</span>(<span class="number">25</span>).<span class="function">build</span>()</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, false)">A) <code>__init__</code> is missing</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, true)">B) <code>set_name</code> doesn't <code>return self</code> &mdash; the chain breaks on the next call</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, false)">C) The setters should be <code>@staticmethod</code></button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, false)">D) <code>build()</code> needs <code>cls</code></button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> <code>set_name</code> returns <code>None</code> (Python's default). So <code>.set_age(25)</code> is called on <code>None</code> &mdash; <code>AttributeError</code>. <strong>Fix:</strong> add <code>return self</code> at the end of every setter. This is the single most common Builder bug; remove that one line from any setter in the chain and everything downstream breaks.
+                </div>
+            </div>
+
+            <!-- Mistake 2 quiz -->
+            <div class="quiz-box" id="mistake-q2">
+                <h4>Mistake 2 &mdash; what's wrong with this <code>build()</code>?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">DatabaseBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._host = self._port = self._user = self._password = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">set_host</span>(self, h): self._host = h; <span class="keyword">return</span> self
+    <span class="comment"># ... other setters ...</span>
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">return</span> <span class="function">Database</span>(self._host, self._port, self._user, self._password)
+
+db = <span class="function">DatabaseBuilder</span>().<span class="function">set_host</span>(<span class="string">"localhost"</span>).<span class="function">build</span>()
+db.<span class="function">connect</span>()</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, false)">A) <code>connect()</code> should be in the Builder</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, true)">B) <code>build()</code> has no validation &mdash; a half-built Product with <code>None</code> fields escapes</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, false)">C) The setters need to be private</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, false)">D) <code>__init__</code> should not set fields to <code>None</code></button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> <code>build()</code> doesn't check that the required fields are set. The caller only set <code>host</code>, but <code>build()</code> happily constructs a Database with <code>port=None</code>, <code>user=None</code>, <code>password=None</code>. The crash surfaces inside <code>connect()</code> &mdash; far from the actual bug.
+
+                    <p style="margin-top: 8px;"><strong>Fix:</strong> add a <code>_validate()</code> call at the top of <code>build()</code>:</p>
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">build</span>(self):
+    self.<span class="function">_validate</span>()       <span class="comment"># &lt;-- raises clear errors HERE, not in connect()</span>
+    <span class="keyword">return</span> <span class="function">Database</span>(...)
+
+<span class="keyword">def</span> <span class="function">_validate</span>(self):
+    <span class="keyword">if</span> <span class="keyword">not</span> self._host:     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"host required"</span>)
+    <span class="keyword">if</span> <span class="keyword">not</span> self._port:     <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"port required"</span>)
+    <span class="comment"># ... etc</span></pre>
+                        </div>
+                    </div>
+                    <p style="margin-top: 6px;">The earlier and louder the failure, the easier the bug is to fix.</p>
+                </div>
+            </div>
+
+            <!-- Mistake 3 quiz -->
+            <div class="quiz-box" id="mistake-q3">
+                <h4>Mistake 3 &mdash; why might <code>db2</code> behave unexpectedly?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre>b = Database.<span class="function">builder</span>()
+
+db1 = b.<span class="function">set_host</span>(<span class="string">"host1"</span>).<span class="function">set_port</span>(<span class="number">5432</span>).<span class="function">build</span>()
+db2 = b.<span class="function">set_host</span>(<span class="string">"host2"</span>).<span class="function">build</span>()
+
+<span class="function">print</span>(db1.host, db2.host)
+<span class="function">print</span>(db1.port, db2.port)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, false)">A) The second call won't work &mdash; Builders are one-shot</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, true)">B) <code>db2</code> silently inherits leftover state from the previous build (port = 5432)</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, false)">C) <code>db1</code> and <code>db2</code> are the same object</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, false)">D) Nothing &mdash; this is the recommended way</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The Builder holds state. The first <code>build()</code> doesn't reset it. So <code>db2</code> ends up with:
+                    <ul style="margin-top: 6px; padding-left: 22px;">
+                        <li><code>host = "host2"</code> &mdash; correctly set</li>
+                        <li><code>port = 5432</code> &mdash; <em>silently inherited from db1's chain!</em></li>
+                    </ul>
+                    Worse, if either <code>db1</code> or <code>db2</code> mutates a shared list/dict on the Builder, both Products are affected.
+
+                    <p style="margin-top: 8px;"><strong>Fix:</strong> one Builder per Product:</p>
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre>db1 = Database.<span class="function">builder</span>().<span class="function">set_host</span>(<span class="string">"host1"</span>).<span class="function">set_port</span>(<span class="number">5432</span>).<span class="function">build</span>()
+db2 = Database.<span class="function">builder</span>().<span class="function">set_host</span>(<span class="string">"host2"</span>).<span class="function">set_port</span>(<span class="number">5432</span>).<span class="function">build</span>()</pre>
+                        </div>
+                    </div>
+                    <p style="margin-top: 6px;">A fresh chain per Product. Cheap, clear, no surprises.</p>
+                </div>
+            </div>
+
+            <!-- Mistake 4 quiz -->
+            <div class="quiz-box" id="mistake-q4">
+                <h4>Mistake 4 &mdash; spot what undoes the pattern</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="comment"># Product</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, user, password):
+        <span class="keyword">if</span> <span class="keyword">not</span> <span class="function">is_reachable</span>(host):
+            <span class="keyword">raise</span> <span class="function">ConnectionError</span>(<span class="string">"unreachable"</span>)
+        <span class="keyword">if</span> port &lt; <span class="number">1024</span>:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"bad port"</span>)
+        self.host, self.port = host, port
+        self.user, self.password = user, password
+
+<span class="comment"># Builder</span>
+<span class="keyword">class</span> <span class="function">DatabaseBuilder</span>:
+    <span class="comment"># ... setters that return self ...</span>
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">return</span> <span class="function">Database</span>(self._host, self._port, self._user, self._password)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, false)">A) Builder is missing <code>_validate()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, true)">B) Business logic crept back into the Product's <code>__init__</code> &mdash; defeating the whole pattern</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, false)">C) <code>Database</code> needs <code>@dataclass</code></button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, false)">D) Builder should be inside the Product class</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The whole point of Builder is that the Product's <code>__init__</code> is trivial. The moment validation, network calls, or business logic slip back into the Product, you've lost:
+                    <ul style="margin-top: 6px; padding-left: 22px;">
+                        <li>Testability &mdash; can't construct a Database in tests without the network</li>
+                        <li>SRP &mdash; Product has multiple reasons to change (recall Q5!)</li>
+                        <li>The whole reason you wrote a Builder in the first place</li>
+                    </ul>
+
+                    <p style="margin-top: 8px;"><strong>Fix:</strong> move <em>all</em> logic to the Builder. Product becomes a <code>@dataclass</code>:</p>
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre><span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>
+    port: <span class="function">int</span>
+    user: <span class="function">str</span>
+    password: <span class="function">str</span>
+
+<span class="keyword">class</span> <span class="function">DatabaseBuilder</span>:
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        self.<span class="function">_validate</span>()                   <span class="comment"># validation HERE</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> <span class="function">is_reachable</span>(self._host):  <span class="comment"># network check HERE</span>
+            <span class="keyword">raise</span> <span class="function">ConnectionError</span>(...)
+        <span class="keyword">return</span> <span class="function">Database</span>(...)</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#10004; Best practices</h3>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#129518;</div>
+                    <div class="card-title">Keep the Product trivial</div>
+                    <div class="card-desc">Just assigns fields. A <code>@dataclass</code> usually does it for free.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9989;</div>
+                    <div class="card-title">Validate in <code>build()</code></div>
+                    <div class="card-desc">One place to look for &ldquo;why is this object invalid?&rdquo; &mdash; the same place that produces it.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127919;</div>
+                    <div class="card-title">Sensible defaults in <code>__init__</code></div>
+                    <div class="card-desc">If <code>method</code> is usually <code>"GET"</code>, default it in the Builder's <code>__init__</code>. Callers only override what they need.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Use descriptive setter names</div>
+                    <div class="card-desc"><code>add_topping("pepperoni")</code> beats <code>set("topping", "pepperoni")</code> every time. Be explicit about plurality and intent.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title">Copy mutable defaults into the Product</div>
+                    <div class="card-desc">In <code>build()</code>, pass <code>list(self._toppings)</code> not <code>self._toppings</code>. Otherwise mutating the Builder later silently mutates an already-built Product.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">Document required vs optional</div>
+                    <div class="card-desc">Required fields raise from <code>_validate()</code>. Optional fields have defaults. Anyone reading <code>build()</code> can tell which is which in five seconds.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. WHEN TO / NOT TO USE ===== -->
+    <section id="when">
+        <div class="section-container">
+            <span class="section-label warning">Decision Guide</span>
+            <h2 class="section-title">When to Use Builder &mdash; and When Not To</h2>
+            <p class="section-subtitle">A pattern is a tool. The tool earns its keep only when the problem fits the shape. Three scenarios first &mdash; your call.</p>
+
+            <!-- Scenario 1: tiny class -->
+            <div class="quiz-box" id="when-q1">
+                <h4>Scenario 1 &mdash; A 2D <code>Point</code> for a geometry library</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Point</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, x: <span class="function">float</span>, y: <span class="function">float</span>):
+        self.x, self.y = x, y</pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Both fields are required, no validation, used millions of times in a rendering loop. Should you wrap this in a Builder?</p>
+                <button class="quiz-option" onclick="checkQuiz('when-q1', this, false)">A) Yes &mdash; Builder is always cleaner</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q1', this, true)">B) No &mdash; the 2-arg constructor is already perfect; Builder adds noise</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q1', this, false)">C) Only if you add a third field later</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q1', this, false)">D) Yes, but only with a Director</button>
+                <div class="quiz-explanation">
+                    <strong>Skip Builder.</strong> Two required arguments, no validation, hot loop &mdash; the constructor is already optimal. A Builder here would mean <code>PointBuilder().set_x(1).set_y(2).build()</code> &mdash; longer, slower, and zero benefit. <strong>Rule:</strong> if the constructor signature is already self-explanatory, leave it alone.
+                </div>
+            </div>
+
+            <!-- Scenario 2: HTTP client with many options -->
+            <div class="quiz-box" id="when-q2">
+                <h4>Scenario 2 &mdash; An HTTP client with 12 optional config options</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">You're designing a Python HTTP client library (like <code>requests</code>). The client needs: base_url, timeout, retries, headers (dict), auth, proxies, verify_ssl, follow_redirects, max_redirects, allow_cookies, user_agent, hooks. Most callers will only set 2-3 of these. Some need to validate combinations (&ldquo;SSL on requires HTTPS scheme&rdquo;). Should you use a Builder?</p>
+                <button class="quiz-option" onclick="checkQuiz('when-q2', this, false)">A) No &mdash; just use 12 keyword arguments with defaults</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q2', this, true)">B) Yes &mdash; many optional fields + cross-field validation is exactly the Builder sweet spot</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q2', this, false)">C) Maybe &mdash; only if you're using async</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q2', this, false)">D) No &mdash; use a Singleton instead</button>
+                <div class="quiz-explanation">
+                    <strong>Use Builder.</strong> 12 optional fields with cross-field validation is the textbook case. Keyword args alone would mean <code>HttpClient(base_url="...", timeout=30, retries=3, ..., verify_ssl=True, ...)</code> &mdash; long, hard to scan, and validation has nowhere clean to live. A Builder lets each caller set <em>only what they need</em> and runs validation once at <code>build()</code>.
+                </div>
+            </div>
+
+            <!-- Scenario 3: hot loop / simple all-required -->
+            <div class="quiz-box" id="when-q3">
+                <h4>Scenario 3 &mdash; A <code>LogEntry</code> object created on every log call</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">LogEntry</span>:
+    timestamp: <span class="function">float</span>
+    level:     <span class="function">str</span>
+    message:   <span class="function">str</span>
+    module:    <span class="function">str</span>
+
+<span class="comment"># created on every log call, hundreds of thousands per second</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">A high-traffic service produces ~500k log entries / second. All 4 fields are required, no optional configuration, no validation. Should LogEntry have a Builder?</p>
+                <button class="quiz-option" onclick="checkQuiz('when-q3', this, false)">A) Yes &mdash; all classes benefit from Builders eventually</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q3', this, true)">B) No &mdash; hot loop + all required + no validation = plain constructor wins</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q3', this, false)">C) Only with a Director</button>
+                <button class="quiz-option" onclick="checkQuiz('when-q3', this, false)">D) Only if some fields are optional</button>
+                <div class="quiz-explanation">
+                    <strong>Skip Builder.</strong> Each Builder allocation is a Python object with its own attributes &mdash; cheap individually, expensive at 500k/s. Plus there's nothing for the Builder to <em>do</em>: no optional fields, no validation, no fluent assembly. <code>LogEntry(now, "INFO", "msg", "auth")</code> is already the best API. <strong>Rule:</strong> in hot paths and for plain data, leave the constructor alone.
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 20px 0 14px;">Got the pattern? Here's the rule, summarised:</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 10px;">&#10004; Reach for Builder when&hellip;</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li><strong>Many parameters</strong>, especially optional ones (4+ becomes uncomfortable)</li>
+                        <li><strong>Validation needs to span multiple fields</strong> (e.g., &ldquo;SSL on requires port 443&rdquo;)</li>
+                        <li>You want <strong>immutable Products</strong> with flexible construction</li>
+                        <li><strong>Step-by-step assembly</strong> is natural to read (query, HTTP request, recipe)</li>
+                        <li><strong>Combinations of presets and overrides</strong> are common</li>
+                        <li>You're <strong>writing a public API</strong> and self-documenting code matters</li>
+                    </ul>
+                </div>
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 10px;">&#10060; Skip Builder when&hellip;</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li><strong>2&ndash;3 required fields</strong> &mdash; <code>Point(x, y)</code> doesn't need a Builder</li>
+                        <li><strong>Object is created in a hot loop</strong> &mdash; the extra allocations matter</li>
+                        <li><strong>All fields required, no validation</strong> &mdash; constructor is already perfect</li>
+                        <li><strong>You'd write more Builder boilerplate than Product code</strong> &mdash; YAGNI</li>
+                        <li>Python's <strong>keyword arguments with defaults</strong> already solve your problem cleanly</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="highlight-box warning">
+                <strong>&#9888;&#65039; The rule of three</strong>: don't introduce a Builder until you've seen the constructor explode <em>at least twice</em>. Speculative Builders accumulate methods that nobody ever calls and obscure the real intent of the Product.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Pythonic alternatives worth knowing</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Approach</th><th>Best for</th><th>Trade-off</th></tr></thead>
+                    <tbody>
+                        <tr><td>Keyword args with defaults</td><td>2&ndash;5 params, mostly required</td><td>Caller still passes positional args sometimes</td></tr>
+                        <tr><td><code>@dataclass</code> with defaults</td><td>Plain data containers</td><td>No fluent API; validation needs <code>__post_init__</code></td></tr>
+                        <tr><td><strong>Builder (today)</strong></td><td>Many optional fields, multi-step assembly, complex validation</td><td>More code; ceremony for simple objects</td></tr>
+                        <tr><td>Factory function</td><td>Just hiding the construction</td><td>Doesn't help with the &ldquo;many params&rdquo; problem</td></tr>
+                        <tr><td><code>pydantic</code> models</td><td>Validation-heavy data with type hints</td><td>External dependency; validation focused, not assembly focused</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. SUMMARY (MINDMAP) ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label success">Mindmap Summary</span>
+            <h2 class="section-title">Builder at a Glance</h2>
+            <p class="section-subtitle">The whole pattern in one picture.</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 18px;">
+                    <div style="display:inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 1.05rem;">BUILDER PATTERN<br><small style="font-weight: 400; opacity: 0.9;">Step-by-step assembly of a complex object</small></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+                    <!-- Problem -->
+                    <div style="border: 2px solid var(--accent-danger); border-radius: 10px; padding: 14px; background: rgba(239,68,68,0.06);">
+                        <div style="color: var(--accent-danger); font-weight: 700; margin-bottom: 6px;">&#128165; The Problems</div>
+                        <ul style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 20px; margin-top: 6px;">
+                            <li>10-parameter constructors (boolean hell)</li>
+                            <li>Two-phase mutable construction</li>
+                            <li>Telescoping constructors (Python can't anyway)</li>
+                            <li>Validation + business logic in <code>__init__</code></li>
+                        </ul>
+                    </div>
+
+                    <!-- Solution -->
+                    <div style="border: 2px solid var(--accent-success); border-radius: 10px; padding: 14px; background: rgba(16,185,129,0.06);">
+                        <div style="color: var(--accent-success); font-weight: 700; margin-bottom: 6px;">&#10004; The Recipe (4 steps)</div>
+                        <ol style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 22px; margin-top: 6px;">
+                            <li>Product class with simple <code>__init__</code></li>
+                            <li>Inner <code>Builder</code> with mutable state</li>
+                            <li>Setters that <code>return self</code> (chain)</li>
+                            <li><code>build()</code> validates, then constructs</li>
+                        </ol>
+                    </div>
+
+                    <!-- Variations -->
+                    <div style="border: 2px solid var(--accent-blue); border-radius: 10px; padding: 14px; background: rgba(59,130,246,0.06);">
+                        <div style="color: var(--accent-blue); font-weight: 700; margin-bottom: 6px;">&#128218; Variations</div>
+                        <ul style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 20px; margin-top: 6px;">
+                            <li><strong>A.</strong> Inner-class Builder (default)</li>
+                            <li><strong>B.</strong> Separate Builder class</li>
+                            <li><strong>C.</strong> Director for named presets</li>
+                        </ul>
+                    </div>
+
+                    <!-- Pitfalls -->
+                    <div style="border: 2px solid var(--accent-warning); border-radius: 10px; padding: 14px; background: rgba(245,158,11,0.06);">
+                        <div style="color: var(--accent-warning); font-weight: 700; margin-bottom: 6px;">&#9888;&#65039; Top Pitfalls</div>
+                        <ul style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 20px; margin-top: 6px;">
+                            <li>Forgot <code>return self</code></li>
+                            <li>No validation in <code>build()</code></li>
+                            <li>Reusing a Builder for two Products</li>
+                            <li>Business logic creeping back to <code>__init__</code></li>
+                        </ul>
+                    </div>
+
+                    <!-- When -->
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 10px; padding: 14px; background: rgba(168,85,247,0.06); grid-column: span 2;">
+                        <div style="color: var(--accent-purple); font-weight: 700; margin-bottom: 6px;">&#127919; Pick Builder when</div>
+                        <div style="color: var(--text-secondary); font-size: 0.85rem;">Many optional params &middot; complex validation &middot; immutable Product wanted &middot; step-by-step assembly reads naturally &middot; public API.<br><strong>Skip it</strong> for 2&ndash;3 required fields, hot loops, or when keyword args already do the job.</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127919; Interview cheat sheet</h3>
+            <div class="knowledge-block">
+                <p>If asked &ldquo;implement a Builder for X&rdquo;:</p>
+                <ol style="margin-top: 8px; padding-left: 22px;">
+                    <li>Sketch the Product first &mdash; just the fields. Use <code>@dataclass</code>.</li>
+                    <li>Add the inner <code>Builder</code> class with one private field per Product field, plus sensible defaults.</li>
+                    <li>One setter per field, each returning <code>self</code>. Use <code>add_*</code> for list fields, <code>set_*</code> for scalars.</li>
+                    <li><code>build()</code>: call <code>_validate()</code>, then construct and return the Product. Make defensive copies of mutable state.</li>
+                    <li>Add a <code>@staticmethod</code> entry point on the Product: <code>def builder(): return Cls.Builder()</code>.</li>
+                    <li>Mention <em>when not</em> to use it &mdash; that's the signal you've understood the pattern, not just memorized it.</li>
+                </ol>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127919; One-line summary</h3>
+            <div class="highlight-box success">
+                <strong>Builder</strong> separates how an object is <em>assembled</em> from what it <em>is</em>. The Product is small and dumb; the Builder is the one that knows how to put it together, validate it, and hand it back complete. Use it when you have many optional fields or complex construction logic &mdash; not when a 2-arg <code>__init__</code> already does the job.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 12. RESOURCES ===== -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label blue">Further Reading</span>
+            <h2 class="section-title">Resources &amp; Further Reading</h2>
+            <p class="section-subtitle">Focused on Builder &mdash; the pattern, the Python idioms, and where to see it in real code.</p>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">&#128218; The canonical references</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://refactoring.guru/design-patterns/builder/python/example" target="_blank" rel="noopener" style="color: var(--accent-primary);">Refactoring.Guru &mdash; Builder in Python</a></div>
+                    <div class="card-desc">UML, step-by-step build, and a Director example. The best free visual reference.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128013;</div>
+                    <div class="card-title"><a href="https://python-patterns.guide/gang-of-four/builder/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Builder &mdash; python-patterns.guide</a></div>
+                    <div class="card-desc">Brandon Rhodes on when Builder helps in Python and when Python's keyword args already do the job. Sharp, opinionated.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://en.wikipedia.org/wiki/Builder_pattern" target="_blank" rel="noopener" style="color: var(--accent-primary);">Builder pattern on Wikipedia</a></div>
+                    <div class="card-desc">History, the UML, Java vs Python contrast. Useful for context before interviews.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128172; The "why" essays</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128293;</div>
+                    <div class="card-title"><a href="https://www.vojtechruzicka.com/avoid-telescoping-constructor-pattern/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Telescoping Constructor &mdash; the anti-pattern Builder fixes</a></div>
+                    <div class="card-desc">Walkthrough of the exact smell Builder is designed to cure. Java-flavored but the lesson translates.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128274;</div>
+                    <div class="card-title"><a href="https://octoperf.com/blog/2016/04/07/why-objects-must-be-immutable/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Why Objects Should Be Immutable</a></div>
+                    <div class="card-desc">The other half of the story: why building a Product that's immutable-from-birth is worth the ceremony.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128013; Python tools that make Builder lighter</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#129518;</div>
+                    <div class="card-title"><a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noopener" style="color: var(--accent-primary);">Python docs &mdash; <code>dataclasses</code></a></div>
+                    <div class="card-desc">The Product class is usually just a <code>@dataclass</code>. This page is the reference for what you get for free.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128300;</div>
+                    <div class="card-title"><a href="https://docs.pydantic.dev/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Pydantic</a></div>
+                    <div class="card-desc">When validation is the main thing, Pydantic models often replace the Builder altogether. Know both; pick the lighter tool.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://www.attrs.org/" target="_blank" rel="noopener" style="color: var(--accent-primary);">attrs</a></div>
+                    <div class="card-desc">An older, more flexible cousin of <code>@dataclass</code>. Validators, converters, and frozen instances built in.</div>
+                </div>
+            </div>
+
+            <!-- Pydantic worked example -->
+            <h4 style="margin-top: 22px; margin-bottom: 8px;">&#128300; Pydantic in practice &mdash; when it replaces the Builder</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">When your real problem is "I get a dict of fields and I need to validate types &amp; values," Pydantic does in <strong>one class</strong> what a Builder does in two. Same Database example, both flavors:</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before" style="background: rgba(168,85,247,0.06); border-color: var(--accent-purple);">
+                    <h4 style="color: var(--accent-purple); margin-bottom: 8px;">&#127919; Hand-rolled Builder (what we built today)</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>
+    port: <span class="function">int</span>
+    user: <span class="function">str</span>
+
+<span class="keyword">class</span> <span class="function">DatabaseBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._host = self._port = self._user = <span class="keyword">None</span>
+
+    <span class="keyword">def</span> <span class="function">set_host</span>(self, h): self._host = h; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">set_port</span>(self, p): self._port = p; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">set_user</span>(self, u): self._user = u; <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">if</span> <span class="keyword">not</span> self._host:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"host required"</span>)
+        <span class="keyword">if</span> <span class="keyword">not</span> (<span class="number">1024</span> &lt;= self._port &lt;= <span class="number">65535</span>):
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"bad port"</span>)
+        <span class="keyword">return</span> <span class="function">Database</span>(self._host, self._port, self._user)
+
+db = (<span class="function">DatabaseBuilder</span>()
+       .<span class="function">set_host</span>(<span class="string">"localhost"</span>)
+       .<span class="function">set_port</span>(<span class="number">5432</span>)
+       .<span class="function">set_user</span>(<span class="string">"admin"</span>)
+       .<span class="function">build</span>())</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 8px;">&#10004; Same thing with Pydantic</h4>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel, Field
+
+<span class="keyword">class</span> <span class="function">Database</span>(BaseModel):
+    host: <span class="function">str</span>
+    port: <span class="function">int</span> = <span class="function">Field</span>(ge=<span class="number">1024</span>, le=<span class="number">65535</span>)
+    user: <span class="function">str</span>
+
+
+db = <span class="function">Database</span>(host=<span class="string">"localhost"</span>, port=<span class="number">5432</span>, user=<span class="string">"admin"</span>)
+
+<span class="comment"># Invalid value? Validated at construction:</span>
+<span class="function">Database</span>(host=<span class="string">"localhost"</span>, port=<span class="number">80</span>, user=<span class="string">"admin"</span>)
+<span class="comment"># pydantic.ValidationError:</span>
+<span class="comment">#   port: Input should be greater than or equal to 1024</span>
+
+<span class="comment"># Missing field? Also caught:</span>
+<span class="function">Database</span>(host=<span class="string">"localhost"</span>, port=<span class="number">5432</span>)
+<span class="comment"># pydantic.ValidationError: user - Field required</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 14px;">
+                <strong>Notice what disappeared:</strong> no separate Builder class, no <code>_validate()</code>, no <code>build()</code>, no <code>return self</code> chain. <code>Field(ge=1024, le=65535)</code> on the type annotation does the range check; missing required fields raise automatically; type coercion is built in. Pydantic also gives you <code>.model_dump()</code> for JSON serialization, custom validators, nested models, and more.
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 14px;"><strong>So when does Pydantic <em>replace</em> the Builder?</strong></p>
+            <ul style="color: var(--text-secondary); padding-left: 22px; margin-top: 6px;">
+                <li>&#10004; Your construction is &ldquo;take a dict &rarr; validate &rarr; get an object&rdquo; (HTTP request bodies, config files, env vars). Pydantic was built for exactly this.</li>
+                <li>&#10004; You want immutable objects with rich type-and-value validation, but don't need step-by-step assembly.</li>
+            </ul>
+
+            <p style="color: var(--text-secondary); margin-top: 10px;"><strong>When does Builder still win?</strong></p>
+            <ul style="color: var(--text-secondary); padding-left: 22px; margin-top: 6px;">
+                <li>&#10004; You genuinely need <strong>step-by-step assembly</strong> &mdash; values arrive across multiple files / async calls / branching code paths (recall the &ldquo;build incrementally&rdquo; point in the Problem section)</li>
+                <li>&#10004; You need <strong>cross-field business rules</strong> at construction (&ldquo;if HTTPS is on, port must be 443&rdquo;) &mdash; Pydantic <em>can</em> do this with validators, but the logic gets verbose</li>
+                <li>&#10004; The team doesn't use Pydantic &mdash; introducing a dependency just for one class is overkill</li>
+            </ul>
+
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 12px;"><strong>The honest take:</strong> for HTTP request bodies and config-style data, reach for Pydantic first. For domain objects you assemble piece-by-piece in business logic, Builder reads better and keeps you dependency-free. Many real codebases use both, in different layers.</p>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127757; Builder in real Python code</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#127760;</div>
+                    <div class="card-title"><a href="https://docs.python-requests.org/en/latest/api/#requests.PreparedRequest" target="_blank" rel="noopener" style="color: var(--accent-primary);"><code>requests.PreparedRequest</code></a></div>
+                    <div class="card-desc">A Session prepares a request via chained setters and <code>prepare()</code> &mdash; basically Builder under another name.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128190;</div>
+                    <div class="card-title"><a href="https://docs.sqlalchemy.org/en/20/tutorial/data_select.html" target="_blank" rel="noopener" style="color: var(--accent-primary);">SQLAlchemy <code>select()</code></a></div>
+                    <div class="card-desc">The textbook query Builder: <code>select(User).where(...).order_by(...).limit(...)</code>. Each call returns a new immutable statement.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127757;</div>
+                    <div class="card-title"><a href="https://docs.djangoproject.com/en/stable/ref/models/querysets/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Django QuerySet</a></div>
+                    <div class="card-desc"><code>User.objects.filter(...).exclude(...).order_by(...)</code> &mdash; chained, lazy, immutable. The fluent shape of Builder applied to ORM queries.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128218; From this batch</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-15-Design-Patterns-Singleton/index.html" style="color: var(--accent-primary);">LLD-15: Design Patterns Intro &amp; Singleton</a></div>
+                    <div class="card-desc">The first creational pattern. Same family of "how do objects get made?" questions; different answer.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-14-SOLID-Principles-2/index.html#composition" style="color: var(--accent-primary);">LLD-14 &mdash; the composition primer</a></div>
+                    <div class="card-desc">Builder is composition in action: the Product has-a set of fields, the Builder uses-a Product. Worth a re-read.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-16: Builder Design Pattern &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+
+    function toggleCode(header) {
+        header.parentElement.classList.toggle('collapsed');
+    }
+
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
