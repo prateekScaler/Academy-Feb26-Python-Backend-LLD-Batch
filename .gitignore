@@ -67,6 +67,9 @@ media/
 # Claude Code
 .claude/
 
+# make-pages-interactive (local feedback inbox + history; never pushed)
+feedback/
+
 # Instructor reference files
 UI-ELEMENTS-REFERENCE.html
 

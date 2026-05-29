@@ -57,16 +57,17 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 2 | [SOLID Principles &mdash; Part 2](LLD-14-SOLID-Principles-2/) | OCP/LSP recap, ISP, composition, DIP, LSP vs ISP, SOLID critique |
 | 3 | [Intro to Design Patterns, Singleton](LLD-15-Design-Patterns-Singleton/) | GoF intro, 3 categories, Singleton (4 implementations + how each breaks) |
 | 4 | [Builder Pattern](LLD-16-Builder-Design-Pattern/) | The problem (boolean hell, telescoping constructors), 4-step recipe, Pizza/HTTP/SQL builders, Director |
-| 5 | Factory, Prototype | Upcoming |
-| 6 | Adapter, Strategy | Upcoming |
-| 7 | Observer, Decorator | Upcoming |
-| 8 | UML Diagrams | Upcoming |
-| 9 | Types of LLD Interviews, How to Approach LLD Problems | Upcoming |
-| 10-11 | Design & Code TicTacToe | Upcoming |
-| 12-13 | Design & Code Parking Lot | Upcoming |
-| 14-15 | Design & Code BookMyShow | Upcoming |
-| 16-17 | Design & Code Splitwise | Upcoming |
-| 18 | Design Google Calendar | Upcoming |
+| 5 | [Factory Pattern Family](LLD-17-Factory-Design-Pattern/) | Simple Factory, Factory Method (OCP + DIP), Abstract Factory (family-consistency); decision tree; 8 runnable examples + UML-friendly code for PyCharm |
+| 6 | Prototype | Upcoming |
+| 7 | Adapter, Strategy | Upcoming |
+| 8 | Observer, Decorator | Upcoming |
+| 9 | UML Diagrams | Upcoming |
+| 10 | Types of LLD Interviews, How to Approach LLD Problems | Upcoming |
+| 11-12 | Design & Code TicTacToe | Upcoming |
+| 13-14 | Design & Code Parking Lot | Upcoming |
+| 15-16 | Design & Code BookMyShow | Upcoming |
+| 17-18 | Design & Code Splitwise | Upcoming |
+| 19 | Design Google Calendar | Upcoming |
 
 ## Quick Start
 

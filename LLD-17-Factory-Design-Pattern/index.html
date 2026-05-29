@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-17: Factory Design Pattern</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #10b981; --accent-secondary: #059669; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(16, 185, 129, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #34d399, #10b981); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #34d399; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 700px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #34d399; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .question-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(168, 85, 247, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .question-box strong { color: var(--text-primary); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+        .collapsible-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; }
+        .collapsible-arrow { transition: transform 0.3s; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 8000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(16, 185, 129, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .diagram-box small { display: block; font-size: 0.8rem; margin-top: 4px; opacity: 0.85; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .flow-box { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 0.85rem; }
+        .flow-box.green { border-color: var(--accent-success); background: rgba(16,185,129,0.1); }
+        .flow-box.red { border-color: var(--accent-danger); background: rgba(239,68,68,0.1); }
+        .flow-box.blue { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+        .flow-box.purple { border-color: var(--accent-purple); background: rgba(168,85,247,0.1); }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        .break-box { background: rgba(239, 68, 68, 0.06); border-left: 4px solid var(--accent-danger); border-radius: 6px; padding: 16px 18px; margin: 12px 0; }
+        .break-box .break-title { color: var(--accent-danger); font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: block; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } .flow-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-17: Factory Pattern</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#intro">Intro</a></li>
+            <li><a href="#prereq">Prereq</a></li>
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#simple">Simple</a></li>
+            <li><a href="#method">Method</a></li>
+            <li><a href="#abstract">Abstract</a></li>
+            <li><a href="#compare">Compare</a></li>
+            <li><a href="#summary">Summary</a></li>
+            <li><a href="#resources">Resources</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#127981;</div>
+        <h1>The Factory Family</h1>
+        <p class="hero-meta">LLD-17 &bull; Creational Patterns</p>
+        <p class="hero-tagline">Stop scattering <code>EmailNotification(host, port, key, ...)</code> across 30 files. <strong>Centralize object creation</strong> &mdash; then learn the three flavors that solve three different versions of "where should the <code>new</code> live?"</p>
+    </section>
+
+    <!-- ===== 2. RECAP (Builder pitfalls) ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label purple">Recap &mdash; Builder</span>
+            <h2 class="section-title">Quick Recall &mdash; Builder Pitfalls</h2>
+            <p class="section-subtitle">Three checks from LLD-16 before we move on. Builder centralized <em>construction logic</em>; Factory is going to centralize <em>which concrete class</em> to instantiate &mdash; related but different problems.</p>
+
+            <!-- Recap Q1: Builder principle -->
+            <div class="quiz-box" id="recap-q1">
+                <h4>Quiz 1 &mdash; What's the main advantage of Approach B?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="comment"># Approach A</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, host, port, username, password):
+        <span class="keyword">if</span> <span class="keyword">not</span> self.<span class="function">_validate_host</span>(host):
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"Invalid host"</span>)
+        <span class="keyword">if</span> port &lt; <span class="number">1024</span>:
+            <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"Invalid port"</span>)
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+
+<span class="comment"># Approach B</span>
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Database</span>:
+    host: <span class="function">str</span>;  port: <span class="function">int</span>
+    username: <span class="function">str</span>; password: <span class="function">str</span>
+
+    <span class="keyword">class</span> <span class="function">Builder</span>:
+        <span class="keyword">def</span> <span class="function">build</span>(self):
+            self.<span class="function">_validate</span>()
+            <span class="keyword">return</span> <span class="function">Database</span>(...)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">A) Less total code &mdash; Builder replaces the bulky <code>__init__</code> with a slim factory chain</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, true)">B) Product stays a trivial immutable data class; all validation &amp; business logic lives in <code>build()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">C) Direct <code>Database(...)</code> calls are blocked &mdash; every caller is forced through <code>Builder.build()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">D) Typos in the setter chain (e.g. <code>.set_prt</code>) are caught at the call site by Python's type system</button>
+                <div class="quiz-explanation">
+                    <strong>Correct &mdash; B.</strong> The other three options each describe a <em>real Builder negative</em> falsely dressed up as a positive. Spotting that is the test:
+                    <ul style="margin-top: 6px; padding-left: 22px;">
+                        <li><strong>A is false</strong> &mdash; Builder writes <em>more</em> code, not less. You now have two classes where one constructor used to do. The boilerplate is the price of the separation.</li>
+                        <li><strong>B is the real advantage</strong> &mdash; Product = data; Builder = workspace. Separation of concerns at the class level.</li>
+                        <li><strong>C is false</strong> &mdash; Python has no access control. <code>Database(host, port, ...)</code> still works. The Builder is a convention, not enforcement &mdash; a real limitation, not a feature.</li>
+                        <li><strong>D is false</strong> &mdash; the setter chain is dynamic. A typo like <code>.set_prt</code> only blows up at <em>runtime</em>, not at the call site. With a plain constructor, the type checker catches misnamed arguments immediately. Late-discovered typos are a real Builder downside.</li>
+                    </ul>
+
+                    <p style="margin-top: 10px;"><strong>The generic Builder UML &mdash; recall the shape:</strong></p>
+                    <div class="diagram-box" style="margin: 8px 0;">
+                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center;">
+                            <div style="border: 2px solid var(--accent-blue); border-radius: 8px; padding: 12px; background: rgba(59,130,246,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                                <div style="color: var(--accent-blue); font-weight: 700; text-align: center; margin-bottom: 6px;">Product (immutable)</div>
+                                <div style="border-top: 1px solid var(--accent-blue); padding-top: 6px;">
+                                    + host: str<br>
+                                    + port: int<br>
+                                    + username: str<br>
+                                    + password: str
+                                </div>
+                                <div style="border-top: 1px solid var(--accent-blue); padding-top: 6px; margin-top: 6px;">
+                                    + connect()
+                                </div>
+                            </div>
+                            <div style="text-align: center; color: var(--text-muted);">&larr;&nbsp;creates</div>
+                            <div style="border: 2px solid var(--accent-success); border-radius: 8px; padding: 12px; background: rgba(16,185,129,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                                <div style="color: var(--accent-success); font-weight: 700; text-align: center; margin-bottom: 6px;">Builder (mutable)</div>
+                                <div style="border-top: 1px solid var(--accent-success); padding-top: 6px;">
+                                    - _host<br>
+                                    - _port<br>
+                                    - _username<br>
+                                    - _password
+                                </div>
+                                <div style="border-top: 1px solid var(--accent-success); padding-top: 6px; margin-top: 6px;">
+                                    + set_host(): Builder<br>
+                                    + set_port(): Builder<br>
+                                    &hellip;<br>
+                                    + build(): Product
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">Each setter returns the Builder itself &mdash; <code>return self</code> &mdash; enabling fluent chaining. <code>build()</code> validates and produces an immutable Product.</div>
+                    </div>
+
+                    <p style="margin-top: 12px;"><strong>But Builder isn't free &mdash; the honest negatives:</strong></p>
+                    <ul style="margin-top: 4px; padding-left: 22px;">
+                        <li><strong>More code per Product</strong> &mdash; you write two classes where one constructor used to do.</li>
+                        <li><strong>No "frozen" enforcement in Python</strong> &mdash; callers can still bypass the Builder by calling <code>Database(...)</code> directly. The Builder is a convention.</li>
+                        <li><strong>Easier to leak state</strong> if you reuse a Builder for two Products (Q3 below).</li>
+                        <li><strong>Two-step construction</strong> means a typo in the chain (<code>.set_port</code> &rarr; <code>.set_prt</code>) shows up at runtime, not at the call site.</li>
+                        <li><strong>Overkill for 2-3 required fields</strong> &mdash; you trade clarity for ceremony (Q2 below).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Recap Q2: when NOT to use Builder -->
+            <div class="quiz-box" id="recap-q2">
+                <h4>Quiz 2 &mdash; Which class would Builder be <em>overkill</em> for?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="comment"># A</span>
+<span class="keyword">class</span> <span class="function">Point</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, x, y):
+        self.x, self.y = x, y
+
+<span class="comment"># B</span>
+<span class="keyword">class</span> <span class="function">HttpRequest</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, url, method, headers, body,
+                 timeout, retry, verify_ssl, cookies, auth):
+        ...   <span class="comment"># 9 params</span>
+
+<span class="comment"># C</span>
+<span class="keyword">class</span> <span class="function">User</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name, email):
+        self.name, self.email = name, email</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, true)">A) A and C &mdash; both are too simple to justify a Builder</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">B) B only</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">C) Only A</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">D) All three need Builder</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> <code>Point(1, 2)</code> and <code>User("Alice", "a@x.com")</code> have 2 required args and no validation &mdash; the constructor is already perfect. <code>HttpRequest</code> with 9 optional params is exactly where Builder earns its keep.
+
+                    <p style="margin-top: 8px;"><strong>Rule of thumb:</strong> 2&ndash;3 required fields with no validation &rarr; plain constructor. 4+ params or optional fields or complex validation &rarr; Builder.</p>
+
+                    <p style="margin-top: 12px;"><strong>&#127922; Where Builder shines in classic LLD interview problems</strong> &mdash; the kind you'll face later in this module:</p>
+                    <ul style="margin-top: 4px; padding-left: 22px;">
+                        <li><strong>TicTacToe</strong> &mdash; <code>Game</code> needs: board size (3&times;3 or 5&times;5), player count, player symbols, win condition (rows-only? include diagonals? N-in-a-row?), undo support. Validating that <em>"5 players don't fit on a 3&times;3 board"</em> or <em>"win-condition N must be &le; board size"</em> is exactly a multi-field rule that belongs in <code>build()</code>, not <code>__init__</code>.</li>
+                        <li><strong>Snake &amp; Ladder</strong> &mdash; <code>Board</code> needs: size, snake positions list, ladder positions list, dice config, player count. Cross-field validation: <em>"no snake and ladder on the same cell," "snakes go from high to low," "no ladders on the last cell"</em>. The constructor would be a nightmare; the Builder reads like a setup checklist.</li>
+                        <li><strong>Chess</strong> &mdash; <code>Game</code> needs: time control, players, opening position (standard / custom FEN), undo enabled, move-validator strictness. Multiple optional fields with combined rules (<em>"custom FEN forbidden in tournament mode"</em>) &mdash; classic Builder territory.</li>
+                        <li><strong>BookMyShow / Parking Lot</strong> &mdash; same shape: <code>Show</code>, <code>ParkingLot</code> have many optional fields and cross-field invariants. You'll write a Builder almost reflexively once you've seen the pattern.</li>
+                    </ul>
+                    <p style="margin-top: 8px;">In every one of these, the <code>__init__</code> approach drowns in <code>if</code>-checks within seconds. Builder lets the Product stay a <code>@dataclass</code> and pushes all the "is this a legal game setup?" logic into <code>build()</code>.</p>
+                </div>
+            </div>
+
+            <!-- Recap Q3: state-sharing bug -->
+            <div class="quiz-box" id="recap-q3">
+                <h4>Quiz 3 &mdash; What does <code>report1.data</code> print?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span><span class="keyword">class</span> <span class="function">ReportBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._title = <span class="keyword">None</span>
+        self._data = []
+
+    <span class="keyword">def</span> <span class="function">set_title</span>(self, t):  self._title = t; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">add_data</span>(self, d):   self._data.<span class="function">append</span>(d); <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">return</span> <span class="function">Report</span>(self._title, self._data)
+
+builder = <span class="function">ReportBuilder</span>()
+report1 = builder.<span class="function">set_title</span>(<span class="string">"Q1"</span>).<span class="function">add_data</span>(<span class="number">100</span>).<span class="function">build</span>()
+report2 = builder.<span class="function">set_title</span>(<span class="string">"Q2"</span>).<span class="function">add_data</span>(<span class="number">200</span>).<span class="function">build</span>()
+
+<span class="function">print</span>(report1.data)</span></pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">A) <code>[100]</code> &mdash; each report has its own data</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, true)">B) <code>[100, 200]</code> &mdash; builder state is shared across both reports!</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">C) <code>None</code></button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">D) <code>TypeError</code>: can't reuse Builder</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Two distinct bugs collaborate here:
+                    <ol style="margin-top: 8px; padding-left: 22px;">
+                        <li><strong>Builder reuse</strong>: the same <code>ReportBuilder</code> instance is used for both reports, so its <code>_data</code> list grows across both calls.</li>
+                        <li><strong>No defensive copy in <code>build()</code></strong>: it passes the same list reference into the Product &mdash; so <code>report1.data</code> and <code>report2.data</code> are the same list.</li>
+                    </ol>
+                    <p style="margin-top: 8px;"><strong>Two fixes</strong>: (a) one Builder per Product (fresh chain each time), and (b) a defensive copy of the mutable list inside <code>build()</code>:</p>
+
+                    <div class="code-block" style="margin-top: 8px;">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">ReportBuilder</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self._title = <span class="keyword">None</span>
+        self._data = []                                <span class="comment"># still mutable on the builder</span>
+
+    <span class="keyword">def</span> <span class="function">set_title</span>(self, t):  self._title = t; <span class="keyword">return</span> self
+    <span class="keyword">def</span> <span class="function">add_data</span>(self, d):   self._data.<span class="function">append</span>(d); <span class="keyword">return</span> self
+
+    <span class="keyword">def</span> <span class="function">build</span>(self):
+        <span class="keyword">return</span> <span class="function">Report</span>(self._title, <span class="function">list</span>(self._data))   <span class="comment"># fix (b): defensive copy</span>
+
+<span class="comment"># fix (a): fresh Builder per Product</span>
+report1 = <span class="function">ReportBuilder</span>().<span class="function">set_title</span>(<span class="string">"Q1"</span>).<span class="function">add_data</span>(<span class="number">100</span>).<span class="function">build</span>()
+report2 = <span class="function">ReportBuilder</span>().<span class="function">set_title</span>(<span class="string">"Q2"</span>).<span class="function">add_data</span>(<span class="number">200</span>).<span class="function">build</span>()
+
+<span class="function">print</span>(report1.data)     <span class="comment"># [100]</span>
+<span class="function">print</span>(report2.data)     <span class="comment"># [200]</span></pre>
+                        </div>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.85rem;">Either fix alone would prevent the cross-contamination shown above; in real codebases, do both.</p>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>What's next:</strong> Builder controlled <em>how</em> a complex object is assembled. <strong>Factory</strong> controls <em>which</em> concrete class gets instantiated &mdash; especially when the caller shouldn't (or can't) name the concrete class itself. Different problem, same family (Creational).</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 3. INTRO ===== -->
+    <section id="intro">
+        <div class="section-container">
+            <span class="section-label">What &amp; Why</span>
+            <h2 class="section-title">What is the Factory Pattern?</h2>
+            <p class="section-subtitle">A family of patterns that share one job: <strong>centralize "which concrete class to instantiate"</strong> so callers don't have to know.</p>
+
+            <!-- One-line comparison -->
+            <div class="diagram-box" style="padding: 18px;">
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;">
+                    <div style="background: rgba(239,68,68,0.08); border: 1px solid var(--accent-danger); padding: 12px; border-radius: 10px;">
+                        <div style="font-weight: 700; color: var(--accent-danger); margin-bottom: 6px;">&#10060; Without Factory</div>
+                        <div style="font-family: 'Fira Code', monospace; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;"><span class="keyword">if</span> ch == <span class="string">"email"</span>:<br>&nbsp;&nbsp;n = <span class="function">EmailNotification</span>(host, port, key, ...)<br><span class="keyword">elif</span> ch == <span class="string">"sms"</span>:<br>&nbsp;&nbsp;n = <span class="function">SMSNotification</span>(api_key, country, ...)<br><span class="comment"># ... repeated in every caller</span></div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 1.4rem;">&rarr;</div>
+                    <div style="background: rgba(16,185,129,0.08); border: 1px solid var(--accent-success); padding: 12px; border-radius: 10px;">
+                        <div style="font-weight: 700; color: var(--accent-success); margin-bottom: 6px;">&#10004; With Factory</div>
+                        <div style="font-family: 'Fira Code', monospace; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">n = NotificationFactory.<span class="function">create</span>(ch, user)<br>n.<span class="function">send</span>(<span class="string">"Welcome!"</span>)<br><br><span class="comment"># Caller doesn't know or care</span><br><span class="comment"># which concrete class came back</span></div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.85rem;">The <em>messy creation logic</em> moves into one place. Everyone else just asks for "a notification" by type.</div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127919; The three flavors &mdash; from simplest to most powerful</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px;">
+
+                <!-- Simple Factory -->
+                <div style="border: 2px solid var(--accent-success); border-radius: 12px; padding: 18px; background: rgba(16,185,129,0.05);">
+                    <div style="text-align: center; font-size: 1.5rem; margin-bottom: 6px;">&#129520;</div>
+                    <div style="text-align: center; font-weight: 800; color: var(--accent-success); font-size: 1.05rem;">SIMPLE FACTORY</div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px;">"one place to call <code>new</code>"</div>
+                    <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; text-align: center;">Factory.<span class="function">create</span>(<span class="string">"email"</span>)</div>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">A single static method with an <code>if/elif</code> chain. Add a new type? <em>Modify the factory.</em></div>
+                </div>
+
+                <!-- Factory Method -->
+                <div style="border: 2px solid var(--accent-blue); border-radius: 12px; padding: 18px; background: rgba(59,130,246,0.05);">
+                    <div style="text-align: center; font-size: 1.5rem; margin-bottom: 6px;">&#129518;</div>
+                    <div style="text-align: center; font-weight: 800; color: var(--accent-blue); font-size: 1.05rem;">FACTORY METHOD</div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px;">"subclass decides the concrete"</div>
+                    <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; text-align: center;"><span class="function">EmailSender</span>().<span class="function">send</span>(msg)</div>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">An abstract creator + one subclass per concrete type. Add a new type? <em>New subclass, no edits.</em></div>
+                </div>
+
+                <!-- Abstract Factory -->
+                <div style="border: 2px solid var(--accent-purple); border-radius: 12px; padding: 18px; background: rgba(168,85,247,0.05);">
+                    <div style="text-align: center; font-size: 1.5rem; margin-bottom: 6px;">&#127968;</div>
+                    <div style="text-align: center; font-weight: 800; color: var(--accent-purple); font-size: 1.05rem;">ABSTRACT FACTORY</div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px;">"families that belong together"</div>
+                    <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; text-align: center;">f = <span class="function">WindowsUIFactory</span>()<br>f.<span class="function">create_button</span>()<br>f.<span class="function">create_menu</span>()</div>
+                    <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.85rem;">A factory that produces <em>a whole family</em> of related objects together. Use when consistency across products matters.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box warning" style="margin-top: 20px;">
+                <strong>&#9888;&#65039; A note about the name.</strong> In conversation, "Factory pattern" usually means "any of the three." In an interview, it's worth being precise &mdash; Simple Factory is the easiest, Factory Method follows the Open-Closed Principle, Abstract Factory guarantees consistency across product families. Today we'll build all three, in order.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 4. PREREQ QUIZ ===== -->
+    <section id="prereq">
+        <div class="section-container">
+            <span class="section-label purple">Pre-flight Check</span>
+            <h2 class="section-title">Prerequisites &mdash; What Factory Solves</h2>
+            <p class="section-subtitle">One warm-up to set up the family. Each variant will introduce its own &ldquo;OK, but what about <em>this</em> case?&rdquo; question as we go.</p>
+
+            <!-- Q1: scattered creation logic (Simple Factory premise) -->
+            <div class="quiz-box" id="prereq-q1">
+                <h4>Question 1 &mdash; The scattered-creation smell</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">send_welcome</span>(user, ch):
+    <span class="keyword">if</span> ch == <span class="string">"email"</span>:
+        n = <span class="function">EmailNotification</span>(user.email, <span class="string">"smtp.x.com"</span>, <span class="number">587</span>, <span class="string">"noreply@x"</span>, <span class="string">"pw"</span>)
+    <span class="keyword">elif</span> ch == <span class="string">"sms"</span>:
+        n = <span class="function">SMSNotification</span>(user.phone, <span class="string">"twilio_key"</span>, user.country_code)
+    n.<span class="function">send</span>(<span class="string">"Welcome!"</span>)
+
+<span class="keyword">def</span> <span class="function">send_reminder</span>(user, ch):
+    <span class="keyword">if</span> ch == <span class="string">"email"</span>:
+        n = <span class="function">EmailNotification</span>(user.email, <span class="string">"smtp.x.com"</span>, <span class="number">587</span>, <span class="string">"noreply@x"</span>, <span class="string">"pw"</span>)
+    <span class="keyword">elif</span> ch == <span class="string">"sms"</span>:
+        n = <span class="function">SMSNotification</span>(user.phone, <span class="string">"twilio_key"</span>, user.country_code)
+    n.<span class="function">send</span>(<span class="string">"Reminder!"</span>)
+
+<span class="comment"># ... 28 more functions, each repeating the same if/elif</span></pre>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">What's the worst part of this design?</p>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">A) The functions are too long</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">B) <code>EmailNotification</code> takes too many parameters</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, true)">C) The creation logic (the <code>if/elif</code> + constructor args) is duplicated in every caller</button>
+                <button class="quiz-option" onclick="checkQuiz('prereq-q1', this, false)">D) Notifications shouldn't be separate classes</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> The constructor args (SMTP host, port, API key, country code) are <em>configuration</em> &mdash; not business decisions. They're now hardcoded in 30 functions. Rotate the SMTP password? Hunt down 30 places. Add a Discord notification? 30 edits.
+
+                    <p style="margin-top: 8px;"><strong>The principle being broken</strong> here isn't even one of the fancy SOLID letters &mdash; it's the most fundamental one: <strong>DRY (Don't Repeat Yourself)</strong>. The same construction logic is copy-pasted 30 times. Every copy is a place a future bug can hide. Whenever you find yourself writing the same shape of code in many call sites, the question to ask is "where should this live <em>once</em>?"</p>
+
+                    <p style="margin-top: 8px;"><strong>The fix:</strong> push all that creation logic into <em>one</em> place &mdash; a Factory. Each caller asks for "a notification of this kind" without knowing the constructor args. <strong>This is Simple Factory.</strong></p>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Got Q1?</strong> The duplication smell is what Simple Factory cures. But Simple Factory will itself reveal a new smell &mdash; and that smell will lead us to Factory Method. Then Factory Method will reveal yet another smell &mdash; and that one leads us to Abstract Factory. We'll meet each follow-up question right at the point where it bites, not as abstract trivia up front.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 5. THE PROBLEM ===== -->
+    <section id="problem">
+        <div class="section-container">
+            <span class="section-label warning">Motivation</span>
+            <h2 class="section-title">The Problem &mdash; a Concrete Scenario</h2>
+            <p class="section-subtitle">Let's watch a notification service grow into a maintenance disaster &mdash; the same story behind every Factory pattern.</p>
+
+            <div class="question-box">
+                <p><strong>Ajit is building the notification layer of a SaaS product.</strong> Today it sends email. Next quarter: SMS. Then push. Then Slack. Then Discord. Each notification type has its own constructor signature &mdash; SMTP host for email, API key for SMS, device token for push. The first version was a 4-line function. Eighteen months later it's spread across 30 files and nobody wants to touch it.</p>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Smell 1 &mdash; creation logic repeated everywhere</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> notification_callers.py</div>
+                    <div class="code-toggle"><span class="arrow">&#9660;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="comment"># users.py</span>
+<span class="keyword">def</span> <span class="function">on_signup</span>(user, channel):
+    <span class="keyword">if</span> channel == <span class="string">"email"</span>:
+        n = <span class="function">EmailNotification</span>(user.email, <span class="string">"smtp.gmail.com"</span>, <span class="number">587</span>,
+                               <span class="string">"noreply@company.com"</span>, <span class="string">"secret"</span>)
+    <span class="keyword">elif</span> channel == <span class="string">"sms"</span>:
+        n = <span class="function">SMSNotification</span>(user.phone, <span class="string">"twilio_key_xyz"</span>, user.country_code)
+    n.<span class="function">send</span>(<span class="string">"Welcome aboard!"</span>)
+
+
+<span class="comment"># billing.py</span>
+<span class="keyword">def</span> <span class="function">on_payment_received</span>(user, channel):
+    <span class="keyword">if</span> channel == <span class="string">"email"</span>:
+        n = <span class="function">EmailNotification</span>(user.email, <span class="string">"smtp.gmail.com"</span>, <span class="number">587</span>,
+                               <span class="string">"noreply@company.com"</span>, <span class="string">"secret"</span>)   <span class="comment"># duplicated!</span>
+    <span class="keyword">elif</span> channel == <span class="string">"sms"</span>:
+        n = <span class="function">SMSNotification</span>(user.phone, <span class="string">"twilio_key_xyz"</span>, user.country_code)
+    n.<span class="function">send</span>(<span class="string">"Payment received"</span>)
+
+
+<span class="comment"># auth.py, orders.py, security.py, marketing.py ... same pattern, copy-pasted</span></pre>
+                </div>
+            </div>
+            <div class="highlight-box danger">
+                <strong>What hurts:</strong>
+                <ul style="margin-top: 8px; padding-left: 22px;">
+                    <li><strong>SMTP password rotated.</strong> Update in 30 places. Miss one. Production breaks.</li>
+                    <li><strong>Twilio replaced with MessageBird.</strong> 30 file edits, all repetitive, easy to mis-type.</li>
+                    <li><strong>The configuration leaks into business code.</strong> Why does <code>billing.py</code> know about port 587?</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Smell 2 &mdash; adding a new channel touches every caller</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="comment"># Discord support requested. Now every if/elif needs another arm:</span>
+
+<span class="keyword">def</span> <span class="function">on_signup</span>(user, channel):
+    <span class="keyword">if</span> channel == <span class="string">"email"</span>:    n = <span class="function">EmailNotification</span>(...)
+    <span class="keyword">elif</span> channel == <span class="string">"sms"</span>:    n = <span class="function">SMSNotification</span>(...)
+    <span class="keyword">elif</span> channel == <span class="string">"discord"</span>:                                 <span class="comment"># NEW</span>
+        n = <span class="function">DiscordNotification</span>(user.discord_id, <span class="string">"webhook"</span>, <span class="string">"bot_token"</span>)
+    n.<span class="function">send</span>(<span class="string">"Welcome!"</span>)
+
+<span class="comment"># Repeat this edit in on_payment_received, on_login, on_security_alert ...</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Smell 3 &mdash; business logic and creation logic tangled together</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;"><code>on_payment_received</code> shouldn't know what an SMTP port is. It shouldn't import <code>twilio</code>. Its job is to react to a payment &mdash; nothing else. But the constructor calls drag all of that infrastructure into the business module.</p>
+
+            <div class="highlight-box success">
+                The fix in one sentence: <strong>move the "which class do I instantiate, and with which constructor args" question into one place</strong> &mdash; a Factory. Each caller asks for "a notification for this user on this channel" and gets a ready-to-use object back. That's where we're headed next.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 6. SIMPLE FACTORY ===== -->
+    <section id="simple">
+        <div class="section-container">
+            <span class="section-label success">Variant 1 of 3</span>
+            <h2 class="section-title">Simple Factory &mdash; Centralized Creation</h2>
+            <p class="section-subtitle">The smallest possible move: take the <code>if/elif</code> out of every caller and put it in one place. Not even a real GoF pattern &mdash; just good housekeeping.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Step 1 &mdash; common abstract interface</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Every notification class promises the same <code>send()</code> method. Callers will talk to <code>Notification</code>, not to <code>EmailNotification</code> or <code>SMSNotification</code> directly.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Notification</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send</span>(self, message: <span class="function">str</span>) -&gt; <span class="keyword">None</span>: ...
+
+
+<span class="keyword">class</span> <span class="function">EmailNotification</span>(Notification):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, to, smtp_host, smtp_port, user, password):
+        self.to, self.smtp_host = to, smtp_host
+        self.smtp_port = smtp_port
+        self.user, self.password = user, password
+    <span class="keyword">def</span> <span class="function">send</span>(self, msg):
+        <span class="function">print</span>(f<span class="string">"[email] {self.to}: {msg}"</span>)
+
+
+<span class="keyword">class</span> <span class="function">SMSNotification</span>(Notification):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, phone, api_key, country_code):
+        self.phone, self.api_key, self.country_code = phone, api_key, country_code
+    <span class="keyword">def</span> <span class="function">send</span>(self, msg):
+        <span class="function">print</span>(f<span class="string">"[sms] {self.country_code}{self.phone}: {msg}"</span>)
+
+
+<span class="keyword">class</span> <span class="function">PushNotification</span>(Notification):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, device_id, fcm_key):
+        self.device_id, self.fcm_key = device_id, fcm_key
+    <span class="keyword">def</span> <span class="function">send</span>(self, msg):
+        <span class="function">print</span>(f<span class="string">"[push] dev={self.device_id}: {msg}"</span>)</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Step 2 &mdash; the Factory class with one static <code>create()</code></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">All construction logic + configuration now lives <em>here</em>. Each call site simply asks "give me a notification of type X" and gets a ready-to-use object.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">import</span> os
+
+<span class="keyword">class</span> <span class="function">NotificationFactory</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">create</span>(channel: <span class="function">str</span>, user) -&gt; Notification:
+        <span class="keyword">if</span> channel == <span class="string">"email"</span>:
+            <span class="keyword">return</span> <span class="function">EmailNotification</span>(
+                to=user.email,
+                smtp_host=os.<span class="function">environ</span>[<span class="string">"SMTP_HOST"</span>],
+                smtp_port=<span class="function">int</span>(os.<span class="function">environ</span>[<span class="string">"SMTP_PORT"</span>]),
+                user=os.<span class="function">environ</span>[<span class="string">"SMTP_USER"</span>],
+                password=os.<span class="function">environ</span>[<span class="string">"SMTP_PASS"</span>],
+            )
+        <span class="keyword">elif</span> channel == <span class="string">"sms"</span>:
+            <span class="keyword">return</span> <span class="function">SMSNotification</span>(
+                phone=user.phone,
+                api_key=os.<span class="function">environ</span>[<span class="string">"TWILIO_KEY"</span>],
+                country_code=user.country_code,
+            )
+        <span class="keyword">elif</span> channel == <span class="string">"push"</span>:
+            <span class="keyword">return</span> <span class="function">PushNotification</span>(
+                device_id=user.device_id,
+                fcm_key=os.<span class="function">environ</span>[<span class="string">"FCM_KEY"</span>],
+            )
+        <span class="keyword">raise</span> <span class="function">ValueError</span>(f<span class="string">"unknown channel: {channel}"</span>)</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Step 3 &mdash; callers become trivial</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="comment"># users.py</span>
+<span class="keyword">def</span> <span class="function">on_signup</span>(user, channel):
+    NotificationFactory.<span class="function">create</span>(channel, user).<span class="function">send</span>(<span class="string">"Welcome aboard!"</span>)
+
+<span class="comment"># billing.py</span>
+<span class="keyword">def</span> <span class="function">on_payment_received</span>(user, channel):
+    NotificationFactory.<span class="function">create</span>(channel, user).<span class="function">send</span>(<span class="string">"Payment received"</span>)
+
+<span class="comment"># auth.py, security.py, marketing.py ... same one-liner pattern</span></pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">UML &mdash; one factory, one abstract product, many concrete products</h3>
+            <div class="diagram-box">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch;">
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 8px; padding: 12px; background: rgba(168,85,247,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-purple); font-weight: 700; text-align: center; margin-bottom: 6px;">NotificationFactory</div>
+                        <div style="border-top: 1px solid var(--accent-purple); padding-top: 6px;">
+                            + create(channel, user): Notification
+                        </div>
+                        <div style="text-align: center; color: var(--text-muted); margin-top: 8px;">&darr; one big if/elif</div>
+                    </div>
+                    <div style="border: 2px dashed var(--accent-blue); border-radius: 8px; padding: 12px; background: rgba(59,130,246,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-blue); font-weight: 700; text-align: center; margin-bottom: 6px;">&lt;&lt;abstract&gt;&gt; Notification</div>
+                        <div style="border-top: 1px solid var(--accent-blue); padding-top: 6px;">
+                            + send(msg)
+                        </div>
+                        <div style="text-align: center; color: var(--text-muted); margin-top: 8px;">&uarr; implemented by</div>
+                        <div style="display: flex; gap: 6px; margin-top: 4px;">
+                            <div style="flex: 1; border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; text-align: center; font-size: 0.7rem;">Email</div>
+                            <div style="flex: 1; border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; text-align: center; font-size: 0.7rem;">SMS</div>
+                            <div style="flex: 1; border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; text-align: center; font-size: 0.7rem;">Push</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>What Simple Factory bought us:</strong>
+                <ul style="margin-top: 8px; padding-left: 22px;">
+                    <li><strong>DRY restored</strong> &mdash; construction logic exists in <em>one</em> place</li>
+                    <li><strong>Configuration centralized</strong> &mdash; SMTP password rotates? One file changes</li>
+                    <li><strong>Callers are clean</strong> &mdash; <code>billing.py</code> no longer imports <code>twilio</code></li>
+                    <li><strong>Easy to mock in tests</strong> &mdash; patch <code>NotificationFactory.create</code> once</li>
+                </ul>
+            </div>
+
+            <!-- The follow-up trap question (formerly prereq Q2), now placed AFTER Simple Factory is taught -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#129327; But wait &mdash; is Simple Factory really clean?</h3>
+            <div class="quiz-box" id="simple-trap-q">
+                <h4>Question &mdash; A new requirement arrives: add Slack and Discord. What SOLID principle does our Simple Factory <em>itself</em> break?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">NotificationFactory</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">create</span>(channel, user):
+        <span class="keyword">if</span> channel == <span class="string">"email"</span>:    <span class="keyword">return</span> <span class="function">EmailNotification</span>(...)
+        <span class="keyword">elif</span> channel == <span class="string">"sms"</span>:    <span class="keyword">return</span> <span class="function">SMSNotification</span>(...)
+        <span class="keyword">elif</span> channel == <span class="string">"push"</span>:   <span class="keyword">return</span> <span class="function">PushNotification</span>(...)
+        <span class="keyword">elif</span> channel == <span class="string">"slack"</span>:  <span class="keyword">return</span> <span class="function">SlackNotification</span>(...)     <span class="comment"># NEW</span>
+        <span class="keyword">elif</span> channel == <span class="string">"discord"</span>: <span class="keyword">return</span> <span class="function">DiscordNotification</span>(...)  <span class="comment"># NEW</span>
+        <span class="keyword">raise</span> <span class="function">ValueError</span>(f<span class="string">"unknown channel: {channel}"</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('simple-trap-q', this, false)">A) SRP &mdash; the factory has multiple responsibilities</button>
+                <button class="quiz-option" onclick="checkQuiz('simple-trap-q', this, true)">B) OCP &mdash; every new channel requires <em>modifying</em> the factory class</button>
+                <button class="quiz-option" onclick="checkQuiz('simple-trap-q', this, false)">C) LSP &mdash; the subclasses aren't substitutable</button>
+                <button class="quiz-option" onclick="checkQuiz('simple-trap-q', this, false)">D) DIP &mdash; the factory now depends on too many concretions</button>
+                <div class="quiz-explanation">
+                    <strong>Correct &mdash; OCP.</strong> From <a href="../LLD-13-SOLID-Principles/index.html#ocp" style="color: var(--accent-primary);">LLD-13</a>: <em>open for extension, closed for modification</em>. Simple Factory cured the duplication smell (the <code>if/elif</code> was in 30 callers; now it's in 1). But we didn't <em>eliminate</em> it &mdash; we just moved it. And every new channel still forces us to <em>edit</em> tested code in the factory.
+
+                    <p style="margin-top: 8px;"><strong>The next move</strong>: get rid of the central <code>if/elif</code> entirely by letting each notification type live in its own factory subclass. <strong>That's Factory Method.</strong></p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">When Simple Factory is enough</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card after">
+                    <h4 style="color: var(--accent-success); margin-bottom: 8px;">&#10004; Reach for Simple Factory when&hellip;</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li>You have <strong>3&ndash;5 concrete classes</strong> behind one interface</li>
+                        <li>The set is <strong>stable</strong> (not adding new types every sprint)</li>
+                        <li>You want clients to <strong>not know the concrete names</strong></li>
+                        <li>"One <code>if/elif</code> in one file" is fine for your codebase's lifetime</li>
+                    </ul>
+                </div>
+                <div class="comparison-card before">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 8px;">&#10060; Skip it when&hellip;</h4>
+                    <ul style="color: var(--text-secondary); padding-left: 20px;">
+                        <li>You're <strong>adding new types frequently</strong> &mdash; the factory becomes an OCP violation</li>
+                        <li>The concrete class has <strong>per-instance behavior</strong> that varies (not just construction)</li>
+                        <li>You need <strong>families of related products</strong> (Abstract Factory)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ===== Two more Simple Factory examples ===== -->
+            <h3 style="margin-top: 36px; margin-bottom: 12px;">&#129520; Two more places you'll meet Simple Factory</h3>
+
+            <h4 style="margin-top: 16px; margin-bottom: 8px;">Example A &mdash; Document parser factory</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">A backend service receives uploaded files. Based on the extension, it picks the right parser. Simple Factory is the right tool because the set of parsers is small and stable.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Parser</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">parse</span>(self, raw: <span class="function">bytes</span>) -&gt; <span class="function">dict</span>: ...
+
+
+<span class="keyword">class</span> <span class="function">JsonParser</span>(Parser):
+    <span class="keyword">def</span> <span class="function">parse</span>(self, raw): <span class="keyword">import</span> json; <span class="keyword">return</span> json.<span class="function">loads</span>(raw)
+
+<span class="keyword">class</span> <span class="function">CsvParser</span>(Parser):
+    <span class="keyword">def</span> <span class="function">parse</span>(self, raw): <span class="keyword">import</span> csv, io; <span class="keyword">return</span> <span class="function">list</span>(csv.<span class="function">DictReader</span>(io.<span class="function">StringIO</span>(raw.<span class="function">decode</span>())))
+
+<span class="keyword">class</span> <span class="function">XmlParser</span>(Parser):
+    <span class="keyword">def</span> <span class="function">parse</span>(self, raw): ...
+
+
+<span class="keyword">class</span> <span class="function">ParserFactory</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">for_extension</span>(ext: <span class="function">str</span>) -&gt; Parser:
+        <span class="keyword">if</span> ext == <span class="string">".json"</span>: <span class="keyword">return</span> <span class="function">JsonParser</span>()
+        <span class="keyword">if</span> ext == <span class="string">".csv"</span>:  <span class="keyword">return</span> <span class="function">CsvParser</span>()
+        <span class="keyword">if</span> ext == <span class="string">".xml"</span>:  <span class="keyword">return</span> <span class="function">XmlParser</span>()
+        <span class="keyword">raise</span> <span class="function">ValueError</span>(f<span class="string">"unsupported: {ext}"</span>)
+
+
+<span class="comment"># Caller</span>
+data = ParserFactory.<span class="function">for_extension</span>(<span class="string">".json"</span>).<span class="function">parse</span>(raw_bytes)</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box" style="margin: 12px 0;">
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 10px; font-size: 0.85rem;">UML &mdash; same shape as the notification factory</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch;">
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 8px; padding: 10px; background: rgba(168,85,247,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-purple); font-weight: 700; text-align: center;">ParserFactory</div>
+                        <div style="border-top: 1px solid var(--accent-purple); padding-top: 6px; margin-top: 4px;">+ for_extension(ext): Parser</div>
+                    </div>
+                    <div style="border: 2px dashed var(--accent-blue); border-radius: 8px; padding: 10px; background: rgba(59,130,246,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-blue); font-weight: 700; text-align: center;">&lt;&lt;abstract&gt;&gt; Parser</div>
+                        <div style="border-top: 1px solid var(--accent-blue); padding-top: 6px; margin-top: 4px;">+ parse(raw): dict</div>
+                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                            <div style="flex:1; border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; text-align:center; font-size: 0.7rem;">JsonParser</div>
+                            <div style="flex:1; border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; text-align:center; font-size: 0.7rem;">CsvParser</div>
+                            <div style="flex:1; border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; text-align:center; font-size: 0.7rem;">XmlParser</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 22px; margin-bottom: 8px;">Example B &mdash; Logger factory</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">Pick a logging sink based on environment (dev / staging / prod). Two or three concrete types, no plans to grow &mdash; Simple Factory is the sweet spot.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Logger</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">log</span>(self, level: <span class="function">str</span>, msg: <span class="function">str</span>): ...
+
+
+<span class="keyword">class</span> <span class="function">ConsoleLogger</span>(Logger):
+    <span class="keyword">def</span> <span class="function">log</span>(self, level, msg): <span class="function">print</span>(f<span class="string">"[{level}] {msg}"</span>)
+
+<span class="keyword">class</span> <span class="function">FileLogger</span>(Logger):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, path): self.path = path
+    <span class="keyword">def</span> <span class="function">log</span>(self, level, msg):
+        <span class="keyword">with</span> <span class="function">open</span>(self.path, <span class="string">"a"</span>) <span class="keyword">as</span> f:
+            f.<span class="function">write</span>(f<span class="string">"[{level}] {msg}\n"</span>)
+
+<span class="keyword">class</span> <span class="function">DatadogLogger</span>(Logger):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, api_key): self.api_key = api_key
+    <span class="keyword">def</span> <span class="function">log</span>(self, level, msg): ...   <span class="comment"># POST to Datadog</span>
+
+
+<span class="keyword">class</span> <span class="function">LoggerFactory</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">for_env</span>(env: <span class="function">str</span>) -&gt; Logger:
+        <span class="keyword">if</span> env == <span class="string">"dev"</span>:        <span class="keyword">return</span> <span class="function">ConsoleLogger</span>()
+        <span class="keyword">if</span> env == <span class="string">"staging"</span>:    <span class="keyword">return</span> <span class="function">FileLogger</span>(<span class="string">"/var/log/app.log"</span>)
+        <span class="keyword">if</span> env == <span class="string">"production"</span>: <span class="keyword">return</span> <span class="function">DatadogLogger</span>(api_key=<span class="function">os</span>.<span class="function">environ</span>[<span class="string">"DD_KEY"</span>])
+        <span class="keyword">raise</span> <span class="function">ValueError</span>(f<span class="string">"unknown env: {env}"</span>)
+
+
+log = LoggerFactory.<span class="function">for_env</span>(<span class="string">"production"</span>)
+log.<span class="function">log</span>(<span class="string">"INFO"</span>, <span class="string">"server started"</span>)</pre>
+                </div>
+            </div>
+
+            <!-- ===== Frequency stat ===== -->
+            <div class="knowledge-block" style="margin-top: 22px;">
+                <p><strong>&#128202; How often you'll see Simple Factory in real codebases:</strong> <span style="color: var(--accent-success); font-weight: 700;">very common</span> &mdash; roughly <strong>7&ndash;8 out of 10</strong> production codebases use this informally, often without anyone calling it a "pattern." It's the default response to "I've copy-pasted this <code>if channel == ...</code> three times." If you've written a function called <code>get_parser(...)</code>, <code>build_client(...)</code>, or <code>make_xxx(...)</code> that returns one of N implementations, you've shipped a Simple Factory.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7. FACTORY METHOD ===== -->
+    <section id="method">
+        <div class="section-container">
+            <span class="section-label blue">Variant 2 of 3</span>
+            <h2 class="section-title">Factory Method &mdash; Subclasses Decide</h2>
+            <p class="section-subtitle">Instead of one factory class with <code>if/elif</code>, give each concrete type its own factory subclass. New type &mdash; new class. Old factories untouched. <strong>OCP restored.</strong></p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">The idea in one diagram</h3>
+            <div class="diagram-box">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                    <div style="border: 2px dashed var(--accent-purple); border-radius: 8px; padding: 12px; background: rgba(168,85,247,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem; text-align: center;">
+                        <div style="color: var(--accent-purple); font-weight: 700;">&lt;&lt;abstract&gt;&gt; NotificationCreator</div>
+                        <div style="margin-top: 6px;">+ create_notification(): Notification &nbsp;<span style="color: var(--text-muted);">&larr; abstract factory method</span><br>+ notify(msg) &nbsp;<span style="color: var(--text-muted);">&larr; template method that uses it</span></div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted);">&uarr; subclassed by &uarr;</div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-family: 'Fira Code', monospace; font-size: 0.72rem;">
+                        <div style="border: 2px solid var(--accent-success); padding: 8px; border-radius: 6px; background: rgba(16,185,129,0.06);"><b>EmailCreator</b><br>create() &rarr; Email</div>
+                        <div style="border: 2px solid var(--accent-success); padding: 8px; border-radius: 6px; background: rgba(16,185,129,0.06);"><b>SMSCreator</b><br>create() &rarr; SMS</div>
+                        <div style="border: 2px solid var(--accent-success); padding: 8px; border-radius: 6px; background: rgba(16,185,129,0.06);"><b>PushCreator</b><br>create() &rarr; Push</div>
+                        <div style="border: 2px solid var(--accent-warning); padding: 8px; border-radius: 6px; background: rgba(245,158,11,0.06);"><b>DiscordCreator</b> &#11088;<br><small>new &mdash; no edits to old creators</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">The code</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">NotificationCreator</span>(ABC):
+    <span class="string">"""Abstract creator. Subclasses pick which Notification to make."""</span>
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_notification</span>(self, user) -&gt; Notification: ...
+
+    <span class="keyword">def</span> <span class="function">notify</span>(self, user, message):
+        <span class="comment"># Template method - uses the factory method internally</span>
+        n = self.<span class="function">create_notification</span>(user)
+        n.<span class="function">send</span>(message)
+
+
+<span class="comment"># Each concrete creator: one class, one create_notification()</span>
+<span class="keyword">class</span> <span class="function">EmailCreator</span>(NotificationCreator):
+    <span class="keyword">def</span> <span class="function">create_notification</span>(self, user):
+        <span class="keyword">return</span> <span class="function">EmailNotification</span>(
+            to=user.email,
+            smtp_host=os.<span class="function">environ</span>[<span class="string">"SMTP_HOST"</span>],
+            smtp_port=<span class="function">int</span>(os.<span class="function">environ</span>[<span class="string">"SMTP_PORT"</span>]),
+            user=os.<span class="function">environ</span>[<span class="string">"SMTP_USER"</span>],
+            password=os.<span class="function">environ</span>[<span class="string">"SMTP_PASS"</span>],
+        )
+
+<span class="keyword">class</span> <span class="function">SMSCreator</span>(NotificationCreator):
+    <span class="keyword">def</span> <span class="function">create_notification</span>(self, user):
+        <span class="keyword">return</span> <span class="function">SMSNotification</span>(
+            phone=user.phone,
+            api_key=os.<span class="function">environ</span>[<span class="string">"TWILIO_KEY"</span>],
+            country_code=user.country_code,
+        )
+
+<span class="keyword">class</span> <span class="function">PushCreator</span>(NotificationCreator):
+    <span class="keyword">def</span> <span class="function">create_notification</span>(self, user):
+        <span class="keyword">return</span> <span class="function">PushNotification</span>(
+            device_id=user.device_id,
+            fcm_key=os.<span class="function">environ</span>[<span class="string">"FCM_KEY"</span>],
+        )
+
+
+<span class="comment"># Add Discord later? Just add a new class. ZERO edits to old creators.</span>
+<span class="keyword">class</span> <span class="function">DiscordCreator</span>(NotificationCreator):
+    <span class="keyword">def</span> <span class="function">create_notification</span>(self, user):
+        <span class="keyword">return</span> <span class="function">DiscordNotification</span>(
+            webhook_url=os.<span class="function">environ</span>[<span class="string">"DISCORD_WEBHOOK"</span>],
+            user_handle=user.discord_handle,
+        )</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Callers pick a creator instead of a string</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">on_signup</span>(user, creator: NotificationCreator):
+    creator.<span class="function">notify</span>(user, <span class="string">"Welcome aboard!"</span>)
+
+<span class="comment"># The "which creator?" choice happens at the edge:</span>
+<span class="function">on_signup</span>(user, <span class="function">EmailCreator</span>())
+<span class="function">on_signup</span>(user, <span class="function">SMSCreator</span>())
+<span class="function">on_signup</span>(user, <span class="function">DiscordCreator</span>())   <span class="comment"># works without any prior on_signup change</span></pre>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>The trade-off:</strong>
+                <ul style="margin-top: 8px; padding-left: 22px;">
+                    <li><strong>&#10004; OCP restored</strong> &mdash; new types are <em>added</em>, not <em>edited in</em></li>
+                    <li><strong>&#10004; Each concrete creator is small and focused</strong></li>
+                    <li><strong>&#10004; Easy to swap for tests</strong> &mdash; <code>FakeCreator()</code> sits beside <code>EmailCreator()</code></li>
+                    <li><strong>&#10060; More classes</strong> &mdash; 5 channels = 5 creator classes (plus 5 product classes)</li>
+                    <li><strong>&#10060; The "channel &rarr; creator" string-to-class lookup has to live <em>somewhere</em></strong> &mdash; often in a tiny registry dict at the composition root</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">When Factory Method earns its keep</h3>
+            <ul style="color: var(--text-secondary); padding-left: 22px;">
+                <li>You're <strong>regularly adding new types</strong> behind one abstract interface</li>
+                <li>You want strict <strong>Open/Closed compliance</strong> (interview answer + many library codebases)</li>
+                <li>Each type has <strong>some logic beyond construction</strong> (e.g. a template method that uses the product)</li>
+                <li>Real examples: <code>logging.getLogger(name)</code> uses a factory method internally; SQLAlchemy dialect classes; <code>requests.adapters.HTTPAdapter</code></li>
+            </ul>
+
+            <!-- ===== DIP explanation ===== -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128268; Bonus &mdash; Factory Method follows DIP too</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Look at the caller signature one more time:</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">def</span> <span class="function">on_signup</span>(user, creator: NotificationCreator):
+    creator.<span class="function">notify</span>(user, <span class="string">"Welcome aboard!"</span>)</pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary);">Recall the <a href="../LLD-14-SOLID-Principles-2/index.html#dip" style="color: var(--accent-primary);">Dependency Inversion Principle</a> from LLD-14: <em>high-level modules should depend on abstractions, not concretions.</em> Three stakeholders here:</p>
+
+            <div class="diagram-box" style="margin: 12px 0;">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 0.9rem;">
+                    <div style="border: 2px solid var(--accent-warning); border-radius: 8px; padding: 12px; background: rgba(245,158,11,0.06);">
+                        <strong style="color: var(--accent-warning);">High-level (<code>on_signup</code>)</strong> &mdash; the business logic. It only knows it needs <em>some</em> notification sent.<br>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">&darr; depends on &darr;</span>
+                    </div>
+                    <div style="border: 2px dashed var(--accent-blue); border-radius: 8px; padding: 12px; background: rgba(59,130,246,0.06); text-align: center;">
+                        <strong style="color: var(--accent-blue);">Abstraction (<code>NotificationCreator</code>)</strong><br>
+                        <span style="color: var(--text-muted); font-size: 0.85rem; font-family: 'Fira Code', monospace;">&lt;&lt;abstract&gt;&gt; create_notification() &middot; notify()</span>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">&uarr; ALSO depends on &uarr;</div>
+                    <div style="border: 2px solid var(--accent-success); border-radius: 8px; padding: 12px; background: rgba(16,185,129,0.06);">
+                        <strong style="color: var(--accent-success);">Low-level (<code>EmailCreator</code>, <code>SMSCreator</code>, &hellip;)</strong> &mdash; concrete implementations. They depend on the abstraction (they implement it).
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px;">&rarr; <strong>Both the high-level code and the low-level code depend on the abstraction</strong>. Neither knows about the other directly. That's DIP. Swap <code>EmailCreator</code> for <code>FakeCreator</code> in tests &mdash; <code>on_signup</code> doesn't care. Add a brand new <code>SlackCreator</code> &mdash; <code>on_signup</code> doesn't care. The arrows all point at the abstraction.</p>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 10px;">Compare with the Simple Factory version: <code>on_signup</code> would have to call <code>NotificationFactory.create(channel, user)</code> &mdash; importing the concrete factory class and passing a string. Now <code>on_signup</code> depends on <code>NotificationFactory</code> directly. Factory Method's caller depends only on <code>NotificationCreator</code> (the abstraction). <strong>One small win for DIP.</strong></p>
+
+            <!-- ===== Naming convention sub-section ===== -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128221; A note on naming &mdash; <code>*Creator</code> vs <code>*Factory</code></h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">We called the abstract class <code>NotificationCreator</code>, but the same pattern is equally valid (and very common in real code) with a <code>*Factory</code> suffix. <strong>The pattern is not about the name</strong> &mdash; it's about the shape: an abstract class whose abstract <em>method</em> is the factory, plus concrete subclasses that each fix the choice of product.</p>
+
+            <div class="diagram-box" style="margin: 12px 0;">
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 12px; font-size: 0.85rem;">Same pattern, two perfectly fine naming styles &mdash; pick the one your team already uses</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div style="border: 2px dashed var(--accent-blue); border-radius: 8px; padding: 12px; background: rgba(59,130,246,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-blue); font-weight: 700; text-align: center; margin-bottom: 6px;">Naming style A: <code>*Creator</code></div>
+                        <div style="border-top: 1px solid var(--accent-blue); padding-top: 6px;">
+                            NotificationCreator (abstract)<br>
+                            &nbsp;&nbsp;+ create_notification()<br>
+                            &nbsp;&nbsp;+ notify()
+                        </div>
+                        <div style="margin-top: 6px;">
+                            EmailCreator &middot; SMSCreator<br>
+                            PushCreator &middot; DiscordCreator
+                        </div>
+                    </div>
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 8px; padding: 12px; background: rgba(168,85,247,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-purple); font-weight: 700; text-align: center; margin-bottom: 6px;">Naming style B: <code>*Factory</code></div>
+                        <div style="border-top: 1px solid var(--accent-purple); padding-top: 6px;">
+                            NotificationFactory (abstract)<br>
+                            &nbsp;&nbsp;+ create_notification()<br>
+                            &nbsp;&nbsp;+ notify()
+                        </div>
+                        <div style="margin-top: 6px;">
+                            EmailFactory &middot; SMSFactory<br>
+                            PushFactory &middot; DiscordFactory
+                        </div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.82rem; margin-top: 14px;">Same UML. Same code. Same OCP &amp; DIP win. Only the suffix is different.</p>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem;"><strong>Convention you'll meet in the wild:</strong> Java/.NET codebases tend toward <code>*Factory</code>; many Python codebases prefer <code>*Creator</code>, <code>*Provider</code>, <code>*Builder</code>, or even just a method like <code>build_*()</code>. <em>If the structure matches the pattern, it</em> is <em>the pattern</em> &mdash; regardless of what the file is named.</p>
+
+            <!-- ===== One more Factory Method example with UML ===== -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#129520; Another Factory Method &mdash; Document export service</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">An e-commerce backend can export invoices in different formats (PDF, Excel, HTML for the web). Each format is its own subclass.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">Document</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">render</span>(self, data) -&gt; <span class="function">bytes</span>: ...
+
+
+<span class="keyword">class</span> <span class="function">PdfDocument</span>(Document):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> b<span class="string">"%PDF-1.4 ..."</span>
+
+<span class="keyword">class</span> <span class="function">ExcelDocument</span>(Document):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> b<span class="string">"PK\x03\x04 ..."</span>      <span class="comment"># xlsx bytes</span>
+
+<span class="keyword">class</span> <span class="function">HtmlDocument</span>(Document):
+    <span class="keyword">def</span> <span class="function">render</span>(self, data): <span class="keyword">return</span> b<span class="string">"&lt;table&gt;...&lt;/table&gt;"</span>
+
+
+<span class="keyword">class</span> <span class="function">ExportService</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_document</span>(self) -&gt; Document: ...
+
+    <span class="keyword">def</span> <span class="function">export</span>(self, data, path: <span class="function">str</span>):                    <span class="comment"># template method</span>
+        doc = self.<span class="function">create_document</span>()
+        <span class="keyword">with</span> <span class="function">open</span>(path, <span class="string">"wb"</span>) <span class="keyword">as</span> f:
+            f.<span class="function">write</span>(doc.<span class="function">render</span>(data))
+
+
+<span class="keyword">class</span> <span class="function">PdfExportService</span>(ExportService):
+    <span class="keyword">def</span> <span class="function">create_document</span>(self): <span class="keyword">return</span> <span class="function">PdfDocument</span>()
+
+
+<span class="keyword">class</span> <span class="function">ExcelExportService</span>(ExportService):
+    <span class="keyword">def</span> <span class="function">create_document</span>(self): <span class="keyword">return</span> <span class="function">ExcelDocument</span>()
+
+
+<span class="keyword">class</span> <span class="function">HtmlExportService</span>(ExportService):
+    <span class="keyword">def</span> <span class="function">create_document</span>(self): <span class="keyword">return</span> <span class="function">HtmlDocument</span>()
+
+
+<span class="comment"># Caller picks the service. New format = new service class, no edits to old ones.</span>
+<span class="function">PdfExportService</span>().<span class="function">export</span>(invoice_data, <span class="string">"invoice.pdf"</span>)
+<span class="function">ExcelExportService</span>().<span class="function">export</span>(invoice_data, <span class="string">"invoice.xlsx"</span>)</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box" style="margin: 12px 0;">
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 10px; font-size: 0.85rem;">UML &mdash; same Factory Method shape, different domain</div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                    <div style="border: 2px dashed var(--accent-purple); border-radius: 8px; padding: 10px; background: rgba(168,85,247,0.06); text-align: center;">
+                        <strong>&lt;&lt;abstract&gt;&gt; ExportService</strong><br>
+                        + create_document(): Document &nbsp;<span style="color: var(--text-muted);">&larr; factory method</span><br>
+                        + export(data, path) &nbsp;<span style="color: var(--text-muted);">&larr; template method</span>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted);">&uarr;</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                        <div style="border: 2px solid var(--accent-success); padding: 8px; border-radius: 6px; background: rgba(16,185,129,0.06); text-align: center;"><b>PdfExportService</b><br>&rarr; PdfDocument</div>
+                        <div style="border: 2px solid var(--accent-success); padding: 8px; border-radius: 6px; background: rgba(16,185,129,0.06); text-align: center;"><b>ExcelExportService</b><br>&rarr; ExcelDocument</div>
+                        <div style="border: 2px solid var(--accent-success); padding: 8px; border-radius: 6px; background: rgba(16,185,129,0.06); text-align: center;"><b>HtmlExportService</b><br>&rarr; HtmlDocument</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Frequency stat ===== -->
+            <div class="knowledge-block" style="margin-top: 22px;">
+                <p><strong>&#128202; How often you'll see Factory Method:</strong> <span style="color: var(--accent-warning); font-weight: 700;">common in library &amp; framework code</span> &mdash; roughly <strong>4&ndash;5 out of 10</strong> codebases use it explicitly. Less common in everyday app code (Simple Factory or just plain dependency injection usually wins there). Show up most often in: ORM drivers (each DB dialect is a subclass), web frameworks (each request handler is a subclass), CI/CD task runners (each runner type subclasses a base). Recognize it more than you write it.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 8. ABSTRACT FACTORY ===== -->
+    <section id="abstract">
+        <div class="section-container">
+            <span class="section-label purple">Variant 3 of 3</span>
+            <h2 class="section-title">Abstract Factory &mdash; Families of Related Products</h2>
+            <p class="section-subtitle">When the products come in <strong>families that must stay together</strong> &mdash; all Windows widgets, all dark-theme components, all production-AWS resources &mdash; you need a factory that hands over the entire family in one call. Anything less <em>allows</em> mixing.</p>
+
+            <!-- The progressive attempts that motivate Abstract Factory (reworked from old prereq Q3) -->
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Setup &mdash; cross-platform UI widgets</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Imagine you're building an app that renders on Windows, Mac, and Linux. Each platform has its own <code>Button</code>, <code>Checkbox</code>, <code>Menu</code>. The constraint: a single window must contain widgets <em>all from the same platform</em> &mdash; never a Mac checkbox next to a Windows button.</p>
+
+            <!-- Original naive code BEFORE any pattern -->
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">&#129512; Starting point &mdash; no pattern at all</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">The most natural first cut. The <code>Application</code> class does all the construction itself.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Application</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, os_type: <span class="function">str</span>):
+        <span class="keyword">if</span> os_type == <span class="string">"Windows"</span>:
+            self.button   = <span class="function">WindowsButton</span>()
+            self.checkbox = <span class="function">WindowsCheckbox</span>()
+            self.menu     = <span class="function">WindowsMenu</span>()
+        <span class="keyword">elif</span> os_type == <span class="string">"Mac"</span>:
+            self.button   = <span class="function">MacButton</span>()
+            self.checkbox = <span class="function">MacCheckbox</span>()
+            self.menu     = <span class="function">MacMenu</span>()
+        <span class="keyword">elif</span> os_type == <span class="string">"Linux"</span>:
+            self.button   = <span class="function">LinuxButton</span>()
+            self.checkbox = <span class="function">LinuxCheckbox</span>()
+            self.menu     = <span class="function">LinuxMenu</span>()</pre>
+                </div>
+            </div>
+            <div class="highlight-box danger">
+                <strong>Four things hurt right away:</strong>
+                <ul style="margin-top: 6px; padding-left: 22px;">
+                    <li><strong>Construction logic inside <code>Application</code></strong> &mdash; the business class knows every concrete widget name.</li>
+                    <li><strong>If/elif on a string</strong> &mdash; adding a fourth platform means modifying this code (OCP smell).</li>
+                    <li><strong>Triplet duplication</strong> &mdash; every dialog/window/popup that wants widgets repeats this pattern.</li>
+                    <li><strong>Nothing prevents accidental mixing</strong> &mdash; a junior dev refactoring this can typo <code>self.checkbox = MacCheckbox()</code> inside the Windows branch and ship a mixed-platform UI.</li>
+                </ul>
+            </div>
+            <p style="color: var(--text-secondary); margin-top: 10px;">Let's see how far each pattern we already know gets us.</p>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#129518; Attempt 1 &mdash; reach for Simple Factory</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">WidgetFactory</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">create_button</span>(os_type):
+        <span class="keyword">if</span> os_type == <span class="string">"Windows"</span>: <span class="keyword">return</span> <span class="function">WindowsButton</span>()
+        <span class="keyword">elif</span> os_type == <span class="string">"Mac"</span>:   <span class="keyword">return</span> <span class="function">MacButton</span>()
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">create_checkbox</span>(os_type):
+        <span class="keyword">if</span> os_type == <span class="string">"Windows"</span>: <span class="keyword">return</span> <span class="function">WindowsCheckbox</span>()
+        <span class="keyword">elif</span> os_type == <span class="string">"Mac"</span>:   <span class="keyword">return</span> <span class="function">MacCheckbox</span>()
+
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">create_menu</span>(os_type): ...
+
+
+<span class="comment"># Caller</span>
+<span class="keyword">class</span> <span class="function">Application</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, os_type):
+        self.button   = WidgetFactory.<span class="function">create_button</span>(os_type)
+        self.checkbox = WidgetFactory.<span class="function">create_checkbox</span>(<span class="string">"Mac"</span>)   <span class="comment"># typo!</span>
+        self.menu     = WidgetFactory.<span class="function">create_menu</span>(os_type)</pre>
+                </div>
+            </div>
+            <div class="highlight-box danger">
+                <strong>The bug:</strong> nothing prevented us from passing <code>"Mac"</code> as the checkbox's platform string while everything else got <code>os_type</code>. The code <em>runs</em>. Tests <em>pass</em>. Users see a mixed-platform UI in production. Simple Factory has no concept of "family."
+            </div>
+
+            <!-- UML for Attempt 1 -->
+            <div class="diagram-box" style="margin: 14px 0;">
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 10px; font-size: 0.85rem;">UML for Attempt 1 &mdash; notice: <em>three independent</em> factory methods, no glue holding the family together</div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                    <div style="border: 2px solid var(--accent-warning); border-radius: 8px; padding: 10px; background: rgba(245,158,11,0.06); font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                        <div style="color: var(--accent-warning); font-weight: 700; text-align: center;">WidgetFactory</div>
+                        <div style="border-top: 1px solid var(--accent-warning); padding-top: 6px; margin-top: 4px;">
+                            + create_button(os_type) &nbsp;<span style="color: var(--text-muted);">&larr; independent</span><br>
+                            + create_checkbox(os_type) &nbsp;<span style="color: var(--text-muted);">&larr; independent</span><br>
+                            + create_menu(os_type) &nbsp;<span style="color: var(--text-muted);">&larr; independent</span>
+                        </div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">each call independently does an <code>if os_type ==</code> &darr;</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <div style="border: 1px dashed var(--accent-blue); padding: 6px; border-radius: 4px; text-align: center; font-family: 'Fira Code', monospace; font-size: 0.72rem;">
+                            <b>Button</b><br>Win &middot; Mac &middot; Linux
+                        </div>
+                        <div style="border: 1px dashed var(--accent-blue); padding: 6px; border-radius: 4px; text-align: center; font-family: 'Fira Code', monospace; font-size: 0.72rem;">
+                            <b>Checkbox</b><br>Win &middot; Mac &middot; Linux
+                        </div>
+                        <div style="border: 1px dashed var(--accent-blue); padding: 6px; border-radius: 4px; text-align: center; font-family: 'Fira Code', monospace; font-size: 0.72rem;">
+                            <b>Menu</b><br>Win &middot; Mac &middot; Linux
+                        </div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.82rem; margin-top: 12px;">No structural connection between the three calls. The caller must "remember" to pass <code>os_type</code> consistently &mdash; and one forgotten letter is a production bug.</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#129518; Attempt 2 &mdash; reach for Factory Method (per widget)</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">ButtonCreator</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create</span>(self) -&gt; Button: ...
+
+
+<span class="keyword">class</span> <span class="function">WindowsButtonCreator</span>(ButtonCreator):
+    <span class="keyword">def</span> <span class="function">create</span>(self):
+        <span class="keyword">return</span> <span class="function">WindowsButton</span>()
+
+
+<span class="keyword">class</span> <span class="function">MacButtonCreator</span>(ButtonCreator):
+    <span class="keyword">def</span> <span class="function">create</span>(self):
+        <span class="keyword">return</span> <span class="function">MacButton</span>()
+
+
+<span class="keyword">class</span> <span class="function">LinuxButtonCreator</span>(ButtonCreator):
+    <span class="keyword">def</span> <span class="function">create</span>(self):
+        <span class="keyword">return</span> <span class="function">LinuxButton</span>()
+
+
+<span class="comment"># ... and the same triple-pattern repeats for Checkbox and Menu</span>
+<span class="comment"># (CheckboxCreator + WindowsCheckboxCreator + MacCheckboxCreator + LinuxCheckboxCreator)</span>
+<span class="comment"># (MenuCreator     + WindowsMenuCreator     + MacMenuCreator     + LinuxMenuCreator)</span>
+
+
+<span class="comment"># Caller: three SEPARATE creator parameters - nothing holds them together</span>
+<span class="keyword">class</span> <span class="function">Application</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, button_c, checkbox_c, menu_c):
+        self.button   = button_c.<span class="function">create</span>()
+        self.checkbox = checkbox_c.<span class="function">create</span>()
+        self.menu     = menu_c.<span class="function">create</span>()
+
+
+<span class="comment"># Mixing is still possible:</span>
+app = <span class="function">Application</span>(
+    <span class="function">WindowsButtonCreator</span>(),
+    <span class="function">MacCheckboxCreator</span>(),       <span class="comment"># still nothing stops this</span>
+    <span class="function">WindowsMenuCreator</span>(),
+)</pre>
+                </div>
+            </div>
+            <div class="highlight-box danger">
+                <strong>Same bug, different surface.</strong> We can still hand <code>Application</code> three creators from three different platforms. Factory Method gave us extensibility but did <em>nothing</em> for family consistency.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#9989; Attempt 3 &mdash; Abstract Factory: <em>one</em> factory for the whole family</h3>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">WidgetFactory</span>(ABC):
+    <span class="string">"""Abstract Factory: each subclass produces a COMPLETE family."""</span>
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_button</span>(self) -&gt; Button: ...
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_checkbox</span>(self) -&gt; Checkbox: ...
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_menu</span>(self) -&gt; Menu: ...
+
+
+<span class="keyword">class</span> <span class="function">WindowsWidgetFactory</span>(WidgetFactory):
+    <span class="keyword">def</span> <span class="function">create_button</span>(self):   <span class="keyword">return</span> <span class="function">WindowsButton</span>()
+    <span class="keyword">def</span> <span class="function">create_checkbox</span>(self): <span class="keyword">return</span> <span class="function">WindowsCheckbox</span>()
+    <span class="keyword">def</span> <span class="function">create_menu</span>(self):     <span class="keyword">return</span> <span class="function">WindowsMenu</span>()
+
+<span class="keyword">class</span> <span class="function">MacWidgetFactory</span>(WidgetFactory):
+    <span class="keyword">def</span> <span class="function">create_button</span>(self):   <span class="keyword">return</span> <span class="function">MacButton</span>()
+    <span class="keyword">def</span> <span class="function">create_checkbox</span>(self): <span class="keyword">return</span> <span class="function">MacCheckbox</span>()
+    <span class="keyword">def</span> <span class="function">create_menu</span>(self):     <span class="keyword">return</span> <span class="function">MacMenu</span>()
+
+
+<span class="keyword">class</span> <span class="function">Application</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, factory: WidgetFactory):
+        <span class="comment"># ONE factory. Family-consistent BY CONSTRUCTION.</span>
+        self.button   = factory.<span class="function">create_button</span>()
+        self.checkbox = factory.<span class="function">create_checkbox</span>()
+        self.menu     = factory.<span class="function">create_menu</span>()
+
+
+<span class="comment"># Mixing is IMPOSSIBLE - you can pass exactly one factory.</span>
+win_app = <span class="function">Application</span>(<span class="function">WindowsWidgetFactory</span>())
+mac_app = <span class="function">Application</span>(<span class="function">MacWidgetFactory</span>())</pre>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">UML &mdash; the family guarantee</h3>
+            <div class="diagram-box">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                    <div style="border: 2px dashed var(--accent-purple); padding: 10px; border-radius: 6px; text-align: center; font-family: 'Fira Code', monospace; font-size: 0.78rem; background: rgba(168,85,247,0.06);">
+                        <b>&lt;&lt;abstract&gt;&gt; WidgetFactory</b><br>+ create_button() / create_checkbox() / create_menu()
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted);">&uarr;</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="border: 2px solid var(--accent-blue); border-radius: 6px; padding: 8px; background: rgba(59,130,246,0.06); text-align: center; font-family: 'Fira Code', monospace; font-size: 0.75rem;">
+                            <b>WindowsWidgetFactory</b><br>
+                            <span style="color: var(--text-muted);">produces:</span><br>
+                            WindowsButton<br>WindowsCheckbox<br>WindowsMenu
+                        </div>
+                        <div style="border: 2px solid var(--accent-success); border-radius: 6px; padding: 8px; background: rgba(16,185,129,0.06); text-align: center; font-family: 'Fira Code', monospace; font-size: 0.75rem;">
+                            <b>MacWidgetFactory</b><br>
+                            <span style="color: var(--text-muted);">produces:</span><br>
+                            MacButton<br>MacCheckbox<br>MacMenu
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box success">
+                <strong>The key win:</strong> The type system / class structure now <em>enforces</em> what was previously a runtime invariant. You cannot accidentally hand <code>Application</code> a mix &mdash; there's only one <code>factory</code> parameter, and the family travels together.
+            </div>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Real-world Abstract Factories you've already touched</h3>
+            <ul style="color: var(--text-secondary); padding-left: 22px;">
+                <li><strong>Database drivers</strong>: <code>connection</code> + <code>cursor</code> + <code>transaction</code> come as a Postgres family or a MySQL family &mdash; never mixed. <code>sqlalchemy.create_engine</code> picks the family.</li>
+                <li><strong>Cloud SDKs</strong>: <code>boto3.client("s3")</code> hands you the AWS-S3 family of resources; you don't accidentally get an Azure blob client.</li>
+                <li><strong>UI toolkits</strong>: <code>QtWidgets</code> on Windows vs. Mac &mdash; the OS-native theme is wired in via an abstract factory under the hood.</li>
+                <li><strong>Test doubles</strong>: a "fake" abstract factory that produces fake DB, fake email sender, fake clock &mdash; lets your service swap its entire infra family in tests.</li>
+            </ul>
+
+            <!-- ===== Two fully worked real-world Abstract Factory examples ===== -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#129520; Worked example A &mdash; Test infrastructure factory</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">A service needs a database, email sender, and clock. In production you want the real things; in tests you want fakes. The constraint: <em>they must match</em> &mdash; if you're using the fake DB, you also want the fake clock and fake mailer (otherwise tests are flaky and slow).</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="comment"># --- Abstract products ---</span>
+<span class="keyword">class</span> <span class="function">Database</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">save</span>(self, record): ...
+
+
+<span class="keyword">class</span> <span class="function">Mailer</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">send</span>(self, to, msg): ...
+
+
+<span class="keyword">class</span> <span class="function">Clock</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">now</span>(self): ...
+
+
+<span class="comment"># --- Production family ---</span>
+<span class="keyword">class</span> <span class="function">PostgresDatabase</span>(Database):
+    <span class="keyword">def</span> <span class="function">save</span>(self, record): <span class="function">print</span>(<span class="string">"&rarr; postgres INSERT"</span>)
+
+
+<span class="keyword">class</span> <span class="function">SmtpMailer</span>(Mailer):
+    <span class="keyword">def</span> <span class="function">send</span>(self, to, msg): <span class="function">print</span>(f<span class="string">"&rarr; SMTP send to {to}"</span>)
+
+
+<span class="keyword">class</span> <span class="function">SystemClock</span>(Clock):
+    <span class="keyword">def</span> <span class="function">now</span>(self):
+        <span class="keyword">import</span> datetime; <span class="keyword">return</span> datetime.datetime.<span class="function">utcnow</span>()
+
+
+<span class="comment"># --- Test family (all fakes that work together) ---</span>
+<span class="keyword">class</span> <span class="function">InMemoryDatabase</span>(Database):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self): self.records = []
+    <span class="keyword">def</span> <span class="function">save</span>(self, record): self.records.<span class="function">append</span>(record)
+
+
+<span class="keyword">class</span> <span class="function">CapturingMailer</span>(Mailer):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self): self.sent = []
+    <span class="keyword">def</span> <span class="function">send</span>(self, to, msg): self.sent.<span class="function">append</span>((to, msg))
+
+
+<span class="keyword">class</span> <span class="function">FrozenClock</span>(Clock):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, fixed): self.fixed = fixed
+    <span class="keyword">def</span> <span class="function">now</span>(self): <span class="keyword">return</span> self.fixed
+
+
+<span class="comment"># --- Abstract Factory ---</span>
+<span class="keyword">class</span> <span class="function">InfraFactory</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_db</span>(self) -&gt; Database: ...
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_mailer</span>(self) -&gt; Mailer: ...
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_clock</span>(self) -&gt; Clock: ...
+
+
+<span class="comment"># --- Concrete factories: one per family ---</span>
+<span class="keyword">class</span> <span class="function">ProductionInfraFactory</span>(InfraFactory):
+    <span class="keyword">def</span> <span class="function">create_db</span>(self):     <span class="keyword">return</span> <span class="function">PostgresDatabase</span>()
+    <span class="keyword">def</span> <span class="function">create_mailer</span>(self): <span class="keyword">return</span> <span class="function">SmtpMailer</span>()
+    <span class="keyword">def</span> <span class="function">create_clock</span>(self):  <span class="keyword">return</span> <span class="function">SystemClock</span>()
+
+
+<span class="keyword">class</span> <span class="function">TestInfraFactory</span>(InfraFactory):
+    <span class="keyword">def</span> <span class="function">create_db</span>(self):     <span class="keyword">return</span> <span class="function">InMemoryDatabase</span>()
+    <span class="keyword">def</span> <span class="function">create_mailer</span>(self): <span class="keyword">return</span> <span class="function">CapturingMailer</span>()
+    <span class="keyword">def</span> <span class="function">create_clock</span>(self):
+        <span class="keyword">import</span> datetime
+        <span class="keyword">return</span> <span class="function">FrozenClock</span>(datetime.datetime(<span class="number">2026</span>, <span class="number">1</span>, <span class="number">1</span>))
+
+
+<span class="comment"># --- Service depends on the abstract factory ---</span>
+<span class="keyword">class</span> <span class="function">OrderService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, infra: InfraFactory):
+        self.db     = infra.<span class="function">create_db</span>()
+        self.mail   = infra.<span class="function">create_mailer</span>()
+        self.clock  = infra.<span class="function">create_clock</span>()
+
+
+<span class="comment"># In production:</span>
+prod_service = <span class="function">OrderService</span>(<span class="function">ProductionInfraFactory</span>())
+
+<span class="comment"># In tests:</span>
+test_service = <span class="function">OrderService</span>(<span class="function">TestInfraFactory</span>())
+<span class="comment"># Guaranteed: in-memory DB + capturing mailer + frozen clock - all consistent</span></pre>
+                </div>
+            </div>
+
+            <div class="diagram-box" style="margin: 14px 0;">
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 10px; font-size: 0.85rem;">UML &mdash; same Abstract Factory shape, different domain (infra families)</div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-family: 'Fira Code', monospace; font-size: 0.78rem;">
+                    <div style="border: 2px dashed var(--accent-purple); padding: 10px; border-radius: 6px; text-align: center; background: rgba(168,85,247,0.06);">
+                        <b>&lt;&lt;abstract&gt;&gt; InfraFactory</b><br>+ create_db() / create_mailer() / create_clock()
+                    </div>
+                    <div style="text-align: center; color: var(--text-muted);">&uarr;</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="border: 2px solid var(--accent-success); border-radius: 6px; padding: 8px; background: rgba(16,185,129,0.06); text-align: center;">
+                            <b>ProductionInfraFactory</b><br>
+                            <span style="color: var(--text-muted);">produces:</span><br>
+                            PostgresDatabase<br>SmtpMailer<br>SystemClock
+                        </div>
+                        <div style="border: 2px solid var(--accent-blue); border-radius: 6px; padding: 8px; background: rgba(59,130,246,0.06); text-align: center;">
+                            <b>TestInfraFactory</b><br>
+                            <span style="color: var(--text-muted);">produces:</span><br>
+                            InMemoryDatabase<br>CapturingMailer<br>FrozenClock
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#129520; Worked example B &mdash; Cloud provider SDK</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">A multi-cloud app needs file storage, a queue, and a notification service. Each cloud provider has its own native services &mdash; AWS S3 + SQS + SNS, GCP GCS + Pub/Sub + ... etc. The constraint: <em>once you pick a cloud, everything has to match</em>.</p>
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">CloudFactory</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_blob_store</span>(self) -&gt; BlobStore: ...
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_queue</span>(self) -&gt; Queue: ...
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">create_notifier</span>(self) -&gt; Notifier: ...
+
+
+<span class="keyword">class</span> <span class="function">AwsCloudFactory</span>(CloudFactory):
+    <span class="keyword">def</span> <span class="function">create_blob_store</span>(self): <span class="keyword">return</span> <span class="function">S3BlobStore</span>(...)
+    <span class="keyword">def</span> <span class="function">create_queue</span>(self):      <span class="keyword">return</span> <span class="function">SqsQueue</span>(...)
+    <span class="keyword">def</span> <span class="function">create_notifier</span>(self):   <span class="keyword">return</span> <span class="function">SnsNotifier</span>(...)
+
+
+<span class="keyword">class</span> <span class="function">GcpCloudFactory</span>(CloudFactory):
+    <span class="keyword">def</span> <span class="function">create_blob_store</span>(self): <span class="keyword">return</span> <span class="function">GcsBlobStore</span>(...)
+    <span class="keyword">def</span> <span class="function">create_queue</span>(self):      <span class="keyword">return</span> <span class="function">PubSubQueue</span>(...)
+    <span class="keyword">def</span> <span class="function">create_notifier</span>(self):   <span class="keyword">return</span> <span class="function">FcmNotifier</span>(...)
+
+
+<span class="keyword">class</span> <span class="function">AzureCloudFactory</span>(CloudFactory):
+    <span class="keyword">def</span> <span class="function">create_blob_store</span>(self): <span class="keyword">return</span> <span class="function">AzureBlobStore</span>(...)
+    <span class="keyword">def</span> <span class="function">create_queue</span>(self):      <span class="keyword">return</span> <span class="function">ServiceBusQueue</span>(...)
+    <span class="keyword">def</span> <span class="function">create_notifier</span>(self):   <span class="keyword">return</span> <span class="function">AzureNotificationHub</span>(...)
+
+
+<span class="comment"># Caller picks ONE cloud factory. Everything below is consistent by construction.</span>
+cloud = <span class="function">AwsCloudFactory</span>()    <span class="comment"># or GcpCloudFactory(), or AzureCloudFactory()</span>
+files = cloud.<span class="function">create_blob_store</span>()
+queue = cloud.<span class="function">create_queue</span>()
+notif = cloud.<span class="function">create_notifier</span>()</pre>
+                </div>
+            </div>
+
+            <div class="diagram-box" style="margin: 14px 0;">
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 10px; font-size: 0.85rem;">UML &mdash; three concrete factories, three matching product families</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-family: 'Fira Code', monospace; font-size: 0.74rem;">
+                    <div style="border: 2px solid #ff9900; border-radius: 6px; padding: 8px; background: rgba(255,153,0,0.06); text-align: center;">
+                        <b>AwsCloudFactory</b><br>
+                        S3BlobStore<br>SqsQueue<br>SnsNotifier
+                    </div>
+                    <div style="border: 2px solid #4285f4; border-radius: 6px; padding: 8px; background: rgba(66,133,244,0.06); text-align: center;">
+                        <b>GcpCloudFactory</b><br>
+                        GcsBlobStore<br>PubSubQueue<br>FcmNotifier
+                    </div>
+                    <div style="border: 2px solid #0078d4; border-radius: 6px; padding: 8px; background: rgba(0,120,212,0.06); text-align: center;">
+                        <b>AzureCloudFactory</b><br>
+                        AzureBlobStore<br>ServiceBusQueue<br>NotificationHub
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Frequency stat ===== -->
+            <div class="knowledge-block" style="margin-top: 22px;">
+                <p><strong>&#128202; How often you'll see Abstract Factory:</strong> <span style="color: var(--accent-danger); font-weight: 700;">rare</span> &mdash; roughly <strong>1&ndash;2 out of 10</strong> codebases use it. It's <em>the right tool</em> for a narrow problem (matching product families) and overkill for everything else. Show up most often in: cross-platform UI toolkits, multi-cloud SDKs, multi-DB ORMs, test-double infrastructure, theme/skin systems. <strong>Recognize it</strong> when you see it; <strong>don't reach for it</strong> unless you have a real family-matching constraint.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 9. COMPARISON / WHEN TO USE ===== -->
+    <section id="compare">
+        <div class="section-container">
+            <span class="section-label warning">Decision Guide</span>
+            <h2 class="section-title">Picking the Right Variant</h2>
+            <p class="section-subtitle">Three patterns, three different problems. Here's how to tell them apart in 30 seconds.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th>Simple Factory</th>
+                            <th>Factory Method</th>
+                            <th>Abstract Factory</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Solves</strong></td><td>Duplicated construction across callers</td><td>Adding new types without modifying existing code</td><td>Keeping related products in a consistent family</td></tr>
+                        <tr><td><strong>Mechanism</strong></td><td>One static method with <code>if/elif</code></td><td>Abstract base + one subclass per type</td><td>Abstract base producing many products + one subclass per family</td></tr>
+                        <tr><td><strong>Number of products</strong></td><td>1 abstract product</td><td>1 abstract product</td><td><strong>Many</strong> abstract products that go together</td></tr>
+                        <tr><td><strong>Follows OCP?</strong></td><td>&#10060; No &mdash; modify to add types</td><td>&#9989; Yes &mdash; new subclass</td><td>&#9989; Yes &mdash; new family subclass</td></tr>
+                        <tr><td><strong>Complexity</strong></td><td>&#11088; lowest</td><td>&#11088;&#11088; medium</td><td>&#11088;&#11088;&#11088; highest</td></tr>
+                        <tr><td><strong>Reach for it when&hellip;</strong></td><td>Few types, stable set, want DRY</td><td>You add new types often</td><td>Products come in families that must match</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">Decision tree</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green">Do callers need to <em>pick</em> a concrete class?</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">No &mdash; one obvious class &rarr; <strong>just use the constructor</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Yes, few stable types &rarr; <strong>Simple Factory</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Yes, types keep being added &rarr; <strong>Factory Method</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box purple">Yes, AND products come in matching <em>families</em> &rarr; <strong>Abstract Factory</strong></div>
+                </div>
+            </div>
+
+            <!-- The over-engineering question (formerly prereq Q4), now at the end as a meta-reflection -->
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">One last check &mdash; when <em>no</em> factory is the right answer</h3>
+            <div class="quiz-box" id="final-q-overengineering">
+                <h4>Question &mdash; Why is <code>PointFactory</code> a bad idea?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">PointFactory</span>:
+    <span class="decorator">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">create</span>(x, y):
+        <span class="keyword">return</span> <span class="function">Point</span>(x, y)
+
+<span class="comment"># vs. just:</span>
+p = <span class="function">Point</span>(<span class="number">10</span>, <span class="number">20</span>)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('final-q-overengineering', this, false)">A) Factories are always over-engineering &mdash; just use the constructor</button>
+                <button class="quiz-option" onclick="checkQuiz('final-q-overengineering', this, true)">B) There's no <em>choice</em> being centralized &mdash; <code>Point(x, y)</code> is already as clean as it gets</button>
+                <button class="quiz-option" onclick="checkQuiz('final-q-overengineering', this, false)">C) Static methods are slow</button>
+                <button class="quiz-option" onclick="checkQuiz('final-q-overengineering', this, false)">D) Factories require an abstract base class</button>
+                <div class="quiz-explanation">
+                    <strong>Correct!</strong> Factory shines when there's <strong>a choice to centralize</strong> &mdash; which concrete class, which configuration, which family. <code>Point(x, y)</code> has no choice. The "factory" just adds an indirection that hides... nothing.
+
+                    <p style="margin-top: 8px;"><strong>Rule of thumb:</strong> if removing the factory and inlining <code>ConcreteClass(...)</code> at the call site makes the code <em>shorter and equally clear</em>, you didn't need the factory.</p>
+
+                    <p style="margin-top: 8px;"><strong>The three triggers that justify a factory</strong>, in order of strength:
+                        <br>1. The same construction logic appears in many call sites (DRY) &rarr; <em>Simple Factory</em>
+                        <br>2. You're adding new types and want to stop modifying existing code (OCP) &rarr; <em>Factory Method</em>
+                        <br>3. Products travel in families that must match (consistency) &rarr; <em>Abstract Factory</em>
+                    </p>
+                    <p style="margin-top: 8px;">If none of these are true, just call the constructor.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 10. SUMMARY (MINDMAP) ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label success">Mindmap Summary</span>
+            <h2 class="section-title">The Factory Family at a Glance</h2>
+            <p class="section-subtitle">Three patterns, three different problems, one mental model.</p>
+
+            <div class="diagram-box">
+                <div style="text-align: center; margin-bottom: 18px;">
+                    <div style="display:inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 1.05rem;">FACTORY FAMILY<br><small style="font-weight: 400; opacity: 0.9;">Centralize the &ldquo;which concrete class do I instantiate?&rdquo; choice</small></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+                    <!-- Simple Factory -->
+                    <div style="border: 2px solid var(--accent-success); border-radius: 10px; padding: 14px; background: rgba(16,185,129,0.06);">
+                        <div style="color: var(--accent-success); font-weight: 700; margin-bottom: 6px;">1. Simple Factory</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">One static <code>create()</code> method with an <code>if/elif</code>. Centralizes <em>where</em> objects are constructed.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-success);">Cures:</strong> DRY violation (scattered construction)<br>
+                            <strong style="color: var(--accent-danger);">Breaks:</strong> OCP &mdash; adding types means editing the factory<br>
+                            <strong style="color: var(--accent-blue);">Frequency:</strong> &#128202; ~7&ndash;8/10 codebases
+                        </div>
+                    </div>
+
+                    <!-- Factory Method -->
+                    <div style="border: 2px solid var(--accent-blue); border-radius: 10px; padding: 14px; background: rgba(59,130,246,0.06);">
+                        <div style="color: var(--accent-blue); font-weight: 700; margin-bottom: 6px;">2. Factory Method</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">Abstract creator + one subclass per type. Each subclass owns its <code>create_x()</code>.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-success);">Cures:</strong> OCP &mdash; new types are <em>added</em>, not <em>edited in</em>. Also DIP for callers.<br>
+                            <strong style="color: var(--accent-danger);">Costs:</strong> more classes; string&rarr;creator lookup must live somewhere<br>
+                            <strong style="color: var(--accent-blue);">Frequency:</strong> &#128202; ~4&ndash;5/10 codebases (library/framework heavy)
+                        </div>
+                    </div>
+
+                    <!-- Abstract Factory -->
+                    <div style="border: 2px solid var(--accent-purple); border-radius: 10px; padding: 14px; background: rgba(168,85,247,0.06); grid-column: span 2;">
+                        <div style="color: var(--accent-purple); font-weight: 700; margin-bottom: 6px;">3. Abstract Factory</div>
+                        <div style="color: var(--text-secondary); font-size: 0.88rem;">Abstract factory producing <em>many</em> related products. Each concrete factory hands over the whole family.</div>
+                        <div style="margin-top: 8px; font-size: 0.82rem;">
+                            <strong style="color: var(--accent-success);">Cures:</strong> family-mixing bugs &mdash; structurally impossible to combine products from different families<br>
+                            <strong style="color: var(--accent-danger);">Costs:</strong> most ceremony of the three; needs a real cross-product invariant to justify<br>
+                            <strong style="color: var(--accent-blue);">Frequency:</strong> &#128202; ~1&ndash;2/10 codebases (cross-platform UI, multi-cloud, multi-DB, theme/skin systems, test doubles)
+                        </div>
+                    </div>
+
+                    <!-- Anti-pattern reminder -->
+                    <div style="border: 2px solid var(--accent-warning); border-radius: 10px; padding: 14px; background: rgba(245,158,11,0.06); grid-column: span 2;">
+                        <div style="color: var(--accent-warning); font-weight: 700; margin-bottom: 6px;">&#9888;&#65039; The anti-pattern: <code>PointFactory</code></div>
+                        <div style="color: var(--text-secondary); font-size: 0.85rem;">No choice to centralize &rarr; no factory. <code>Point(x, y)</code> doesn't need a factory; it needs a constructor. The three triggers that <em>justify</em> any factory: <strong>DRY</strong> (duplicated construction across callers), <strong>OCP</strong> (new types added often), <strong>family consistency</strong> (products that must match).</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; Decision tree &mdash; pick by question</h3>
+            <div class="diagram-box">
+                <div class="flow-row">
+                    <div class="flow-box green"><strong>Do callers need to choose a concrete class?</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">No, only one concrete class exists &rarr; <strong>just call the constructor</strong></div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Yes, few stable types &rarr; <strong>Simple Factory</strong> (one static method)</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box blue">Yes, types added often &rarr; <strong>Factory Method</strong> (abstract creator + subclasses)</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box purple">Yes AND products travel in matching families &rarr; <strong>Abstract Factory</strong></div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; Interview cheat sheet</h3>
+            <div class="knowledge-block">
+                <p>If asked &ldquo;implement Factory for X&rdquo;:</p>
+                <ol style="margin-top: 8px; padding-left: 22px;">
+                    <li>Sketch the <strong>abstract product</strong> first (the interface every concrete class will honor).</li>
+                    <li>Show the <strong>concrete products</strong> &mdash; same shape, different bodies.</li>
+                    <li>Add the simplest variant first: a <code>@staticmethod create()</code> on a Factory class with the <code>if/elif</code>. Name the OCP problem in this version out loud.</li>
+                    <li>Refactor to Factory Method: <code>AbstractCreator</code> + one subclass per type. Point out the DIP win (caller depends only on the abstraction).</li>
+                    <li>If asked &ldquo;but what if the products must come in matching families?&rdquo; &mdash; that's the cue for Abstract Factory.</li>
+                    <li>Mention the anti-pattern: <code>PointFactory</code>. Naming the over-engineering case shows pattern fluency.</li>
+                </ol>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">&#127919; One-line summary</h3>
+            <div class="highlight-box success">
+                <strong>Factory patterns</strong> centralize the &ldquo;which concrete class do I create, with what configuration?&rdquo; choice. <strong>Simple Factory</strong> cures duplication. <strong>Factory Method</strong> additionally cures OCP and gets you DIP for free. <strong>Abstract Factory</strong> additionally enforces family consistency. Each step up adds machinery &mdash; reach for it only when the problem fits the shape.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 11. RESOURCES ===== -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label blue">Further Reading</span>
+            <h2 class="section-title">Resources &amp; Further Reading</h2>
+            <p class="section-subtitle">Focused on the Factory family &mdash; the canonical references, Python idioms, and real codebases where you'll meet each variant.</p>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">&#128218; The canonical references</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://refactoring.guru/design-patterns/factory-method/python/example" target="_blank" rel="noopener" style="color: var(--accent-primary);">Refactoring.Guru &mdash; Factory Method in Python</a></div>
+                    <div class="card-desc">UML, step-by-step build, Python-flavored example. The best free visual reference.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://refactoring.guru/design-patterns/abstract-factory/python/example" target="_blank" rel="noopener" style="color: var(--accent-primary);">Refactoring.Guru &mdash; Abstract Factory in Python</a></div>
+                    <div class="card-desc">Same series, for the family-of-products variant. Worth reading the &ldquo;Pros and Cons&rdquo; section.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128013;</div>
+                    <div class="card-title"><a href="https://python-patterns.guide/gang-of-four/abstract-factory/" target="_blank" rel="noopener" style="color: var(--accent-primary);">Abstract Factory &mdash; python-patterns.guide</a></div>
+                    <div class="card-desc">Brandon Rhodes&apos; opinionated Python-first take. Mentions Django&apos;s database backends as a real-world Abstract Factory.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://en.wikipedia.org/wiki/Factory_method_pattern" target="_blank" rel="noopener" style="color: var(--accent-primary);">Factory Method &mdash; Wikipedia</a></div>
+                    <div class="card-desc">History, the GoF UML, contrast with other Creational patterns. Good for interview context.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128013; Python idioms that often replace explicit Factories</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#129518;</div>
+                    <div class="card-title"><a href="https://docs.python.org/3/library/functools.html#functools.singledispatch" target="_blank" rel="noopener" style="color: var(--accent-primary);"><code>functools.singledispatch</code></a></div>
+                    <div class="card-desc">A function that picks its implementation based on the first argument&apos;s type. Often replaces a Simple Factory when the dispatching key <em>is</em> the type.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128268;</div>
+                    <div class="card-title"><a href="https://realpython.com/python-class-method-vs-static-method/" target="_blank" rel="noopener" style="color: var(--accent-primary);"><code>@classmethod</code> alternate constructors</a></div>
+                    <div class="card-desc"><code>Point.origin()</code>, <code>Point.from_polar()</code>, <code>datetime.fromisoformat()</code> &mdash; named constructors. Eliminates many cases where people reach for a dedicated Factory class.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128218;</div>
+                    <div class="card-title"><a href="https://docs.python.org/3/library/abc.html" target="_blank" rel="noopener" style="color: var(--accent-primary);"><code>abc</code> &mdash; abstract base classes</a></div>
+                    <div class="card-desc">The stdlib piece that powers Factory Method&apos;s abstract creator + concrete subclass shape. Reference for <code>@abstractmethod</code> and <code>ABC</code>.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#127757; Factories in real Python code</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128190;</div>
+                    <div class="card-title"><a href="https://github.com/python/cpython/blob/main/Lib/logging/__init__.py" target="_blank" rel="noopener" style="color: var(--accent-primary);">stdlib <code>logging.getLogger</code></a></div>
+                    <div class="card-desc">A textbook Simple Factory hidden in plain sight. <code>getLogger(name)</code> returns or creates a Logger; the dispatch lives in one module-level function.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128190;</div>
+                    <div class="card-title"><a href="https://docs.sqlalchemy.org/en/20/core/engines.html" target="_blank" rel="noopener" style="color: var(--accent-primary);">SQLAlchemy <code>create_engine</code> + dialects</a></div>
+                    <div class="card-desc">Abstract Factory for database connection + cursor + dialect. <code>create_engine(&quot;postgresql://...&quot;)</code> hands you a Postgres-family of objects that work together.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127757;</div>
+                    <div class="card-title"><a href="https://github.com/django/django/blob/main/django/db/backends/base/base.py" target="_blank" rel="noopener" style="color: var(--accent-primary);">Django DB backend</a></div>
+                    <div class="card-desc">Abstract Factory in production: each DB backend produces matching Connection / Cursor / Schema / Introspection objects.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title"><a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html" target="_blank" rel="noopener" style="color: var(--accent-primary);">boto3 <code>session.client(&quot;s3&quot;)</code></a></div>
+                    <div class="card-desc">Simple Factory dispatching on a service-name string &mdash; the function returns the right service-specific client class.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128300;</div>
+                    <div class="card-title"><a href="https://docs.python-requests.org/en/latest/api/#requests.adapters.HTTPAdapter" target="_blank" rel="noopener" style="color: var(--accent-primary);"><code>requests</code> transport adapters</a></div>
+                    <div class="card-desc">Factory Method: <code>HTTPAdapter</code> is the abstract creator; subclasses override <code>build_response()</code> to produce different response shapes.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128293;</div>
+                    <div class="card-title"><a href="https://fastapi.tiangolo.com/tutorial/dependencies/" target="_blank" rel="noopener" style="color: var(--accent-primary);">FastAPI <code>Depends()</code></a></div>
+                    <div class="card-desc">Not a Factory in the classical sense, but the same job &mdash; per-request object creation centralized in the framework. Worth seeing the modern Python alternative.</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 12px;">&#128218; From this batch</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-15-Design-Patterns-Singleton/index.html" style="color: var(--accent-primary);">LLD-15: Singleton</a></div>
+                    <div class="card-desc">The first Creational pattern &mdash; controls <em>how many</em>. Factory controls <em>which</em>.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-16-Builder-Design-Pattern/index.html" style="color: var(--accent-primary);">LLD-16: Builder</a></div>
+                    <div class="card-desc">Controls <em>how</em> a complex object is assembled step by step. The other side of object creation.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-13-SOLID-Principles/index.html#ocp" style="color: var(--accent-primary);">LLD-13: OCP</a></div>
+                    <div class="card-desc">The principle that motivates Factory Method &mdash; open for extension, closed for modification.</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128193;</div>
+                    <div class="card-title"><a href="../LLD-14-SOLID-Principles-2/index.html#dip" style="color: var(--accent-primary);">LLD-14: DIP</a></div>
+                    <div class="card-desc">The principle that Factory Method delivers for free &mdash; high-level code depends on the abstraction, not concretions.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-17: Factory Design Pattern &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) { btn.classList.add('correct'); }
+        else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
