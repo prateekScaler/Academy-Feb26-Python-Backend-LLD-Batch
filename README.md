@@ -32,7 +32,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 14 | [Pagination, Searching & Sorting](Class-14-Pagination-Searching-Sorting/) | API query features |
 | 15 | [Redis Caching & Resume](Class-15-Redis-Caching-Resume/) | Caching strategies, resume building |
 
-## Module 2: Advanced Programming Concepts (In Progress)
+## Module 2: Advanced Programming Concepts (Completed)
 
 | # | Class | Topics |
 |---|-------|--------|
@@ -68,6 +68,21 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 16-17 | Design & Code Splitwise | Upcoming |
 | 18 | Design Google Calendar | Upcoming |
 
+## Latest
+
+&#127919; **[LLD-18 &mdash; Prototype &amp; Adapter](LLD-18-Prototype-and-Adapter/)** &mdash; the last creational pattern + the first structural one, with a real-life travel-socket intro, BEFORE/AFTER UML diagrams for the interface-mismatch problem, parallel Razorpay &amp; Stripe adapters, and a full Adapter-pattern refactor of an actual Django payments view. 12 runnable Python examples.
+
 ## Quick Start
 
-Open any class folder and view `index.html` in your browser.
+Open any class folder and view its `index.html` in your browser. From LLD-13 onward, every class also ships a [`code/`](LLD-18-Prototype-and-Adapter/code/) directory with self-contained `python3`-runnable examples (no `pip install` needed) and a class-level `README.md` you can read instead of the HTML.
+
+```bash
+# Browse a class's interactive notes
+open LLD-18-Prototype-and-Adapter/index.html
+
+# Run one of its code examples
+python3 LLD-18-Prototype-and-Adapter/code/06_payment_gateway_adapter.py
+
+# Or just read the long-form lesson
+less LLD-18-Prototype-and-Adapter/README.md
+```
