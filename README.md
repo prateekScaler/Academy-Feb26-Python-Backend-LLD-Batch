@@ -59,7 +59,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 4 | [Builder Pattern](LLD-16-Builder-Design-Pattern/) | The problem (boolean hell, telescoping constructors), 4-step recipe, Pizza/HTTP/SQL builders, Director |
 | 5 | [Factory Pattern Family](LLD-17-Factory-Design-Pattern/) | Simple Factory, Factory Method (OCP + DIP), Abstract Factory (family-consistency); decision tree; 8 runnable examples + UML-friendly code for PyCharm |
 | 6 | [Prototype &amp; Adapter](LLD-18-Prototype-and-Adapter/) | Prototype (clone vs. construct), Adapter (translate mismatched interfaces); travel-socket intro; Django payments refactor case study; 12 runnable Python examples + BEFORE/AFTER UML diagrams |
-| 7 | Strategy, Observer | Upcoming |
+| 7 | [Strategy &amp; Observer](LLD-19-Strategy-and-Observer/) | First two behavioural patterns &mdash; Strategy (swap the algorithm) and Observer (one event, many reactions). Recap teaches Prototype Registry + Adapter variations (Object/Class/Two-Way). 11 runnable Python examples including a stdlib Strategy survey and an asyncio Observer. |
 | 8 | Decorator, UML Diagrams | Upcoming |
 | 9 | Types of LLD Interviews, How to Approach LLD Problems | Upcoming |
 | 10-11 | Design & Code TicTacToe | Upcoming |
@@ -70,7 +70,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 
 ## Latest
 
-&#127919; **[LLD-18 &mdash; Prototype &amp; Adapter](LLD-18-Prototype-and-Adapter/)** &mdash; the last creational pattern + the first structural one, with a real-life travel-socket intro, BEFORE/AFTER UML diagrams for the interface-mismatch problem, parallel Razorpay &amp; Stripe adapters, and a full Adapter-pattern refactor of an actual Django payments view. 12 runnable Python examples.
+&#127919; **[LLD-19 &mdash; Strategy &amp; Observer](LLD-19-Strategy-and-Observer/)** &mdash; the first two behavioural patterns. Strategy replaces the long <code>if/elif</code> mode-switch with a swappable algorithm object; Observer decouples one publisher from N reactions. Includes a Stack Overflow rich-editor Prototype quiz, a side-by-side Object-vs-Class-Adapter UML, a six-function stdlib Strategy survey (<code>sorted</code> / <code>min</code> / <code>max</code> / <code>filter</code> / <code>reduce</code> / <code>heapq.nlargest</code>), and an <code>asyncio.gather</code> Observer demo. 11 runnable Python examples.
 
 ## Quick Start
 
