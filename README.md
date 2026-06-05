@@ -60,7 +60,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 5 | [Factory Pattern Family](LLD-17-Factory-Design-Pattern/) | Simple Factory, Factory Method (OCP + DIP), Abstract Factory (family-consistency); decision tree; 8 runnable examples + UML-friendly code for PyCharm |
 | 6 | [Prototype &amp; Adapter](LLD-18-Prototype-and-Adapter/) | Prototype (clone vs. construct), Adapter (translate mismatched interfaces); travel-socket intro; Django payments refactor case study; 12 runnable Python examples + BEFORE/AFTER UML diagrams |
 | 7 | [Strategy &amp; Observer](LLD-19-Strategy-and-Observer/) | First two behavioural patterns &mdash; Strategy (swap the algorithm) and Observer (one event, many reactions). Recap teaches Prototype Registry + Adapter variations (Object/Class/Two-Way). 11 runnable Python examples including a stdlib Strategy survey and an asyncio Observer. |
-| 8 | Decorator, UML Diagrams | Upcoming |
+| 8 | [Decorator &amp; UML Diagrams](LLD-20-Decorator-and-UML-Diagrams/) | Decorator (wrap an object to add behaviour) + UML for backend design. Chai-shop case study (MasalaChai / FilterCoffee with Elaichi / Adrak), stacked API-client decorators, inheritance-explosion trap. UML: class + sequence diagrams, 6 relationship arrow types as mini-SVGs, Three Amigos history, full 14-diagram-type classification, is-a vs has-a deep-dive (Composition / Aggregation / Association / Inheritance), sequence-diagram anatomy mini-gallery (sync / async / return arrows + alt / loop / par / opt frames). Python GC + weakref primer. 8 runnable examples + Pattern Cheat Sheet appendix covering 12 patterns. |
 | 9 | Types of LLD Interviews, How to Approach LLD Problems | Upcoming |
 | 10-11 | Design & Code TicTacToe | Upcoming |
 | 12-13 | Design & Code Parking Lot | Upcoming |
@@ -70,7 +70,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 
 ## Latest
 
-&#127919; **[LLD-19 &mdash; Strategy &amp; Observer](LLD-19-Strategy-and-Observer/)** &mdash; the first two behavioural patterns. Strategy replaces the long <code>if/elif</code> mode-switch with a swappable algorithm object; Observer decouples one publisher from N reactions. Includes a Stack Overflow rich-editor Prototype quiz, a side-by-side Object-vs-Class-Adapter UML, a six-function stdlib Strategy survey (<code>sorted</code> / <code>min</code> / <code>max</code> / <code>filter</code> / <code>reduce</code> / <code>heapq.nlargest</code>), and an <code>asyncio.gather</code> Observer demo. 11 runnable Python examples.
+&#127919; **[LLD-20 &mdash; Decorator &amp; UML Diagrams](LLD-20-Decorator-and-UML-Diagrams/)** &mdash; the last structural pattern + the visual vocabulary for talking about design. Decorator (chai-shop case study with MasalaChai / FilterCoffee and Elaichi / Adrak add-ons, stacked API-client wrappers) covered side-by-side with the inheritance-explosion trap it replaces. UML: class &amp; sequence diagrams (with mini-SVG gallery for sync / async / return arrows + alt / loop / par / opt frames), 6 relationship arrows as cards, Three Amigos history, full 14-diagram-type classification, is-a vs has-a deep-dive (Composition / Aggregation / Association / Inheritance with code + scenarios), Python GC + <code>weakref</code> primer, and a Pattern Cheat Sheet appendix covering 12 patterns.
 
 ## Quick Start
 
