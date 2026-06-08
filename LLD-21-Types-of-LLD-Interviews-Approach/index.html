@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-21: Types of LLD Interviews &amp; How to Approach Them</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #3b82f6; --accent-secondary: #2563eb; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(59, 130, 246, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(59, 130, 246, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #60a5fa, #3b82f6); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #60a5fa; }
+        .nav-links { display: flex; gap: 22px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 700px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 720px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #60a5fa; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65; }
+        .card-desc br { content: ""; display: block; margin-top: 10px; }
+        .card-desc strong { color: var(--text-primary); }
+        .card { padding: 28px 26px; }
+        .card-grid { gap: 24px; }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(59, 130, 246, 0.08); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-danger); }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .highlight-box.info { background: rgba(59, 130, 246, 0.08); border-color: var(--accent-blue); }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-primary); color: white; border-radius: 50%; font-weight: 700; font-size: 0.85rem; margin-right: 10px; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+        .collapsible-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+        .collapsible-arrow { transition: transform 0.3s; color: var(--text-muted); }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 4000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(59, 130, 246, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .timeline { position: relative; padding-left: 32px; margin: 20px 0; }
+        .timeline::before { content: ''; position: absolute; left: 12px; top: 8px; bottom: 8px; width: 2px; background: var(--accent-blue); }
+        .timeline-item { position: relative; padding: 12px 0 12px 20px; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 18px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-blue); border: 3px solid var(--bg-primary); }
+        .timeline-item .t-time { font-size: 0.78rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .timeline-item .t-what { font-size: 1rem; font-weight: 600; margin-top: 2px; }
+        .timeline-item .t-desc { font-size: 0.88rem; color: var(--text-secondary); margin-top: 2px; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+    </style>
+  <link rel="stylesheet" href="/lib/feedback.css">
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-21: LLD Interview Approach</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#why">Why this class</a></li>
+            <li><a href="#types">Interview types</a></li>
+            <li><a href="#approach">Approach</a></li>
+            <li><a href="#mistakes">Mistakes</a></li>
+            <li><a href="#walkthrough">Walk-through</a></li>
+            <li><a href="#pen">Design a Pen</a></li>
+            <li><a href="#cheatsheet">Cheat sheet</a></li>
+            <li><a href="#resources">Resources</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#127919;</div>
+        <h1>Types of LLD Interviews &amp; How to Approach Them</h1>
+        <p class="hero-meta">LLD-21 &bull; The methodology class &mdash; turn what you know into what you ship in 90 minutes</p>
+        <p class="hero-tagline">You've spent the last eight classes learning SOLID, design patterns, and UML. This class is about how to <strong>use</strong> all of that under interview pressure. Same problem solved by two candidates &mdash; one panics, one ships. The difference is the <strong>approach</strong>, not the IQ.</p>
+    </section>
+
+    <!-- ===== RECAP — Spot the pattern + Decorator + UML quizzes ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label purple">Recap &mdash; LLD-20</span>
+            <h2 class="section-title">Recap quizzes &mdash; spot the pattern, then decorator &amp; UML</h2>
+            <p class="section-subtitle">First six: name the design pattern from the diagram alone (we've used neutral domain names so the SHAPE of the boxes and arrows is what reveals it). Then four on Decorator + UML relationships.</p>
+
+            <h3 style="margin-top: 16px; margin-bottom: 8px;">Part 1 &mdash; Spot the pattern from the UML (6 questions)</h3>
+
+            <!-- UML-Q1 — Strategy as ReportGenerator + Format + Pdf/Html/Csv. correct: B -->
+            <div class="quiz-box" id="uml-q1">
+                <h4>Spot Quiz 1 &mdash; Which pattern is this?  <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(<code>ReportGenerator</code> writes the same report in many file formats.)</span></h4>
+                <div class="diagram-box" style="margin-bottom: 12px;">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                        <rect x="40" y="80" width="160" height="50" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                        <text x="120" y="100" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">ReportGenerator</text>
+                        <text x="120" y="118" text-anchor="middle" font-size="9" fill="#0f172a">- format: Format</text>
+
+                        <rect x="260" y="80" width="140" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="330" y="98" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="330" y="114" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">Format</text>
+                        <text x="330" y="128" text-anchor="middle" font-size="9" fill="#0f172a">+ render(data)</text>
+
+                        <line x1="200" y1="105" x2="260" y2="105" stroke="#a855f7" stroke-width="2"/>
+                        <polygon points="256,101 266,105 256,109" fill="#a855f7"/>
+                        <polygon points="200,105 192,109 200,113 208,109" fill="white" stroke="#a855f7" stroke-width="2"/>
+                        <text x="230" y="100" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#7e22ce">has-a</text>
+
+                        <rect x="450" y="20" width="140" height="36" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="520" y="42" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">PdfFormat</text>
+
+                        <rect x="450" y="86" width="140" height="36" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="520" y="108" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">HtmlFormat</text>
+
+                        <rect x="450" y="152" width="140" height="36" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="520" y="174" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">CsvFormat</text>
+
+                        <line x1="450" y1="38" x2="400" y2="100" stroke="#475569" stroke-width="1.5"/>
+                        <line x1="450" y1="104" x2="400" y2="105" stroke="#475569" stroke-width="1.5"/>
+                        <line x1="450" y1="170" x2="400" y2="115" stroke="#475569" stroke-width="1.5"/>
+                        <polygon points="397,98 408,108 408,98" fill="white" stroke="#475569" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('uml-q1', this, false)">A) Observer</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q1', this, true)">B) Strategy</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q1', this, false)">C) Decorator</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q1', this, false)">D) Factory Method</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Signature shape: one context (<code>ReportGenerator</code>) <em>holds</em> one reference to an abstract interface; N concrete implementations of that interface. No wrapping (so not Decorator), no notification fan-out (so not Observer), no object-creation method on the context (so not Factory). "One open variable plugged into a context that uses it" &rarr; Strategy.
+                </div>
+            </div>
+
+            <!-- UML-Q2 — Decorator as DataStream + Raw + Wrapper + Gzip/Encrypted. correct: A -->
+            <div class="quiz-box" id="uml-q2">
+                <h4>Spot Quiz 2 &mdash; Which pattern is this?  <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(Wrappers stack around a raw byte stream to add behaviour.)</span></h4>
+                <div class="diagram-box" style="margin-bottom: 12px;">
+                    <svg viewBox="0 0 620 240" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                        <rect x="220" y="20" width="180" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="310" y="38" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="310" y="54" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">DataStream</text>
+                        <text x="310" y="68" text-anchor="middle" font-size="9" fill="#0f172a">+ read() &middot; + write()</text>
+
+                        <rect x="40" y="130" width="160" height="50" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                        <text x="120" y="152" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">RawFileStream</text>
+                        <text x="120" y="168" text-anchor="middle" font-size="9" fill="#0f172a">+ read() / + write()</text>
+
+                        <rect x="350" y="130" width="180" height="60" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+                        <text x="440" y="146" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="440" y="160" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">StreamWrapper</text>
+                        <text x="440" y="174" text-anchor="middle" font-size="9" fill="#0f172a">- inner: DataStream</text>
+                        <text x="440" y="186" text-anchor="middle" font-size="9" fill="#0f172a">+ read() / + write()</text>
+
+                        <line x1="120" y1="130" x2="290" y2="70" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                        <polygon points="284,68 297,72 290,82" fill="white" stroke="#475569" stroke-width="1.5"/>
+                        <line x1="440" y1="130" x2="330" y2="70" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                        <polygon points="324,68 337,72 330,82" fill="white" stroke="#475569" stroke-width="1.5"/>
+
+                        <path d="M 530 150 Q 600 100 400 50" fill="none" stroke="#a855f7" stroke-width="2"/>
+                        <polygon points="404,46 396,50 404,54 410,50" fill="white" stroke="#a855f7" stroke-width="2"/>
+                        <polygon points="528,154 521,162 523,150" fill="#a855f7"/>
+                        <text x="590" y="100" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#7e22ce">wraps</text>
+
+                        <rect x="350" y="210" width="180" height="26" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="440" y="227" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">GzipStream &middot; EncryptedStream</text>
+                        <line x1="440" y1="210" x2="440" y2="190" stroke="#475569" stroke-width="1.5"/>
+                        <polygon points="433,192 447,192 440,180" fill="white" stroke="#475569" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('uml-q2', this, true)">A) Decorator</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q2', this, false)">B) Strategy</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q2', this, false)">C) Adapter</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q2', this, false)">D) Proxy</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Signature shape: <code>StreamWrapper</code> both <em>implements</em> <code>DataStream</code> AND <em>holds</em> a <code>DataStream</code> instance &mdash; that purple "wraps" arrow loops back up to the same interface. Self-referential composition is what lets wrappers wrap wrappers (e.g. <code>EncryptedStream(GzipStream(RawFileStream()))</code>). Strategy is a flat "Context has-a Strategy" with no loop. Adapter holds a <em>different</em> type than the one it implements. Proxy looks similar but exists to <em>control access</em>, not add behaviour.
+                </div>
+            </div>
+
+            <!-- UML-Q3 — Observer as PriceTicker + Listener + Email/Sms/Analytics. correct: C -->
+            <div class="quiz-box" id="uml-q3">
+                <h4>Spot Quiz 3 &mdash; Which pattern is this?  <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(A <code>PriceTicker</code> fires once per tick; several handlers react independently.)</span></h4>
+                <div class="diagram-box" style="margin-bottom: 12px;">
+                    <svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                        <rect x="40" y="60" width="180" height="80" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                        <text x="130" y="82" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#047857">PriceTicker</text>
+                        <line x1="50" y1="90" x2="210" y2="90" stroke="#10b981" stroke-width="1"/>
+                        <text x="55" y="104" font-size="9" fill="#0f172a">- listeners: list[Listener]</text>
+                        <text x="55" y="118" font-size="9" fill="#0f172a">+ attach(l), detach(l)</text>
+                        <text x="55" y="132" font-size="9" fill="#0f172a">+ tick(price)</text>
+
+                        <rect x="340" y="60" width="180" height="60" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="430" y="78" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="430" y="94" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">Listener</text>
+                        <text x="430" y="110" text-anchor="middle" font-size="9" fill="#0f172a">+ on_tick(price)</text>
+
+                        <line x1="220" y1="100" x2="340" y2="90" stroke="#a855f7" stroke-width="2"/>
+                        <polygon points="336,87 346,91 336,95" fill="#a855f7"/>
+                        <polygon points="220,100 213,104 220,108 227,104" fill="white" stroke="#a855f7" stroke-width="2"/>
+                        <text x="280" y="86" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#7e22ce">notifies *</text>
+
+                        <rect x="320" y="150" width="100" height="32" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="370" y="170" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">EmailListener</text>
+
+                        <rect x="430" y="150" width="100" height="32" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="480" y="170" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">SmsListener</text>
+
+                        <rect x="540" y="150" width="80" height="32" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                        <text x="580" y="170" text-anchor="middle" font-size="9" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">Analytics</text>
+
+                        <line x1="370" y1="150" x2="430" y2="120" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                        <line x1="480" y1="150" x2="430" y2="120" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                        <line x1="580" y1="150" x2="430" y2="120" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                        <polygon points="423,122 437,122 430,110" fill="white" stroke="#475569" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('uml-q3', this, false)">A) Mediator</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q3', this, false)">B) Strategy</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q3', this, true)">C) Observer</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q3', this, false)">D) Chain of Responsibility</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> A subject keeps a <em>list</em> of references to an abstract type and calls a notify method that fans out. That fan-out is the Observer signature. Mediator differs because it <em>knows</em> each participant by name and routes selectively. Strategy is one-to-one, not fan-out. Chain of Responsibility is a linked sequence where each link decides whether to pass on &mdash; not a list of independents.
+                </div>
+            </div>
+
+            <!-- UML-Q4 — Factory Method as LogisticsApp + Transport + Truck/Ship. correct: D -->
+            <div class="quiz-box" id="uml-q4">
+                <h4>Spot Quiz 4 &mdash; Which pattern is this?  <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(Each logistics company decides which kind of transport it ships with.)</span></h4>
+                <div class="diagram-box" style="margin-bottom: 12px;">
+                    <svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                        <rect x="20" y="40" width="180" height="56" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="110" y="58" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="110" y="74" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">LogisticsApp</text>
+                        <text x="110" y="88" text-anchor="middle" font-size="9" fill="#0f172a">+ create_transport()*</text>
+
+                        <rect x="20" y="140" width="180" height="50" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                        <text x="110" y="160" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#047857">RoadLogistics / SeaLogistics</text>
+                        <text x="110" y="178" text-anchor="middle" font-size="9" fill="#0f172a">+ create_transport() &rarr; Truck / Ship</text>
+
+                        <line x1="110" y1="140" x2="110" y2="96" stroke="#475569" stroke-width="1.5"/>
+                        <polygon points="103,98 117,98 110,86" fill="white" stroke="#475569" stroke-width="1.5"/>
+
+                        <rect x="380" y="40" width="180" height="56" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="470" y="58" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="470" y="74" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">Transport</text>
+                        <text x="470" y="88" text-anchor="middle" font-size="9" fill="#0f172a">+ deliver(parcel)*</text>
+
+                        <rect x="380" y="140" width="180" height="50" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+                        <text x="470" y="168" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">Truck &middot; Ship</text>
+
+                        <line x1="470" y1="140" x2="470" y2="96" stroke="#475569" stroke-width="1.5"/>
+                        <polygon points="463,98 477,98 470,86" fill="white" stroke="#475569" stroke-width="1.5"/>
+
+                        <line x1="200" y1="166" x2="380" y2="166" stroke="#475569" stroke-width="1.5"/>
+                        <polygon points="376,162 386,166 376,170" fill="#475569"/>
+                        <text x="290" y="160" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#475569">creates</text>
+                    </svg>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('uml-q4', this, false)">A) Builder</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q4', this, false)">B) Abstract Factory</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q4', this, false)">C) Singleton</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q4', this, true)">D) Factory Method</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Signature shape: an abstract class declares a single abstract creation method; each concrete subclass returns a different concrete product from that one method. Builder uses fluent chaining over an under-construction object &mdash; not present here. Abstract Factory has a <em>family</em> of related products (multiple create methods) &mdash; we only have one. Singleton has zero creation polymorphism.
+                </div>
+            </div>
+
+            <!-- UML-Q5 — Singleton (Logger). correct: A -->
+            <div class="quiz-box" id="uml-q5">
+                <h4>Spot Quiz 5 &mdash; Which pattern is this?  <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(One logger across the whole process.)</span></h4>
+                <div class="diagram-box" style="margin-bottom: 12px;">
+                    <svg viewBox="0 0 460 180" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                        <rect x="120" y="30" width="240" height="120" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                        <text x="240" y="52" text-anchor="middle" font-size="14" font-weight="700" font-family="Inter, sans-serif" fill="#047857">Logger</text>
+                        <line x1="130" y1="60" x2="350" y2="60" stroke="#10b981" stroke-width="1"/>
+                        <text x="135" y="78" font-size="10" fill="#0f172a">- static _instance: Logger</text>
+                        <text x="135" y="96" font-size="10" fill="#0f172a">- __init__()  &nbsp;<tspan fill="#991b1b">[private]</tspan></text>
+                        <line x1="130" y1="106" x2="350" y2="106" stroke="#10b981" stroke-width="1"/>
+                        <text x="135" y="124" font-size="10" fill="#0f172a">+ static get_instance() &rarr; Logger</text>
+                        <text x="135" y="142" font-size="10" fill="#0f172a">+ log(msg)</text>
+                    </svg>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('uml-q5', this, true)">A) Singleton</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q5', this, false)">B) Factory</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q5', this, false)">C) Prototype</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q5', this, false)">D) Builder</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Three signature features: a private constructor, a static reference to its own type, and a static <code>get_instance()</code> that lazily creates and returns it. That trio means "this class controls how many of itself exist, and the answer is one". Factory creates DIFFERENT classes. Prototype clones from an existing instance. Builder accumulates configuration through a fluent API.
+                </div>
+            </div>
+
+            <!-- UML-Q6 — Adapter for payment. correct: B -->
+            <div class="quiz-box" id="uml-q6">
+                <h4>Spot Quiz 6 &mdash; Which pattern is this?  <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(Wrap a third-party SDK so it matches the contract our code expects.)</span></h4>
+                <div class="diagram-box" style="margin-bottom: 12px;">
+                    <svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                        <rect x="20" y="80" width="160" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="100" y="98" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                        <text x="100" y="114" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">PaymentGateway</text>
+                        <text x="100" y="128" text-anchor="middle" font-size="9" fill="#0f172a">+ charge(amount)</text>
+
+                        <rect x="220" y="80" width="180" height="60" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2.5"/>
+                        <text x="310" y="100" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#047857">RazorpayAdapter</text>
+                        <line x1="230" y1="108" x2="390" y2="108" stroke="#10b981" stroke-width="1"/>
+                        <text x="235" y="122" font-size="9" fill="#0f172a">- sdk: RazorpaySDK</text>
+                        <text x="235" y="134" font-size="9" fill="#0f172a">+ charge(amount) &rarr; sdk.weird_v2()</text>
+
+                        <rect x="460" y="80" width="140" height="50" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+                        <text x="530" y="100" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">RazorpaySDK</text>
+                        <text x="530" y="116" text-anchor="middle" font-size="8.5" fill="#0f172a">+ razorpay_charge_v2(rs_paise)</text>
+
+                        <line x1="220" y1="100" x2="180" y2="100" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                        <polygon points="186,96 176,100 186,104" fill="white" stroke="#475569" stroke-width="1.5"/>
+
+                        <line x1="400" y1="110" x2="455" y2="110" stroke="#a855f7" stroke-width="2"/>
+                        <polygon points="451,106 461,110 451,114" fill="#a855f7"/>
+                        <text x="427" y="105" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#7e22ce">delegates</text>
+                    </svg>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('uml-q6', this, false)">A) Decorator</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q6', this, true)">B) Adapter</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q6', this, false)">C) Facade</button>
+                <button class="quiz-option" onclick="checkQuiz('uml-q6', this, false)">D) Bridge</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> The middle class <em>implements</em> one interface (<code>PaymentGateway</code>) but <em>holds</em> an instance of a different type (<code>RazorpaySDK</code>) and translates calls. The interface implemented is DIFFERENT from the type held &mdash; that's what makes it Adapter and not Decorator (where both are the same interface). Facade fronts a complex subsystem with a simpler API but doesn't translate between two incompatible ones. Bridge separates an abstraction hierarchy from an implementation hierarchy &mdash; both designed together, not glued post-hoc.
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Why this drill matters:</strong> in a Tier-2 design discussion you'll often be handed someone else's diagram. The interviewer's next question is almost always "which pattern is this?" Naming it forces you to articulate <em>what is open for change</em>. The labels above are deliberately neutral &mdash; you have to read the SHAPE (interface + concrete impls + how the boxes relate) to spot the pattern.</p>
+            </div>
+
+            <h3 style="margin-top: 28px; margin-bottom: 8px;">Part 2 &mdash; Decorator order &amp; UML relationships (4 questions)</h3>
+
+            <!-- Q1 — correct: C  (with code shown) -->
+            <div class="quiz-box" id="recap-q1">
+                <h4>Quiz 1 &mdash; Given the code below, which method runs first when the caller calls <code>pricer.total(cart)</code>?</h4>
+                <div class="code-block">
+                    <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">BasicPricer</span>:
+    <span class="keyword">def</span> <span class="function">total</span>(self, cart):
+        <span class="keyword">return</span> <span class="function">sum</span>(item.price <span class="keyword">for</span> item <span class="keyword">in</span> cart)
+
+<span class="keyword">class</span> <span class="function">TaxDecorator</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, inner):
+        self._inner = inner
+    <span class="keyword">def</span> <span class="function">total</span>(self, cart):
+        <span class="keyword">return</span> self._inner.<span class="function">total</span>(cart) * <span class="number">1.18</span>   <span class="comment"># add 18% GST</span>
+
+<span class="keyword">class</span> <span class="function">DiscountDecorator</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, inner, percent):
+        self._inner = inner
+        self._percent = percent
+    <span class="keyword">def</span> <span class="function">total</span>(self, cart):
+        sub = self._inner.<span class="function">total</span>(cart)
+        <span class="keyword">return</span> sub * (<span class="number">1</span> - self._percent / <span class="number">100</span>)
+
+<span class="comment"># How the caller wires it up:</span>
+pricer = <span class="function">DiscountDecorator</span>(<span class="function">TaxDecorator</span>(<span class="function">BasicPricer</span>()), percent=<span class="number">10</span>)
+pricer.<span class="function">total</span>(cart)</pre>
+                    </div>
+                </div>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">A) TaxDecorator.total &mdash; the middle wrapper in the stack</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">B) BasicPricer.total &mdash; the real worker that sums prices</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, true)">C) DiscountDecorator.total &mdash; the outermost wrapper of the stack</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q1', this, false)">D) All three run at the same time and the results get merged</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> Decorators run <em>outside-in</em>. The caller holds a reference to the outermost wrapper (<code>DiscountDecorator</code>), so its <code>total()</code> runs first &mdash; it calls <code>self._inner.total()</code> which is <code>TaxDecorator</code>, which in turn calls <code>BasicPricer</code>. Read the constructor chain right-to-left and you get the execution order outside-in.
+                    <br><br>
+                    <strong>Bonus &mdash; why order matters here:</strong> with <code>Discount(Tax(Basic))</code> the discount applies AFTER tax (you save less). Swap to <code>Tax(Discount(Basic))</code> and the discount applies BEFORE tax (you save more, GoI tax-code's actual rule). Same components, different stacking order &rarr; different result. This is the real reason decorator order is worth thinking about, not just trivia.
+                </div>
+            </div>
+
+            <!-- Q2 — correct: B  (Composition scenario) -->
+            <div class="quiz-box" id="recap-q2">
+                <h4>Quiz 2 &mdash; A <code>House</code> has many <code>Room</code> objects. If the house is demolished, the rooms cease to exist &mdash; a room can't migrate to a different house. In UML, which relationship is this?</h4>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">A) Aggregation &mdash; open diamond on the whole side</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, true)">B) Composition &mdash; filled diamond on the whole side</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">C) Inheritance &mdash; open triangle from child to parent</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q2', this, false)">D) Association &mdash; plain undecorated line between them</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Composition is the strongest <em>has-a</em>: shared lifetime and exclusive ownership. Kill the whole, the parts die with it; the parts cannot be transferred to another whole. UML draws the diamond on the WHOLE side (the owning end) and fills it in.
+                    <div style="margin-top: 10px; text-align: center;">
+                        <svg viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                            <rect x="20" y="22" width="80" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                            <text x="60" y="44" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#047857">House</text>
+                            <rect x="240" y="22" width="80" height="36" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+                            <text x="280" y="44" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">Room</text>
+                            <line x1="120" y1="40" x2="240" y2="40" stroke="#475569" stroke-width="1.5"/>
+                            <polygon points="100,40 112,34 124,40 112,46" fill="#10b981" stroke="#047857" stroke-width="1.5"/>
+                            <text x="105" y="20" font-size="9" font-family="Inter, sans-serif" fill="#475569">1</text>
+                            <text x="225" y="20" font-size="9" font-family="Inter, sans-serif" fill="#475569">1..*</text>
+                            <text x="170" y="58" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#475569">owns</text>
+                        </svg>
+                    </div>
+                    <p style="margin-top: 8px;">Aggregation looks the same but with an <em>open</em> diamond &mdash; that's for parts that outlive the whole. Inheritance is a triangle, not a diamond. Association is just a line &mdash; "knows about", no ownership claim.</p>
+                </div>
+            </div>
+
+            <!-- Q3 — correct: D  (Aggregation scenario) -->
+            <div class="quiz-box" id="recap-q3">
+                <h4>Quiz 3 &mdash; A <code>Team</code> has a list of <code>Player</code> objects. Players exist before the team is formed and survive after it dissolves &mdash; the same player can join other teams. In UML, which relationship is this?</h4>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">A) Composition &mdash; filled diamond on the whole side</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">B) Inheritance &mdash; open triangle from child to parent</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, false)">C) Realisation &mdash; dashed line with an open triangle</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q3', this, true)">D) Aggregation &mdash; open diamond on the whole side</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Aggregation is the weaker <em>has-a</em>: the whole holds the parts, but the parts have independent lifetimes and can be shared across wholes. UML draws the diamond on the whole side but leaves it <em>open</em>.
+                    <div style="margin-top: 10px; text-align: center;">
+                        <svg viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                            <rect x="20" y="22" width="80" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                            <text x="60" y="44" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#047857">Team</text>
+                            <rect x="240" y="22" width="80" height="36" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+                            <text x="280" y="44" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">Player</text>
+                            <line x1="120" y1="40" x2="240" y2="40" stroke="#475569" stroke-width="1.5"/>
+                            <polygon points="100,40 112,34 124,40 112,46" fill="white" stroke="#047857" stroke-width="1.5"/>
+                            <text x="105" y="20" font-size="9" font-family="Inter, sans-serif" fill="#475569">*</text>
+                            <text x="225" y="20" font-size="9" font-family="Inter, sans-serif" fill="#475569">*</text>
+                            <text x="170" y="58" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#475569">has</text>
+                        </svg>
+                    </div>
+                    <p style="margin-top: 8px;">Composition would imply the players die with the team &mdash; not the case here. Inheritance and Realisation are about <em>is-a</em>, not <em>has-a</em>.</p>
+                </div>
+            </div>
+
+            <!-- Q4 — correct: A  (Association scenario) -->
+            <div class="quiz-box" id="recap-q4">
+                <h4>Quiz 4 &mdash; A <code>Doctor</code> has a set of <code>Patient</code> objects they're treating. Neither owns the other; if the doctor leaves the hospital, the patients continue with someone else. In UML, which relationship best fits?</h4>
+                <button class="quiz-option" onclick="checkQuiz('recap-q4', this, true)">A) Association &mdash; plain undecorated line between them</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q4', this, false)">B) Composition &mdash; filled diamond on the whole side</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q4', this, false)">C) Aggregation &mdash; open diamond on the whole side</button>
+                <button class="quiz-option" onclick="checkQuiz('recap-q4', this, false)">D) Dependency &mdash; dashed arrow used briefly in one call</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Association is the most neutral relationship &mdash; two classes that know about each other and interact, but neither owns the other. No diamond. UML just draws a line, optionally with multiplicity (<code>1..*</code>) and a role name.
+                    <div style="margin-top: 10px; text-align: center;">
+                        <svg viewBox="0 0 360 80" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                            <rect x="20" y="22" width="80" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                            <text x="60" y="44" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#047857">Doctor</text>
+                            <rect x="260" y="22" width="80" height="36" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+                            <text x="300" y="44" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">Patient</text>
+                            <line x1="100" y1="40" x2="260" y2="40" stroke="#475569" stroke-width="1.5"/>
+                            <text x="110" y="20" font-size="9" font-family="Inter, sans-serif" fill="#475569">1</text>
+                            <text x="240" y="20" font-size="9" font-family="Inter, sans-serif" fill="#475569">*</text>
+                            <text x="180" y="58" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#475569">treats &raquo;</text>
+                        </svg>
+                    </div>
+                    <p style="margin: 8px 0;">In Python this looks like a list reference with no destruction semantics &mdash; either side can hold or release the other freely:</p>
+                    <div class="code-block">
+                        <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Patient</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name: str):
+        self.name = name
+        <span class="comment"># patient does NOT own the doctor; no back-reference needed</span>
+
+<span class="keyword">class</span> <span class="function">Doctor</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, name: str):
+        self.name = name
+        self.patients: <span class="function">list</span>[Patient] = []   <span class="comment"># just a reference, not ownership</span>
+
+    <span class="keyword">def</span> <span class="function">assign</span>(self, p: Patient) -&gt; <span class="keyword">None</span>:
+        self.patients.<span class="function">append</span>(p)
+
+    <span class="keyword">def</span> <span class="function">release</span>(self, p: Patient) -&gt; <span class="keyword">None</span>:
+        self.patients.<span class="function">remove</span>(p)        <span class="comment"># patient is still alive after this</span>
+
+<span class="comment"># both exist independently in some registry</span>
+asha = <span class="function">Patient</span>(<span class="string">"Asha"</span>)
+dr_mehta = <span class="function">Doctor</span>(<span class="string">"Dr Mehta"</span>)
+dr_mehta.<span class="function">assign</span>(asha)         <span class="comment"># now treats her</span>
+
+dr_mehta.<span class="function">release</span>(asha)        <span class="comment"># still alive</span>
+<span class="keyword">del</span> dr_mehta                <span class="comment"># patient is still alive (registry holds her)</span></pre>
+                        </div>
+                    </div>
+                    <p style="margin-top: 8px;">Composition and Aggregation both imply a "whole" that holds "parts" &mdash; not the case between a Doctor and a Patient. Dependency is for short-lived uses (a parameter or local variable), not a long-term relationship.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY THIS CLASS ===== -->
+    <section id="why">
+        <div class="section-container">
+            <span class="section-label blue">Why this class matters</span>
+            <h2 class="section-title">You know the theory. Now ship it under pressure.</h2>
+            <p class="section-subtitle">Eight classes on patterns. Now you face 90 minutes with a stranger asking you to design Splitwise. What separates the candidate who passes from the one who freezes is <em>not</em> the patterns &mdash; it's the approach.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <strong style="color: var(--accent-danger);">Candidate A &mdash; jumps in</strong>
+                    <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                        <li>Hears "Design Splitwise" &rarr; starts typing in minute 2</li>
+                        <li>Writes <code>class User</code> and <code>class Group</code> with no thought to API</li>
+                        <li>Halfway through, realises they forgot percentage splits &mdash; rewrites</li>
+                        <li>At 80 minutes: working demo for "equal split, two people" &mdash; nothing else</li>
+                        <li>Interviewer asks "how do you handle settlements?" &mdash; candidate freezes</li>
+                    </ul>
+                </div>
+                <div class="comparison-card after">
+                    <strong style="color: var(--accent-success);">Candidate B &mdash; runs the playbook</strong>
+                    <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                        <li>0&ndash;5 min: asks 4 clarifying questions, agrees on scope with interviewer</li>
+                        <li>5&ndash;15 min: writes 6 entities + 8 APIs on the board</li>
+                        <li>15&ndash;65 min: codes the happy path first, then the two edge cases agreed</li>
+                        <li>65&ndash;80 min: live demo + trade-off discussion (SQL vs in-mem, concurrency)</li>
+                        <li>80&ndash;90 min: extensions they'd build next, interviewer nods</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p style="margin-top: 24px; color: var(--text-secondary);">Both candidates know <em>the same patterns</em>. Today's class is the difference between knowing and shipping.</p>
+        </div>
+    </section>
+
+    <!-- ===== INTERVIEW TYPES ===== -->
+    <section id="types">
+        <div class="section-container">
+            <span class="section-label success">Types of LLD interviews</span>
+            <h2 class="section-title">First the Indian tech tiers, then the six concrete formats</h2>
+            <p class="section-subtitle">Three tiers of companies in India interview for the same role in three quite different ways. Inside each tier the format also varies. We'll do the tier view first, then the format view.</p>
+
+            <!-- INDIAN TECH TIER VIEW -->
+            <h3 style="margin-top: 8px; margin-bottom: 8px;">The three Indian tiers</h3>
+            <div class="card-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="card" style="border-color: var(--accent-warning);">
+                    <div class="card-icon">&#128181;</div>
+                    <div class="card-title">Tier 1 &mdash; Traditional IT</div>
+                    <p class="card-desc"><strong>Who:</strong> TCS, Infosys, Wipro, Cognizant, Accenture, Capgemini, HCL.<br><strong>Style:</strong> theory-heavy verbal Q&amp;A (30&ndash;45 min). Almost no coding.<br><strong>Asks:</strong> "Explain SOLID", "Singleton vs Factory", "What is duck typing", "abstract class vs interface", "thread-safe Singleton".<br><strong>Prep:</strong> memorise GoF pattern names + 2 examples each; SOLID with examples; Python specifics (decorators, GIL, magic methods).</p>
+                </div>
+                <div class="card" style="border-color: var(--accent-primary);">
+                    <div class="card-icon">&#127970;</div>
+                    <div class="card-title">Tier 2 &mdash; Product MNCs</div>
+                    <p class="card-desc"><strong>Who:</strong> Google, Microsoft, Amazon, Flipkart, PhonePe, Uber, Ola, Paytm.<br><strong>Style:</strong> design process on a whiteboard/doc (45&ndash;60 min). Pseudo-code or partial real code.<br><strong>Asks:</strong> "Design Zoomcar / Library / Movie booking". Wants requirements, class diagram, APIs, deep-dive on schema or concurrency.<br><strong>Prep:</strong> the 7-step playbook below; 10+ problems end-to-end on whiteboard.</p>
+                </div>
+                <div class="card" style="border-color: var(--accent-purple);">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title">Tier 3 &mdash; Modern startups</div>
+                    <p class="card-desc"><strong>Who:</strong> Swiggy, Zomato, Cred, Razorpay, Zepto, Meesho, ShareChat, Dream11.<br><strong>Style:</strong> machine-coding round (90&ndash;120 min). Working code in IDE, runnable demo, sometimes test cases.<br><strong>Asks:</strong> "Build Splitwise" / "Build Snake-and-Ladder". Cares about a working demo more than perfect design.<br><strong>Prep:</strong> 90-minute timed mocks; <code>python main.py</code> habit; dataclasses + Enums + comprehensions.</p>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 24px;">Within each tier &mdash; especially Tier 2 and Tier 3 &mdash; the concrete <em>format</em> still varies. These are the six you'll actually encounter:</p>
+
+            <h3 style="margin-top: 16px; margin-bottom: 8px;">The six concrete formats</h3>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#9203;</div>
+                    <div class="card-title">1. Machine coding (90 min)</div>
+                    <p class="card-desc"><strong>Format:</strong> sit-down, IDE, ship a working solution. <br><strong>Common at:</strong> Flipkart, Walmart, Razorpay, Swiggy, Zomato, Cred, PhonePe.<br><strong>Judged on:</strong> working demo + clean class design + you can extend it live.<br><strong>Sample problems:</strong> Splitwise, Parking Lot, Tic-Tac-Toe, BookMyShow, ride-sharing, in-memory cache.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">2. Design discussion (45&ndash;60 min)</div>
+                    <p class="card-desc"><strong>Format:</strong> whiteboard / Google Doc &mdash; UML class diagram + API list + trade-offs. <em>No working code required.</em><br><strong>Common at:</strong> Google, Meta, Amazon (mixed with HLD), Atlassian.<br><strong>Judged on:</strong> clean class diagram, sound APIs, SOLID/pattern awareness.<br><strong>Sample problems:</strong> Uber matching, ATM, vending machine, hotel booking.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127968;</div>
+                    <div class="card-title">3. Take-home (24&ndash;72 hrs)</div>
+                    <p class="card-desc"><strong>Format:</strong> implement at home, submit a repo with tests, README, design notes.<br><strong>Common at:</strong> startups, Stripe, GitLab, remote-first companies.<br><strong>Judged on:</strong> code quality, test coverage, design choices in README, no shortcuts.<br><strong>Sample problems:</strong> URL shortener, chess engine, file deduper, e-commerce checkout.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129518;</div>
+                    <div class="card-title">4. System + LLD hybrid (60 min)</div>
+                    <p class="card-desc"><strong>Format:</strong> half HLD (services, DBs, scale), half LLD (one component drawn in classes).<br><strong>Common at:</strong> senior+ rounds at FAANG, Atlassian, Uber.<br><strong>Judged on:</strong> when to zoom out vs zoom in; ability to switch altitude on demand.<br><strong>Sample problems:</strong> Design Instagram &mdash; HLD the feed, LLD the comment model.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128270;</div>
+                    <div class="card-title">5. Code review (45&ndash;60 min)</div>
+                    <p class="card-desc"><strong>Format:</strong> given a PR-shaped piece of code, find bugs / smells / SOLID violations and suggest fixes.<br><strong>Common at:</strong> Atlassian, Stripe, Twilio, Microsoft.<br><strong>Judged on:</strong> what you notice + how you frame feedback + the fix you propose.<br><strong>Sample problems:</strong> "Here's a 200-line file &mdash; what's wrong, what do you change first?"</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128172;</div>
+                    <div class="card-title">6. Live design discussion (30 min, screen)</div>
+                    <p class="card-desc"><strong>Format:</strong> no whiteboard, just talk. "Walk me through how you'd design X."<br><strong>Common at:</strong> phone screens, recruiter pre-screens.<br><strong>Judged on:</strong> can you stay structured without drawing?<br><strong>Sample problems:</strong> "Design a rate limiter &mdash; talk me through it."</p>
+                </div>
+            </div>
+
+            <!-- Type-spotting quiz block (5 quizzes, correct positions: B, D, A, C, B) -->
+
+            <!-- T1 — correct: B -->
+            <div class="quiz-box" id="type-q1">
+                <h4>Quiz 1 &mdash; The recruiter says: "90 minutes, IDE of your choice, build a working Parking Lot." Which format is this?</h4>
+                <button class="quiz-option" onclick="checkQuiz('type-q1', this, false)">A) Take-home</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q1', this, true)">B) Machine coding</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q1', this, false)">C) Design discussion</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q1', this, false)">D) Code review</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Time-boxed + IDE + working solution required = machine coding. Take-home is multi-day with a repo. Design discussion is no-code on a whiteboard. Code review starts from existing code, not a blank IDE.
+                </div>
+            </div>
+
+            <!-- T2 — correct: D -->
+            <div class="quiz-box" id="type-q2">
+                <h4>Quiz 2 &mdash; "Design Instagram &mdash; 30 minutes on the feed at scale, then 30 minutes on the comment model in classes." What's this?</h4>
+                <button class="quiz-option" onclick="checkQuiz('type-q2', this, false)">A) Pure HLD</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q2', this, false)">B) Pure LLD</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q2', this, false)">C) Machine coding</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q2', this, true)">D) System + LLD hybrid</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> "Feed at scale" is HLD territory (sharding, caching, fanout). "Comment model in classes" is LLD. The two-part framing is the signature of the hybrid round &mdash; common at senior+ FAANG and Atlassian. Pure HLD wouldn't ask for classes; pure LLD wouldn't ask for scale.
+                </div>
+            </div>
+
+            <!-- T3 — correct: A -->
+            <div class="quiz-box" id="type-q3">
+                <h4>Quiz 3 &mdash; "Here's a 200-line Python file. Read it for 10 minutes, then walk me through what you'd change." What format?</h4>
+                <button class="quiz-option" onclick="checkQuiz('type-q3', this, true)">A) Code review</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q3', this, false)">B) Take-home</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q3', this, false)">C) Design discussion</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q3', this, false)">D) Machine coding</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Starts from existing code, no new code expected, you talk through changes &mdash; that's code review. Stripe and Atlassian use this format heavily. Don't confuse with machine coding (blank IDE) or design discussion (no code at all).
+                </div>
+            </div>
+
+            <!-- T4 — correct: C -->
+            <div class="quiz-box" id="type-q4">
+                <h4>Quiz 4 &mdash; You're asked to "draw the class diagram for an ATM &mdash; we don't need code." Format?</h4>
+                <button class="quiz-option" onclick="checkQuiz('type-q4', this, false)">A) Machine coding</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q4', this, false)">B) Take-home</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q4', this, true)">C) Design discussion</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q4', this, false)">D) Code review</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> "Draw" + "we don't need code" = design discussion. What you sketch on the whiteboard is a <em>rough</em> class diagram &mdash; boxes for classes, lines for relationships, and which design pattern each part is using &mdash; not pixel-perfect UML with every arrow head correct. Plus an APIs list and verbal trade-offs. This is where the LLD-20 vocabulary helps you talk about design, even when the picture is loose.
+                </div>
+            </div>
+
+            <!-- T5 — correct: B -->
+            <div class="quiz-box" id="type-q5">
+                <h4>Quiz 5 &mdash; "We'll send you a problem on Friday. Submit a GitHub repo by Monday." Format?</h4>
+                <button class="quiz-option" onclick="checkQuiz('type-q5', this, false)">A) Machine coding</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q5', this, true)">B) Take-home</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q5', this, false)">C) Code review</button>
+                <button class="quiz-option" onclick="checkQuiz('type-q5', this, false)">D) Design discussion</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Multi-day + GitHub repo = take-home. Different judging axis: they expect tests, a README explaining your decisions, and polish you can't fit in 90 minutes. Submitting a single .py file with no tests is the most common way to fail this format.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 7-STEP APPROACH ===== -->
+    <section id="approach">
+        <div class="section-container">
+            <span class="section-label">The 7-step approach</span>
+            <h2 class="section-title">A repeatable playbook for 90-minute LLD</h2>
+            <p class="section-subtitle">Same template, every problem. The first three steps look slow; they're what makes the last four fast.</p>
+
+            <!-- timeline -->
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="t-time">0 &mdash; 5 min &bull; Step 1</div>
+                    <div class="t-what">Clarify the problem</div>
+                    <div class="t-desc">Ask 3&ndash;5 specific questions. Pin down scope. Do NOT start coding.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">5 &mdash; 10 min &bull; Step 2</div>
+                    <div class="t-what">Write down requirements</div>
+                    <div class="t-desc">Functional (what it does) + non-functional (scale, concurrency, persistence).</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">10 &mdash; 18 min &bull; Step 3</div>
+                    <div class="t-what">Identify entities &amp; relationships</div>
+                    <div class="t-desc">Nouns become classes. Verbs become methods. Draw a quick UML.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">18 &mdash; 25 min &bull; Step 4</div>
+                    <div class="t-what">Define the public APIs</div>
+                    <div class="t-desc">For each entity, list 2&ndash;5 method signatures. Names &amp; types only &mdash; no bodies yet.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">25 &mdash; 65 min &bull; Step 5</div>
+                    <div class="t-what">Code the happy path first</div>
+                    <div class="t-desc">Get the simplest input working end-to-end. Then add the edge cases you agreed on in Step 1.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">65 &mdash; 80 min &bull; Step 6</div>
+                    <div class="t-what">Demo &amp; verify</div>
+                    <div class="t-desc">Run the code. Walk the interviewer through one happy + one edge-case run.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">80 &mdash; 90 min &bull; Step 7</div>
+                    <div class="t-what">Trade-offs &amp; extensions</div>
+                    <div class="t-desc">"If we had 10 more minutes, I'd&hellip;" + concurrency, persistence, SOLID, patterns used.</div>
+                </div>
+            </div>
+
+            <!-- Step 1: clarify -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 1 &mdash; Clarify (0&ndash;5 min)</h3>
+
+            <h4 style="margin-bottom: 8px;">1a. Overview alignment &mdash; agree on what you're building</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Before any scope question, confirm you and the interviewer mean the same thing by the product name. Half of all failed Splitwise / Zoomcar / Dunzo interviews start with a student silently guessing what the product does.</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <strong style="color: var(--accent-danger);">&#10006; Bad &mdash; assume + start</strong>
+                    <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Interviewer: "Design Zoomcar."
+You:         "Sure, let me start with a User class..."
+             [silently assumes it's like Uber]
+             [40 min in, realises Zoomcar is self-drive
+              rentals, not ride-hailing]</pre>
+                </div>
+                <div class="comparison-card after">
+                    <strong style="color: var(--accent-success);">&#10004; Good &mdash; confirm, then narrow</strong>
+                    <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Interviewer: "Design Zoomcar."
+You:         "Quick check &mdash; Zoomcar is the self-drive
+              car-rental platform where users book by
+              the hour/day. Right?"
+Interviewer: "Yes, exactly."
+You:         "Got it. Consumer side (booking) or admin
+              side (inventory) &mdash; which one first?"
+Interviewer: "Consumer."</pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 12px 0;"><strong>If you genuinely don't know the product, say so out loud:</strong></p>
+            <div class="highlight-box info">
+                <p style="margin: 0; color: var(--text-secondary); font-family: 'Fira Code', monospace; font-size: 0.85rem; white-space: pre-wrap;">You:         "I haven't used Dunzo &mdash; could you give me a
+              one-line description of what it does?"
+Interviewer: "Hyperlocal delivery: packages, groceries,
+              within a city."
+You:         "So a courier + grocery delivery hybrid.
+              Should I focus on the delivery-assignment
+              flow or the order-management flow?"</p>
+            </div>
+            <p style="color: var(--text-secondary); margin: 8px 0 16px;">Asking is a strength signal, not a weakness. Pretending costs you the round.</p>
+
+            <!-- step1-q0 — correct: B -->
+            <div class="quiz-box" id="step1-q0">
+                <h4>Overview-alignment Quiz &mdash; Interviewer says "Design Dunzo." You've heard the name but aren't sure exactly what they do. What's the right next move?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step1-q0', this, false)">A) Open your laptop and start typing Dunzo classes</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q0', this, true)">B) Ask for a one-line description of what Dunzo does</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q0', this, false)">C) Pretend you know it; pivot if you get details wrong</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q0', this, false)">D) Ask for a different problem you're more familiar with</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Asking the interviewer to describe the product is normal, low-risk, and shows you'd do the same on the job before designing anything. Pretending (C) means you'll discover 30 minutes in that you were modelling Uber when they wanted package delivery. Asking for a different problem (D) signals you can't recover from ambiguity. Typing without checking (A) is the classic "candidate A" failure from the opening of this class.
+                </div>
+            </div>
+
+            <h4 style="margin-top: 24px; margin-bottom: 8px;">1b. Then the scope/scale/out-of-scope sweep</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Three categories to cover &mdash; pick 1&ndash;2 from each:</p>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">Scope questions</div>
+                    <p class="card-desc">"Do users have a single group or many?"<br>"Do we support partial payments, or full only?"<br>"Is currency conversion in scope?"</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Scale questions</div>
+                    <p class="card-desc">"In-memory or persistent?"<br>"Single-threaded or concurrent users?"<br>"How many groups / orders do we plan for?"</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Out-of-scope questions</div>
+                    <p class="card-desc">"Do we need auth / login flow?"<br>"UI, or just the engine?"<br>"Do we generate invoices, or just compute totals?"</p>
+                </div>
+            </div>
+
+            <!-- Q step1-a — correct: D -->
+            <div class="quiz-box" id="step1-q1">
+                <h4>Quiz 1 &mdash; Interviewer says "Design Splitwise." You have 5 minutes for clarifying questions. Which is the best opener?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step1-q1', this, false)">A) "Should I follow SOLID and use design patterns?"</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q1', this, false)">B) "Can you tell me what tools I'm allowed to use?"</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q1', this, false)">C) "Should I write tests, or just focus on the code?"</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q1', this, true)">D) "Do users do equal splits, or also percent / share?"</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Clarifying questions must be about <em>the problem</em>, not your toolkit. Asking about SOLID, patterns, or tests signals "I'm thinking about what looks good" rather than "I'm thinking about what to build". A scope question like the split-type one pins down the smallest thing that changes your design.
+                </div>
+            </div>
+
+            <!-- Q step1-b — correct: C -->
+            <div class="quiz-box" id="step1-q2">
+                <h4>Quiz 2 &mdash; The interviewer says "yes, support equal + percent + share splits." How many minutes do you spend asking more questions before moving on?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step1-q2', this, false)">A) 0&mdash;1 &mdash; you got an answer, start coding</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q2', this, false)">B) 1&mdash;2 &mdash; one quick scale question, then code</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q2', this, true)">C) 3&mdash;5 &mdash; finish your scope + scale + out-of-scope list</button>
+                <button class="quiz-option" onclick="checkQuiz('step1-q2', this, false)">D) 8&mdash;10 &mdash; clarify every edge case upfront</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> Most candidates rush this. The first answer unlocks more questions ("ok, percent &mdash; do percentages always sum to 100, or can we round?"). 3&ndash;5 minutes is the standard budget &mdash; long enough to nail scope, short enough that you still have 85 minutes to build. Spending 8&ndash;10 minutes is the opposite failure: you run out of code time. Spending 0&ndash;1 is the original mistake.
+                </div>
+            </div>
+
+            <!-- More worked clarification examples -->
+            <h4 style="margin-top: 28px; margin-bottom: 8px;">More worked examples &mdash; wrong vs right clarifying (click to expand)</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Three different problem shapes. Each is a real interview ask. For each: what most candidates say, vs what gets you ahead.</p>
+
+            <!-- Splitwise -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128176; "Design Splitwise"</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="comparison-grid">
+                            <div class="comparison-card before">
+                                <strong style="color: var(--accent-danger);">&#10006; Wrong &mdash; assume equal split only</strong>
+                                <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Interviewer: "Design Splitwise."
+You:         "OK &mdash; I'll model User, Group,
+              Expense. Equal split among
+              everyone in the group."
+              [starts coding]
+              [40 min in: realises Bhavna
+               actually paid 70% of dinner
+               and percent split is a thing]
+              [refactors data model]</pre>
+                            </div>
+                            <div class="comparison-card after">
+                                <strong style="color: var(--accent-success);">&#10004; Right &mdash; pin down the split-type spectrum</strong>
+                                <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">You: "Split types &mdash; just equal, or
+      also percent / share / exact-rupee?"
+Int: "Equal + percent + share. Skip exact-rupee."
+You: "Settlements &mdash; do we record actual
+      payments, or just compute who-owes-whom?"
+Int: "Both. Show the optimised payment graph too."
+You: "Single currency?"
+Int: "INR only, no conversion."
+You: "OK &mdash; let me confirm scope on the
+      board before I touch a line of code."</pre>
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;"><strong>Why this saves you:</strong> the moment you hear "percent and share split", you reach for a <code>SplitStrategy</code> ABC from minute 12 instead of refactoring an inheritance tree at minute 40. The clarifying question literally chose your design pattern for you.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BookMyShow -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#127916; "Design BookMyShow"</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="comparison-grid">
+                            <div class="comparison-card before">
+                                <strong style="color: var(--accent-danger);">&#10006; Wrong &mdash; jump straight to seats</strong>
+                                <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Interviewer: "Design BookMyShow."
+You:         "Theater &rarr; Screen &rarr; Show &rarr; Seat.
+              Users pick seats &rarr; pay &rarr; done."
+              [codes happily]
+              [interviewer: "what if two
+               people pick the same seat?"]
+              [you: silence]</pre>
+                            </div>
+                            <div class="comparison-card after">
+                                <strong style="color: var(--accent-success);">&#10004; Right &mdash; surface the locking + payment edges</strong>
+                                <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">You: "Multi-user simultaneous booking &mdash;
+      how do we handle the seat-lock race?"
+Int: "Lock for 10 minutes when added to cart,
+      release on timeout or cancel."
+You: "Payment &mdash; sync or async webhook?
+      What about partial failures?"
+Int: "Async. Refund flow needed for failures."
+You: "One screen one show, or
+      multiple shows per screen per day?"
+Int: "Multiple. Up to 6 shows per screen."</pre>
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;"><strong>Why this saves you:</strong> seat-locking is the bread-and-butter of this problem &mdash; you'll be asked about it whether you ask or not. Asking up-front lets you model <code>SeatLock</code> as a first-class entity (with TTL + idempotency) in Step 3, instead of bolting concurrency control onto a model that doesn't have a place for it.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uber matching -->
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128663; "Design Uber's driver-rider matching"</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="collapsible-inner">
+                        <div class="comparison-grid">
+                            <div class="comparison-card before">
+                                <strong style="color: var(--accent-danger);">&#10006; Wrong &mdash; "nearest driver wins"</strong>
+                                <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Interviewer: "Design Uber matching."
+You:         "Find nearest available driver
+              by lat/long, assign, done."
+              [codes a haversine loop]
+              [interviewer: "what about surge?
+               UberPool? auto vs sedan? what
+               if the driver rejects?"]
+              [scope explodes mid-coding]</pre>
+                            </div>
+                            <div class="comparison-card after">
+                                <strong style="color: var(--accent-success);">&#10004; Right &mdash; pin the matching axis</strong>
+                                <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">You: "Single ride type, or auto / sedan / suv?"
+Int: "Just two: auto + sedan."
+You: "Rider gets one driver, or batched
+      to a pool (UberPool style)?"
+Int: "One driver only. Skip pooling."
+You: "Driver-acceptance flow &mdash; auto-assigned,
+      or driver can decline + we re-match?"
+Int: "Can decline. We re-match within 10s."
+You: "Is surge pricing in scope, or
+      just the matching algorithm?"
+Int: "Matching only. Pricing is out of scope."</pre>
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;"><strong>Why this saves you:</strong> "re-match within 10s on decline" is the most non-obvious requirement &mdash; it changes your design from a one-shot allocator to a <em>retry-able</em> matching loop with state (driver pool, decline history, timeout). You'd never reach for that without asking.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>Pattern across all four examples</strong> (Zoomcar, Splitwise, BookMyShow, Uber): the WRONG version codes from a default assumption; the RIGHT version asks <em>one question about the open variable</em> &mdash; the place the design is most likely to differ from your first guess. Get that one right and the next 85 minutes flow.</p>
+            </div>
+
+            <!-- Step 2: Requirements -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 2 &mdash; Requirements (5&ndash;10 min)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Write them down. Say them out loud. Pin them up where you'll see them while coding.</p>
+
+            <div class="highlight-box warning">
+                <strong>The 5&ndash;6-requirements cap (golden rule)</strong>
+                <ul style="margin: 10px 0 0 22px;">
+                    <li>Functional requirements: cap at <strong>4&ndash;5</strong>.</li>
+                    <li>Non-functional: cap at <strong>1&ndash;2</strong>.</li>
+                    <li>Nice-to-haves: park them in a separate "future scope" list. Mention out loud, do NOT implement.</li>
+                    <li>Working code for 4 features beats half-broken code for 15.</li>
+                    <li>The interviewer would rather see one Strategy slot in cleanly than watch you ship nothing because you took on the full PRD.</li>
+                </ul>
+            </div>
+            <p style="color: var(--text-secondary); margin: 10px 0;">Worked example &mdash; "Design Spotify (single user, in-memory):"</p>
+            <div class="comparison-grid">
+                <div class="comparison-card after" style="background: rgba(59, 130, 246, 0.08); border-color: var(--accent-blue);">
+                    <strong style="color: var(--accent-blue);">Functional requirements (what)</strong>
+                    <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                        <li>Stream a song &mdash; play / pause / seek</li>
+                        <li>Build a playlist; play it in order or on shuffle</li>
+                        <li>Search the catalogue by title / artist / album</li>
+                        <li>Like a song (add to "Liked Songs" library)</li>
+                        <li>Track recent listening history per user</li>
+                    </ul>
+                </div>
+                <div class="comparison-card after" style="background: rgba(168, 85, 247, 0.08); border-color: var(--accent-purple);">
+                    <strong style="color: var(--accent-purple);">Non-functional requirements (how)</strong>
+                    <ul style="margin: 10px 0 0 20px; color: var(--text-secondary);">
+                        <li>In-memory catalogue &mdash; no DB for this round</li>
+                        <li>Single user &mdash; no concurrent listeners</li>
+                        <li>Catalogue size: ~10,000 songs</li>
+                        <li>Audio decoding out of scope &mdash; <code>play()</code> just prints</li>
+                        <li>Extensible: a new shuffle / smart-playlist rule is one new class</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Q step2-a — correct: A -->
+            <div class="quiz-box" id="step2-q1">
+                <h4>Quiz 3 &mdash; The interviewer says "catalogue is ~10,000 songs." What's the RIGHT thing to do with that number?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step2-q1', this, true)">A) Pin it to the board. A linear scan is fine here.</button>
+                <button class="quiz-option" onclick="checkQuiz('step2-q1', this, false)">B) Shard the catalogue across two machines.</button>
+                <button class="quiz-option" onclick="checkQuiz('step2-q1', this, false)">C) Build a Redis cache in front of the catalogue.</button>
+                <button class="quiz-option" onclick="checkQuiz('step2-q1', this, false)">D) Forget the number &mdash; design for 100M songs.</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> 10,000 is small &mdash; a linear scan or a single Python dict handles search and lookup comfortably. No sharding, no cache, no inverted index needed for an in-memory interview. The point of an NFR number is to <em>narrow</em> your design, not blow it up: B, C, D all over-engineer for scale you don't have. Pinning the number on the board means later, when you reach for a fancy algorithm, you catch yourself: "wait, the catalogue is 10K &mdash; this is overkill."
+                </div>
+            </div>
+
+            <!-- Step 3: entities -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 3 &mdash; Entities &amp; relationships (10&ndash;18 min)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Two reliable ways to find your entities. Pick by the shape of the problem.</p>
+
+            <div class="card-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card" style="border-color: var(--accent-primary);">
+                    <div class="card-title">Approach A &mdash; Noun identification</div>
+                    <p class="card-desc"><strong>When:</strong> business-domain problems (library, parking, e-commerce, food delivery, Splitwise). Anything with users, transactions, inventory.<br><strong>How:</strong> circle the nouns in your requirements &mdash; those are your classes. Underline the verbs &mdash; those are your methods.</p>
+                    <div class="highlight-box info" style="margin-top: 8px; padding: 10px; font-size: 0.85rem;">
+                        <strong>Splitwise:</strong> "User, Group, Expense, Payment, Split, Balance, Currency" &rarr; entity list. "add_user, add_expense, split, settle, get_balance, simplify" &rarr; methods.
+                    </div>
+                </div>
+                <div class="card" style="border-color: var(--accent-purple);">
+                    <div class="card-title">Approach B &mdash; Visualization</div>
+                    <p class="card-desc"><strong>When:</strong> games, simulations, real-time systems (chess, snake-and-ladder, tic-tac-toe, an elevator scheduler).<br><strong>How:</strong> picture the gameplay in your head. The visible pieces are the entities; the actions are the methods.</p>
+                    <div class="highlight-box" style="margin-top: 8px; padding: 10px; font-size: 0.85rem; background: rgba(168,85,247,0.08); border-color: var(--accent-purple);">
+                        <strong>Snake-and-Ladder:</strong> picture the board &rarr; Board, Player, Dice, Snake, Ladder, Game. Each one obvious from imagining the table the kids are sitting at.
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 14px;">Most problems use one approach cleanly. A few hybrids (Parking Lot is both): nouns give you Vehicle / Spot / Ticket, visualization gives you Floor / multi-level structure.</p>
+
+            <!-- step3-approach quiz — correct: A -->
+            <div class="quiz-box" id="step3-q0">
+                <h4>Approach Quiz &mdash; "Design an elevator scheduler &mdash; multiple floors, multiple elevators, requests pile up." Which approach do you start with?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step3-q0', this, true)">A) Visualization &mdash; picture the lobby and the cars moving</button>
+                <button class="quiz-option" onclick="checkQuiz('step3-q0', this, false)">B) Noun identification &mdash; circle nouns in a fresh PRD</button>
+                <button class="quiz-option" onclick="checkQuiz('step3-q0', this, false)">C) Skip Step 3 &mdash; jump straight to coding the queue</button>
+                <button class="quiz-option" onclick="checkQuiz('step3-q0', this, false)">D) Draw an ER diagram of the building's database</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong>
+                    <ul style="margin: 8px 0 0 22px;">
+                        <li><strong>Elevator system is a real-time simulation</strong> &mdash; floors, cars, directions, requests piling up. Easier to see than to read.</li>
+                        <li><strong>Picture it for 20 seconds</strong> &rarr; entities surface almost instantly: Elevator, Floor, Request, Direction (enum), Scheduler.</li>
+                        <li><strong>Noun identification still works</strong> &mdash; but the requirements text usually doesn't name every entity (e.g. "Direction" rarely appears as a noun), so you'd miss things.</li>
+                        <li><strong>ER diagram (D) is wrong layer</strong> &mdash; that's persistence design, not the object model the interview wants.</li>
+                        <li><strong>Jumping to code (C)</strong> is the exact failure mode this whole class is fixing.</li>
+                    </ul>
+
+                    <div class="diagram-box" style="margin-top: 12px; padding: 16px;">
+                        <p style="text-align: center; font-weight: 700; margin-bottom: 12px; color: var(--accent-purple); font-size: 0.9rem;">What "picturing the lobby for 20 seconds" surfaces</p>
+                        <svg viewBox="0 0 620 230" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                            <!-- 4 floors -->
+                            <line x1="40" y1="20" x2="280" y2="20" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="40" y1="70" x2="280" y2="70" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="40" y1="120" x2="280" y2="120" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="40" y1="170" x2="280" y2="170" stroke="#94a3b8" stroke-width="1"/>
+                            <text x="20" y="24" font-size="10" font-family="Inter, sans-serif" fill="#475569">F4</text>
+                            <text x="20" y="74" font-size="10" font-family="Inter, sans-serif" fill="#475569">F3</text>
+                            <text x="20" y="124" font-size="10" font-family="Inter, sans-serif" fill="#475569">F2</text>
+                            <text x="20" y="174" font-size="10" font-family="Inter, sans-serif" fill="#475569">F1</text>
+
+                            <!-- Two elevators (cars) -->
+                            <rect x="90" y="50" width="50" height="30" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                            <text x="115" y="69" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#047857">E1</text>
+                            <text x="115" y="40" text-anchor="middle" font-size="11" fill="#10b981">&#8593;</text>
+
+                            <rect x="180" y="150" width="50" height="30" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+                            <text x="205" y="169" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#047857">E2</text>
+                            <text x="205" y="200" text-anchor="middle" font-size="11" fill="#10b981">&#8595;</text>
+
+                            <!-- Pending requests -->
+                            <circle cx="260" cy="70" r="6" fill="#f59e0b"/>
+                            <circle cx="260" cy="20" r="6" fill="#f59e0b"/>
+                            <circle cx="260" cy="120" r="6" fill="#f59e0b"/>
+
+                            <text x="160" y="208" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#475569">2 cars &bull; 4 floors &bull; 3 pending requests &bull; each car has a direction</text>
+
+                            <!-- Entities surfaced -->
+                            <text x="340" y="20" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">Entities you SEE:</text>
+                            <text x="340" y="42" font-size="10" font-family="Inter, sans-serif" fill="#0f172a">&bull; <tspan font-weight="700" fill="#047857">Elevator</tspan>   (the 2 boxes)</text>
+                            <text x="340" y="60" font-size="10" font-family="Inter, sans-serif" fill="#0f172a">&bull; <tspan font-weight="700" fill="#475569">Floor</tspan>      (the 4 horizontal lines)</text>
+                            <text x="340" y="78" font-size="10" font-family="Inter, sans-serif" fill="#0f172a">&bull; <tspan font-weight="700" fill="#92400e">Request</tspan>    (the orange dots)</text>
+                            <text x="340" y="96" font-size="10" font-family="Inter, sans-serif" fill="#0f172a">&bull; <tspan font-weight="700" fill="#10b981">Direction</tspan>  (the &#8593;&#8595; arrows, enum)</text>
+                            <text x="340" y="114" font-size="10" font-family="Inter, sans-serif" fill="#0f172a">&bull; <tspan font-weight="700" fill="#a855f7">Scheduler</tspan>  (the brain that assigns)</text>
+                            <text x="340" y="140" font-size="9" font-family="Inter, sans-serif" fill="#475569">Methods surface too:</text>
+                            <text x="340" y="156" font-size="9" font-family="Inter, sans-serif" fill="#475569">request(floor, dir), step(), assign(req)</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: APIs -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 4 &mdash; Define the public APIs (18&ndash;25 min)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">For each class, write 2&ndash;5 method signatures. Names + parameters + return types. <strong>No method bodies.</strong> The point: when you start coding in Step 5, you already know exactly what to type.</p>
+
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Splitwise &mdash; APIs only, no bodies</div>
+                    <div class="code-toggle"><span>collapse</span><span class="arrow">&#9662;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="function">User</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, user_id: str, name: str): ...
+
+<span class="keyword">class</span> <span class="function">Group</span>:
+    <span class="keyword">def</span> <span class="function">add_user</span>(self, user: User) -&gt; <span class="keyword">None</span>: ...
+    <span class="keyword">def</span> <span class="function">add_expense</span>(self, expense: Expense) -&gt; <span class="keyword">None</span>: ...
+    <span class="keyword">def</span> <span class="function">balances</span>(self) -&gt; <span class="function">dict</span>[User, <span class="function">float</span>]: ...
+    <span class="keyword">def</span> <span class="function">simplified_payments</span>(self) -&gt; <span class="function">list</span>[<span class="function">tuple</span>[User, User, <span class="function">float</span>]]: ...
+
+<span class="keyword">class</span> <span class="function">Expense</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, payer: User, amount: <span class="function">float</span>, split: SplitStrategy): ...
+    <span class="keyword">def</span> <span class="function">shares</span>(self) -&gt; <span class="function">dict</span>[User, <span class="function">float</span>]: ...
+
+<span class="keyword">class</span> <span class="function">SplitStrategy</span>(ABC):
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">split</span>(self, amount: <span class="function">float</span>, members: <span class="function">list</span>[User]) -&gt; <span class="function">dict</span>[User, <span class="function">float</span>]: ...
+
+<span class="keyword">class</span> <span class="function">EqualSplit</span>(SplitStrategy): ...
+<span class="keyword">class</span> <span class="function">PercentSplit</span>(SplitStrategy): ...
+<span class="keyword">class</span> <span class="function">ShareSplit</span>(SplitStrategy): ...</pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 12px;">Notice: <strong>Strategy pattern from LLD-19</strong> already shows up &mdash; <code>SplitStrategy</code> is an ABC with three implementations. The patterns are tools you reach for in Step 3&ndash;4, not slogans you announce.</p>
+
+            <!-- Q step4-a — correct: C -->
+            <div class="quiz-box" id="step4-q1">
+                <h4>Quiz 5 &mdash; Why write methods as signatures-only in Step 4, instead of starting to fill them in?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step4-q1', this, false)">A) To save typing later</button>
+                <button class="quiz-option" onclick="checkQuiz('step4-q1', this, false)">B) Because Python needs forward declarations</button>
+                <button class="quiz-option" onclick="checkQuiz('step4-q1', this, true)">C) To catch design holes before bodies bake them in</button>
+                <button class="quiz-option" onclick="checkQuiz('step4-q1', this, false)">D) The interviewer asked for it explicitly</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> The signature is where you commit to the contract: parameter types, return type, which class owns the method. If the signatures look wrong (e.g. <code>Group.add_expense</code> took a raw dict instead of an Expense object), you fix it in 10 seconds. Once bodies are written, the same fix is 5 minutes of edits across files. Python doesn't need forward declarations (B); A is too small a benefit; the interviewer cares about your reasoning, not your ceremony.
+                </div>
+            </div>
+
+            <!-- Step 5: code happy path -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 5 &mdash; Code the happy path first (25&ndash;65 min)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">40 minutes is the meat of the interview. Two rules:</p>
+            <ul style="margin-left: 22px; color: var(--text-secondary);">
+                <li><strong>Happy path first.</strong> One group, two users, equal split, one expense. End-to-end. Then add edges.</li>
+                <li><strong>Print as you go.</strong> Every class gets a tiny <code>main()</code> snippet that exercises it. If the interviewer asks "does this work?" you run it in 3 seconds.</li>
+            </ul>
+
+            <!-- Q step5-a — correct: A -->
+            <div class="quiz-box" id="step5-q1">
+                <h4>Quiz 6 &mdash; 50 minutes in: equal-split works end-to-end. 40 minutes left. What do you build next?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step5-q1', this, true)">A) Percent split &mdash; the next agreed feature</button>
+                <button class="quiz-option" onclick="checkQuiz('step5-q1', this, false)">B) Refactor everything for thread safety</button>
+                <button class="quiz-option" onclick="checkQuiz('step5-q1', this, false)">C) Add a persistence layer with SQLAlchemy</button>
+                <button class="quiz-option" onclick="checkQuiz('step5-q1', this, false)">D) Write 30 unit tests</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Build features in the order you agreed in Step 1. Thread safety, persistence, and tests are all great &mdash; but if you said "in-memory, single-threaded" in Step 2, doing them now eats the time you need for the OTHER feature you promised. Most candidates fail by widening scope mid-flight rather than finishing what they agreed to.
+                </div>
+            </div>
+
+            <!-- Step 6: demo & verify -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 6 &mdash; Demo &amp; verify (65&ndash;80 min)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Run your code in front of the interviewer. Walk one happy path. Walk one edge case. If it crashes, fix the crash on screen &mdash; <strong>that's a signal of strength, not weakness.</strong> Interviewers love watching you debug.</p>
+
+            <!-- Step 7: trade-offs -->
+            <h3 style="margin-top: 36px; margin-bottom: 10px;">Step 7 &mdash; Trade-offs &amp; extensions (80&ndash;90 min)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">The last 10 minutes decide whether you pass with a "yes" or a "strong yes". Have answers ready for:</p>
+            <ul style="margin-left: 22px; color: var(--text-secondary);">
+                <li><strong>Concurrency:</strong> "I assumed single-threaded. To support concurrent writes, I'd guard <code>Group.add_expense</code> with a lock, or move to per-user queues."</li>
+                <li><strong>Persistence:</strong> "Right now it's in-memory dicts. To persist, I'd add a Repository per aggregate &mdash; <code>GroupRepository</code>, <code>UserRepository</code> &mdash; and keep the domain classes ignorant of storage."</li>
+                <li><strong>SOLID:</strong> "<code>SplitStrategy</code> is OCP-friendly &mdash; new split types are new classes. The <code>Expense</code> doesn't <code>isinstance</code>-check the split."</li>
+                <li><strong>Extensions:</strong> "If we had 10 more minutes, I'd add the payment-graph simplification algorithm."</li>
+            </ul>
+
+            <!-- Q step7-a — correct: D -->
+            <div class="quiz-box" id="step7-q1">
+                <h4>Quiz 7 &mdash; Interviewer asks "How would you scale this to 1M concurrent users?" You designed for 100 in-memory users. Best answer?</h4>
+                <button class="quiz-option" onclick="checkQuiz('step7-q1', this, false)">A) "It already scales &mdash; Python handles it."</button>
+                <button class="quiz-option" onclick="checkQuiz('step7-q1', this, false)">B) "We'd need to rewrite it in Go."</button>
+                <button class="quiz-option" onclick="checkQuiz('step7-q1', this, false)">C) "Add Kafka and call it done."</button>
+                <button class="quiz-option" onclick="checkQuiz('step7-q1', this, true)">D) "Persistence first, then partition by group_id."</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Show the path: identify the bottleneck (in-memory state can't survive crashes or fan out), name the first lever (persistence), name the second (partitioning by a natural key &mdash; group_id, since most reads/writes are within a group). A is wrong (in-mem state breaks at any scale). B punts. C drops a buzzword. D is a concrete step-by-step that respects what you already built.
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>The meta-skill:</strong> at every step, you're showing the interviewer your <em>process</em>. Even if your code has bugs, a candidate who follows steps 1&ndash;7 audibly &mdash; "I'm clarifying", "I'm picking entities", "I'm coding the happy path" &mdash; conveys senior-level habits. Silence + furious typing conveys panic, regardless of how clean the code turns out.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MISTAKES ===== -->
+    <section id="mistakes">
+        <div class="section-container">
+            <span class="section-label danger">Mistakes that tank interviews</span>
+            <h2 class="section-title">Seven habits we audit candidates for &mdash; and the fix for each</h2>
+            <p class="section-subtitle">Every one of these is a real pattern we've seen kill loops in the last 12 months. Recognise them in yourself before the interviewer recognises them in you.</p>
+
+            <!-- M1 — correct: D -->
+            <div class="quiz-box" id="mistake-q1">
+                <h4>Mistake 1 &mdash; Diving into code without clarifying. What's the symptom?</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, false)">A) Code compiles on the first try</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, false)">B) You finish in 45 minutes</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, false)">C) The interviewer is silent throughout</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q1', this, true)">D) You rewrite the data model twice</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Rewriting the data model mid-flight is the tell that you guessed at scope. Compiling-on-first-try is good. Finishing in 45 means you under-built (or got an easy problem). Silent interviewer is neutral (they're observing). But "I need to refactor &mdash; turns out percentages don't always sum to 100" 35 minutes in is the unmistakable cost of skipping Step 1.
+                </div>
+            </div>
+
+            <!-- M2 — correct: B -->
+            <div class="quiz-box" id="mistake-q2">
+                <h4>Mistake 2 &mdash; Building all 47 features instead of the MVP. The fix is&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, false)">A) Type faster and skip drawing the diagram</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, true)">B) Pick the top 3 features in Step 1 with the interviewer</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, false)">C) Lean on more design patterns to save time later</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q2', this, false)">D) Skip the demo step and keep coding until time</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Scope is a co-designed contract. "I'll do equal split + percent split + simplified payments &mdash; we'll skip currency, settlement history, and the UI. Sound good?" gets a nod and protects your time budget. C makes it worse. D skips the highest-signal part. A doesn't fix the structural problem.
+                </div>
+            </div>
+
+            <!-- M3 — correct: A -->
+            <div class="quiz-box" id="mistake-q3">
+                <h4>Mistake 3 &mdash; Inheritance for everything. Symptom in code?</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, true)">A) Six classes inheriting from one big base class</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, false)">B) Three flat classes with no parent class at all</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, false)">C) Lots of Protocol classes with no base classes</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q3', this, false)">D) Many small dataclasses with a few methods each</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> The "deep, wide hierarchy" smell &mdash; the chai-shop trap from LLD-20. Most LLD problems want composition (Strategy, Decorator) not inheritance. Protocol classes (C) are a green flag &mdash; structural typing without hierarchy. Dataclasses (D) are also fine. Three flat classes (B) usually means under-modelled, not over-modelled.
+                </div>
+            </div>
+
+            <!-- M4 — correct: C -->
+            <div class="quiz-box" id="mistake-q4">
+                <h4>Mistake 4 &mdash; In minute 3, before any design is on the board, you announce: "I'll use Factory + Strategy + Observer here." What does the interviewer most likely hear?</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, false)">A) "I know my patterns &mdash; that's a green flag."</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, false)">B) "I've seen this problem before, so I'm confident."</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, true)">C) "I'm pattern-shopping before knowing the problem shape."</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q4', this, false)">D) "I'm following the GoF book step by step."</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> Patterns are tools you reach for in <em>Step 3&ndash;4</em> when you've recognised the shape of the problem &mdash; "the algorithm is the open variable, so Strategy"; "I'm fanning out one event to many independent reactions, so Observer". Naming patterns before the design is on the board signals the opposite: you're pattern-shopping to look senior. Senior candidates introduce patterns silently, as code, and only name them when asked or when justifying a trade-off. Reach for any pattern only when (a) you can name the open variable it solves for, and (b) the cost of NOT using it is concrete in this problem.
+                </div>
+            </div>
+
+            <!-- M5 — correct: B -->
+            <div class="quiz-box" id="mistake-q5">
+                <h4>Mistake 5 &mdash; Naming. Which method name is healthiest?</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q5', this, false)">A) <code>doStuff(data)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q5', this, true)">B) <code>add_expense(expense)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q5', this, false)">C) <code>processData(things)</code></button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q5', this, false)">D) <code>handle(x)</code></button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Verb + domain noun. A reader knows what the method does without reading the body. <code>doStuff</code>, <code>processData</code>, <code>handle</code> are placeholder names that scream "haven't decided what this is yet". Interviewers read your naming as a proxy for whether you've actually thought about the contract.
+                </div>
+            </div>
+
+            <!-- M6 — correct: C -->
+            <div class="quiz-box" id="mistake-q6">
+                <h4>Mistake 6 &mdash; Code at 70 minutes works. Interviewer says "let's see it run." You&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q6', this, false)">A) Refuse &mdash; "let me clean it up first"</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q6', this, false)">B) Run it; if it crashes, panic</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q6', this, true)">C) Run it; if it crashes, narrate &amp; fix</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q6', this, false)">D) Skip the run, draw a diagram instead</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> Live debugging is the single highest-signal moment in the interview. A candidate who calmly says "ah, I forgot to seed the user list &mdash; one sec" and fixes it in 30 seconds is rated higher than one who never runs the code. A signals fragility. B signals panic. D signals avoidance. Running and fixing signals "I do this every day".
+                </div>
+            </div>
+
+            <!-- M7 — correct: A -->
+            <div class="quiz-box" id="mistake-q7">
+                <h4>Mistake 7 &mdash; Last 5 minutes. Interviewer: "trade-offs?" You&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q7', this, true)">A) Name 3: persistence, concurrency, extensions</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q7', this, false)">B) Say "I would add unit tests next" and stop</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q7', this, false)">C) Apologise: "I ran out of time, sorry"</button>
+                <button class="quiz-option" onclick="checkQuiz('mistake-q7', this, false)">D) Pitch rewriting it in Go for performance</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Have 3 trade-offs ready before you walk in: persistence (where state lives), concurrency (what breaks under contention), and extension (what's the next feature and where would it slot in). "I'd add tests" (B) is too small. C apologises. D abandons the design you just built. The 3-trade-offs answer is rehearsable and converts a passing interview into a strong-yes.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WALKTHROUGH ===== -->
+    <section id="walkthrough">
+        <div class="section-container">
+            <span class="section-label purple">Walk-through</span>
+            <h2 class="section-title">Live demo &mdash; Parking Lot in 90 minutes</h2>
+            <p class="section-subtitle">We'll run the 7-step playbook on a classic problem. Each step is timestamped to the wall clock so you can pace yourself in the real thing.</p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="t-time">0:00 &mdash; 0:05 &bull; Clarify</div>
+                    <div class="t-what">Ask 4 questions</div>
+                    <div class="t-desc">Vehicle types? Floors / slot sizes? Payment? Persistence? &mdash; Get scope from interviewer.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">0:05 &mdash; 0:10 &bull; Requirements</div>
+                    <div class="t-what">FR + NFR list</div>
+                    <div class="t-desc">FR: park, unpark, available-slots, generate ticket. NFR: in-memory, 1 lot, single-threaded.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">0:10 &mdash; 0:18 &bull; Entities</div>
+                    <div class="t-what">7 classes drawn</div>
+                    <div class="t-desc">ParkingLot, Floor, Slot, Vehicle (+ Car / Bike / Truck), Ticket, ParkingStrategy, PricingStrategy.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">0:18 &mdash; 0:25 &bull; APIs</div>
+                    <div class="t-what">Method signatures</div>
+                    <div class="t-desc">park(vehicle) &rarr; Ticket | None &bull; unpark(ticket) &rarr; float &bull; available_slots(VehicleType) &rarr; int.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">0:25 &mdash; 1:05 &bull; Code</div>
+                    <div class="t-what">Happy path then edges</div>
+                    <div class="t-desc">Park 1 car, unpark, compute charge. Then: lot full, vehicle not found, large vehicle.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">1:05 &mdash; 1:20 &bull; Demo</div>
+                    <div class="t-what">Run scenarios live</div>
+                    <div class="t-desc">Park 3 cars across 2 floors, unpark middle one, verify slot is free.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="t-time">1:20 &mdash; 1:30 &bull; Trade-offs</div>
+                    <div class="t-what">Concurrency / persistence / extension</div>
+                    <div class="t-desc">"Lock per floor for concurrency; SlotRepository for persistence; new ParkingStrategy class to add ML-based placement."</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 32px; margin-bottom: 8px;">Step 3 in detail &mdash; entities &amp; relationships</h3>
+            <div class="code-block">
+                <div class="code-header" onclick="toggleCode(this)">
+                    <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> Parking Lot &mdash; the class skeleton you draw in minute 15</div>
+                    <div class="code-toggle"><span>collapse</span><span class="arrow">&#9662;</span></div>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">from</span> typing <span class="keyword">import</span> Protocol
+<span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+<span class="keyword">from</span> enum <span class="keyword">import</span> Enum
+
+<span class="keyword">class</span> <span class="function">VehicleType</span>(Enum):
+    CAR = <span class="string">"car"</span>; BIKE = <span class="string">"bike"</span>; TRUCK = <span class="string">"truck"</span>
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Vehicle</span>:
+    plate: str
+    kind: VehicleType
+
+<span class="decorator">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Slot</span>:
+    slot_id: str
+    kind: VehicleType
+    occupied: <span class="function">bool</span> = <span class="keyword">False</span>
+
+<span class="keyword">class</span> <span class="function">ParkingStrategy</span>(Protocol):
+    <span class="keyword">def</span> <span class="function">pick</span>(self, free_slots: <span class="function">list</span>[Slot]) -&gt; Slot | <span class="keyword">None</span>: ...
+
+<span class="keyword">class</span> <span class="function">FirstFit</span>(ParkingStrategy):
+    <span class="keyword">def</span> <span class="function">pick</span>(self, free_slots):
+        <span class="keyword">return</span> free_slots[<span class="number">0</span>] <span class="keyword">if</span> free_slots <span class="keyword">else</span> <span class="keyword">None</span>
+
+<span class="keyword">class</span> <span class="function">PricingStrategy</span>(Protocol):
+    <span class="keyword">def</span> <span class="function">charge</span>(self, kind: VehicleType, hours: <span class="function">float</span>) -&gt; <span class="function">float</span>: ...
+
+<span class="keyword">class</span> <span class="function">FlatHourly</span>(PricingStrategy):
+    RATES = {VehicleType.CAR: <span class="number">40</span>, VehicleType.BIKE: <span class="number">20</span>, VehicleType.TRUCK: <span class="number">80</span>}
+    <span class="keyword">def</span> <span class="function">charge</span>(self, kind, hours):
+        <span class="keyword">return</span> self.RATES[kind] * <span class="function">max</span>(<span class="number">1</span>, hours)
+
+<span class="keyword">class</span> <span class="function">ParkingLot</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, slots, strat, pricing):
+        self.slots = slots
+        self.strat = strat; self.pricing = pricing
+        self.active: <span class="function">dict</span>[str, <span class="function">tuple</span>[Slot, <span class="function">float</span>]] = {}
+
+    <span class="keyword">def</span> <span class="function">park</span>(self, v: Vehicle, t0: <span class="function">float</span>) -&gt; str | <span class="keyword">None</span>:
+        free = [s <span class="keyword">for</span> s <span class="keyword">in</span> self.slots <span class="keyword">if</span> <span class="keyword">not</span> s.occupied <span class="keyword">and</span> s.kind == v.kind]
+        slot = self.strat.<span class="function">pick</span>(free)
+        <span class="keyword">if</span> slot <span class="keyword">is</span> <span class="keyword">None</span>: <span class="keyword">return</span> <span class="keyword">None</span>
+        slot.occupied = <span class="keyword">True</span>
+        ticket = <span class="string">f"T-{v.plate}"</span>
+        self.active[ticket] = (slot, t0)
+        <span class="keyword">return</span> ticket
+
+    <span class="keyword">def</span> <span class="function">unpark</span>(self, ticket: str, t1: <span class="function">float</span>) -&gt; <span class="function">float</span>:
+        slot, t0 = self.active.<span class="function">pop</span>(ticket)
+        slot.occupied = <span class="keyword">False</span>
+        <span class="keyword">return</span> self.pricing.<span class="function">charge</span>(slot.kind, (t1 - t0) / <span class="number">3600</span>)</pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 12px;"><strong>Read what just happened:</strong> two Strategy patterns (ParkingStrategy, PricingStrategy) so adding "nearest-to-exit placement" or "weekday vs weekend pricing" is one new class. A dataclass for Vehicle / Slot &mdash; immutable enough for this round. The ParkingLot is the orchestrator. <strong>You wrote 50 lines of code in 7 minutes</strong> because Steps 1&ndash;4 already drew the map.</p>
+
+            <!-- W1 — correct: B -->
+            <div class="quiz-box" id="wt-q1">
+                <h4>Walk-through Quiz 1 &mdash; You'd skip <code>FirstFit</code> and inline <code>free_slots[0]</code> in <code>park()</code>. Worth doing in an interview?</h4>
+                <button class="quiz-option" onclick="checkQuiz('wt-q1', this, false)">A) Yes &mdash; fewer lines, the interviewer will appreciate brevity</button>
+                <button class="quiz-option" onclick="checkQuiz('wt-q1', this, true)">B) No &mdash; the Strategy keeps "swap it" trivial later on</button>
+                <button class="quiz-option" onclick="checkQuiz('wt-q1', this, false)">C) Yes &mdash; you can always refactor it back in later</button>
+                <button class="quiz-option" onclick="checkQuiz('wt-q1', this, false)">D) No &mdash; SOLID mandates Strategy for every algorithm</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> The Strategy is two extra lines but a major change in optionality. When the interviewer asks "how would you support nearest-to-exit?" you answer in one sentence: "new ParkingStrategy class". Without it you'd have to refactor. C is the trap that kills time later. D is wrong &mdash; SOLID doesn't mandate Strategy; you reach for it when the algorithm is the open variable, which here it is.
+                </div>
+            </div>
+
+            <!-- W2 — correct: A -->
+            <div class="quiz-box" id="wt-q2">
+                <h4>Walk-through Quiz 2 &mdash; Interviewer adds: "support reserved EV slots". Where does that change live?</h4>
+                <button class="quiz-option" onclick="checkQuiz('wt-q2', this, true)">A) New <code>VehicleType.EV</code> + a new <code>ParkingStrategy</code></button>
+                <button class="quiz-option" onclick="checkQuiz('wt-q2', this, false)">B) Rewrite <code>ParkingLot.park</code> end to end</button>
+                <button class="quiz-option" onclick="checkQuiz('wt-q2', this, false)">C) Subclass <code>ParkingLot</code> into <code>EVParkingLot</code></button>
+                <button class="quiz-option" onclick="checkQuiz('wt-q2', this, false)">D) Add an <code>if</code> branch inside <code>park</code></button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Extension via composition: new enum value, new strategy class that knows how to prefer the EV slots, plug it in. ParkingLot itself is unchanged &mdash; that's OCP from LLD-13. Rewriting <code>park</code> (B), subclassing the orchestrator (C), or adding inline ifs (D) are all ways to slowly turn the code into a god-object.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DESIGN A PEN ===== -->
+    <section id="pen">
+        <div class="section-container">
+            <span class="section-label purple">Warm-up exercise</span>
+            <h2 class="section-title">Design a Pen &mdash; first try, then learn</h2>
+            <p class="section-subtitle">Before reading any of our solution: spend <strong>10 minutes</strong> with just the requirements below and the template that follows. Then scroll down and compare your answer to ours through five evolutions.</p>
+
+            <!-- The requirements -->
+            <div class="highlight-box warning">
+                <h3 style="margin-bottom: 8px; color: var(--accent-warning);">&#9999;&#65039; The problem</h3>
+                <p style="margin: 0 0 8px;"><strong>Design a Pen.</strong> Here is everything you know:</p>
+                <ul style="margin-left: 22px;">
+                    <li>A pen is anything that can <em>write</em>.</li>
+                    <li>Types: Gel, Ball, Fountain, Marker, Throwaway.</li>
+                    <li>Ball and Gel pens use a <strong>refill</strong> (which has a <strong>tip/nib</strong> and an <strong>ink</strong>).</li>
+                    <li>Ink has a colour.</li>
+                    <li>Fountain pens have an ink directly (no refill); their nib has a radius.</li>
+                    <li>Refills have a radius.</li>
+                    <li>Each pen <em>writes</em> in its own way. Some pens write in the same way as others.</li>
+                    <li>Every pen has a brand and a name.</li>
+                    <li>Some pens are refillable; some are not (throwaway).</li>
+                </ul>
+            </div>
+
+            <!-- Student task template -->
+            <div class="question-box">
+                <h3 style="margin-bottom: 8px;">&#128221; Your turn first &mdash; the template</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 8px;">Pause here. Open a doc / notebook. Don't scroll. For 10 minutes, fill in:</p>
+                <ol style="margin-left: 22px; color: var(--text-secondary);">
+                    <li><strong>Clarifying questions (3&ndash;5):</strong> what would you ask the interviewer before designing anything?</li>
+                    <li><strong>Entities:</strong> which classes? (Use noun-identification on the requirements.)</li>
+                    <li><strong>Relationships:</strong> which ones own which? Which are <em>has-a</em> vs <em>is-a</em>?</li>
+                    <li><strong>The <code>write()</code> method:</strong> where does it live? How do you avoid an <code>if</code>-tree?</li>
+                    <li><strong>Refilling:</strong> how do you stop someone calling <code>change_refill()</code> on a fountain pen?</li>
+                </ol>
+                <p style="margin-top: 10px; color: var(--text-secondary);">When you're done, scroll. We'll walk five different designs &mdash; each fixes a flaw in the previous one. See how many of these you naturally arrived at.</p>
+            </div>
+
+            <!-- pre-design quiz on what to ask -->
+            <!-- pen-pre-q1 — correct: B -->
+            <div class="quiz-box" id="pen-pre-q1">
+                <h4>Pen Quiz 1 &mdash; Which of these is the strongest clarifying question to ask FIRST?</h4>
+                <button class="quiz-option" onclick="checkQuiz('pen-pre-q1', this, false)">A) "Should the pen support left-handed users?"</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-pre-q1', this, true)">B) "Will new pen types likely be added later?"</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-pre-q1', this, false)">C) "What colour should the default Pen be?"</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-pre-q1', this, false)">D) "Do we need a Pen factory or just direct constructors?"</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> Whether new pen types arrive later decides whether you reach for OCP-friendly designs (Strategy, abstract base, Protocol) or a much simpler single-class with an enum. Answering wrong sends you down 30 minutes of over-engineering or under-engineering. A asks about UX (out of scope here). C asks a triviality. D commits to a pattern before you know the shape.
+                </div>
+            </div>
+
+            <!-- =================== EVOLUTION 1: Single class =================== -->
+            <h3 style="margin-top: 32px; margin-bottom: 10px;">Evolution 1 &mdash; one giant <code>Pen</code> class with a type enum</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">The first instinct: one Pen class, with a <code>PenType</code> enum and an <code>if</code>-tree inside <code>write()</code>.</p>
+
+            <div class="diagram-box">
+                <p style="text-align: center; font-weight: 700; margin-bottom: 14px; color: var(--accent-danger);">Class diagram &mdash; the god class</p>
+                <svg viewBox="0 0 540 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <rect x="180" y="20" width="180" height="120" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+                    <text x="270" y="40" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#991b1b">Pen</text>
+                    <line x1="190" y1="48" x2="350" y2="48" stroke="#ef4444" stroke-width="1"/>
+                    <text x="195" y="62" font-size="9" fill="#0f172a">- brand, name, price</text>
+                    <text x="195" y="76" font-size="9" fill="#0f172a">- pen_type: PenType</text>
+                    <text x="195" y="90" font-size="9" fill="#0f172a">- refill, ink, nib (all nullable)</text>
+                    <line x1="190" y1="98" x2="350" y2="98" stroke="#ef4444" stroke-width="1"/>
+                    <text x="195" y="112" font-size="9" fill="#0f172a">+ write() &nbsp;&larr; big if-tree inside</text>
+                    <text x="195" y="126" font-size="9" fill="#0f172a">+ change_refill(), change_ink()</text>
+
+                    <rect x="20" y="170" width="120" height="36" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="80" y="187" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">PenType (enum)</text>
+                    <text x="80" y="200" text-anchor="middle" font-size="8.5" fill="#0f172a">GEL/BALL/FOUNTAIN/...</text>
+
+                    <line x1="180" y1="120" x2="140" y2="180" stroke="#475569" stroke-width="1.5"/>
+                    <text x="135" y="155" font-size="9" font-family="Inter, sans-serif" fill="#475569">type</text>
+                </svg>
+            </div>
+
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">class</span> <span class="function">Pen</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, brand, name, pen_type, price):
+        self.pen_type = pen_type
+        self.refill = self.ink = self.nib = <span class="keyword">None</span>  <span class="comment"># all nullable</span>
+
+    <span class="keyword">def</span> <span class="function">write</span>(self):
+        <span class="keyword">if</span>   self.pen_type == PenType.GEL:      <span class="function">print</span>(<span class="string">"Gel writes"</span>)
+        <span class="keyword">elif</span> self.pen_type == PenType.BALL:     <span class="function">print</span>(<span class="string">"Ball writes"</span>)
+        <span class="keyword">elif</span> self.pen_type == PenType.FOUNTAIN: <span class="function">print</span>(<span class="string">"Fountain writes"</span>)
+        <span class="keyword">elif</span> self.pen_type == PenType.MARKER:   <span class="function">print</span>(<span class="string">"Marker writes"</span>)
+        <span class="keyword">else</span>: <span class="keyword">raise</span> <span class="function">ValueError</span>(<span class="string">"unknown pen"</span>)
+
+    <span class="keyword">def</span> <span class="function">change_refill</span>(self, refill):
+        <span class="keyword">if</span> self.refill <span class="keyword">and</span> self.refill.refillable:
+            self.refill = refill</pre>
+                </div>
+            </div>
+
+            <ul style="margin-left: 22px; color: var(--text-secondary);">
+                <li><strong>SRP violated.</strong> Every pen-type change edits this one class.</li>
+                <li><strong>OCP violated.</strong> A new pen type is an edit, not an extension.</li>
+                <li><strong>Null checks everywhere.</strong> Fountain pens have no refill; ball pens have no direct ink.</li>
+                <li><strong>Object creation is fragile.</strong> Caller has to know which fields apply to which type.</li>
+            </ul>
+
+            <!-- =================== EVOLUTION 2: Inheritance =================== -->
+            <h3 style="margin-top: 32px; margin-bottom: 10px;">Evolution 2 &mdash; subclass per pen type</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Pull the type-specific bits into subclasses. Abstract <code>Pen</code> with abstract <code>write()</code>; <code>GelPen</code> / <code>BallPen</code> / <code>FountainPen</code> / <code>ThrowawayPen</code> each implement it.</p>
+
+            <div class="diagram-box">
+                <p style="text-align: center; font-weight: 700; margin-bottom: 14px; color: var(--accent-warning);">Class diagram &mdash; flat inheritance</p>
+                <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <rect x="280" y="20" width="140" height="56" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="350" y="38" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                    <text x="350" y="54" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">Pen</text>
+                    <text x="350" y="68" text-anchor="middle" font-size="9" fill="#0f172a">+ write()* abstract</text>
+
+                    <rect x="40" y="150" width="120" height="50" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="100" y="170" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">GelPen</text>
+                    <text x="100" y="186" text-anchor="middle" font-size="8.5" fill="#0f172a">+ refill</text>
+                    <text x="100" y="196" text-anchor="middle" font-size="8.5" fill="#0f172a">+ change_refill()</text>
+
+                    <rect x="180" y="150" width="120" height="50" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="240" y="170" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">BallPen</text>
+                    <text x="240" y="186" text-anchor="middle" font-size="8.5" fill="#0f172a">+ refill</text>
+                    <text x="240" y="196" text-anchor="middle" font-size="8.5" fill="#0f172a">+ change_refill()</text>
+
+                    <rect x="320" y="150" width="140" height="50" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                    <text x="390" y="170" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#991b1b">FountainPen</text>
+                    <text x="390" y="186" text-anchor="middle" font-size="8.5" fill="#0f172a">+ ink, nib</text>
+                    <text x="390" y="196" text-anchor="middle" font-size="8.5" fill="#0f172a">change_refill &rarr; raise!</text>
+
+                    <rect x="480" y="150" width="160" height="50" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="560" y="170" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">ThrowawayPen</text>
+                    <text x="560" y="186" text-anchor="middle" font-size="8.5" fill="#0f172a">+ refill</text>
+                    <text x="560" y="196" text-anchor="middle" font-size="8.5" fill="#0f172a">change_refill &rarr; raise!</text>
+
+                    <line x1="100" y1="150" x2="350" y2="78" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="240" y1="150" x2="350" y2="78" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="390" y1="150" x2="350" y2="78" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="560" y1="150" x2="350" y2="78" stroke="#475569" stroke-width="1.5"/>
+                    <polygon points="343,80 357,80 350,68" fill="white" stroke="#475569" stroke-width="1.5"/>
+                </svg>
+            </div>
+
+            <ul style="margin-left: 22px; color: var(--text-secondary);">
+                <li>&#10004; SRP / OCP fixed &mdash; each class owns one pen type.</li>
+                <li>&#10004; No more null checks on irrelevant fields.</li>
+                <li>&#10006; <strong>LSP broken.</strong> <code>FountainPen.change_refill()</code> doesn't exist (or raises) &mdash; you can't substitute a FountainPen wherever a Pen is expected.</li>
+                <li>&#10006; <strong>Code duplication.</strong> GelPen and BallPen <code>write()</code> bodies are nearly identical.</li>
+            </ul>
+
+            <!-- =================== EVOLUTION 3: Strategy =================== -->
+            <h3 style="margin-top: 32px; margin-bottom: 10px;">Evolution 3 &mdash; add Strategy for <code>write()</code> behaviour</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Some pens write the same way (smoothly, roughly, etc.). Pull writing behaviour out into a <code>WritingStrategy</code> &mdash; same shape as our LLD-19 Strategy.</p>
+
+            <div class="diagram-box">
+                <p style="text-align: center; font-weight: 700; margin-bottom: 14px; color: var(--accent-blue);">Class diagram &mdash; Strategy injected into Pen</p>
+                <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <rect x="40" y="80" width="160" height="60" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="120" y="98" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                    <text x="120" y="114" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">Pen</text>
+                    <text x="120" y="130" text-anchor="middle" font-size="9" fill="#0f172a">- strategy: WritingStrategy</text>
+
+                    <rect x="320" y="80" width="180" height="60" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+                    <text x="410" y="98" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#475569">&lt;&lt;Protocol&gt;&gt;</text>
+                    <text x="410" y="114" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">WritingStrategy</text>
+                    <text x="410" y="130" text-anchor="middle" font-size="9" fill="#0f172a">+ write()</text>
+
+                    <line x1="200" y1="110" x2="320" y2="110" stroke="#a855f7" stroke-width="2"/>
+                    <polygon points="316,106 326,110 316,114" fill="#a855f7"/>
+                    <polygon points="200,110 192,114 200,118 208,114" fill="white" stroke="#a855f7" stroke-width="2"/>
+                    <text x="260" y="104" text-anchor="middle" font-size="9" font-family="Inter, sans-serif" fill="#7e22ce">has-a 1</text>
+
+                    <rect x="540" y="40" width="140" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="610" y="62" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#047857">SmoothWriting</text>
+
+                    <rect x="540" y="100" width="140" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="610" y="122" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#047857">RoughWriting</text>
+
+                    <rect x="540" y="160" width="140" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="610" y="182" text-anchor="middle" font-size="10" font-weight="700" font-family="Inter, sans-serif" fill="#047857">FelTipWriting</text>
+
+                    <line x1="540" y1="58" x2="500" y2="100" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                    <line x1="540" y1="118" x2="500" y2="115" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                    <line x1="540" y1="178" x2="500" y2="130" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+                    <polygon points="497,98 504,107 506,98" fill="white" stroke="#475569" stroke-width="1.5"/>
+                </svg>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 8px;">&#10004; Code duplication gone &mdash; GelPen and BallPen now just hand their constructor a strategy. &#10006; LSP still broken on <code>change_refill()</code>.</p>
+
+            <!-- =================== EVOLUTION 4: Abstract intermediates =================== -->
+            <h3 style="margin-top: 32px; margin-bottom: 10px;">Evolution 4 &mdash; abstract intermediates for refillable vs not</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Split the hierarchy at the right axis: refillable vs non-refillable. <code>RefillablePen</code> abstract owns <code>change_refill()</code>; <code>NonRefillablePen</code> doesn't have it at all.</p>
+
+            <div class="diagram-box">
+                <p style="text-align: center; font-weight: 700; margin-bottom: 14px; color: var(--accent-success);">Class diagram &mdash; two-layer hierarchy</p>
+                <svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <rect x="300" y="20" width="140" height="46" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="370" y="38" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                    <text x="370" y="54" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">Pen</text>
+
+                    <rect x="120" y="120" width="180" height="56" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="210" y="138" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                    <text x="210" y="154" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">RefillablePen</text>
+                    <text x="210" y="168" text-anchor="middle" font-size="9" fill="#0f172a">+ change_refill()</text>
+
+                    <rect x="440" y="120" width="180" height="56" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="530" y="138" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&lt;&lt;abstract&gt;&gt;</text>
+                    <text x="530" y="154" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">NonRefillablePen</text>
+                    <text x="530" y="168" text-anchor="middle" font-size="9" fill="#0f172a">+ change_ink()</text>
+
+                    <line x1="210" y1="120" x2="370" y2="66" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="530" y1="120" x2="370" y2="66" stroke="#475569" stroke-width="1.5"/>
+                    <polygon points="363,68 377,68 370,56" fill="white" stroke="#475569" stroke-width="1.5"/>
+
+                    <rect x="40" y="220" width="100" height="40" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="90" y="244" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">GelPen</text>
+
+                    <rect x="160" y="220" width="100" height="40" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="210" y="244" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">BallPen</text>
+
+                    <rect x="280" y="220" width="120" height="40" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="340" y="244" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">ThrowawayPen</text>
+
+                    <rect x="460" y="220" width="140" height="40" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="530" y="244" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#047857">FountainPen</text>
+
+                    <line x1="90" y1="220" x2="210" y2="176" stroke="#475569" stroke-width="1.2"/>
+                    <line x1="210" y1="220" x2="210" y2="176" stroke="#475569" stroke-width="1.2"/>
+                    <line x1="340" y1="220" x2="210" y2="176" stroke="#475569" stroke-width="1.2"/>
+                    <polygon points="203,178 217,178 210,166" fill="white" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="530" y1="220" x2="530" y2="176" stroke="#475569" stroke-width="1.2"/>
+                    <polygon points="523,178 537,178 530,166" fill="white" stroke="#475569" stroke-width="1.5"/>
+                </svg>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 8px;">&#10004; LSP fixed &mdash; the only places <code>change_refill()</code> exists are pens that actually have one. &#10006; You still pay an inheritance tax: behaviour is welded to position in the tree. Adding "rechargeable battery-powered pen" would mean another intermediate.</p>
+
+            <!-- =================== EVOLUTION 5: Protocols =================== -->
+            <h3 style="margin-top: 32px; margin-bottom: 10px;">Evolution 5 &mdash; Protocols for capabilities, flat hierarchy</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Drop the abstract intermediates. Keep <code>Pen</code> flat. Express "can be refilled" as a <code>Protocol</code> (structural typing); each pen that has a refill simply has the right methods, and mypy enforces the contract at the call site.</p>
+
+            <div class="code-block">
+                <div class="code-content">
+<pre><span class="keyword">from</span> typing <span class="keyword">import</span> Protocol
+
+<span class="keyword">class</span> <span class="function">RefillablePen</span>(Protocol):
+    <span class="keyword">def</span> <span class="function">change_refill</span>(self, refill: Refill) -&gt; <span class="keyword">None</span>: ...
+    <span class="keyword">def</span> <span class="function">is_refillable</span>(self) -&gt; <span class="function">bool</span>: ...
+
+<span class="keyword">class</span> <span class="function">Pen</span>(ABC):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, brand, name, price, strategy: WritingStrategy):
+        self._strategy = strategy
+    <span class="keyword">def</span> <span class="function">write</span>(self): self._strategy.<span class="function">write</span>()
+
+<span class="keyword">class</span> <span class="function">GelPen</span>(Pen):                    <span class="comment"># implicitly satisfies RefillablePen</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, brand, name, price, refill):
+        <span class="function">super</span>().<span class="function">__init__</span>(brand, name, price, <span class="function">SmoothWriting</span>())
+        self._refill = refill
+    <span class="keyword">def</span> <span class="function">change_refill</span>(self, refill): self._refill = refill
+    <span class="keyword">def</span> <span class="function">is_refillable</span>(self): <span class="keyword">return</span> <span class="keyword">True</span>
+
+<span class="keyword">class</span> <span class="function">FountainPen</span>(Pen):                <span class="comment"># does NOT satisfy RefillablePen</span>
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, brand, name, price, ink, nib):
+        <span class="function">super</span>().<span class="function">__init__</span>(brand, name, price, <span class="function">SmoothWriting</span>())
+        self._ink, self._nib = ink, nib
+
+<span class="comment"># Callers that need refilling demand the protocol:</span>
+<span class="keyword">def</span> <span class="function">refill_in_bulk</span>(pens: <span class="function">list</span>[RefillablePen], new_refill: Refill) -&gt; <span class="keyword">None</span>:
+    <span class="keyword">for</span> p <span class="keyword">in</span> pens: p.<span class="function">change_refill</span>(new_refill)
+
+<span class="comment"># mypy ERRORS at call site if you pass a FountainPen here. Runtime is fine too.</span></pre>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 8px;">&#10004; Flat hierarchy, no LSP issue, capability is a Protocol not a class. &#10006; Each refillable pen still repeats the <code>_refill</code> field &mdash; structural typing's tax. Trade against E4: less inheritance, more duplication.</p>
+
+            <!-- Summary table -->
+            <h3 style="margin-top: 32px; margin-bottom: 8px;">All five evolutions on one table</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Approach</th><th>SRP</th><th>OCP</th><th>LSP</th><th>Duplication</th><th>Flexibility</th></tr></thead>
+                    <tbody>
+                        <tr><td>E1 &mdash; Single class + enum</td><td>&#10006;</td><td>&#10006;</td><td>&#10006;</td><td>Low</td><td>Low</td></tr>
+                        <tr><td>E2 &mdash; Subclass per type</td><td>&#10004;</td><td>&#10004;</td><td>&#10006;</td><td>High</td><td>Medium</td></tr>
+                        <tr><td>E3 &mdash; Strategy for <code>write()</code></td><td>&#10004;</td><td>&#10004;</td><td>&#10006;</td><td>Low</td><td>High</td></tr>
+                        <tr><td>E4 &mdash; Abstract intermediates</td><td>&#10004;</td><td>&#10004;</td><td>&#10004;</td><td>Low</td><td>Medium</td></tr>
+                        <tr><td>E5 &mdash; Protocols + Strategy</td><td>&#10004;</td><td>&#10004;</td><td>&#10004;</td><td>Medium</td><td>High</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- pen-q2 — correct: D -->
+            <div class="quiz-box" id="pen-q2">
+                <h4>Pen Quiz 2 &mdash; In E2 (subclass per type), why is calling <code>change_refill()</code> on a <code>FountainPen</code> an LSP violation?</h4>
+                <button class="quiz-option" onclick="checkQuiz('pen-q2', this, false)">A) Fountain pens are inherently slower than ball pens</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-q2', this, false)">B) <code>FountainPen</code> has too many parent classes for LSP</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-q2', this, false)">C) <code>change_refill()</code> is a Strategy, not an inheritance method</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-q2', this, true)">D) A FountainPen can't substitute a Pen where refill is expected</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Liskov's Substitution Principle says any place that takes the base type must work with any subclass. If callers can call <code>change_refill()</code> on a <code>Pen</code>, then every <code>Pen</code> subclass must support it. FountainPen either raises (caller crashes) or no-ops silently (caller confused) &mdash; either way, substitutability is broken. E4 fixes this by giving <code>change_refill()</code> only to a <code>RefillablePen</code> intermediate. E5 fixes it by making "refillable" a Protocol &mdash; callers ask for that capability explicitly.
+                </div>
+            </div>
+
+            <!-- pen-q3 — correct: C -->
+            <div class="quiz-box" id="pen-q3">
+                <h4>Pen Quiz 3 &mdash; The interviewer says "we'll definitely add 5 more pen types over the next year." Which evolution do you head for?</h4>
+                <button class="quiz-option" onclick="checkQuiz('pen-q3', this, false)">A) E1 &mdash; single class with a bigger enum</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-q3', this, false)">B) E2 &mdash; subclass per type, accept the LSP debt</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-q3', this, true)">C) E5 &mdash; Protocols + Strategy for max flexibility</button>
+                <button class="quiz-option" onclick="checkQuiz('pen-q3', this, false)">D) Skip OOP &mdash; use a dict of functions</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> Frequent new types &rarr; you'll repeatedly add classes. Protocols + Strategy mean each new pen type is one new class that picks its writing strategy and (if relevant) implements the RefillablePen protocol &mdash; zero edits to existing code. E1 turns each new type into an enum edit + an <code>if</code> branch (OCP violation grows). E2 forces inheritance shapes that may not fit (battery-powered? smart pen with bluetooth?). D abandons the question.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CHEAT SHEET ===== -->
+    <section id="cheatsheet">
+        <div class="section-container">
+            <span class="section-label warning">Interview cheat sheet</span>
+            <h2 class="section-title">Print this. Tape it above your desk.</h2>
+            <p class="section-subtitle">One page, seven steps, ten checkboxes. Glance at it before every LLD interview.</p>
+
+            <div class="highlight-box info" style="font-size: 1rem;">
+                <h3 style="margin-bottom: 12px; color: var(--accent-primary);">Before you type a single line of code</h3>
+                <ul style="margin-left: 22px;">
+                    <li>Did I ask 3+ clarifying questions? &check;</li>
+                    <li>Did I write down FR + NFR? &check;</li>
+                    <li>Do I have a list of entities and which one owns which? &check;</li>
+                    <li>Do I have method signatures for the top 3 classes? &check;</li>
+                </ul>
+                <h3 style="margin: 14px 0 12px; color: var(--accent-purple);">While you're coding</h3>
+                <ul style="margin-left: 22px;">
+                    <li>Am I building the happy path first? &check;</li>
+                    <li>Am I printing as I go so the interviewer can watch? &check;</li>
+                    <li>Am I narrating my choices ("I'm using Strategy here because&hellip;")? &check;</li>
+                </ul>
+                <h3 style="margin: 14px 0 12px; color: var(--accent-warning);">In the last 15 minutes</h3>
+                <ul style="margin-left: 22px;">
+                    <li>Did I run the code in front of the interviewer? &check;</li>
+                    <li>Did I name 3 trade-offs (persistence / concurrency / extension)? &check;</li>
+                    <li>Did I propose what I'd build next if I had 10 more minutes? &check;</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 28px;">Phrases that score points</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">Clarifying</div>
+                    <p class="card-desc">"Before I start, can I confirm scope?"<br>"What's the expected scale?"<br>"Is X in scope or can we defer it?"</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Mid-coding</div>
+                    <p class="card-desc">"I'm using Strategy here so X is easy to swap later."<br>"This is the happy path &mdash; I'll add edges next."<br>"Let me print this so we can watch it work."</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Closing</div>
+                    <p class="card-desc">"For persistence I'd add a Repository per aggregate."<br>"For concurrency I'd lock per group."<br>"With 10 more minutes I'd add Y."</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 28px;">Patterns most likely to appear</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Pattern</th><th>Where it shows up</th><th>Sample problems</th></tr></thead>
+                    <tbody>
+                        <tr><td>Strategy</td><td>Pluggable algorithm</td><td>Splitwise (split type), Parking Lot (placement), Cab matching (algorithm)</td></tr>
+                        <tr><td>Factory</td><td>Object creation by type</td><td>Vehicle factory, payment-gateway factory, notification channel</td></tr>
+                        <tr><td>Observer</td><td>One event, many reactions</td><td>Order placed, ride booked, message sent</td></tr>
+                        <tr><td>Singleton</td><td>Process-wide single resource</td><td>Config, logger, connection pool (sparingly!)</td></tr>
+                        <tr><td>Builder</td><td>Many constructor args</td><td>HTTP request builder, query builder, pizza builder</td></tr>
+                        <tr><td>Decorator</td><td>Wrap to add behaviour</td><td>Add-ons (beverages), middleware, retry/cache/logging</td></tr>
+                        <tr><td>State</td><td>Object behaves differently by mode</td><td>Order (placed &rarr; paid &rarr; shipped), TCP connection</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Final mixed-position quiz (correct: D, B, C, A — even spread, no straw-men) -->
+
+            <!-- C1 — correct: D -->
+            <div class="quiz-box" id="cs-q1">
+                <h4>Cheat-sheet Quiz 1 &mdash; "Design a notification system: email, SMS, push." Which pattern is the FIRST you reach for?</h4>
+                <button class="quiz-option" onclick="checkQuiz('cs-q1', this, false)">A) Builder</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q1', this, false)">B) Singleton</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q1', this, false)">C) Decorator</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q1', this, true)">D) Strategy</button>
+                <div class="quiz-explanation">
+                    <strong>D is right.</strong> Three swappable channels with the same interface &mdash; classic Strategy. Builder is for many-arg construction (not the shape here). Singleton is process-wide state. Decorator wraps to ADD behaviour (e.g. "retry + log" around the channel) but the channel itself is the Strategy.
+                </div>
+            </div>
+
+            <!-- C2 — correct: B -->
+            <div class="quiz-box" id="cs-q2">
+                <h4>Cheat-sheet Quiz 2 &mdash; "Design an Order &mdash; placed &rarr; paid &rarr; shipped &rarr; delivered." Pattern?</h4>
+                <button class="quiz-option" onclick="checkQuiz('cs-q2', this, false)">A) Strategy</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q2', this, true)">B) State</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q2', this, false)">C) Observer</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q2', this, false)">D) Builder</button>
+                <div class="quiz-explanation">
+                    <strong>B is right.</strong> The object's behaviour changes with its lifecycle state (you can't ship before paid). State pattern: each state is a class, transitions are explicit. Strategy swaps an algorithm under your control; State swaps based on internal lifecycle. Observer would fit if you're notifying "shipped" to listeners, but it's not the core modelling pattern here.
+                </div>
+            </div>
+
+            <!-- C3 — correct: C -->
+            <div class="quiz-box" id="cs-q3">
+                <h4>Cheat-sheet Quiz 3 &mdash; "Order placed &rarr; warehouse reserves stock + email confirmation sent + analytics logged." Pattern?</h4>
+                <button class="quiz-option" onclick="checkQuiz('cs-q3', this, false)">A) Strategy</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q3', this, false)">B) State</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q3', this, true)">C) Observer</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q3', this, false)">D) Factory</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> One event, three independent reactions. Observer. If "email needs the warehouse's tracking number" then it becomes Chain of Responsibility (LLD-20 recap). State is wrong because there's no lifecycle change in Order driving this. Factory is wrong because no creation is involved.
+                </div>
+            </div>
+
+            <!-- C4 — correct: A -->
+            <div class="quiz-box" id="cs-q4">
+                <h4>Cheat-sheet Quiz 4 &mdash; "HTTP request with 12 optional headers and 6 optional query params." Pattern?</h4>
+                <button class="quiz-option" onclick="checkQuiz('cs-q4', this, true)">A) Builder</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q4', this, false)">B) Decorator</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q4', this, false)">C) Factory</button>
+                <button class="quiz-option" onclick="checkQuiz('cs-q4', this, false)">D) State</button>
+                <div class="quiz-explanation">
+                    <strong>A is right.</strong> Builder &mdash; many optional construction args, fluent chaining, no telescoping constructors. Decorator wraps to add behaviour (not construction). Factory chooses a TYPE (not a configuration). State is about lifecycle.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SUMMARY MINDMAP ===== -->
+    <section id="summary">
+        <div class="section-container">
+            <span class="section-label">Summary</span>
+            <h2 class="section-title">The 60-second recap</h2>
+            <p class="section-subtitle">If you forget everything else, remember this slide.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#127919;</div>
+                    <div class="card-title">Five interview formats</div>
+                    <p class="card-desc">Machine coding, design discussion, take-home, system+LLD hybrid, code review. Confirm the format with the recruiter before you sit down.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128203;</div>
+                    <div class="card-title">Seven steps every time</div>
+                    <p class="card-desc">Clarify, requirements, entities, APIs, code, demo, trade-offs. The first three save the last four from chaos.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128299;</div>
+                    <div class="card-title">Patterns are tools</div>
+                    <p class="card-desc">Reach for them in Step 3&ndash;4 when you spot the shape. Don't announce them &mdash; demonstrate them.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128737;</div>
+                    <div class="card-title">Mistakes to avoid</div>
+                    <p class="card-desc">No clarifying, all 47 features, deep inheritance, Singleton-for-everything, weak naming, no demo, no trade-offs.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128172;</div>
+                    <div class="card-title">Narrate constantly</div>
+                    <p class="card-desc">"I'm clarifying scope", "I'm using Strategy because&hellip;", "I'm building the happy path first". Silence = panic to the interviewer.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9203;</div>
+                    <div class="card-title">Run the code live</div>
+                    <p class="card-desc">A buggy demo you fix on screen beats a polished design you never run. Live debugging is the highest signal you'll send.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RESOURCES ===== -->
+    <section id="resources">
+        <div class="section-container">
+            <span class="section-label success">Resources</span>
+            <h2 class="section-title">Where to practice &mdash; ranked by quality</h2>
+            <p class="section-subtitle">Quality over quantity. Three problems done well teaches more than 20 skimmed.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">Refactoring.Guru</div>
+                    <p class="card-desc"><a href="https://refactoring.guru/design-patterns" target="_blank" style="color: var(--accent-primary);">refactoring.guru/design-patterns</a> &mdash; the cleanest single reference for the GoF patterns. Read the "Real-World Analogy" + "Structure" sections for every pattern.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">faif/python-patterns</div>
+                    <p class="card-desc"><a href="https://github.com/faif/python-patterns" target="_blank" style="color: var(--accent-primary);">github.com/faif/python-patterns</a> &mdash; canonical Python implementations of GoF patterns. Read 1 file per evening for a month.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">LeetCode Design (Problem 146 onward)</div>
+                    <p class="card-desc">LRU Cache, Snake game, Twitter feed, hit counter &mdash; all LLD-shaped. Use them to practice Steps 1&ndash;4 on the clock, even if you don't write the full body.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Grokking the System Design Interview</div>
+                    <p class="card-desc">Use this for the HLD half of system+LLD hybrid rounds. The vocabulary (sharding, fanout, leader election) is what interviewers expect for the "scale" question.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Mock interviews</div>
+                    <p class="card-desc">Pramp, Interviewing.io, peer mocks. The signal you get from being asked "why did you do that?" mid-flight is unobtainable from solo practice.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Your own notes</div>
+                    <p class="card-desc">Re-read LLD-13 through LLD-20 weekly. The Pattern Cheat Sheet at the end of LLD-20 is the single most useful page when you're stuck mid-interview.</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 32px; margin-bottom: 8px;">LLD / OOD practice platforms &mdash; "LeetCode for design"</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">If you want a problem bank with judge / feedback (not just articles to read):</p>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">Codemia.io</div>
+                    <p class="card-desc"><a href="https://codemia.io" target="_blank" style="color: var(--accent-primary);">codemia.io</a> &mdash; the most-cited "LeetCode for system design / OOD". 120+ problems with step-by-step UML / class-structure explanations, plus classics (Parking Lot, ATM, Hotel Booking). Largest problem bank of the lot.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Coudo AI</div>
+                    <p class="card-desc"><a href="https://coudo.ai" target="_blank" style="color: var(--accent-primary);">coudo.ai</a> &mdash; closest to "submit a solution, get feedback". You draft class diagrams, gather requirements by asking interview-style questions, write machine-coding-round code, and get instant AI feedback. Community layer for peer reviews.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">CodeZym</div>
+                    <p class="card-desc"><a href="https://codezym.com" target="_blank" style="color: var(--accent-primary);">codezym.com</a> &mdash; solutions-and-practice-oriented for OOD / machine-coding problems. Has a working judge so you can submit and check.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">GeekTrust</div>
+                    <p class="card-desc"><a href="https://www.geektrust.com" target="_blank" style="color: var(--accent-primary);">geektrust.com</a> &mdash; FREE and genuinely LeetCode-style for LLD: you build a solution and submit, it evaluates against test cases. Underrated for pure practice volume.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">kumaransg/LLD (GitHub)</div>
+                    <p class="card-desc"><a href="https://github.com/kumaransg/LLD" target="_blank" style="color: var(--accent-primary);">github.com/kumaransg/LLD</a> &mdash; curated list of real LLD questions actually asked at Flipkart, Navi, ClearTrip, Udaan etc., with PDFs / links. Pair these problem statements with any of the platforms above.</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 32px; margin-bottom: 8px;">Schema / DB design practice</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">For when the interviewer says "and how would you persist this?" &mdash; the Step-7 trade-off you don't want to fumble:</p>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">w3resource SQL Database Design</div>
+                    <p class="card-desc"><a href="https://www.w3resource.com/sql/sql-table.php" target="_blank" style="color: var(--accent-primary);">w3resource &mdash; SQL DB design &amp; normalization</a> &mdash; 100 problems with solutions covering 1NF&rarr;BCNF, junction tables for M:N, surrogate keys, star schemas, resolving anomalies. Most hands-on schema resource we found.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">dbdiagram.io</div>
+                    <p class="card-desc"><a href="https://dbdiagram.io" target="_blank" style="color: var(--accent-primary);">dbdiagram.io</a> &mdash; not a problem bank, but the right TOOL to draw schemas while practicing. Pair it with any LLD prompt (e.g. "food-ordering system") and design the schema for it.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">InterviewQuery's DB design guide</div>
+                    <p class="card-desc"><a href="https://www.interviewquery.com/p/database-design-interview" target="_blank" style="color: var(--accent-primary);">interviewquery.com</a> &mdash; real schema-design scenarios with entities + trade-offs to walk through. Good complement to w3resource's mechanics.</p>
+                </div>
+            </div>
+
+            <div class="knowledge-block" style="margin-top: 28px;">
+                <p><strong>Honest practice plan:</strong> pick 5 problems (Splitwise, Parking Lot, Tic-Tac-Toe, BookMyShow, in-memory cache). Do each one twice: once with no time limit, once strict 90 minutes. The first run teaches the design space. The second run teaches the playbook. Most candidates only do version 1 &mdash; that's why they freeze. Cross-reference your attempts on Codemia / Coudo AI / CodeZym so someone (or AI) actually looks at the code.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-21: Types of LLD Interviews &amp; How to Approach Them &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+    function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) { btn.classList.add('correct'); }
+        else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+  <script src="/lib/feedback.js" defer></script>
+</body>
+</html>
