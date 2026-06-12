@@ -79,3 +79,10 @@ UI-ELEMENTS-REFERENCE.html
 # Migrations (optional - some teams commit these, some don't)
 # **/migrations/*.py
 # !**/migrations/__init__.py
+
+# LLD-23 local files during development (before public release)
+LLD-23-TicTacToe-Code/**/*.pdf
+LLD-23-TicTacToe-Code/**/*_files/
+LLD-23-TicTacToe-Code/README.html
+LLD-23-TicTacToe-Code/convert_html_to_pdf.sh
+LLD-23-TicTacToe-Code/LLD-23_*.html
