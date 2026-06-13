@@ -73,9 +73,9 @@ Same derivation as the entities, second pass. Re-read each FR as a *verb*, and t
   - Returns a string, prints nothing — the engine never learns it's a CLI (the NFR)
 
 - **The bonus FR nobody wrote down — undo**
-  - We deliberately did NOT build it — but the question still has one right answer: **Game**, because it owns the `moves` list
-  - The ten lines, when asked: pop the last `Move` · clear its square · hand the turn back
-  - The readiness is already in the code: `make_move()` records every `Move(player, row, col)`
+  - We deliberately did NOT build it — and left it as an open exercise ([issue #15](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15)). The derivation still resolves: whose job would undo be? **Game** — it owns the turn flow
+  - The shape of the work: reversing a move needs *memory* of what each move did; what that record must hold is trivial here and explodes for chess (see trade-offs)
+  - There's no move-record waiting in the code — that's the point. Bring your design to the PR
 
 ## The folder skeleton is a design signal
 
@@ -99,7 +99,7 @@ tictactoe/
 
 - `models/` = pure state, zero I/O — you can test Board with no terminal and no game
 - `strategies/` = pluggable rules — swap without touching the rest
-- `game.py` = the orchestrator — coordinates turns + win check, owns `moves`
+- `game.py` = the orchestrator — coordinates turns + win check
 - `cli.py` = the I/O adapter — `HumanPlayer` lives here because it needs `input()`; everything else is headless
 
 **`__init__.py` quiz:** if `models/__init__.py` contains `from .board import Board` and a teammate deletes that line, which import in `main.py` breaks? → `from models import Board` (the shortcut). `from models.board import Board` (the direct path) still works. The re-export is a convenience; the underlying module is always reachable.
@@ -132,7 +132,7 @@ tictactoe/
 
 3. **Factory — assembling players:** `Player` is already an abstract contract. A `PlayerFactory.create("bot", difficulty=Difficulty.HARD)` hides which class + which strategy gets built — `Game` just receives Players.
 
-4. **The Move record — undo-ready:** `make_move()` appends `Move(player, row, col)` to `moves` — the game's memory. When asked: `undo()` = pop the last Move, clear that square, hand the turn back — ten lines. Why not snapshot the whole board each turn? Deep copies cost N×N per move and carry no extra information — the move list IS the memory.
+4. **Command / Memento — the undo you'd reach for:** we didn't build `undo()` — it's an open exercise ([issue #15](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15)). The pattern it calls for: record each action as a command that carries its own inverse, so reversing is popping the last one. Why not snapshot the whole board each turn? Deep copies cost N×N per move and carry no extra information — a per-move record is the minimal diff.
 
 **The hygiene rule from LLD-21:** introduce these patterns silently in the code, not as announcements. When the interviewer asks "why is `WinRule` a separate class?" the answer is "because the win condition is the open variable across Tic-Tac-Toe, Gomoku, and Connect-Four-style games — making it a Strategy means each new game is one new class, not a forked codebase."
 
@@ -159,7 +159,7 @@ tictactoe/
 
 4. **`models/player.py` + `strategies/move_strategy.py`** — FR-2 + FR-7. `Player` ABC with `choose_move(board)` abstract method. `BotPlayer` maps `Difficulty` → `MoveStrategy` via a `STRATEGIES` dict. `HumanPlayer` lives in `cli.py` (input adapter, not a model).
 
-5. **`game.py`** — the orchestrator. `make_move(row, col)` does four things: guard game-over → delegate to board → record the Move → advance the turn. `status()` checks winner first, then full. `moves: list[Move]` is the game's memory — undo and persistence both read from it.
+5. **`game.py`** — the orchestrator. `make_move(row, col)` does: guard game-over → delegate to board → check win → advance the turn. `status()` checks winner first, then full. There's deliberately no move history and no `undo()` — that's the open exercise ([issue #15](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15)).
 
 ## `console.py` — the game-agnostic CLI toolkit
 
@@ -177,9 +177,9 @@ One run shows every FR: win, all rejections (occupied/OOB/post-game), draw, bot-
 
 ## Trade-offs — the last ten minutes
 
-- **Undo — one ask away:** we didn't ship `undo()` — nobody asked (YAGNI). But `make_move()` records `Move(player, row, col)` from day one, so when the interviewer says "now add undo": pop the last Move · clear its square · hand the turn back — ten lines. Why chess breaks this: captures need `captured_piece`, en passant captures from a *different* square, castling moves two pieces, and moving the king destroys castling *rights* — invisible state undo must restore. The Move record grows into "everything needed to un-happen it" (Command/Memento).
+- **Undo — the open exercise:** we didn't ship `undo()` — nobody asked (YAGNI), and it's yours to build ([issue #15](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15)). The move you reach for is a *record* of each move so the last can be reversed — clear its square, hand the turn back. Why chess breaks this: captures need `captured_piece`, en passant captures from a *different* square, castling moves two pieces, and moving the king destroys castling *rights* — invisible state undo must restore. The record grows into "everything needed to un-happen it" (Command/Memento).
 
-- **Persistence — save the moves, not the board:** the `moves` list IS the save format: replaying it through `make_move()` rebuilds the exact state — board, turn, status. "Save/resume" = store `(players, board config, moves)`; "spectate from move 1" = the same replay.
+- **Persistence — save the moves, not the board:** build the move-record from the undo exercise and it doubles as the save format: replaying the moves through `make_move()` rebuilds the exact state — board, turn, status. "Save/resume" = store `(players, board config, moves)`; "spectate from move 1" = the same replay.
 
 - **Connect Four — one method away:** `Board.drop(col)`: find the lowest cell in the column with `can_place()`, call the same `place()`. Win rule: `KInARowRule(4)` — already written. Gravity is the only new physics; everything else is reuse.
 
@@ -196,7 +196,7 @@ Every line traces to an LLD-22 decision:
 | `WinRule` / `KInARowRule(k)` — 4-direction scan, k decoupled from n | FR-5 — Gomoku is `Board(n=5), KInARowRule(k=4)` |
 | win checked BEFORE full; `GameStatus` enum | FR-6 |
 | `render()` outside `make_move()`; CLI loop separate | FR-8 + the CLI NFR |
-| `moves: list[Move]` — the game's memory | audit, replay, and the ten-line `undo()` the day it's asked for |
+| _No_ `moves` list / `undo()` — left as an open exercise | [issue #15](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15) — students design the move-record and reversal |
 
 ## Files
 

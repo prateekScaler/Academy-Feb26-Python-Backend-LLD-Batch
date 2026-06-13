@@ -4,20 +4,11 @@ No input(), no print() — the engine never learns it's a CLI."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from enums import GameStatus
 from exceptions import InvalidMoveError
 from models.board import Board
 from models.player import Player
 from strategies.win_rule import WinRule
-
-
-@dataclass(frozen=True)
-class Move:
-    player: Player
-    row: int
-    col: int
 
 
 class Game:
@@ -32,8 +23,7 @@ class Game:
         self._turn = starting_index
         self._status = GameStatus.IN_PROGRESS
         self._winner: Player | None = None
-        self.moves: list[Move] = []   # the game's memory: audit, replay —
-                                      # and the ten-line undo(), the day it's asked for
+        # No move history and no undo() — that's the open exercise (issue #15).
 
     # --- queries --------------------------------------------------------
     def status(self) -> GameStatus:
@@ -54,7 +44,6 @@ class Game:
             raise InvalidMoveError("game already over")
         player = self.current_player()
         self.board.place(row, col, player.symbol)      # validates; raises on bad move
-        self.moves.append(Move(player, row, col))
         winning_symbol = self.rule.winner(self.board)  # win BEFORE full
         if winning_symbol is not None:
             self._status = GameStatus.WON

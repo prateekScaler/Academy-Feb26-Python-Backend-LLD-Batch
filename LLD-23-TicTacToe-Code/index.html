@@ -522,9 +522,9 @@
                 </div>
                 <div class="collapsible-content"><div class="collapsible-inner">
                     <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8; display: grid; gap: 7px;">
-                        <li><strong>We deliberately did NOT build it</strong> &mdash; but the question still has one right answer: <strong>Game</strong>, because it owns the <code>moves</code> list</li>
-                        <li><strong>The ten lines, when asked:</strong> pop the last <code>Move</code> &middot; clear its square &middot; hand the turn back; <strong>Board</strong> would gain a single-purpose <code>clear(row, col)</code> helper</li>
-                        <li><strong>The readiness is already in the code:</strong> <code>make_move()</code> records every <code>Move(player, row, col)</code> &mdash; full discussion in the trade-offs</li>
+                        <li><strong>We deliberately did NOT build it &mdash; and left it as an open exercise</strong> (<a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15" target="_blank" style="color: var(--accent-primary);">issue #15</a>). The derivation still resolves cleanly: <strong>whose job would undo be? Game</strong> &mdash; it owns the turn flow, so it owns reversing a turn</li>
+                        <li><strong>Why it's worth attempting:</strong> the moment you try, you discover reversing a move needs <em>memory</em> &mdash; something has to remember what each move did. What exactly that memory must hold is the interesting part, and it explodes for richer games (the trade-offs section walks the chess escalation)</li>
+                        <li><strong>There's no move-record waiting in the code &mdash; that's the point.</strong> Bring your own design to the PR</li>
                     </ul>
                 </div></div>
             </div>
@@ -544,9 +544,8 @@
                     <rect x="310" y="30" width="240" height="166" rx="8" fill="#dcfce7" stroke="#10b981" stroke-width="2.5"/>
                     <text x="430" y="54" text-anchor="middle" font-size="16" font-weight="700" font-family="Inter, sans-serif" fill="#047857">Game</text>
                     <line x1="322" y1="64" x2="538" y2="64" stroke="#10b981" stroke-width="1"/>
-                    <text x="330" y="82" font-size="10.5" fill="#0f172a">- board: Board &middot; rule: WinRule</text>
-                    <text x="330" y="98" font-size="10.5" fill="#0f172a">- players: list[Player]</text>
-                    <text x="330" y="114" font-size="10.5" fill="#0f172a">- moves: list[Move]</text>
+                    <text x="330" y="86" font-size="10.5" fill="#0f172a">- board: Board &middot; rule: WinRule</text>
+                    <text x="330" y="104" font-size="10.5" fill="#0f172a">- players: list[Player]</text>
                     <line x1="322" y1="124" x2="538" y2="124" stroke="#10b981" stroke-width="1"/>
                     <text x="330" y="142" font-size="10.5" fill="#0f172a">+ make_move(r, c)</text>
                     <text x="330" y="158" font-size="10.5" fill="#0f172a">+ status() &middot; + winner()</text>
@@ -1011,8 +1010,8 @@ WIN_LEN    = <span class="number">3</span>
                     <p class="card-desc"><code>Player</code> is already an abstract contract (FR-7): <code>HumanPlayer</code> reads input; <code>BotPlayer</code> picks via its <code>MoveStrategy</code>.<br>A <code>PlayerFactory.create("bot", difficulty=Difficulty.HARD)</code> hides which class + which strategy gets built &mdash; <code>Game</code> just receives Players.<br>LLD-23 MVP wires two <code>HumanPlayer</code>s; the bot is the live extension.</p>
                 </div>
                 <div class="card" style="border-color: var(--accent-danger);" data-cf-change="ch-undo-card">
-                    <div class="card-title">4. The Move record &mdash; undo-ready</div>
-                    <p class="card-desc"><strong>The classic follow-up: "now add undo." We didn't build it &mdash; we built its prerequisite.</strong><br><code>make_move()</code> appends <code>Move(player, row, col)</code> to <code>moves</code> &mdash; the game's memory.<br>When asked: <code>undo()</code> = pop the last Move, clear that square, hand the turn back &mdash; ten lines.<br><strong>Why not snapshot the whole board each turn?</strong> Deep copies cost N&times;N per move and carry no extra information &mdash; the move list IS the memory (in Chess it's also the notation &mdash; see the trade-offs).</p>
+                    <div class="card-title">4. Command / Memento &mdash; the undo you'd reach for</div>
+                    <p class="card-desc"><strong>The classic follow-up: "now add undo." We didn't build it &mdash; it's your open exercise (<a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15" target="_blank" style="color: var(--text-primary);">issue #15</a>).</strong><br>The pattern it calls for: record each action as a <em>command that carries its own inverse</em>, so reversing is just popping the last one.<br><strong>Why not snapshot the whole board each turn?</strong> Deep copies cost N&times;N per move and carry no extra information &mdash; a per-move record is the minimal diff (in Chess it's also the notation &mdash; see the trade-offs).</p>
                 </div>
             </div>
 
@@ -1190,7 +1189,7 @@ class KInARowRule(WinRule):
                     <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8; display: grid; gap: 7px;">
                         <li><strong>The insight:</strong> a player can only win on the move they just made &mdash; so check just the 4 lines THROUGH (row, col): its row, its column, its two diagonals</li>
                         <li><strong>The complexity: O(k)</strong> &mdash; four short walks, board size irrelevant</li>
-                        <li><strong>The signature grows:</strong> <code>winner(board, last_move)</code> &mdash; and notice who supplies that argument: <strong>the Move record, again</strong>. The pattern keeps paying</li>
+                        <li><strong>The signature grows:</strong> <code>winner(board, last_move)</code> &mdash; and notice who supplies that argument: whoever just called <code>make_move()</code> already knows the <code>(row, col)</code>. (Build the undo exercise's move-record and it hands you this for free &mdash; the same idea paying off twice.)</li>
                     </ul>
                 </div></div>
             </div>
@@ -1294,7 +1293,7 @@ class HumanPlayer(Player):
             </div>
 
             <h3 style="margin-top: 32px; margin-bottom: 6px;">5. <code>game.py</code> &mdash; the orchestrator</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 10px;">Read <code>make_move()</code> against the edge table above: refuse-if-over, delegate placement, win BEFORE full, flip the turn only on success. The <code>moves</code> list is the game's memory &mdash; audit, replay, and the ten-line <code>undo()</code> the moment anyone asks (trade-offs below).</p>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">Read <code>make_move()</code> against the edge table above: refuse-if-over, delegate placement, win BEFORE full, flip the turn only on success. Notice what's <em>not</em> here &mdash; no move history, no <code>undo()</code>. That's the open exercise (<a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15" target="_blank" style="color: var(--accent-primary);">issue #15</a>), yours to design (trade-offs below).</p>
             <div class="code-block">
                 <div class="code-header" onclick="toggleCode(this)">
                     <div class="code-title"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span> code/tictactoe/game.py</div>
@@ -1306,20 +1305,11 @@ No input(), no print() — the engine never learns it&#x27;s a CLI.&quot;&quot;&
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from enums import GameStatus
 from exceptions import InvalidMoveError
 from models.board import Board
 from models.player import Player
 from strategies.win_rule import WinRule
-
-
-@dataclass(frozen=True)
-class Move:
-    player: Player
-    row: int
-    col: int
 
 
 class Game:
@@ -1334,8 +1324,7 @@ class Game:
         self._turn = starting_index
         self._status = GameStatus.IN_PROGRESS
         self._winner: Player | None = None
-        self.moves: list[Move] = []   # the game&#x27;s memory: audit, replay —
-                                      # and the ten-line undo(), the day it&#x27;s asked for
+        # No move history and no undo() — that's the open exercise (issue #15).
 
     # --- queries --------------------------------------------------------
     def status(self) -&gt; GameStatus:
@@ -1356,7 +1345,6 @@ class Game:
             raise InvalidMoveError(&quot;game already over&quot;)
         player = self.current_player()
         self.board.place(row, col, player.symbol)      # validates; raises on bad move
-        self.moves.append(Move(player, row, col))
         winning_symbol = self.rule.winner(self.board)  # win BEFORE full
         if winning_symbol is not None:
             self._status = GameStatus.WON
@@ -1647,13 +1635,13 @@ all demos passed ✔
             <div class="card-grid">
                 <div class="card" data-cf-change="ch-undo-deepdive">
                     <div class="card-icon">&#8617;&#65039;</div>
-                    <div class="card-title">Undo &mdash; one ask away</div>
-                    <p class="card-desc">We didn't ship <code>undo()</code> &mdash; nobody asked (YAGNI).<br>But <code>make_move()</code> records <code>Move(player, row, col)</code> from day one, so when the interviewer says <em>"now add undo"</em>: pop the last Move &middot; clear its square &middot; hand the turn back &mdash; ten lines.<br>The alternative &mdash; snapshot the whole board every turn &mdash; works, at N&times; the memory. The Move is the minimal diff.<br><em>Why chess breaks this &mdash; reveal below.</em></p>
+                    <div class="card-title">Undo &mdash; the open exercise</div>
+                    <p class="card-desc">We didn't ship <code>undo()</code> &mdash; nobody asked (YAGNI), and it's yours to build (<a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15" target="_blank" style="color: var(--text-primary);">issue #15</a>).<br>When the interviewer says <em>"now add undo"</em>, the move you reach for is a <em>record</em> of each move so the last one can be reversed &mdash; clear its square, hand the turn back.<br>The alternative &mdash; snapshot the whole board every turn &mdash; works, at N&times; the memory. A per-move record is the minimal diff.<br><em>Why chess breaks this &mdash; reveal below.</em></p>
                 </div>
                 <div class="card">
                     <div class="card-icon">&#128190;</div>
                     <div class="card-title">Persistence &mdash; save the moves, not the board</div>
-                    <p class="card-desc">The <code>moves</code> list IS the save format: replaying it through <code>make_move()</code> rebuilds the exact state &mdash; board, turn, status.<br>The same record that makes undo a ten-line ask doubles as the serialisation story.<br>"Save/resume" = store <code>(players, board config, moves)</code>; "spectate from move 1" = the same replay.</p>
+                    <p class="card-desc">Build the move-record from the undo exercise and it doubles as the save format: replaying the moves through <code>make_move()</code> rebuilds the exact state &mdash; board, turn, status.<br>One record, two features &mdash; undo and serialisation fall out together.<br>"Save/resume" = store <code>(players, board config, moves)</code>; "spectate from move 1" = the same replay.</p>
                 </div>
                 <div class="card">
                     <div class="card-icon">&#128309;</div>
@@ -1676,7 +1664,7 @@ all demos passed ✔
                         <li><strong>Chess move 3 problem &mdash; one move, two pieces:</strong> castling moves king AND rook; promotion <em>changes a piece's identity</em> (the pawn that comes back must be a pawn again)</li>
                         <li><strong>Chess move 4 problem &mdash; invisible state dies too:</strong> moving the king destroys castling <em>rights</em>; any move destroys the en-passant window &mdash; rights aren't on any square, yet undo must restore them</li>
                     </ul>
-                    <pre style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 0.8rem; line-height: 1.55; font-family: 'Fira Code', monospace; color: var(--text-primary); overflow-x: auto; margin-top: 8px;"><span class="comment"># TTT — the record IS the inverse:</span>
+                    <pre style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 0.8rem; line-height: 1.55; font-family: 'Fira Code', monospace; color: var(--text-primary); overflow-x: auto; margin-top: 8px;"><span class="comment"># TTT — the record you'd build; the inverse is trivial:</span>
 <span class="decorator">@dataclass</span>(frozen=<span class="keyword">True</span>)
 <span class="keyword">class</span> <span class="function">Move</span>:
     player: Player

@@ -12,7 +12,8 @@ Every line traces back to an LLD-22 decision:
   WinRule Strategy              <- FR-5 (Gomoku = KInARowRule(5))
   GameStatus enum               <- FR-6 (the third state)
   render() outside make_move()  <- FR-8 + the CLI NFR
-  moves: list[Move]             <- the game's memory: audit, replay, undo-when-asked
+
+Undo is deliberately NOT here — it's an open exercise (see issue #15).
 """
 
 from __future__ import annotations
@@ -180,13 +181,6 @@ class BotPlayer(Player):
 
 
 # === Game — the orchestrator =================================================
-@dataclass(frozen=True)
-class Move:
-    player: Player
-    row: int
-    col: int
-
-
 class Game:
     def __init__(self, players: list[Player], board: Board, rule: WinRule,
                  starting_index: int = 0):
@@ -199,8 +193,6 @@ class Game:
         self._turn = starting_index
         self._status = GameStatus.IN_PROGRESS
         self._winner: Player | None = None
-        self.moves: list[Move] = []   # the game's memory: audit, replay —
-                                      # and the ten-line undo(), the day it's asked for
 
     # --- queries --------------------------------------------------------
     def status(self) -> GameStatus:
@@ -221,7 +213,6 @@ class Game:
             raise InvalidMoveError("game already over")
         player = self.current_player()
         self.board.place(row, col, player.symbol)      # validates; raises on bad move
-        self.moves.append(Move(player, row, col))
         winning_symbol = self.rule.winner(self.board)  # win BEFORE full
         if winning_symbol is not None:
             self._status = GameStatus.WON
@@ -231,13 +222,13 @@ class Game:
         else:
             self._turn = (self._turn + 1) % len(self.players)
 
-    def play_turn(self) -> Move:
+    def play_turn(self) -> tuple[int, int]:
         """Ask the current player (human OR bot — Game can't tell) and apply."""
         while True:
             row, col = self.current_player().choose_move(self.board)
             try:
                 self.make_move(row, col)
-                return self.moves[-1]
+                return row, col
             except InvalidMoveError as e:
                 print(f"  rejected: {e}")
 
