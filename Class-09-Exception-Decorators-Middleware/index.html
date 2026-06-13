@@ -333,7 +333,7 @@
                 </div>
             </div>
 
-            <!-- TEACHING: What is Exception Handling? - Now build from the question -->
+            <!--What is Exception Handling? - Now build from the question -->
             <div class="story-box mt-30">
                 <h4>&#128218; So What is an Exception?</h4>
                 <p class="mt-10">An <strong>exception</strong> is Python's way of saying "something went wrong!" When code fails (database lookup finds nothing, file doesn't exist, network times out), Python <strong>raises</strong> an exception. If you don't <strong>handle</strong> it, your program crashes.</p>
@@ -344,7 +344,7 @@
                 <p class="mt-10">Catch these errors and respond gracefully instead of crashing. Show users a friendly message, log the error for debugging, and keep your app running.</p>
             </div>
 
-            <!-- TEACHING: try-except basics -->
+            <!--try-except basics -->
             <h3 class="mt-30 mb-20">The Solution: try-except Block</h3>
             <div class="code-block">
                 <div class="code-header">
@@ -374,7 +374,7 @@ WITH try-except:
     .get(99999) → except catches it → Your code handles it gracefully
             </div>
 
-            <!-- TEACHING: The Full Exception Flow -->
+            <!--The Full Exception Flow -->
             <h3 class="mt-40 mb-20">The Full Exception Flow: try-except-else-finally</h3>
             <div class="diagram-box">try:
     risky_operation()      # 1. Always runs first
@@ -1178,7 +1178,7 @@ print_info(name=<span class="string">"Alice"</span>, age=<span class="variable">
     <span class="keyword">return</span> result</pre>
             </div>
 
-            <!-- TEACHING: What is a Decorator? -->
+            <!--What is a Decorator? -->
             <h3 class="mt-40 mb-20">What is a Decorator?</h3>
             <div class="story-box">
                 <h4>&#128218; Decorators in One Sentence</h4>
@@ -1211,7 +1211,7 @@ my_function = my_decorator(my_function)
                 </div>
             </div>
 
-            <!-- TEACHING: How to Write a Decorator -->
+            <!--How to Write a Decorator -->
             <h3 class="mt-40 mb-20">How to Write a Decorator</h3>
             <div class="code-block">
                 <div class="code-header">
@@ -1739,7 +1739,7 @@ say_hello()
             <h2 class="section-title">Middleware</h2>
             <p class="section-subtitle">Hooks into Django's request/response processing - runs on EVERY request!</p>
 
-            <!-- TEACHING: What is Middleware? -->
+            <!--What is Middleware? -->
             <div class="story-box">
                 <h4>&#128218; What is Middleware?</h4>
                 <p class="mt-10">Middleware is a framework of hooks that sits between the web server and your views. Every request passes through ALL middleware (top to bottom), and every response passes back through (bottom to top). Think of it like airport security - everyone goes through it, no exceptions.</p>
@@ -1773,7 +1773,7 @@ say_hello()
                 <strong>&#128161; Key Point:</strong> Request goes top-to-bottom, response goes bottom-to-top (like an onion - LIFO). The last middleware to touch the request is the first to touch the response.
             </div>
 
-            <!-- TEACHING: Middleware Template -->
+            <!--Middleware Template -->
             <h3 class="mt-40 mb-20">How to Write a Middleware</h3>
             <div class="code-block">
                 <div class="code-header">

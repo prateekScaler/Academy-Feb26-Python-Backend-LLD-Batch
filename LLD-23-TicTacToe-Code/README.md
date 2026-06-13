@@ -6,7 +6,7 @@
 - `python3 code/01_tictactoe.py` — all FRs asserted green
 - `python3 code/01_tictactoe.py play` — two-player CLI
 - `cd code/tictactoe && python3 main.py` — file-by-file package build
-- Open `index.html` in a browser for the interactive teaching page with diagrams, quizzes, and code walkthroughs
+- Open `index.html` in a browser for the interactive page with diagrams, quizzes, and code walkthroughs
 
 ---
 
@@ -203,8 +203,8 @@ Every line traces to an LLD-22 decision:
 | File | What |
 |---|---|
 | `index.html` | The interactive class page: relationships → diagram → behaviours-from-FRs → folder structure → APIs → build → CLI → trade-offs (open in a browser for SVG diagrams, quizzes, and click-to-reveal walkthroughs) |
-| `code/01_tictactoe.py` | Complete working game in ONE file (teaching scroll) — all demos assert green; `play` arg for the interactive CLI |
-| `code/tictactoe/` | **The same engine, lifted into the tree the class teaches** — `enums.py` / `exceptions.py` / `models/` / `strategies/` / `game.py` / `console.py` / `cli.py` / `main.py`. Run `python3 main.py` (acceptance asserts) or `python3 main.py play` |
+| `code/01_tictactoe.py` | Complete working game in ONE file (read top to bottom) — all demos assert green; `play` arg for the interactive CLI |
+| `code/tictactoe/` | **The same engine, organised into a proper package tree** — `enums.py` / `exceptions.py` / `models/` / `strategies/` / `game.py` / `console.py` / `cli.py` / `main.py`. Run `python3 main.py` (acceptance asserts) or `python3 main.py play` |
 | `code/tictactoe/console.py` | The game-agnostic console toolkit: `ask` (prompt→parse→validate→retry) + `ask_int` / `ask_nonempty` / `ask_choice` / `ask_enum` / `ask_yes_no` — ~50 lines, zero deps, reusable in every CLI round |
 
 ## Next

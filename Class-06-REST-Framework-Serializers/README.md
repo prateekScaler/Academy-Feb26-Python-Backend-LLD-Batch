@@ -337,7 +337,7 @@ curl http://127.0.0.1:8000/menu/api/menu-items/
 
 ---
 
-## Teaching Flow
+## Learning Path
 
 ```
 REST Concepts → Build Basic API → Feel the Pain → Serializers → ViewSets
