@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-24: Parking Lot &mdash; Design (Part 1)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --accent-primary: #a855f7; --accent-secondary: #7c3aed; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #c084fc, #a855f7); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #c084fc; }
+        .nav-links { display: flex; gap: 22px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 750px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(168, 85, 247, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #c084fc, #a855f7, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 720px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #c084fc; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 28px 26px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 30px; }
+        .card-icon { font-size: 2rem; margin-bottom: 12px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65; }
+        .card-desc br { content: ""; display: block; margin-top: 10px; }
+        .card-desc strong { color: var(--text-primary); }
+        .code-block { background: #1e1e2e; border-radius: 10px; overflow: hidden; margin: 15px 0; border: 1px solid var(--border-color); }
+        .code-header { background: #2d2d3d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .code-header:hover { background: #353548; }
+        .code-title { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.red { background: #ff5f56; } .code-dot.yellow { background: #ffbd2e; } .code-dot.green { background: #27ca40; }
+        .code-toggle { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+        .code-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+        .code-block.collapsed .code-toggle .arrow { transform: rotate(-90deg); }
+        .code-content { padding: 15px; overflow-x: auto; transition: all 0.3s ease; }
+        .code-block.collapsed .code-content { max-height: 0; padding: 0 15px; overflow: hidden; }
+        .code-content pre { font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin: 0; }
+        .comment { color: #6b7280; } .keyword { color: #c792ea; } .string { color: #c3e88d; } .function { color: #82aaff; } .number { color: #f78c6c; } .decorator { color: #f59e0b; }
+        .highlight-box { background: rgba(168, 85, 247, 0.08); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger  { background: rgba(239, 68, 68, 0.1);  border-color: var(--accent-danger);  }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .highlight-box.info    { background: rgba(59, 130, 246, 0.08); border-color: var(--accent-blue);   }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 20px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after  { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 25px 0; }
+        .quiz-box h4 { margin-bottom: 15px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(168, 85, 247, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(168, 85, 247, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .question-box { background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(59, 130, 246, 0.08)); border: 2px dashed var(--accent-primary); border-radius: 12px; padding: 25px; margin: 40px 0; position: relative; }
+        .question-box::before { content: 'Think About It'; position: absolute; top: -12px; left: 20px; background: var(--accent-primary); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .question-box p { color: var(--text-secondary); font-size: 1rem; margin-top: 5px; }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .timeline { position: relative; padding-left: 32px; margin: 20px 0; }
+        .timeline::before { content: ''; position: absolute; left: 12px; top: 8px; bottom: 8px; width: 2px; background: var(--accent-primary); }
+        .timeline-item { position: relative; padding: 12px 0 12px 20px; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 18px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-primary); border: 3px solid var(--bg-primary); }
+        .timeline-item .t-time { font-size: 0.78rem; color: var(--accent-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .timeline-item .t-what { font-size: 1rem; font-weight: 600; margin-top: 2px; }
+        .timeline-item .t-desc { font-size: 0.88rem; color: var(--text-secondary); margin-top: 2px; }
+        .ttt-board { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 4px; justify-content: center; margin: 20px auto; }
+        .ttt-cell { background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; font-family: 'Fira Code', monospace; }
+        .ttt-cell.x { color: var(--accent-blue); }
+        .ttt-cell.o { color: var(--accent-warning); }
+        .ttt-cell.win { background: rgba(16, 185, 129, 0.2); border-color: var(--accent-success); }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+        .collapsible-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { display: flex; align-items: center; gap: 10px; font-size: 1rem; margin: 0; }
+        .collapsible-arrow { transition: transform 0.3s; color: var(--text-muted); }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 5000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        /* ===== interactive tic-tac-toe demo ===== */
+        .ttt-demo { display: grid; grid-template-columns: 360px 1fr; gap: 28px; margin: 24px 0; align-items: start; }
+        @media (max-width: 900px) { .ttt-demo { grid-template-columns: 1fr; } }
+        .ttt-demo-left { position: sticky; top: 100px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; }
+        .ttt-chips { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+        .ttt-chip { background: var(--bg-tertiary); border: 1.5px solid var(--border-color); border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; font-weight: 600; transition: all 0.25s; }
+        .ttt-turn { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; border-radius: 8px; padding: 4px; transition: all 0.25s; }
+        .ttt-stage { position: relative; border-radius: 10px; padding: 8px; transition: all 0.25s; }
+        .ttt-demo .ttt-board { margin: 6px auto; }
+        .ttt-demo .ttt-cell { cursor: pointer; transition: all 0.2s; user-select: none; }
+        .ttt-demo .ttt-cell:hover { border-color: var(--accent-primary); }
+        .ttt-cell.shake { animation: ttt-shake 0.4s; border-color: var(--accent-danger) !important; background: rgba(239,68,68,0.18) !important; }
+        @keyframes ttt-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .ttt-status { text-align: center; font-family: 'Fira Code', monospace; font-size: 0.8rem; margin: 10px 0 6px; padding: 5px; border-radius: 8px; background: var(--bg-tertiary); transition: all 0.25s; }
+        .ttt-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+        .ttt-controls button { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 16px; cursor: pointer; color: var(--text-primary); font-size: 0.85rem; font-family: inherit; }
+        .ttt-controls button:hover { border-color: var(--accent-primary); }
+        .ttt-log { font-family: 'Fira Code', monospace; font-size: 0.72rem; color: var(--text-muted); max-height: 90px; overflow-y: auto; border-top: 1px dashed var(--border-color); padding-top: 8px; border-radius: 6px; transition: all 0.25s; }
+        .ttt-note { text-align: center; font-size: 0.8rem; color: var(--accent-purple); font-weight: 600; min-height: 42px; padding: 6px 4px 0; }
+        /* lens highlight states */
+        .lens-target { outline: 3px solid var(--accent-purple); outline-offset: 3px; border-radius: 8px; background: rgba(168,85,247,0.08); }
+        .ttt-cell.lens-win { background: rgba(16,185,129,0.25) !important; border-color: var(--accent-success) !important; }
+        /* FR cards */
+        .fr-card { background: var(--bg-secondary); border: 1.5px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; overflow: hidden; transition: border-color 0.25s; }
+        .fr-card.fr-active { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+        .fr-head { display: flex; align-items: baseline; gap: 12px; padding: 14px 18px; cursor: pointer; }
+        .fr-head:hover { background: var(--bg-tertiary); }
+        .fr-num { font-family: 'Fira Code', monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-purple); white-space: nowrap; }
+        .fr-text { flex: 1; font-size: 0.92rem; }
+        .fr-arrow { color: var(--text-muted); transition: transform 0.3s; }
+        .fr-card.fr-open .fr-arrow { transform: rotate(180deg); }
+        .fr-think { max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out; }
+        .fr-card.fr-open .fr-think { max-height: 1200px; }
+        .fr-think-inner { padding: 0 18px 16px; font-size: 0.85rem; color: var(--text-secondary); border-top: 1px dashed var(--border-color); margin: 0 18px; padding: 12px 0 16px; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-24: Parking Lot Design</div>
+        <ul class="nav-links">
+            <li><a href="#recap">Recap</a></li>
+            <li><a href="#clarify">Clarify</a></li>
+            <li><a href="#frs">Requirements</a></li>
+            <li><a href="#entities">Entities</a></li>
+            <li><a href="#next">For LLD-25</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#128663;</div>
+        <h1>Parking Lot &mdash; Design (Part 1)</h1>
+        <p class="hero-meta">LLD-24 &bull; The most-asked machine-coding problem in India &bull; Design today, code in LLD-25</p>
+        <p class="hero-tagline">Same method as Tic-Tac-Toe, bigger problem: <strong>align &rarr; FR sentences &rarr; derive every class from its requirement &rarr; ownership</strong>. Two Strategies show up from minute one, one decision <em>flips</em> versus TTT (when is failure an exception?), and concurrency stops being theoretical &mdash; a lot has two entry gates. Drawing the class diagram is again your homework; we code it all in LLD-25.</p>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section id="recap">
+        <div class="section-container">
+            <span class="section-label purple">From last class &mdash; still open on GitHub</span>
+            <h2 class="section-title" data-cf-change="ch-last-class-issues">Where we left Tic-Tac-Toe</h2>
+            <p class="section-subtitle">Three threads from the Tic-Tac-Toe code are open as GitHub issues &mdash; each one a PR waiting to happen. Pick one, raise it, tag a batchmate. We'll walk through the strongest before today's design.</p>
+            <div class="card-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="card" style="padding: 18px; border-color: var(--accent-danger);">
+                    <div class="card-title" style="margin-bottom: 6px;">&#129529; Code smells &mdash; <a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/14" target="_blank" style="color: var(--accent-primary);">Issue #14</a></div>
+                    <p class="card-desc">Hunt small, concrete smells in the TTT code &mdash; magic numbers, long methods, weak names &mdash; and open a <strong>one-smell PR</strong>. We won't merge them; we'll discuss how to tackle each in class.</p>
+                </div>
+                <div class="card" style="padding: 18px; border-color: var(--accent-warning);">
+                    <div class="card-title" style="margin-bottom: 6px;">&#8617;&#65039; Undo &mdash; <a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/15" target="_blank" style="color: var(--accent-primary);">Issue #15</a></div>
+                    <p class="card-desc">How would you add undo? There's deliberately <strong>no move-record in the code</strong> &mdash; that's the point. Design it your way, open a PR, defend the trade-offs.</p>
+                </div>
+                <div class="card" style="padding: 18px; border-color: var(--accent-blue);">
+                    <div class="card-title" style="margin-bottom: 6px;">&#127919; Winner-check &mdash; <a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues/16" target="_blank" style="color: var(--accent-primary);">Issue #16</a></div>
+                    <p class="card-desc">What are different ways to check the winner &mdash; and how do you make the check <strong>configurable</strong> so the game swaps between them with zero game-loop edits?</p>
+                </div>
+            </div>
+            <div class="highlight-box info" style="margin-top: 16px;">
+                <strong>How to take part:</strong> open a PR against the issue, tag a couple of batchmates to review, and bring questions to class. <a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/issues" target="_blank" style="color: var(--accent-primary);">See all open issues &rarr;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CLARIFY ===== -->
+    <section id="clarify">
+        <div class="section-container">
+            <span class="section-label blue">Step 1 &mdash; Clarify</span>
+            <h2 class="section-title">Align first, then gather</h2>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <strong style="color: var(--accent-danger);">&#10006; Bad opening</strong>
+                    <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Interviewer: "Design a parking lot."
+You:         "OK — Vehicle, Spot, park,
+              unpark. Let me code."
+              [20 min later: "wait, can a
+               bike take a car spot? how
+               do trucks pay?"]
+              [model rewrite]</pre>
+                </div>
+                <div class="comparison-card after" data-cf-change="ch-clarify-scope">
+                    <strong style="color: var(--accent-success);">&#10004; Set the altitude first</strong>
+                    <pre style="white-space: pre-wrap; font-size: 0.82rem; margin-top: 8px; color: var(--text-secondary); font-family: 'Fira Code', monospace;">Agree on WHAT and HOW BIG before any
+detail:
+
+· Designing the parking-lot ENTITY, or a
+  whole management system (many branches,
+  staff, billing back-office)?
+   → we'll do the single lot.
+· In-memory is fine? No database / REST
+  today, just the model + logic?
+· One physical lot with multiple floors?</pre>
+                    <p style="font-size: 0.78rem; margin-top: 8px; color: var(--text-muted);">The detailed "what vehicle types / how do they pay" questions come next, in Requirements &darr;</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 28px; margin-bottom: 8px;">The feature sweep &mdash; offer, then park in future scope</h3>
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#127915; Monthly passes</div><p class="card-desc">"Regulars with a pass &mdash; skip the per-visit ticket?"</p></div>
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#128661; Valet</div><p class="card-desc">"Driver hands over the key &mdash; who picks the spot then?"</p></div>
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#128247; Reservations</div><p class="card-desc">"Book a spot before arriving?" (a hold with a TTL &mdash; BookMyShow's seat lock!)</p></div>
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#9889; EV charging</div><p class="card-desc">"Charger spots &mdash; a new spot capability, not a new lot."</p></div>
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#128202; Display boards</div><p class="card-desc">"Free-count screens per floor &mdash; reads, never writes."</p></div>
+            </div>
+
+            <div class="highlight-box info" style="margin-top: 16px;">
+                <strong>Defaults we'll use:</strong>
+                <ul style="margin: 10px 0 0 22px;">
+                    <li><strong>Vehicles &amp; spots:</strong> vehicles are bike / car / truck; spots are small / medium / large &mdash; <em>two separate enums</em>, related by one mapping (bike&rarr;small, car&rarr;medium, truck&rarr;large). "Can a bike take a car spot?" becomes a policy change in that one mapping, never a code change.</li>
+                    <li><strong>Floors:</strong> multiple, each with a fixed mix of typed spots.</li>
+                    <li><strong>Pricing:</strong> tiered hourly per spot size &mdash; first hour at one rate, every extra hour at another (50/80, 80/100, 100/120); the scheme must be swappable.</li>
+                    <li><strong>Payment:</strong> pay at exit, exactly once per ticket (cash / card / UPI); the gate opens only for a paid ticket.</li>
+                    <li><strong>Full lot:</strong> the vehicle is turned away at the gate.</li>
+                    <li><strong>Gates:</strong> ONE for the MVP &mdash; multiple gates is the named Step-7 headline (it's the concurrency question).</li>
+                    <li><strong>Future scope, named and parked:</strong> passes, valet, reservations, EV, display boards.</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 28px; margin-bottom: 8px;">Who touches the system &mdash; actors before entities</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">A 60-second sweep of WHO uses the lot. Each actor's use cases become API endpoints in LLD-25 &mdash; and one of them quietly seeds a design decision below.</p>
+            <div class="card-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#128100; Customer</div><p class="card-desc">Gets a ticket &middot; checks what's due &middot; pays (cash / card / UPI) &middot; exits</p></div>
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#129333; Attendant / gate</div><p class="card-desc">Checks free spots &middot; issues tickets &middot; collects payment &middot; verifies paid before lifting the barrier</p></div>
+                <div class="card" style="padding: 16px;"><div class="card-title" style="margin-bottom: 4px;">&#128736;&#65039; Admin</div><p class="card-desc">CRUD on lots / floors / spots &middot; marks a spot <em>out of order</em> &middot; swaps the active strategies</p></div>
+            </div>
+
+            <h4 style="margin-top: 26px; margin-bottom: 6px;" data-cf-change="ch-usecase">Use-case diagram &mdash; each actor &rarr; what they can do</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 8px;">Draw WHO can do WHAT before any class. Every oval is one use case &mdash; and in LLD-25 each becomes a REST endpoint (that's your pre-work below).</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 780 560" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+                    <!-- system boundary -->
+                    <rect x="246" y="44" width="288" height="500" rx="12" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+                    <text x="390" y="34" text-anchor="middle" font-size="12" font-weight="700" font-family="Inter, sans-serif" fill="#334155">Parking Lot System</text>
+
+                    <!-- connection lines: Customer (blue) -->
+                    <g stroke="#3b82f6" stroke-width="1.3" opacity="0.65">
+                        <line x1="118" y1="150" x2="280" y2="92"/><line x1="118" y1="150" x2="280" y2="134"/><line x1="118" y1="150" x2="280" y2="176"/><line x1="118" y1="150" x2="280" y2="218"/>
+                    </g>
+                    <!-- Attendant (green) -->
+                    <g stroke="#10b981" stroke-width="1.3" opacity="0.65">
+                        <line x1="118" y1="346" x2="280" y2="270"/><line x1="118" y1="346" x2="280" y2="312"/><line x1="118" y1="346" x2="280" y2="354"/><line x1="118" y1="346" x2="280" y2="396"/>
+                    </g>
+                    <!-- Admin (amber) -->
+                    <g stroke="#f59e0b" stroke-width="1.3" opacity="0.7">
+                        <line x1="662" y1="430" x2="500" y2="450"/><line x1="662" y1="430" x2="500" y2="490"/><line x1="662" y1="430" x2="500" y2="522"/>
+                    </g>
+
+                    <!-- use-case ovals: Customer -->
+                    <g font-family="Inter, sans-serif" font-size="10.5">
+                        <ellipse cx="390" cy="92" rx="110" ry="17" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/><text x="390" y="96" text-anchor="middle" fill="#1e3a8a">Get ticket (on entry)</text>
+                        <ellipse cx="390" cy="134" rx="110" ry="17" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/><text x="390" y="138" text-anchor="middle" fill="#1e3a8a">Check amount due</text>
+                        <ellipse cx="390" cy="176" rx="110" ry="17" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/><text x="390" y="180" text-anchor="middle" fill="#1e3a8a">Pay</text>
+                        <ellipse cx="390" cy="218" rx="110" ry="17" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/><text x="390" y="222" text-anchor="middle" fill="#1e3a8a">Exit</text>
+                        <!-- Attendant -->
+                        <ellipse cx="390" cy="270" rx="110" ry="17" fill="#dcfce7" stroke="#10b981" stroke-width="1.4"/><text x="390" y="274" text-anchor="middle" fill="#065f46">Check free spots</text>
+                        <ellipse cx="390" cy="312" rx="110" ry="17" fill="#dcfce7" stroke="#10b981" stroke-width="1.4"/><text x="390" y="316" text-anchor="middle" fill="#065f46">Issue ticket</text>
+                        <ellipse cx="390" cy="354" rx="110" ry="17" fill="#dcfce7" stroke="#10b981" stroke-width="1.4"/><text x="390" y="358" text-anchor="middle" fill="#065f46">Collect payment</text>
+                        <ellipse cx="390" cy="396" rx="110" ry="17" fill="#dcfce7" stroke="#10b981" stroke-width="1.4"/><text x="390" y="400" text-anchor="middle" fill="#065f46">Verify paid &rarr; open barrier</text>
+                        <!-- Admin -->
+                        <ellipse cx="390" cy="450" rx="110" ry="17" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/><text x="390" y="454" text-anchor="middle" fill="#92400e">Manage lots / floors / spots</text>
+                        <ellipse cx="390" cy="490" rx="110" ry="17" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/><text x="390" y="494" text-anchor="middle" fill="#92400e">Mark spot out of order</text>
+                        <ellipse cx="390" cy="522" rx="110" ry="17" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/><text x="390" y="526" text-anchor="middle" fill="#92400e">Swap strategies</text>
+                    </g>
+
+                    <!-- actors (stick figures) -->
+                    <g stroke-width="2" fill="none" font-family="Inter, sans-serif">
+                        <!-- Customer -->
+                        <g stroke="#3b82f6"><circle cx="90" cy="120" r="11"/><line x1="90" y1="131" x2="90" y2="162"/><line x1="72" y1="143" x2="108" y2="143"/><line x1="90" y1="162" x2="74" y2="184"/><line x1="90" y1="162" x2="106" y2="184"/></g>
+                        <text x="90" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a" stroke="none">Customer</text>
+                        <!-- Attendant -->
+                        <g stroke="#10b981"><circle cx="90" cy="316" r="11"/><line x1="90" y1="327" x2="90" y2="358"/><line x1="72" y1="339" x2="108" y2="339"/><line x1="90" y1="358" x2="74" y2="380"/><line x1="90" y1="358" x2="106" y2="380"/></g>
+                        <text x="90" y="396" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46" stroke="none">Attendant / Gate</text>
+                        <!-- Admin -->
+                        <g stroke="#f59e0b"><circle cx="690" cy="400" r="11"/><line x1="690" y1="411" x2="690" y2="442"/><line x1="672" y1="423" x2="708" y2="423"/><line x1="690" y1="442" x2="674" y2="464"/><line x1="690" y1="442" x2="706" y2="464"/></g>
+                        <text x="690" y="480" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e" stroke="none">Admin</text>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== REQUIREMENTS ===== -->
+    <section id="frs">
+        <div class="section-container">
+            <span class="section-label">Step 2 &mdash; Requirements</span>
+            <h2 class="section-title" data-cf-change="ch-frs">From scope to requirements</h2>
+
+            <h3 style="margin-top: 8px; margin-bottom: 8px;">The art of it &mdash; how do you know WHICH questions to ask?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">You don't memorise a list &mdash; you generate it. Four moves turn a blank "design a parking lot" into the exact MVP questions:</p>
+            <ul style="margin-left: 22px; color: var(--text-secondary); line-height: 1.85; display: grid; gap: 7px;">
+                <li><strong>Follow one actor end-to-end.</strong> Walk the driver's journey out loud: <em>arrive &rarr; find a spot &rarr; park &rarr; (time passes) &rarr; pay &rarr; leave</em>. Every step that <em>could differ</em> is a question.</li>
+                <li><strong>Probe five lenses</strong> at each step &mdash; the <strong>inputs</strong> (what drives in?), the <strong>resource</strong> (the spots &mdash; typed? limited?), the <strong>money</strong> (how much, when, how?), the <strong>failure</strong> (full? unpaid?), the <strong>scale</strong> (one gate or many?).</li>
+                <li><strong>Draw the MVP line with one test:</strong> "does removing this change the core <em>entities or their relationships</em>?" If no &rarr; name it and park it (passes, valet, reservations) &mdash; don't design it now.</li>
+                <li><strong>Prefer the simplest answer that still shows the design.</strong> One lot, in-memory, one gate is enough to demonstrate every pattern; anything more is future scope.</li>
+            </ul>
+            <p style="color: var(--text-secondary); margin-top: 14px; margin-bottom: 8px;">Run those lenses over a parking lot and the questions almost write themselves &mdash; <strong>each answer becomes an FR</strong>:</p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Lens</th><th>The question you ask</th></tr></thead>
+                    <tbody>
+                        <tr><td>Inputs</td><td>1. Which vehicle types &mdash; bike / car / truck?</td></tr>
+                        <tr><td>Resource</td><td>2. Are spots sized per type &mdash; can a bike take a car spot? &nbsp;&middot;&nbsp; 3. One floor or many?</td></tr>
+                        <tr><td>Money</td><td>4. Pricing &mdash; hourly? per size? can the scheme change? &nbsp;&middot;&nbsp; 6. How and <em>when</em> does the driver pay?</td></tr>
+                        <tr><td>Failure</td><td>5. What happens when the lot is FULL?</td></tr>
+                        <tr><td>Scale</td><td>7. One entry gate or several? <em>(the concurrency question)</em></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 28px; margin-bottom: 8px;" data-cf-change="ch-pl-diagrams">Picture the lot first</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">Three pictures hold the whole problem &mdash; the <strong>layout</strong> (what exists), the <strong>mapping</strong> (what fits where), and the <strong>flow</strong> (what happens over time).</p>
+
+            <p style="color: var(--text-secondary); margin: 6px 0 4px; font-weight: 600;">1 &mdash; The layout: one lot, many floors, typed spots</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <defs>
+                        <marker id="pl-in" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#10b981"/></marker>
+                        <marker id="pl-out" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/></marker>
+                    </defs>
+                    <!-- GATE -->
+                    <rect x="22" y="96" width="118" height="92" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                    <text x="81" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">GATE</text>
+                    <text x="81" y="156" text-anchor="middle" font-size="8.5" fill="#7f1d1d">one for the MVP</text>
+                    <line x1="140" y1="120" x2="190" y2="120" stroke="#10b981" stroke-width="2.5" marker-end="url(#pl-in)"/>
+                    <text x="165" y="113" text-anchor="middle" font-size="8.5" fill="#047857">in</text>
+                    <line x1="190" y1="164" x2="140" y2="164" stroke="#64748b" stroke-width="2.5" marker-end="url(#pl-out)"/>
+                    <text x="165" y="178" text-anchor="middle" font-size="8.5" fill="#475569">out &middot; paid</text>
+                    <!-- Floor 2 -->
+                    <text x="196" y="40" font-size="11" font-weight="700" fill="#334155">Floor 2</text>
+                    <rect x="190" y="48" width="516" height="56" rx="8" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+                    <g font-family="Inter, sans-serif">
+                        <rect x="202" y="54" width="60" height="44" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="210" y="68" font-size="9" fill="#047857">S</text><text x="232" y="84" text-anchor="middle" font-size="16">&#128663;</text>
+                        <rect x="270" y="54" width="60" height="44" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="278" y="68" font-size="9" fill="#047857">S</text>
+                        <rect x="338" y="54" width="84" height="44" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="346" y="68" font-size="9" fill="#3730a3">M</text><text x="380" y="84" text-anchor="middle" font-size="16">&#128663;</text>
+                        <rect x="430" y="54" width="84" height="44" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="438" y="68" font-size="9" fill="#3730a3">M</text>
+                        <rect x="522" y="54" width="84" height="44" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="530" y="68" font-size="9" fill="#3730a3">M</text>
+                        <rect x="614" y="54" width="84" height="44" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/><text x="622" y="68" font-size="9" fill="#92400e">L</text><text x="656" y="84" text-anchor="middle" font-size="16">&#128666;</text>
+                    </g>
+                    <!-- Floor 1 -->
+                    <text x="196" y="130" font-size="11" font-weight="700" fill="#334155">Floor 1</text>
+                    <rect x="190" y="138" width="516" height="56" rx="8" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+                    <g font-family="Inter, sans-serif">
+                        <rect x="202" y="144" width="60" height="44" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="210" y="158" font-size="9" fill="#047857">S</text>
+                        <rect x="270" y="144" width="60" height="44" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="278" y="158" font-size="9" fill="#047857">S</text><text x="300" y="174" text-anchor="middle" font-size="16">&#127949;</text>
+                        <rect x="338" y="144" width="84" height="44" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="346" y="158" font-size="9" fill="#3730a3">M</text>
+                        <rect x="430" y="144" width="84" height="44" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="438" y="158" font-size="9" fill="#3730a3">M</text><text x="472" y="174" text-anchor="middle" font-size="16">&#128663;</text>
+                        <rect x="522" y="144" width="84" height="44" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="530" y="158" font-size="9" fill="#3730a3">M</text>
+                        <rect x="614" y="144" width="84" height="44" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/><text x="622" y="158" font-size="9" fill="#92400e">L</text>
+                    </g>
+                    <!-- legend -->
+                    <line x1="22" y1="226" x2="698" y2="226" stroke="#e2e8f0" stroke-width="1"/>
+                    <rect x="22" y="240" width="20" height="14" rx="3" fill="#dcfce7" stroke="#10b981"/><text x="48" y="251" font-size="9.5" fill="#475569">Small (bikes)</text>
+                    <rect x="150" y="240" width="20" height="14" rx="3" fill="#e0e7ff" stroke="#6366f1"/><text x="176" y="251" font-size="9.5" fill="#475569">Medium (cars)</text>
+                    <rect x="290" y="240" width="20" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b"/><text x="316" y="251" font-size="9.5" fill="#475569">Large (trucks)</text>
+                    <text x="430" y="251" font-size="13">&#128663;</text><text x="450" y="251" font-size="9.5" fill="#475569">= occupied &middot; empty cell = free</text>
+                </svg>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 14px 0 4px; font-weight: 600;">2 &mdash; The mapping: two enums, one rule (policy as data)</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <defs><marker id="pl-map" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/></marker></defs>
+                    <text x="150" y="28" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">VehicleType</text>
+                    <text x="570" y="28" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">SpotSize</text>
+                    <!-- bike -> small -->
+                    <rect x="60" y="44" width="180" height="38" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/><text x="150" y="68" text-anchor="middle" font-size="12" fill="#0f172a">&#127949; BIKE</text>
+                    <rect x="480" y="44" width="180" height="38" rx="8" fill="#dcfce7" stroke="#10b981" stroke-width="1.6"/><text x="570" y="68" text-anchor="middle" font-size="12" fill="#047857">SMALL</text>
+                    <line x1="244" y1="63" x2="476" y2="63" stroke="#64748b" stroke-width="1.6" marker-end="url(#pl-map)"/>
+                    <!-- car -> medium -->
+                    <rect x="60" y="92" width="180" height="38" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/><text x="150" y="116" text-anchor="middle" font-size="12" fill="#0f172a">&#128663; CAR</text>
+                    <rect x="480" y="92" width="180" height="38" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.6"/><text x="570" y="116" text-anchor="middle" font-size="12" fill="#3730a3">MEDIUM</text>
+                    <line x1="244" y1="111" x2="476" y2="111" stroke="#64748b" stroke-width="1.6" marker-end="url(#pl-map)"/>
+                    <!-- truck -> large -->
+                    <rect x="60" y="140" width="180" height="38" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/><text x="150" y="164" text-anchor="middle" font-size="12" fill="#0f172a">&#128666; TRUCK</text>
+                    <rect x="480" y="140" width="180" height="38" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.6"/><text x="570" y="164" text-anchor="middle" font-size="12" fill="#92400e">LARGE</text>
+                    <line x1="244" y1="159" x2="476" y2="159" stroke="#64748b" stroke-width="1.6" marker-end="url(#pl-map)"/>
+                    <!-- the mapping label -->
+                    <rect x="285" y="96" width="150" height="30" rx="15" fill="#ffffff" stroke="#a855f7" stroke-width="1.5"/><text x="360" y="115" text-anchor="middle" font-size="9.5" fill="#7c3aed">SPOT_SIZE_FOR</text>
+                    <text x="360" y="200" text-anchor="middle" font-size="9.5" fill="#64748b">one dict, not a class &mdash; "bikes in car spots on weekends" edits data, not code</text>
+                </svg>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 14px 0 4px; font-weight: 600;">3 &mdash; The flow: one vehicle's journey (where the Ticket is born and dies)</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Inter', sans-serif;">
+                    <defs><marker id="pl-flow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#a855f7"/></marker></defs>
+                    <!-- nodes -->
+                    <rect x="20" y="40" width="120" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/><text x="80" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">Arrive</text><text x="80" y="78" text-anchor="middle" font-size="8.5" fill="#475569">at the gate</text>
+                    <rect x="180" y="40" width="150" height="50" rx="10" fill="#dcfce7" stroke="#10b981" stroke-width="1.8"/><text x="255" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#047857">Assign spot</text><text x="255" y="76" text-anchor="middle" font-size="8.5" fill="#047857">+ issue Ticket (entry time)</text>
+                    <rect x="370" y="40" width="120" height="50" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="430" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">Parked</text><text x="430" y="78" text-anchor="middle" font-size="8.5" fill="#3730a3">time passes&hellip;</text>
+                    <rect x="530" y="40" width="170" height="50" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.8"/><text x="615" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Pay at exit</text><text x="615" y="76" text-anchor="middle" font-size="8.5" fill="#92400e">fee = f(duration, size)</text>
+                    <rect x="370" y="150" width="170" height="50" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/><text x="455" y="170" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Free the spot</text><text x="455" y="186" text-anchor="middle" font-size="8.5" fill="#991b1b">barrier opens, drive out</text>
+                    <!-- edges -->
+                    <line x1="140" y1="65" x2="176" y2="65" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow)"/>
+                    <line x1="330" y1="65" x2="366" y2="65" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow)"/>
+                    <line x1="490" y1="65" x2="526" y2="65" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow)"/>
+                    <path d="M615 90 L615 175 L544 175" fill="none" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow)"/>
+                    <!-- ticket lifeline note -->
+                    <path d="M255 90 L255 120 L455 120 L455 148" fill="none" stroke="#64748b" stroke-width="1.3" stroke-dasharray="5,4"/>
+                    <text x="355" y="115" text-anchor="middle" font-size="9" fill="#64748b">the Ticket lives from entry &hellip; to exit &mdash; the lot's event record</text>
+                    <!-- full-lot branch -->
+                    <line x1="255" y1="90" x2="255" y2="220" stroke="#ef4444" stroke-width="1.3" stroke-dasharray="4,4"/>
+                    <text x="262" y="216" font-size="8.5" fill="#ef4444">no free spot of that size &rarr; turned away (FR-4)</text>
+                </svg>
+            </div>
+
+            <h3 style="margin-top: 28px; margin-bottom: 8px;">The nine functional requirements, full sentences</h3>
+            <ol style="margin-left: 22px; color: var(--text-secondary); font-size: 1.02rem;">
+                <li>The parking lot has one or more floors, and each floor has a fixed set of parking spots.</li>
+                <li>Every spot has a size &mdash; small, medium, or large &mdash; and every vehicle type maps to exactly one spot size it can use (bike&rarr;small, car&rarr;medium, truck&rarr;large).</li>
+                <li>A vehicle entering the lot is assigned a free spot of its type, and the driver receives a ticket recording the vehicle, the spot, and the entry time.</li>
+                <li>If no suitable spot is free, the vehicle is turned away at the gate.</li>
+                <li>A vehicle leaving the lot surrenders its ticket and pays a fee computed from the parked duration and the size of the spot it occupied.</li>
+                <li>The moment a vehicle leaves, its spot becomes free for the next vehicle.</li>
+                <li>The lot can report the number of free spots per vehicle type &mdash; per floor and in total.</li>
+                <li>The spot-assignment policy and the pricing scheme can each change independently of everything else.</li>
+                <li>A ticket is paid exactly once, before exit &mdash; the gate opens only for a paid ticket. Payment can be cash, card, or UPI.</li>
+            </ol>
+            <p style="color: var(--text-secondary); margin-top: 16px; margin-bottom: 6px;"><strong>NFRs (non-functional):</strong></p>
+            <ul style="margin-left: 22px; color: var(--text-secondary); line-height: 1.8; display: grid; gap: 6px;">
+                <li>In-memory &mdash; no database or network yet, just the model and its logic.</li>
+                <li>One gate thread for the MVP (multiple gates = the Step-7 trade-off).</li>
+                <li>Rates and lot layout live as configuration in one place.</li>
+            </ul>
+            <div class="highlight-box warning" style="margin-top: 14px;" data-cf-change="ch-concurrency-note">
+                <strong>On concurrency &mdash; deliberately out of scope today.</strong> With a single gate there's no race, so we set it aside. In a real interview you <em>should</em> still raise it (two gates grabbing the last free spot at the same instant) &mdash; we'll tackle that contention head-on in the <strong>BookMyShow case study</strong>, where the seat race is the main event.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ENTITIES ===== -->
+    <section id="entities">
+        <div class="section-container">
+            <span class="section-label success">Step 3 &mdash; Entities</span>
+            <h2 class="section-title">Every FR donates something</h2>
+            <p class="section-subtitle">Same drill as TTT: per requirement &mdash; think first, answer the quiz where there is one, then reveal the discussion.</p>
+
+            <!-- FR-1 -->
+            <h4 style="margin-top: 28px; margin-bottom: 8px;">FR-1 &mdash; <em>"The parking lot has one or more floors, and each floor has a fixed set of parking spots."</em></h4>
+            <div class="quiz-box" id="floor-q">
+                <h4>Decision quiz &mdash; does <code>Floor</code> deserve to be a class, or is it just a list of spots inside the lot?</h4>
+                <button class="quiz-option" onclick="checkQuiz('floor-q', this, false)">A) A <code>list[Spot]</code> inside the lot is enough</button>
+                <button class="quiz-option" onclick="checkQuiz('floor-q', this, false)">B) A dict keyed by floor number, holding spot lists</button>
+                <button class="quiz-option" onclick="checkQuiz('floor-q', this, true)">C) A class &mdash; it has identity and its own queries</button>
+                <button class="quiz-option" onclick="checkQuiz('floor-q', this, false)">D) A subclass of <code>ParkingLot</code> for each level</button>
+                <div class="quiz-explanation">
+                    <strong>C is right &mdash; <code>Floor</code> earns class-hood.</strong>
+                    <ul style="margin: 8px 0 0 18px; line-height: 1.7; display: grid; gap: 5px;">
+                        <li><strong>It has identity</strong> &mdash; its number; tickets and display boards reference "Floor 2" by name.</li>
+                        <li><strong>It has its own behaviour</strong> &mdash; FR-7 wants per-floor free counts, and the assignment strategy asks each floor for its free spots.</li>
+                        <li><strong>State + behaviour &rarr; class.</strong> Contrast TTT: a board <em>row</em> stayed a bare list &mdash; nothing ever addressed "row 2" by name. Same test, different answer.</li>
+                        <li><strong>Not A / B</strong> &mdash; putting floor-level queries on the lot is feature envy, the same smell as <code>Board.is_empty(r,c)</code>.</li>
+                        <li><strong>Not D</strong> &mdash; a floor <em>is not a kind of</em> lot; that's has-a, not is-a.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;">Re-read the requirement &mdash; the <strong>highlighted nouns</strong> are the classes, hiding in plain sight:</p>
+                    <p data-cf-change="ch-fr1-bold" style="font-size: 1.04rem; color: var(--text-primary); margin-bottom: 12px; line-height: 1.7;">"The <strong style="color: var(--accent-primary);">parking lot</strong> has one or more <strong style="color: var(--accent-primary);">floors</strong>, and each <strong style="color: var(--accent-primary);">floor</strong> has a fixed set of parking <strong style="color: var(--accent-primary);">spots</strong>."</p>
+                    <p style="color: var(--text-secondary);">The lot is the orchestrator (the Game analogue). Floors are owned by the lot and spots by their floor &mdash; a composition chain. "Fixed set" means the layout is constructor input, not something that mutates mid-day.</p>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-1 donates:</strong> <code>ParkingLot</code> &#10004; class (orchestrator) &nbsp;&middot;&nbsp; <code>Floor</code> &#10004; class (identity + queries) &nbsp;&middot;&nbsp; layout &#10004; constructor configuration
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-2 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;">FR-2 &mdash; <em>"Every spot has a size, and every vehicle type maps to exactly one spot size it can use."</em></h4>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <ul style="margin-left: 18px; color: var(--text-secondary); line-height: 1.75; display: grid; gap: 7px;" data-cf-change="ch-fr2-bullets">
+                        <li><strong>The trap:</strong> fusing two concepts because they correlate &mdash; a "car spot" welds the vehicle to the spot.</li>
+                        <li><strong>Keep them apart:</strong> <code>VehicleType</code> (what drives in) and <code>SpotSize</code> (what the floor offers) are two enums, related by <strong>one mapping</strong> &mdash; <code>SPOT_SIZE_FOR = {BIKE: SMALL, CAR: MEDIUM, TRUCK: LARGE}</code>.</li>
+                        <li><strong>Policy as data:</strong> "add scooters and buses" is one entry each; "let bikes use car spots on weekends" edits a dict, not a class.</li>
+                        <li><strong><code>Vehicle</code> is a frozen dataclass</strong> &mdash; plate + type, no behaviour.</li>
+                        <li><strong>The fit rule needs a home</strong> &mdash; it lands on <code>Spot.can_fit(vehicle)</code> (next beat).</li>
+                    </ul>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-2 donates:</strong> <code>VehicleType</code> + <code>SpotSize</code> &#10004; two enums &nbsp;&middot;&nbsp; <code>SPOT_SIZE_FOR</code> &#10004; policy as data &nbsp;&middot;&nbsp; <code>Vehicle</code> &#10004; frozen dataclass &nbsp;&middot;&nbsp; the fit rule &#10004; a method on Spot
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-3 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;" data-cf-change="ch-ticket-q">FR-3 &mdash; <em>"&hellip;a vehicle entering the lot is assigned a free spot, and the driver receives a ticket."</em></h4>
+            <div class="quiz-box" id="ticket-q">
+                <h4>Decision quiz &mdash; if <code>Ticket</code> is a class, what does it store?</h4>
+                <button class="quiz-option" onclick="checkQuiz('ticket-q', this, false)">A) Just an id &mdash; look everything else up live when needed</button>
+                <button class="quiz-option" onclick="checkQuiz('ticket-q', this, true)">B) The vehicle, the spot's <em>id</em>, the entry time (+ exit time later)</button>
+                <button class="quiz-option" onclick="checkQuiz('ticket-q', this, false)">C) A live <code>Spot</code> object &mdash; so the ticket can free it directly</button>
+                <button class="quiz-option" onclick="checkQuiz('ticket-q', this, false)">D) Nothing &mdash; the <code>Floor</code> already knows who's parked where</button>
+                <div class="quiz-explanation">
+                    <strong>B is right &mdash; and notice <em>how</em> it stores the spot.</strong>
+                    <ul style="margin: 10px 0 0 18px; line-height: 1.7; display: grid; gap: 10px;">
+                        <li><strong>The ticket is the lot's record (its "Move"):</strong> vehicle + spot + entry time (+ exit time later). Everything reads from it &mdash; the fee is computed FROM it (FR-5), the audit trail IS the ticket log, persistence = "store the tickets".</li>
+                        <li><strong>It stores the spot's <em>id</em>, not a live <code>Spot</code> object</strong> &mdash; that's the trap in C. A ticket outlives the parking session (billing, disputes, a DB row long after the car's gone), so it must not pin live objects. The lifetime question is deciding a <em>field type</em> here.</li>
+                        <li><strong>Not A</strong> &mdash; an id-only ticket can't be billed or audited without re-deriving everything. <strong>Not D</strong> &mdash; the Floor holds <em>current</em> state, not the history a ticket needs.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary);">So the fields fall out: <code>Ticket(id, vehicle, floor_no, spot_id, entry_time, exit_time)</code> &mdash; the parking lot's <em>Move</em>, and the only entity that records <em>history</em>. The quiz nailed the key call: ids over live references, because the ticket outlives the session.</p>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-3 donates:</strong> <code>Ticket</code> &#10004; dataclass &mdash; the event record &nbsp;&middot;&nbsp; ids over references &#10004; tickets outlive sessions
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-4 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;">FR-4 &mdash; <em>"If no suitable spot is free, the vehicle is turned away at the gate."</em></h4>
+            <div class="quiz-box" id="reject-q">
+                <h4>Decision quiz &mdash; the lot is full. Does <code>park()</code> raise an exception, or return <code>None</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('reject-q', this, false)">A) Raise &mdash; failures must always be loud</button>
+                <button class="quiz-option" onclick="checkQuiz('reject-q', this, false)">B) Return <code>None</code> &mdash; exceptions are too slow here</button>
+                <button class="quiz-option" onclick="checkQuiz('reject-q', this, false)">C) Raise &mdash; callers will forget to check a <code>None</code></button>
+                <button class="quiz-option" onclick="checkQuiz('reject-q', this, true)">D) Return <code>None</code> &mdash; a full lot is expected, not exceptional</button>
+                <div class="quiz-explanation">
+                    <strong>D is right &mdash; and notice the answer FLIPPED from Tic-Tac-Toe.</strong> The criterion: is the failure a <em>contract violation</em> or an <em>expected outcome</em>?
+                    <ul style="margin: 10px 0 0 18px; line-height: 1.7; display: grid; gap: 10px;">
+                        <li>TTT's illegal move broke the rules of the conversation &mdash; the caller did something wrong &rarr; <code>InvalidMoveError</code>.</li>
+                        <li>A full lot on a Tuesday morning is nobody's mistake &mdash; it's a normal answer to a normal question &rarr; <code>park() &rarr; Ticket | None</code>, and the gate's display says "FULL".</li>
+                        <li>The exceptions DO come back where the contract IS violated: an unknown or reused ticket, paying twice, exiting unpaid (FR-9) &mdash; <code>InvalidTicketError</code>, <code>AlreadyPaidError</code>, <code>UnpaidExitError</code>.</li>
+                    </ul>
+                    A (always raise) and B (performance) apply a blanket rule where a judgement call is being tested; C is real but the type hint <code>Ticket | None</code> makes mypy do the remembering. Interviewers accept either design <em>if you state the criterion</em> &mdash; the reference design raises; we return None; both defensible, neither accidental.
+                </div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary);">FR-4 donates a <em>signature decision</em>, not an entity. The deeper lesson: exception-vs-Optional is not a style war, it's one question &mdash; whose fault is it? Contract violations raise; expected outcomes return.</p>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-4 donates:</strong> <code>park() &rarr; Ticket | None</code> &#10004; &nbsp;&middot;&nbsp; the criterion &#10004; which FR-9's three exceptions will pass
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-5 + FR-6 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;">FR-5 &amp; FR-6 &mdash; <em>"&hellip;pays a fee computed from duration and spot size" &middot; "the spot becomes free the moment the vehicle leaves."</em></h4>
+            <div class="quiz-box" id="spot-q">
+                <h4>Decision quiz &mdash; what is a <code>Spot</code> in code?</h4>
+                <button class="quiz-option" onclick="checkQuiz('spot-q', this, false)">A) A value &mdash; a status enum (FREE / OCCUPIED) per slot</button>
+                <button class="quiz-option" onclick="checkQuiz('spot-q', this, true)">B) A class &mdash; two facts plus the rules relating them</button>
+                <button class="quiz-option" onclick="checkQuiz('spot-q', this, false)">C) A bare dataclass &mdash; fields only, logic elsewhere</button>
+                <button class="quiz-option" onclick="checkQuiz('spot-q', this, false)">D) A set of occupied ids kept on each Floor object</button>
+                <div class="quiz-explanation" data-cf-change="ch-spot-bullets">
+                    <strong>B is right &mdash; a <code>Spot</code> is TTT's <code>Cell</code> in a hi-vis vest.</strong>
+                    <ul style="margin: 8px 0 0 18px; line-height: 1.7; display: grid; gap: 5px;">
+                        <li><strong>Two facts:</strong> <code>size</code> and <code>status</code>.</li>
+                        <li><strong>Two rules that relate them</strong> live right here: <code>is_free()</code> and <code>can_fit(vehicle)</code> &mdash; free <em>AND</em> the right size (FR-2's rule finds its home).</li>
+                        <li><strong>Status is an enum, not a <code>bool</code></strong> &mdash; see the contrast below.</li>
+                        <li><strong>Future-proof:</strong> when EV charging arrives, <code>Spot</code> grows one more fact &mdash; the class was the right call <em>before</em> the requirement landed.</li>
+                    </ul>
+                    <div class="comparison-grid" style="margin-top: 12px;">
+                        <div class="comparison-card before">
+                            <strong style="color: var(--accent-danger);">&#10006; <code>occupied: bool</code></strong>
+                            <p style="margin-top: 6px; font-size: 0.9rem;">Only two answers: <strong>free</strong> or <strong>taken</strong>. The admin's "mark a spot <em>out of order</em>" (oil spill, broken sensor) has nowhere to go &mdash; a bool can't say <strong>neither</strong>.</p>
+                        </div>
+                        <div class="comparison-card after">
+                            <strong style="color: var(--accent-success);">&#10004; <code>status: SpotStatus</code></strong>
+                            <p style="margin-top: 6px; font-size: 0.9rem;"><code>FREE</code> &middot; <code>OCCUPIED</code> &middot; <code>OUT_OF_ORDER</code> &mdash; three real states. The same lesson <code>GameStatus</code> taught when "draw" arrived: <strong>count the states before reaching for a bool</strong>.</p>
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.9rem;"><strong>Why not the others?</strong> A models the status but loses the size &middot; C leaks the logic to callers (a bare dataclass) &middot; D splits one spot's truth across two objects.</p>
+                </div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary);">FR-5 names the fee inputs &mdash; duration and spot size &mdash; which is already a function signature: <code>fee(size, seconds)</code>. Note what it does <em>not</em> take: the vehicle. <strong>You pay for the resource you occupied, not the vehicle you drove.</strong> The rates are tiered (first hour, then each extra hour, per size), and "the scheme can change" (FR-8) makes it a Strategy, next beat. FR-6 is a lifecycle rule on exit: free the spot, stamp the exit time &mdash; in that breath.</p>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-5/6 donate:</strong> <code>Spot</code> &#10004; class (size + <code>SpotStatus</code>; <code>is_free</code>/<code>can_fit</code>) &nbsp;&middot;&nbsp; exit lifecycle &#10004; free &rarr; stamp &rarr; settle
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-7 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;">FR-7 &mdash; <em>"The lot can report free spots per type &mdash; per floor and in total."</em></h4>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary);" data-cf-change="ch-fr7-methods">No new entity &mdash; FR-7 donates <em>query methods at two altitudes</em>. The <strong>highlighted behaviours</strong> are what become the methods on the class diagram: <strong style="color: var(--accent-primary);"><code>Floor.free_count(kind)</code></strong> (the floor answers for itself) and <strong style="color: var(--accent-primary);"><code>ParkingLot.available(kind)</code></strong> / <strong style="color: var(--accent-primary);"><code>per_floor(kind)</code></strong> (the lot sums its floors). Display boards read these; they never write. Same render/logic boundary as TTT's FR-8.</p>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-7 donates:</strong> query methods &#10004; at floor and lot altitude &nbsp;&middot;&nbsp; reads-never-write boundary &#10004; for displays
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-8 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;">FR-8 &mdash; <em>"The spot-assignment policy and the pricing scheme can each change independently."</em></h4>
+            <div class="quiz-box" id="strat-q">
+                <h4>Decision quiz &mdash; where does "which spot do I pick?" live?</h4>
+                <button class="quiz-option" onclick="checkQuiz('strat-q', this, false)">A) Inside <code>ParkingLot.park()</code> &mdash; simplest thing that works</button>
+                <button class="quiz-option" onclick="checkQuiz('strat-q', this, false)">B) On <code>Floor</code> &mdash; it knows its own free spots best</button>
+                <button class="quiz-option" onclick="checkQuiz('strat-q', this, true)">C) In a <code>ParkingStrategy</code> object injected into the lot</button>
+                <button class="quiz-option" onclick="checkQuiz('strat-q', this, false)">D) On <code>Spot</code> &mdash; each spot bids to take the vehicle</button>
+                <div class="quiz-explanation">
+                    <strong>C is right.</strong> FR-8 says it in plain words: the policy <em>changes</em> &mdash; that's the open variable, the same evidence that made WinRule a Strategy. <code>FirstFit</code> (minimise walking) vs <code>LeastCrowded</code> (spread congestion) vs tomorrow's <code>NearestToExit</code> &mdash; one new class each, zero edits to the lot. A welds today's policy into the orchestrator (the if-tree returns the day valet parking lands). B can only see ONE floor &mdash; the policy is a cross-floor decision. D inverts control for no benefit. Note the second Strategy rides the same sentence: <code>PricingStrategy</code> (TieredHourly &rarr; WeekendFlat) &mdash; a parking lot has TWO open variables from day one, and they vary <em>independently</em>, which is exactly why they're two objects, not one "ConfigStrategy".
+                </div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <div class="highlight-box success" style="padding: 12px 18px;">
+                        <strong>FR-8 donates:</strong> <code>ParkingStrategy</code> &#10004; ABC (FirstFit / LeastCrowded) &nbsp;&middot;&nbsp; <code>PricingStrategy</code> &#10004; ABC (TieredHourly / WeekendFlat) &nbsp;&middot;&nbsp; both injected &#10004; the lot never knows which
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 12px;" data-cf-change="ch-strat-diagram"><strong>What kind of strategies?</strong> <strong style="color: #6366f1;">FirstFit</strong> walks floors lowest-first and grabs the first free spot of the right size &mdash; <em>minimises walking</em> from the gate. <strong style="color: #6366f1;">LeastCrowded</strong> picks the floor with the most free spots of that size &mdash; <em>spreads cars out</em> so no single floor jams. Both implement the same <code>pick(floors, vehicle)</code>; the lot calls it blind to which is plugged in. (Pricing's pair: <strong>TieredHourly</strong> = first hour, then per-extra-hour by size &middot; <strong>WeekendFlat</strong> = one flat fee.)</p>
+                    <div class="diagram-box" style="margin-top: 10px;">
+                        <svg viewBox="0 0 720 310" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                            <!-- ParkingLot -->
+                            <rect x="288" y="16" width="144" height="46" rx="8" fill="#dcfce7" stroke="#10b981" stroke-width="2.2"/>
+                            <text x="360" y="36" text-anchor="middle" font-size="13" font-weight="700" font-family="Inter, sans-serif" fill="#047857">ParkingLot</text>
+                            <text x="360" y="52" text-anchor="middle" font-size="9" fill="#0f172a">- parking &middot; pricing</text>
+                            <!-- aggregation to ParkingStrategy -->
+                            <polygon points="322,62 330,72 322,82 314,72" fill="#ffffff" stroke="#334155" stroke-width="1.6"/>
+                            <path d="M322 82 L322 96 L150 96 L150 110" fill="none" stroke="#334155" stroke-width="1.8"/>
+                            <text x="232" y="92" font-size="9.5" font-family="Inter, sans-serif" fill="#334155">parking 1</text>
+                            <!-- aggregation to PricingStrategy -->
+                            <polygon points="398,62 406,72 398,82 390,72" fill="#ffffff" stroke="#334155" stroke-width="1.6"/>
+                            <path d="M398 82 L398 96 L570 96 L570 110" fill="none" stroke="#334155" stroke-width="1.8"/>
+                            <text x="492" y="92" font-size="9.5" font-family="Inter, sans-serif" fill="#334155">pricing 1</text>
+                            <!-- ParkingStrategy ABC -->
+                            <rect x="44" y="110" width="212" height="58" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                            <text x="150" y="127" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&laquo;abstract&raquo;</text>
+                            <text x="150" y="142" text-anchor="middle" font-size="12.5" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">ParkingStrategy</text>
+                            <line x1="56" y1="150" x2="244" y2="150" stroke="#f59e0b" stroke-width="1"/>
+                            <text x="150" y="164" text-anchor="middle" font-size="10" fill="#0f172a">+ pick(floors, vehicle)</text>
+                            <!-- PricingStrategy ABC -->
+                            <rect x="464" y="110" width="212" height="58" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                            <text x="570" y="127" text-anchor="middle" font-size="10" font-family="Inter, sans-serif" fill="#92400e">&laquo;abstract&raquo;</text>
+                            <text x="570" y="142" text-anchor="middle" font-size="12.5" font-weight="700" font-family="Inter, sans-serif" fill="#92400e">PricingStrategy</text>
+                            <line x1="476" y1="150" x2="664" y2="150" stroke="#f59e0b" stroke-width="1"/>
+                            <text x="570" y="164" text-anchor="middle" font-size="10" fill="#0f172a">+ fee(size, seconds)</text>
+                            <!-- realization triangles -->
+                            <polygon points="150,178 143,190 157,190" fill="#ffffff" stroke="#334155" stroke-width="1.6"/>
+                            <line x1="95" y1="230" x2="143" y2="190" stroke="#334155" stroke-width="1.6" stroke-dasharray="5,4"/>
+                            <line x1="207" y1="230" x2="157" y2="190" stroke="#334155" stroke-width="1.6" stroke-dasharray="5,4"/>
+                            <polygon points="570,178 563,190 577,190" fill="#ffffff" stroke="#334155" stroke-width="1.6"/>
+                            <line x1="525" y1="230" x2="563" y2="190" stroke="#334155" stroke-width="1.6" stroke-dasharray="5,4"/>
+                            <line x1="635" y1="230" x2="577" y2="190" stroke="#334155" stroke-width="1.6" stroke-dasharray="5,4"/>
+                            <!-- concretes -->
+                            <rect x="42" y="230" width="100" height="48" rx="7" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/>
+                            <text x="92" y="250" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">FirstFit</text>
+                            <text x="92" y="266" text-anchor="middle" font-size="8" fill="#475569">minimise walking</text>
+                            <rect x="152" y="230" width="116" height="48" rx="7" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/>
+                            <text x="210" y="250" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">LeastCrowded</text>
+                            <text x="210" y="266" text-anchor="middle" font-size="8" fill="#475569">spread congestion</text>
+                            <rect x="468" y="230" width="116" height="48" rx="7" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/>
+                            <text x="526" y="250" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">TieredHourly</text>
+                            <text x="526" y="266" text-anchor="middle" font-size="8" fill="#475569">per-hour, per size</text>
+                            <rect x="594" y="230" width="100" height="48" rx="7" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/>
+                            <text x="644" y="250" text-anchor="middle" font-size="11" font-weight="700" font-family="Inter, sans-serif" fill="#3730a3">WeekendFlat</text>
+                            <text x="644" y="266" text-anchor="middle" font-size="8" fill="#475569">flat promo</text>
+                            <!-- legend -->
+                            <polygon points="44,298 51,290 58,298 51,306" fill="#ffffff" stroke="#334155" stroke-width="1.3"/>
+                            <text x="66" y="301" font-size="9" font-family="Inter, sans-serif" fill="#475569">aggregation (injected, shared)</text>
+                            <polygon points="300,292 308,304 292,304" fill="#ffffff" stroke="#334155" stroke-width="1.3"/>
+                            <text x="316" y="301" font-size="9" font-family="Inter, sans-serif" fill="#475569">implements (realisation)</text>
+                        </svg>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- FR-9 -->
+            <h4 style="margin-top: 32px; margin-bottom: 8px;" data-cf-change="ch-paid-q">FR-9 &mdash; <em>"A ticket is paid exactly once, before exit &mdash; the gate opens only for a paid ticket."</em></h4>
+            <div class="quiz-box" id="paid-q">
+                <h4>Design quiz &mdash; how do you model "paid exactly once, and the gate opens only for a paid ticket"?</h4>
+                <button class="quiz-option" onclick="checkQuiz('paid-q', this, false)">A) A <code>paid: bool</code> on the Ticket &mdash; flip it in <code>pay()</code></button>
+                <button class="quiz-option" onclick="checkQuiz('paid-q', this, true)">B) A separate <code>Payment</code> record per ticket &mdash; <code>pay()</code> refuses if one exists, <code>exit()</code> refuses if none</button>
+                <button class="quiz-option" onclick="checkQuiz('paid-q', this, false)">C) Delete the ticket on payment, so it can't be paid again</button>
+                <button class="quiz-option" onclick="checkQuiz('paid-q', this, false)">D) A global set of paid ticket-ids on <code>ParkingLot</code></button>
+                <div class="quiz-explanation">
+                    <strong>B is right &mdash; the record IS the enforcement.</strong>
+                    <ul style="margin: 10px 0 0 18px; line-height: 1.7; display: grid; gap: 10px;">
+                        <li><strong>One Payment per ticket makes both rules one existence check:</strong> a Payment exists &rarr; already paid (block the second pay); none exists &rarr; unpaid (block the exit). Two rules, one query.</li>
+                        <li><strong>Not A</strong> &mdash; a bool loses the amount, method, and time, so you can't print a receipt or handle a refund. Payment is a <em>record</em> for the same reason Ticket is.</li>
+                        <li><strong>Not C</strong> &mdash; you still need the ticket at exit (which spot to free, the entry time), and deleting it throws away the audit trail.</li>
+                        <li><strong>Not D</strong> &mdash; a side set scatters one ticket's truth across two places, the same smell as splitting the Spot. Keep the fact with the entity that owns it.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128172; Reveal the discussion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <ul style="margin-left: 18px; color: var(--text-secondary); line-height: 1.75; display: grid; gap: 7px;" data-cf-change="ch-payment-bullets">
+                        <li><strong>A second record entity &mdash; <code>Payment(payment_id, ticket_id, amount, method, paid_at)</code>.</strong> Like the Ticket, it stores ids and outlives the visit (refund disputes read it).</li>
+                        <li><strong><code>PaymentMethod</code> is a small enum</strong> (cash / card / UPI) &mdash; data, not subclasses, because the methods don't <em>behave</em> differently in our scope.</li>
+                        <li><strong>The contract rules raise</strong> (the FR-4 criterion, on the throwing side): paying twice &rarr; <code>AlreadyPaidError</code>; exiting unpaid &rarr; <code>UnpaidExitError</code>.</li>
+                        <li><strong>The flow each actor sees:</strong> park &rarr; <code>amount_due()</code> on the booth display (a read) &rarr; pay &rarr; exit.</li>
+                    </ul>
+                    <div class="highlight-box success" style="padding: 12px 18px; margin-top: 10px;">
+                        <strong>FR-9 donates:</strong> <code>Payment</code> &#10004; dataclass (the second record) &nbsp;&middot;&nbsp; <code>PaymentMethod</code> &#10004; enum &nbsp;&middot;&nbsp; <code>AlreadyPaidError</code> / <code>UnpaidExitError</code> &#10004; contract violations raise
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 14px;" data-cf-change="ch-flow-reveal"><strong>The whole journey in one picture</strong> &mdash; where the Ticket is born (entry) and dies (exit), with pay &rarr; exit completing FR-9:</p>
+                    <div class="diagram-box" style="margin-top: 8px;">
+                        <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto; font-family: 'Inter', sans-serif;">
+                            <defs><marker id="pl-flow2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#a855f7"/></marker></defs>
+                            <rect x="20" y="40" width="120" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/><text x="80" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">Arrive</text><text x="80" y="78" text-anchor="middle" font-size="8.5" fill="#475569">at the gate</text>
+                            <rect x="180" y="40" width="150" height="50" rx="10" fill="#dcfce7" stroke="#10b981" stroke-width="1.8"/><text x="255" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#047857">Assign spot</text><text x="255" y="76" text-anchor="middle" font-size="8.5" fill="#047857">+ issue Ticket (entry time)</text>
+                            <rect x="370" y="40" width="120" height="50" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/><text x="430" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">Parked</text><text x="430" y="78" text-anchor="middle" font-size="8.5" fill="#3730a3">time passes&hellip;</text>
+                            <rect x="530" y="40" width="170" height="50" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.8"/><text x="615" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Pay at exit</text><text x="615" y="76" text-anchor="middle" font-size="8.5" fill="#92400e">fee = f(duration, size)</text>
+                            <rect x="370" y="150" width="170" height="50" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/><text x="455" y="170" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Free the spot</text><text x="455" y="186" text-anchor="middle" font-size="8.5" fill="#991b1b">barrier opens, drive out</text>
+                            <line x1="140" y1="65" x2="176" y2="65" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow2)"/>
+                            <line x1="330" y1="65" x2="366" y2="65" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow2)"/>
+                            <line x1="490" y1="65" x2="526" y2="65" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow2)"/>
+                            <path d="M615 90 L615 175 L544 175" fill="none" stroke="#a855f7" stroke-width="1.8" marker-end="url(#pl-flow2)"/>
+                            <path d="M255 90 L255 120 L455 120 L455 148" fill="none" stroke="#64748b" stroke-width="1.3" stroke-dasharray="5,4"/>
+                            <text x="355" y="115" text-anchor="middle" font-size="9" fill="#64748b">the Ticket lives from entry &hellip; to exit &mdash; the lot's event record</text>
+                            <line x1="255" y1="90" x2="255" y2="220" stroke="#ef4444" stroke-width="1.3" stroke-dasharray="4,4"/>
+                            <text x="262" y="216" font-size="8.5" fill="#ef4444">no free spot of that size &rarr; turned away (FR-4)</text>
+                        </svg>
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- OWNERSHIP -->
+            <h3 style="margin-top: 36px; margin-bottom: 8px;">The ownership pass &mdash; one question per pair</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 10px;">Pair names visible; click to reveal the lifetime answer.</p>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><code>ParkingLot</code> &mdash; <code>Floor</code> &nbsp;&middot;&nbsp; <code>Floor</code> &mdash; <code>Spot</code></h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 6px;"><strong>Ask:</strong> can a floor exist outside its lot? A spot outside its floor?</p>
+                    <p style="margin: 0;"><strong>No &mdash; both are Composition</strong> (filled &#9670;): a composition <em>chain</em>. Demolish the lot, the floors go; remove a floor, its spots go. Nothing shares them.</p>
+                </div></div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><code>ParkingLot</code> &mdash; <code>ParkingStrategy</code> / <code>PricingStrategy</code></h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 6px;"><strong>Ask:</strong> could two lots share one strategy instance?</p>
+                    <p style="margin: 0;"><strong>Yes &mdash; Aggregation</strong> (open &#9671;): both are stateless. A 50-lot operator hands every lot the same <code>FlatHourly()</code>. Same answer as TTT's WinRule, same reason.</p>
+                </div></div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4><code>Ticket</code> &mdash; <code>Vehicle</code> / <code>Spot</code> &nbsp;&middot;&nbsp; <code>Payment</code> &mdash; <code>Ticket</code> &nbsp;&middot;&nbsp; <code>ParkingLot</code> &mdash; <code>Vehicle</code></h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <p style="color: var(--text-secondary); margin-bottom: 6px;"><strong>Ask:</strong> does the ticket own anything? Does the lot own vehicles?</p>
+                    <p style="margin: 0;"><strong>Associations only.</strong> The ticket <em>references</em> a vehicle and a spot id; the payment references its ticket by id &mdash; one per ticket, and the pay-once rule enforces exactly that. Both records outlive the visit (billing, disputes), so ids, not live objects. Vehicles exist entirely outside the lot &mdash; the lot borrows them for a few hours. No diamonds anywhere here.</p>
+                </div></div>
+            </div>
+
+            <!-- DESIGN BOARD -->
+            <h3 style="margin-top: 36px; margin-bottom: 8px;">The completed design board</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Entity</th><th>Kind</th><th>From</th><th>One-line why</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>ParkingLot</code></td><td>class</td><td>FR-1/3/4/6</td><td>Orchestrator: park / unpark / availability; owns floors, borrows strategies.</td></tr>
+                        <tr><td><code>Floor</code></td><td>class</td><td>FR-1 + FR-7</td><td>Identity (number) + its own queries (<code>free_count</code>) &mdash; unlike TTT's rows.</td></tr>
+                        <tr><td><code>Spot</code></td><td>class</td><td>FR-2/6</td><td>Two facts (size, status) + rules (<code>is_free</code>, <code>can_fit</code>) &mdash; the Cell analogue.</td></tr>
+                        <tr><td><code>Vehicle</code></td><td>frozen dataclass</td><td>FR-2</td><td>Plate + type travel together; no behaviour.</td></tr>
+                        <tr><td><code>VehicleType</code> / <code>SpotSize</code> / <code>SpotStatus</code></td><td>enums</td><td>FR-2/6</td><td>Three small named sets; SpotStatus holds the third state (OUT_OF_ORDER) a bool can't.</td></tr>
+                        <tr><td><code>SPOT_SIZE_FOR</code></td><td>mapping</td><td>FR-2</td><td>vehicle&rarr;size policy as DATA &mdash; cross-parking rules and new vehicle types are dict edits.</td></tr>
+                        <tr><td><code>Ticket</code></td><td>dataclass</td><td>FR-3/5</td><td>The event record &mdash; fee, audit and persistence all read from it; stores ids, not live refs.</td></tr>
+                        <tr><td><code>ParkingStrategy</code></td><td>ABC</td><td>FR-8</td><td>FirstFit / LeastCrowded &mdash; the placement open variable.</td></tr>
+                        <tr><td><code>PricingStrategy</code></td><td>ABC</td><td>FR-5 + FR-8</td><td>TieredHourly / WeekendFlat &mdash; bills the spot size, not the vehicle; independent of placement.</td></tr>
+                        <tr><td><code>Payment</code> / <code>PaymentMethod</code></td><td>dataclass + enum</td><td>FR-9</td><td>The second record &mdash; one per ticket, ids not refs; method is data, not subclasses.</td></tr>
+                        <tr><td><code>park() &rarr; Ticket | None</code></td><td>signature</td><td>FR-4</td><td>Full lot = expected outcome, not a contract violation.</td></tr>
+                        <tr><td><code>InvalidTicketError</code> / <code>AlreadyPaidError</code> / <code>UnpaidExitError</code></td><td>exceptions</td><td>FR-9</td><td>Bad ticket, double payment, unpaid exit &mdash; contract violations raise (the FR-4 criterion, other side).</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="highlight-box warning" data-cf-change="ch-pl-handoff">
+                <strong>&#9999;&#65039; Today stops here &mdash; same deal as TTT.</strong> Full cast of classes, each traced to its FR, ownership answered. <strong>Draw the class diagram</strong> (arrows, diamonds, multiplicities, where a new strategy plugs in) and bring it to LLD-25 &mdash; we'll post the submission discussion before next class. Deferred to LLD-25: the reference diagram, API signatures with why-not-the-alternative, and the full implementation.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SIBLINGS ===== -->
+    <section>
+        <div class="section-container">
+            <span class="section-label blue">Same framework, different building</span>
+            <h2 class="section-title">Two structural siblings &mdash; click to compare</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4>&#128218; Library system &mdash; park/unpark wearing a cardigan</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <ul style="margin-left: 22px; color: var(--text-secondary);">
+                        <li><code>issue_book / return_book</code> &asymp; <code>park / unpark</code>: a resource is claimed, a <strong>record</strong> (BookLoan &asymp; Ticket) is written, a fee accrues with time (fine &asymp; parking fee).</li>
+                        <li>Late fines are a <code>FinePolicy</code> Strategy &mdash; the PricingStrategy seat, exactly.</li>
+                        <li>Reservations = a hold with a TTL on the resource &mdash; the same future-scope shape as parking reservations.</li>
+                        <li>The flip to notice: a Book is not consumed in place &mdash; it LEAVES the building. The "spot" (shelf slot) usually isn't modelled at all. Run the three-way test before copying the design.</li>
+                    </ul>
+                </div></div>
+            </div>
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h4 data-cf-change="ch-elevator">&#128727; Elevator system &mdash; the same parts, now in motion</h4>
+                    <span class="collapsible-arrow">&#9662;</span>
+                </div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <ul style="margin-left: 22px; color: var(--text-secondary); line-height: 1.8; display: grid; gap: 7px;">
+                        <li><strong>The same nouns map over:</strong> <code>Floor</code> &asymp; <code>Floor</code> (literally), the elevator car &asymp; the resource (the Spot's role), and a <code>Request</code> / <code>Trip</code> &asymp; <code>Ticket</code> &mdash; the record of who wants to go from where to where.</li>
+                        <li><strong>The dispatch algorithm is a Strategy</strong> &mdash; which car answers a call (nearest-car / SCAN / LOOK) swaps without touching the rest, exactly the <code>ParkingStrategy</code> seat (the assignment policy).</li>
+                        <li><strong>State machine, not a bool</strong> &mdash; a car is <code>IDLE</code> / <code>MOVING_UP</code> / <code>MOVING_DOWN</code> / <code>DOORS_OPEN</code>, and a request carries a <code>Direction</code> (UP / DOWN). Count the real states &mdash; the <code>SpotStatus</code> / <code>GameStatus</code> lesson, again.</li>
+                        <li><strong>The flip to notice:</strong> the resource <em>moves</em> and serves a queue over time &mdash; so an elevator adds a <em>scheduling</em> dimension a parking spot never has. That's why it's its own design problem &mdash; and a great one to try next.</li>
+                    </ul>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PRE-WORK ===== -->
+    <section id="next">
+        <div class="section-container">
+            <span class="section-label danger">Pre-work for LLD-25</span>
+            <h2 class="section-title">What to do before next class</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128221;</div>
+                    <div class="card-title">1. Draw the class diagram</div>
+                    <p class="card-desc">From today's design board: arrows, diamonds (the lifetime question decides every one), multiplicities.<br>Mark where <code>NearestToExit</code> and a new pricing scheme would plug in.<br>Submission discussion goes up before LLD-25.</p>
+                </div>
+                <div class="card" style="border-color: var(--accent-primary);">
+                    <div class="card-icon">&#128279;</div>
+                    <div class="card-title" data-cf-change="ch-hw-rest">2. Design the REST API endpoints</div>
+                    <p class="card-desc">Turn each actor's use cases (the diagram above) into REST endpoints &mdash; <code>METHOD /path</code> for park, due, pay, exit, availability, and the admin ops.<br>Sketch the request/response + status codes for 2&ndash;3 of them (what does "lot full" or "exit before pay" return?).<br><strong>Submit it:</strong> <a href="https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/20" target="_blank" style="color: var(--accent-primary);">Discussion #20 &mdash; design the REST API</a>.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-title">3. Think about: two gates</div>
+                    <p class="card-desc">Two entry gates call <code>park()</code> at the same instant for the LAST car spot.<br>What exactly goes wrong, line by line?<br>What's the smallest thing you'd lock &mdash; and why is "the whole lot" the wrong answer?</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127915;</div>
+                    <div class="card-title">4. Think about: monthly passes</div>
+                    <p class="card-desc">A pass-holder drives in. No per-visit payment.<br>What changes &mdash; <code>Ticket</code>, <code>PricingStrategy</code>, or something new entirely?<br>Hint: run the three-way test on "pass".</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>LLD-24: Parking Lot &mdash; Design &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p>
+    </footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleCode(header) { header.parentElement.classList.toggle('collapsed'); }
+    function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) { btn.classList.add('correct'); }
+        else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (winScroll / height * 100) + '%';
+    });
+    </script>
+</body>
+</html>
