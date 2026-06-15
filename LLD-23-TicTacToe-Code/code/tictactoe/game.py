@@ -46,7 +46,7 @@ class Game:
         player = self.current_player()
         self.board.place(row, col, player.symbol)      # validates; raises on bad move
         self.move_history.append(Move(player, row, col))
-        winning_symbol = self.rule.winner(self.board)  # win BEFORE full
+        winning_symbol = self.rule.winner(self.board, row, col)  # win BEFORE full
         if winning_symbol is not None:
             self._status = GameStatus.WON
             self._winner = next(p for p in self.players if p.symbol == winning_symbol)

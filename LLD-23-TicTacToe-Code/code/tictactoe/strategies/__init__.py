@@ -1,4 +1,5 @@
 from strategies.move_strategy import MoveStrategy, RandomMove
-from strategies.win_rule import KInARowRule, WinRule
+from strategies.win_rule import FullBoardScanRule, KInARowRule, LastMoveWinRule, WinRule
 
-__all__ = ["MoveStrategy", "RandomMove", "KInARowRule", "WinRule"]
+__all__ = ["MoveStrategy", "RandomMove", "FullBoardScanRule", "KInARowRule",
+           "LastMoveWinRule", "WinRule"]
