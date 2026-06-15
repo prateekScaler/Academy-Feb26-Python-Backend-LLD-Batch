@@ -31,6 +31,9 @@ class Board:
             raise InvalidMoveError(f"cell ({row}, {col}) is occupied")
         cell.symbol = sym
 
+    def clear_cell(self, row: int, col: int) -> None:
+        self.cell(row, col).symbol = None
+
     def is_full(self) -> bool:
         return not any(c.is_empty() for row in self._grid for c in row)
 
