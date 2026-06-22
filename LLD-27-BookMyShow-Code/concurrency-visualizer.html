@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookMyShow — Concurrency Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#f6f5fb; --card:#ffffff; --ink:#0f172a; --mut:#64748b; --line:#e6e2f3;
+         --purple:#7c3aed; --purple-soft:#ede9fe; --green:#10b981; --green-soft:#dcfce7;
+         --amber:#f59e0b; --amber-soft:#fef3c7; --red:#ef4444; --red-soft:#fee2e2;
+         --blue:#3b82f6; --blue-soft:#dbeafe; --slate:#94a3b8; --slate-soft:#f1f5f9; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; padding:28px 18px 60px; }
+  .wrap{ max-width:1080px; margin:0 auto; }
+  h1{ font-size:1.9rem; font-weight:900; background:linear-gradient(135deg,#c084fc,#7c3aed); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub{ color:var(--mut); margin:6px 0 22px; max-width:760px; }
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:22px; box-shadow:0 1px 3px rgba(80,40,120,.05); }
+  .panel h2{ font-size:1.15rem; font-weight:800; margin-bottom:4px; }
+  .panel .ph{ color:var(--mut); font-size:.9rem; margin-bottom:16px; }
+  .approaches{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .chip{ border:1.5px solid var(--line); background:#fff; border-radius:999px; padding:8px 14px; font-size:.82rem; font-weight:600; cursor:pointer; color:var(--mut); transition:.15s; font-family:inherit; }
+  .chip:hover{ border-color:var(--purple); color:var(--purple); }
+  .chip.active{ background:var(--purple); border-color:var(--purple); color:#fff; }
+  .controls{ display:flex; flex-wrap:wrap; align-items:center; gap:18px; margin-bottom:14px; }
+  .controls label{ font-size:.82rem; font-weight:600; color:var(--mut); display:flex; align-items:center; gap:8px; }
+  input[type=range]{ accent-color:var(--purple); }
+  .btn{ border:none; border-radius:10px; padding:10px 18px; font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s; }
+  .btn-primary{ background:var(--purple); color:#fff; } .btn-primary:hover{ background:#6d28d9; }
+  .btn-ghost{ background:var(--slate-soft); color:var(--ink); } .btn-ghost:hover{ background:#e2e8f0; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .explain{ background:var(--purple-soft); border-radius:10px; padding:12px 16px; font-size:.86rem; margin:14px 0; }
+  .explain b{ color:var(--purple); }
+  .stage{ display:grid; grid-template-columns:200px 1fr; gap:22px; align-items:start; margin-top:8px; }
+  @media(max-width:720px){ .stage{ grid-template-columns:1fr; } }
+  .seatwrap{ text-align:center; }
+  .seat{ width:130px; height:104px; margin:0 auto; border-radius:14px; border:3px solid var(--slate); background:var(--slate-soft); display:flex; flex-direction:column; align-items:center; justify-content:center; transition:.25s; }
+  .seat.available{ border-color:var(--green); background:var(--green-soft); }
+  .seat.locked{ border-color:var(--amber); background:var(--amber-soft); }
+  .seat.booked{ border-color:var(--red); background:var(--red-soft); }
+  .seat .id{ font-family:'Fira Code'; font-weight:700; font-size:1.2rem; }
+  .seat .st{ font-size:.72rem; font-weight:700; letter-spacing:.5px; margin-top:3px; }
+  .seat .own{ font-size:.7rem; color:var(--mut); margin-top:2px; }
+  .lockbadge{ margin-top:14px; font-size:.78rem; color:var(--mut); min-height:40px; }
+  .lockbadge .held{ display:inline-block; background:var(--amber-soft); color:#92400e; border-radius:8px; padding:4px 10px; font-weight:700; }
+  .lockbadge .q{ display:block; margin-top:5px; font-size:.72rem; }
+  .users{ display:flex; flex-wrap:wrap; gap:10px; }
+  .user{ width:128px; border:1.5px solid var(--line); border-radius:12px; padding:10px; transition:.2s; background:#fff; }
+  .user .nm{ font-weight:700; font-size:.82rem; display:flex; align-items:center; gap:6px; }
+  .user .dot{ width:9px; height:9px; border-radius:50%; background:var(--slate); }
+  .user .step{ font-size:.72rem; color:var(--mut); margin-top:5px; min-height:28px; }
+  .user.read{ border-color:var(--blue); } .user.read .dot{ background:var(--blue); }
+  .user.wait{ border-color:var(--amber); background:var(--amber-soft); } .user.wait .dot{ background:var(--amber); animation:pulse 1s infinite; }
+  .user.work{ border-color:var(--purple); } .user.work .dot{ background:var(--purple); }
+  .user.won{ border-color:var(--green); background:var(--green-soft); } .user.won .dot{ background:var(--green); }
+  .user.lost{ border-color:var(--slate); background:var(--slate-soft); opacity:.7; } .user.lost .dot{ background:var(--slate); }
+  .user.conflict{ border-color:var(--red); background:var(--red-soft); } .user.conflict .dot{ background:var(--red); }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+  .result{ margin-top:18px; padding:14px 18px; border-radius:12px; font-weight:700; font-size:.95rem; display:none; }
+  .result.ok{ background:var(--green-soft); color:#047857; display:block; }
+  .result.bad{ background:var(--red-soft); color:#b91c1c; display:block; }
+  .log{ margin-top:16px; background:#1e1e2e; color:#cbd5e1; border-radius:12px; padding:18px 22px; font-family:'Fira Code'; font-size:1rem; max-height:420px; overflow-y:auto; line-height:1.95; }
+  .log .l-won{ color:#86efac; } .log .l-bad{ color:#fca5a5; } .log .l-info{ color:#93c5fd; } .log .l-mut{ color:#64748b; }
+  table{ width:100%; border-collapse:collapse; margin-top:16px; font-size:.84rem; }
+  th,td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); }
+  th{ color:var(--mut); font-weight:700; font-size:.78rem; }
+  td .ok{ color:#047857; font-weight:700; } td .bad{ color:#b91c1c; font-weight:700; }
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; margin-top:14px; font-size:.74rem; color:var(--mut); }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .sw{ width:12px; height:12px; border-radius:3px; display:inline-block; }
+  /* soft-lock panel */
+  .softrow{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:6px; }
+  .ttlbar{ flex:1; min-width:180px; height:16px; border-radius:8px; background:var(--slate-soft); overflow:hidden; position:relative; }
+  .ttlfill{ height:100%; width:0%; background:linear-gradient(90deg,#f59e0b,#ef4444); transition:width .1s linear; }
+  .ttltext{ font-family:'Fira Code'; font-size:.78rem; color:var(--mut); min-width:130px; }
+  code{ font-family:'Fira Code'; background:var(--purple-soft); color:#5b21b6; padding:1px 5px; border-radius:4px; font-size:.85em; }
+  .be{ display:grid; gap:16px; }
+  .be h3{ font-size:1rem; font-weight:700; color:var(--purple); margin-bottom:2px; }
+  .be .tag{ font-size:.74rem; color:var(--mut); font-weight:600; }
+  pre.cb{ background:#1e1e2e; color:#e2e8f0; border-radius:10px; padding:15px 18px; font-family:'Fira Code'; font-size:.9rem; line-height:1.7; overflow-x:auto; margin-top:8px; }
+  pre.cb .c{ color:#64748b; font-style:italic; } pre.cb .k{ color:#c084fc; } pre.cb .s{ color:#86efac; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎬 BookMyShow — Concurrency Visualizer</h1>
+  <p class="sub">The same question, made visible: <b>many users race for ONE seat</b>. Pick an approach, hit Run, and watch them interleave. Correct approaches issue <b>exactly one ticket</b>; the naive one double-books. (The runnable code is <code>code/02_concurrency_demo.py</code>.)</p>
+
+  <!-- ===== RACE PANEL ===== -->
+  <div class="panel">
+    <h2>The race — pick an approach</h2>
+    <div class="ph">Each approach is the same logic from the Python tournament, animated.</div>
+
+    <div class="approaches" id="chips"></div>
+
+    <div class="controls">
+      <label>Users <input type="range" id="users" min="2" max="6" value="4"><b id="usersVal">4</b></label>
+      <label>Speed <input type="range" id="speed" min="1" max="4" value="2" step="1"></label>
+      <button class="btn btn-primary" id="runBtn" onclick="runOne()">▶ Run</button>
+      <button class="btn btn-ghost" id="allBtn" onclick="runAll()">⚔ Run all (tournament)</button>
+      <button class="btn btn-ghost" onclick="resetUI()">↺ Reset</button>
+    </div>
+
+    <div class="explain" id="explain"></div>
+
+    <div class="stage">
+      <div class="seatwrap">
+        <div class="seat available" id="seat"><div class="id">A3</div><div class="st" id="seatSt">AVAILABLE</div><div class="own" id="seatOwn">&nbsp;</div></div>
+        <div class="lockbadge" id="lock"></div>
+      </div>
+      <div>
+        <div class="users" id="users-row"></div>
+        <div class="result" id="result"></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="sw" style="background:var(--blue)"></i>reading</span>
+      <span><i class="sw" style="background:var(--amber)"></i>waiting for lock</span>
+      <span><i class="sw" style="background:var(--purple)"></i>working (unlocked)</span>
+      <span><i class="sw" style="background:var(--green)"></i>got the seat ✓</span>
+      <span><i class="sw" style="background:var(--slate)"></i>lost / backed off</span>
+      <span><i class="sw" style="background:var(--red)"></i>conflict / rejected</span>
+    </div>
+
+    <div class="log" id="log"></div>
+    <table id="board" style="display:none"><thead><tr><th>Approach</th><th>Tickets</th><th>Conflicts</th><th>Verdict</th></tr></thead><tbody id="boardBody"></tbody></table>
+  </div>
+
+  <!-- ===== SOFT LOCK PANEL ===== -->
+  <div class="panel">
+    <h2>🔒 Soft lock &amp; expiry — the hold</h2>
+    <div class="ph">A different idea from the race: a <b>soft (advisory) lock</b> — the seat is held <code>LOCKED</code> with a countdown. Pay before it runs out → BOOKED; let it expire → it frees itself and someone else can grab it. This is the hold in the real engine (<code>ShowSeat.status == LOCKED</code> + <code>locked_until</code>).</div>
+    <div class="seatwrap" style="text-align:left">
+      <div style="display:flex; gap:18px; align-items:center; flex-wrap:wrap">
+        <div class="seat available" id="seat2" style="margin:0"><div class="id">B7</div><div class="st" id="seat2St">AVAILABLE</div><div class="own" id="seat2Own">&nbsp;</div></div>
+        <div style="flex:1; min-width:240px">
+          <div class="softrow">
+            <button class="btn btn-primary" id="holdBtn" onclick="softHold()">Ananya: Hold seat (start TTL)</button>
+            <button class="btn btn-ghost" id="payBtn" onclick="softPay()" disabled>Pay → Confirm</button>
+          </div>
+          <div class="softrow" style="margin-top:10px">
+            <div class="ttlbar"><div class="ttlfill" id="ttlfill"></div></div>
+            <div class="ttltext" id="ttltext">no active hold</div>
+          </div>
+          <div class="softrow" style="margin-top:10px">
+            <button class="btn btn-ghost" id="grabBtn" onclick="softGrab()">Rahul: try to grab B7</button>
+          </div>
+        </div>
+      </div>
+      <div class="log" id="log2" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- ===== BACKEND PANEL ===== -->
+  <div class="panel" id="backend-real">
+    <h2>🔌 How each approach is really implemented on the backend</h2>
+    <div class="ph">This page <em>fakes</em> the locks with JavaScript so you can watch them. On a real backend, here's the actual thing each one maps to.</div>
+    <div class="be">
+
+      <div>
+        <h3>2 · In-process lock <span class="tag">— single server, in-memory</span></h3>
+        <pre class="cb"><span class="c"># one mutex per show, inside the app process</span>
+<span class="k">with</span> show.lock:                 <span class="c"># threading.Lock()</span>
+    <span class="k">if</span> seat.status == AVAILABLE:
+        seat.status = BOOKED
+<span class="c"># ⚠ guards THIS process only — two servers still race</span></pre>
+      </div>
+
+      <div>
+        <h3>3 · Pessimistic row lock <span class="tag">— one DB, many app servers</span></h3>
+        <pre class="cb">BEGIN;
+SELECT status FROM show_seat
+  WHERE show_id=:s AND seat_id=:n
+  FOR UPDATE;                  <span class="c">-- locks the row; others WAIT here</span>
+<span class="c">-- (status == 'AVAILABLE'?)</span>
+UPDATE show_seat SET status=<span class="s">'BOOKED'</span>
+  WHERE show_id=:s AND seat_id=:n;
+COMMIT;                        <span class="c">-- lock released; next in queue proceeds</span></pre>
+      </div>
+
+      <div>
+        <h3>4 · Optimistic concurrency <span class="tag">— no lock; conflicts rare</span></h3>
+        <pre class="cb"><span class="c">-- read first, remember the version:</span>
+SELECT status, version FROM show_seat WHERE ...;   <span class="c">-- version = 7</span>
+<span class="c">-- ...do the slow work UNLOCKED, then commit conditionally:</span>
+UPDATE show_seat
+   SET status=<span class="s">'BOOKED'</span>, version = version + 1
+ WHERE show_id=:s AND seat_id=:n
+   AND version = 7;            <span class="c">-- 0 rows updated => you lost, retry</span></pre>
+      </div>
+
+      <div>
+        <h3>5 · DB UNIQUE constraint <span class="tag">— the correctness floor, always on</span></h3>
+        <pre class="cb"><span class="c">-- once, at schema time:</span>
+ALTER TABLE booking
+  ADD CONSTRAINT uq UNIQUE (show_id, seat_id);
+<span class="c">-- per booking — the DB itself refuses the duplicate:</span>
+INSERT INTO booking(show_id, seat_id, user_id)
+  VALUES (:s, :n, :u);         <span class="c">-- 2nd insert -> IntegrityError</span></pre>
+      </div>
+
+      <div>
+        <h3>6 · Distributed (Redis) lock <span class="tag">— many services, no shared DB</span></h3>
+        <pre class="cb"><span class="c"># acquire atomically: set-if-absent + a 5-min TTL</span>
+SET lock:{show}:{seat} {token} NX EX 300
+   -> OK     <span class="c"># you hold it — go book</span>
+   -> (nil)  <span class="c"># someone else holds it — bail out</span>
+<span class="c"># release after confirm (or just let the TTL expire)</span>
+DEL lock:{show}:{seat}</pre>
+      </div>
+
+      <div>
+        <h3>🔒 The hold <span class="tag">— what BookMyShow actually ships</span></h3>
+        <pre class="cb"><span class="c"># the LOCKED status IS the hold — usually Redis-backed</span>
+HSET show:{show}:seat:{seat} status LOCKED held_by {user}
+EXPIRE show:{show}:seat:{seat} 300   <span class="c"># auto-free after 5 min</span>
+<span class="c"># paid in time -> status BOOKED + a row in `ticket`</span>
+<span class="c"># else        -> the key expires, the seat frees itself</span></pre>
+      </div>
+
+    </div>
+    <div class="explain" style="margin-top:18px;"><b>In production you stack them:</b> a <code>UNIQUE(show_id, seat_id)</code> constraint as the non-negotiable floor, a short pessimistic row lock (or Redis lock) on hot seats for a clean "seat taken", and the hold (LOCKED + TTL) for the reserve-then-pay UX. Optimistic is reserved for the cold rows where clashes are rare.</div>
+  </div>
+
+</div>
+
+<script>
+// ===== approach definitions =====
+const APPROACHES = [
+  { key:'naive', name:'Naive (no protection)', when:'never — this is the bug',
+    text:'<b>Naive.</b> Read &ldquo;is it AVAILABLE?&rdquo;, then write BOOKED — two separate steps. Everyone reads AVAILABLE before anyone writes, so <b>everyone &ldquo;wins&rdquo;</b>. The double-book.' },
+  { key:'lock', name:'In-process lock (threading.Lock)', when:'one process / single server, in-memory',
+    text:'<b>In-process lock.</b> A mutex serialises the whole check-and-set: one user at a time. Simple and correct — but only guards <b>one</b> server.' },
+  { key:'pessimistic', name:'Pessimistic row lock (SELECT … FOR UPDATE)', when:'one DB, many app servers; hot seats',
+    text:'<b>Pessimistic row lock.</b> Lock the seat&rsquo;s <i>row</i> before touching it (<code>SELECT … FOR UPDATE</code>). <b>Only one holds it at a time</b> &mdash; the rest queue and acquire it <b>one-by-one, in turn</b> (watch the &ldquo;waiting&rdquo; list); each later one finds the seat already taken and rolls back.' },
+  { key:'optimistic', name:'Optimistic concurrency (version / CAS)', when:'conflicts are rare; max throughput',
+    text:'<b>Optimistic.</b> No lock during the slow work — read a <i>version</i>, do the work, then compare-and-set. If the version moved, you lost: <b>conflict, retry/abort</b>. Great when clashes are rare; thrashes on a hot seat.' },
+  { key:'unique', name:'DB UNIQUE(show_id, seat_id)', when:'ALWAYS — the correctness floor',
+    text:'<b>UNIQUE constraint.</b> No app lock at all — the DB itself refuses the second insert of the same (show, seat). The non-negotiable floor under every other approach.' },
+  { key:'redis', name:'Distributed lock (Redis SET NX + TTL)', when:'many services, no shared DB row',
+    text:'<b>Redis lock.</b> Grab a key per seat with <code>SET NX</code> + a TTL; whoever gets it books, the rest are turned away. Coordinates many services; the TTL stops a crashed holder locking forever.' },
+];
+let current = 'lock';
+
+// ===== shared sim state =====
+let seat, lock, waiters, uniqueIdx, redis, conflicts, running=false;
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const gap = () => 850 / (+$('speed').value);
+
+function resetState(){
+  seat = { status:'AVAILABLE', owner:null, version:0 };
+  lock = { holder:null, queue:[] };
+  waiters = [];
+  uniqueIdx = new Set();
+  redis = {};
+  conflicts = 0;
+}
+function renderSeat(s, stId, ownId){
+  const el=$(s); el.className='seat '+seat.status.toLowerCase();
+  $(stId).textContent=seat.status; $(ownId).textContent = seat.owner? '👤 '+seat.owner : ' ';
+}
+function renderLock(){
+  const el=$('lock');
+  if(lock.holder===null && lock.queue.length===0){ el.innerHTML=''; return; }
+  el.innerHTML = (lock.holder? `<span class="held">🔒 held by ${lock.holder}</span>`:'')
+    + (lock.queue.length? `<span class="q">waiting: ${lock.queue.join(', ')}</span>`:'');
+}
+function log(msg, cls=''){ const l=$('log'); l.innerHTML += `<div class="${cls}">${msg}</div>`; l.scrollTop=l.scrollHeight; }
+function setUser(u, state, step){ u.el.className='user '+state; u.el.querySelector('.step').textContent=step; }
+
+// async mutex with visible queue
+async function acquire(u){
+  if(lock.holder===null){ lock.holder=u.name; renderLock(); return; }
+  lock.queue.push(u.name); renderLock();
+  await new Promise(res => waiters.push({u,res}));
+}
+function release(){
+  if(waiters.length){ const w=waiters.shift(); lock.queue=lock.queue.filter(n=>n!==w.u.name); lock.holder=w.u.name; renderLock(); w.res(); }
+  else { lock.holder=null; renderLock(); }
+}
+
+// ===== per-approach book(user) =====
+async function book(key, u){
+  if(key==='naive'){
+    setUser(u,'read','reads: AVAILABLE?'); log(`${u.name}: sees ${seat.status}`,'l-info');
+    if(seat.status!=='AVAILABLE'){ setUser(u,'lost','seat taken'); return false; }
+    await sleep(gap());
+    seat.status='BOOKED'; seat.owner=u.name; renderSeat('seat','seatSt','seatOwn');
+    setUser(u,'won','writes BOOKED ✓'); log(`${u.name}: writes BOOKED (thinks it won!)`,'l-won'); return true;
+  }
+  if(key==='lock' || key==='pessimistic'){
+    const verb = key==='pessimistic' ? 'SELECT … FOR UPDATE' : 'lock';
+    setUser(u,'wait',`waiting (${verb})`);
+    await acquire(u);
+    setUser(u,'work','its turn — holds lock'); log(`${u.name}: acquired the ${key==='pessimistic'?'row':'process'} lock — its turn (others still waiting)`,'l-info');
+    let won=false;
+    if(seat.status==='AVAILABLE'){
+      await sleep(gap());
+      seat.status='BOOKED'; seat.owner=u.name; renderSeat('seat','seatSt','seatOwn');
+      setUser(u,'won','BOOKED ✓'); log(`${u.name}: ${key==='pessimistic'?'UPDATE→BOOKED, COMMIT':'BOOKED'} ✓`,'l-won'); won=true;
+    } else { setUser(u,'lost','already BOOKED'); log(`${u.name}: already BOOKED → ${key==='pessimistic'?'rollback':'backs off'}`,'l-mut'); conflicts++; }
+    release(); return won;
+  }
+  if(key==='optimistic'){
+    const seen=seat.version;
+    if(seat.status!=='AVAILABLE'){ setUser(u,'lost','seat taken'); return false; }
+    setUser(u,'work',`read v${seen}, working unlocked…`); log(`${u.name}: read version=${seen}, working unlocked…`,'l-info');
+    await sleep(gap());
+    if(seat.version===seen && seat.status==='AVAILABLE'){
+      seat.status='BOOKED'; seat.owner=u.name; seat.version++; renderSeat('seat','seatSt','seatOwn');
+      setUser(u,'won',`CAS v${seen}→v${seen+1} ✓`); log(`${u.name}: CAS ok (v${seen}→v${seen+1}) BOOKED ✓`,'l-won'); return true;
+    }
+    conflicts++; setUser(u,'conflict','version moved → conflict'); log(`${u.name}: version moved under me → conflict, abort ✗`,'l-bad'); return false;
+  }
+  if(key==='unique'){
+    setUser(u,'work','prepared row, working…'); log(`${u.name}: prepared the row, working unlocked…`,'l-info');
+    await sleep(gap());
+    if(uniqueIdx.has('A3')){ conflicts++; setUser(u,'conflict','UNIQUE violation'); log(`${u.name}: INSERT → UNIQUE violation, rejected ✗`,'l-bad'); return false; }
+    uniqueIdx.add('A3'); seat.status='BOOKED'; seat.owner=u.name; renderSeat('seat','seatSt','seatOwn');
+    setUser(u,'won','INSERT ok ✓'); log(`${u.name}: INSERT ok (DB enforced UNIQUE) ✓`,'l-won'); return true;
+  }
+  if(key==='redis'){
+    if(redis['A3']){ conflicts++; setUser(u,'lost','no lock → abort'); log(`${u.name}: couldn't get the distributed lock ✗`,'l-mut'); return false; }
+    redis['A3']=true; setUser(u,'work','holds redis lock (TTL)'); log(`${u.name}: holds the redis lock`,'l-info');
+    await sleep(gap());
+    let won=false;
+    if(seat.status==='AVAILABLE'){ seat.status='BOOKED'; seat.owner=u.name; renderSeat('seat','seatSt','seatOwn'); setUser(u,'won','BOOKED ✓'); log(`${u.name}: BOOKED ✓`,'l-won'); won=true; }
+    delete redis['A3']; return won;
+  }
+}
+
+// ===== run harness =====
+function buildUsers(n){
+  const row=$('users-row'); row.innerHTML='';
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div'); el.className='user';
+    el.innerHTML=`<div class="nm"><span class="dot"></span>user${i+1}</div><div class="step">idle</div>`;
+    row.appendChild(el); arr.push({ name:`user${i+1}`, el });
+  }
+  return arr;
+}
+function showResult(winners){
+  const r=$('result'), ok=winners.length===1;
+  r.className='result '+(ok?'ok':'bad');
+  r.textContent = ok ? `✅ Correct — exactly one ticket issued (to ${winners[0]}). Conflicts: ${conflicts}.`
+                     : `❌ DOUBLE-BOOK — ${winners.length} tickets issued for one seat! (${winners.join(', ')})`;
+}
+async function runRace(key){
+  resetState(); renderSeat('seat','seatSt','seatOwn'); renderLock();
+  $('result').className='result';
+  const users = buildUsers(+$('users').value);
+  const winners=[];
+  await Promise.all(users.map(async u=>{ if(await book(key,u)) winners.push(u.name); }));
+  showResult(winners);
+  return { name:APPROACHES.find(a=>a.key===key).name, winners:winners.length, conflicts };
+}
+async function runOne(){
+  if(running) return; running=true; toggleBtns(true);
+  $('board').style.display='none'; $('log').innerHTML='';
+  log(`▶ ${APPROACHES.find(a=>a.key===current).name} — ${+$('users').value} users, one seat`,'l-info');
+  await runRace(current);
+  running=false; toggleBtns(false);
+}
+async function runAll(){
+  if(running) return; running=true; toggleBtns(true);
+  $('log').innerHTML=''; $('boardBody').innerHTML=''; $('board').style.display='';
+  const rows=[];
+  for(const a of APPROACHES){
+    setCurrent(a.key);
+    log(`⚔ ${a.name}`,'l-info');
+    const r = await runRace(a.key);
+    const ok = r.winners===1;
+    $('boardBody').insertAdjacentHTML('beforeend',
+      `<tr><td>${r.name}</td><td>${r.winners}</td><td>${r.conflicts}</td><td>${ok?'<span class="ok">✅ one wins</span>':'<span class="bad">❌ double-book</span>'}</td></tr>`);
+    rows.push(r); await sleep(700);
+  }
+  running=false; toggleBtns(false);
+}
+function toggleBtns(on){ $('runBtn').disabled=on; $('allBtn').disabled=on; }
+
+// ===== chips / selection =====
+function setCurrent(key){
+  current=key;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.key===key));
+  $('explain').innerHTML = APPROACHES.find(a=>a.key===key).text + ` &nbsp;·&nbsp; <i>best when: ${APPROACHES.find(a=>a.key===key).when}</i>`;
+}
+function resetUI(){
+  if(running) return;
+  resetState(); renderSeat('seat','seatSt','seatOwn'); renderLock();
+  $('log').innerHTML=''; $('result').className='result'; $('board').style.display='none';
+  buildUsers(+$('users').value);
+}
+(function init(){
+  const c=$('chips');
+  APPROACHES.forEach(a=>{
+    const b=document.createElement('button'); b.className='chip'; b.dataset.key=a.key; b.textContent=a.name.split(' (')[0];
+    b.onclick=()=>{ if(!running) setCurrent(a.key); }; c.appendChild(b);
+  });
+  $('users').oninput=()=>{ $('usersVal').textContent=$('users').value; if(!running) buildUsers(+$('users').value); };
+  setCurrent('lock'); buildUsers(4);
+})();
+
+// ===== SOFT LOCK panel =====
+const HOLD_SECONDS = 8;   // scaled-down stand-in for the real 5-minute TTL
+let soft = { status:'AVAILABLE', owner:null, timer:null, remaining:0 };
+function renderSeat2(){ const el=$('seat2'); el.className='seat '+soft.status.toLowerCase(); $('seat2St').textContent=soft.status; $('seat2Own').textContent=soft.owner?'👤 '+soft.owner:' '; }
+function log2(msg,cls=''){ const l=$('log2'); l.innerHTML+=`<div class="${cls}">${msg}</div>`; l.scrollTop=l.scrollHeight; }
+function stopTimer(){ if(soft.timer){ clearInterval(soft.timer); soft.timer=null; } }
+function setTtl(pct,text){ $('ttlfill').style.width=pct+'%'; $('ttltext').textContent=text; }
+function softHold(){
+  if(soft.status!=='AVAILABLE'){ log2(`✗ can't hold — B7 is ${soft.status}`,'l-bad'); return; }
+  soft.status='LOCKED'; soft.owner='Ananya'; soft.remaining=HOLD_SECONDS; renderSeat2();
+  $('payBtn').disabled=false; $('holdBtn').disabled=true;
+  log2(`Ananya: HOLD B7 → LOCKED, expires in ${HOLD_SECONDS}s (soft lock)`,'l-info');
+  stopTimer();
+  soft.timer=setInterval(()=>{
+    soft.remaining-=0.1;
+    const pct=Math.max(0, soft.remaining/HOLD_SECONDS*100);
+    setTtl(pct, `LOCKED — ${soft.remaining.toFixed(1)}s left`);
+    if(soft.remaining<=0){
+      stopTimer(); soft.status='AVAILABLE'; soft.owner=null; renderSeat2();
+      setTtl(0,'hold expired — seat freed'); $('payBtn').disabled=true; $('holdBtn').disabled=false;
+      log2('⏱ TTL lapsed → hold EXPIRED, B7 is AVAILABLE again (lazy expiry)','l-bad');
+    }
+  },100);
+}
+function softPay(){
+  if(soft.status!=='LOCKED'){ return; }
+  stopTimer(); soft.status='BOOKED'; renderSeat2();
+  setTtl(100,'paid in time → BOOKED'); $('payBtn').disabled=true; $('holdBtn').disabled=true;
+  log2('Ananya: paid within the window → CONFIRMED, B7 is BOOKED ✓','l-won');
+}
+function softGrab(){
+  if(soft.status==='AVAILABLE'){
+    soft.status='BOOKED'; soft.owner='Rahul'; renderSeat2(); $('payBtn').disabled=true; $('holdBtn').disabled=true;
+    log2('Rahul: grabbed B7 → BOOKED ✓ (it was free)','l-won');
+  } else if(soft.status==='LOCKED'){
+    log2(`Rahul: ✗ blocked — B7 is held by ${soft.owner}, ${soft.remaining.toFixed(1)}s left on the hold`,'l-bad');
+  } else {
+    log2(`Rahul: ✗ B7 already BOOKED by ${soft.owner||'someone'}`,'l-bad');
+  }
+}
+renderSeat2();
+</script>
+</body>
+</html>

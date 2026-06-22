@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLD-27: BookMyShow &mdash; Code (Part 2)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --bg-card: #1a1a2e; --accent-primary: #a855f7; --accent-secondary: #7c3aed; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --bg-card: #ffffff; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #c084fc, #a855f7); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #c084fc; }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.82rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 760px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(168, 85, 247, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #c084fc, #a855f7, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 740px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #c084fc; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px 22px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; margin-top: 26px; }
+        .card-icon { font-size: 1.8rem; margin-bottom: 10px; }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65; }
+        .card-desc strong { color: var(--text-primary); }
+        .highlight-box { background: rgba(168, 85, 247, 0.08); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger  { background: rgba(239, 68, 68, 0.1);  border-color: var(--accent-danger);  }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .highlight-box.info    { background: rgba(59, 130, 246, 0.08); border-color: var(--accent-blue);   }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 18px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after  { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .comparison-card pre, pre.code { font-family: 'Fira Code', monospace; font-size: 0.8rem; line-height: 1.55; overflow-x: auto; margin-top: 8px; background: #1e1e2e; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; }
+        pre.code .kw { color: #c084fc; } pre.code .st { color: #86efac; } pre.code .cm { color: #64748b; font-style: italic; } pre.code .fn { color: #60a5fa; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.86rem; }
+        tr:last-child td { border-bottom: none; }
+        code { font-family: 'Fira Code', monospace; background: rgba(168, 85, 247, 0.12); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 24px; margin: 24px 0; }
+        .quiz-box h4 { margin-bottom: 14px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(168, 85, 247, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(168, 85, 247, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; margin: 20px 0; overflow-x: auto; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+        .collapsible-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { font-size: 1rem; margin: 0; font-weight: 600; }
+        .collapsible-arrow { transition: transform 0.3s; color: var(--text-muted); flex-shrink: 0; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 5000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        ul, ol { margin-left: 22px; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        #diagram .section-container, #ddia .section-container { max-width: 1400px; }
+        #diagram, #ddia { padding-left: 26px; padding-right: 26px; }
+        .diagram-box svg text.rl { paint-order: stroke; stroke: var(--bg-secondary); stroke-width: 4px; stroke-linejoin: round; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav">
+        <div class="nav-brand">LLD-27: BookMyShow Code</div>
+        <ul class="nav-links">
+            <li><a href="#diagram">Diagram</a></li>
+            <li><a href="#apis">REST APIs</a></li>
+            <li><a href="#concurrency">Concurrency</a></li>
+            <li><a href="#locks">Opt vs Pess</a></li>
+            <li><a href="#state">State</a></li>
+            <li><a href="#ddia">Txns (DDIA)</a></li>
+            <li><a href="#build">Build</a></li>
+            <li><a href="#backend">Backend</a></li>
+            <li><a href="#tradeoffs">Trade-offs</a></li>
+        </ul>
+        <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-icon">&#127916;</div>
+        <h1>BookMyShow &mdash; Code (Part 2)</h1>
+        <p class="hero-meta">LLD-27 &bull; the promise from LLD-26, delivered</p>
+        <p class="hero-tagline">We designed this in LLD-26 and left one promise: <em>&ldquo;there are several ways to keep two users off the same seat &mdash; we'll compare them and build the best.&rdquo;</em> Today we keep it. We build the model (<strong>ShowSeat</strong>, the <code>HOLD &rarr; pay &rarr; CONFIRM</code> flow), make &ldquo;claim a seat&rdquo; atomic with a <strong>per-show lock</strong>, and <strong>prove the winner</strong>: the same race double-books under a naive locker and books exactly once under the lock.</p>
+    </section>
+
+    <!-- ===== STRUCTURE ===== -->
+    <section id="structure">
+        <div class="section-container">
+            <span class="section-label">The folder tree IS the architecture</span>
+            <h2 class="section-title">Two shapes, one engine</h2>
+            <p class="section-subtitle">A single scroll to read top-to-bottom, and the layered package whose folders are the backend layers. The concurrency approach is a <strong>strategy</strong>, so comparing approaches is real code, not just talk.</p>
+            <pre class="code"><span class="cm"># code/01_bookmyshow.py       — the whole engine in one file (all demos assert green)</span>
+<span class="cm"># code/02_concurrency_demo.py — the concurrency tournament (every approach, runnable live)</span>
+
+bookmyshow/
+&#9500;&#9472; enums.py &middot; exceptions.py &middot; config.py   <span class="cm"># vocabulary + policy-as-data (BASE_PRICE, TTLs)</span>
+&#9500;&#9472; models/        <span class="cm">── DOMAIN ──   seat · movie · screen · show_seat · show · user · ticket · payment · hold</span>
+&#9500;&#9472; strategies/    <span class="cm">── OPEN VARIABLES ──   pricing (FR-5) · locking (the SeatLocker — compare approaches)</span>
+&#9500;&#9472; repositories/  <span class="cm">── REPOSITORY (storage seam) ──   ticket · payment</span>
+&#9500;&#9472; service.py     <span class="cm">── SERVICE ──   BookingService (the concurrency invariant + orchestration)</span>
+&#9500;&#9472; console.py     <span class="cm"># the ask toolkit, carried over from earlier classes</span>
+&#9500;&#9472; cli.py         <span class="cm">── CONTROLLER ──   render seat map → call service → format</span>
+&#9492;&#9472; main.py        <span class="cm"># entry — `python3 main.py` (acceptance) · `python3 main.py play`</span></pre>
+            <div class="highlight-box info"><strong>The model from LLD-26, in code:</strong> <code>Seat</code> is physical (GOLD/DIAMOND/PLATINUM); <code>ShowSeat</code> is the per-show pairing carrying <code>status</code> (AVAILABLE/LOCKED/BOOKED) + <code>price</code>. There is <strong>no SeatLock entity</strong> &mdash; the hold is just <code>ShowSeat.status == LOCKED</code>. The durable record is the <code>Ticket</code>.</div>
+        </div>
+    </section>
+
+    <!-- ===== CLASS DIAGRAM ===== -->
+    <section id="diagram">
+        <div class="section-container">
+            <span class="section-label success">Step 4 &mdash; the complete class diagram</span>
+            <h2 class="section-title">The diagram we left as homework &mdash; completed</h2>
+            <p class="section-subtitle">In LLD-26 you drew the boxes; coding it <em>fills in the methods</em>. Here is the whole model &mdash; <code>City &rarr; Cinema &rarr; Screen &rarr; Seat</code>, the <span style="color: var(--accent-primary); font-weight: 700;">ShowSeat</span> association class, the records, and the four enums &mdash; with the methods the code gave each one.</p>
+            <div class="diagram-box" data-cf-change="ch-diagram-roomier">
+                <svg viewBox="0 0 1340 990" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <defs><marker id="cm" markerWidth="11" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3 L0,6" fill="none" stroke="#334155" stroke-width="1.3"/></marker></defs>
+                    <polygon points="190.0,172 199.0,182 190.0,192 181.0,182" fill="#334155" stroke="#334155" stroke-width="1.5"/><line x1="190.0" y1="192" x2="190.0" y2="220" stroke="#334155" stroke-width="1.8"/><text class="rl" x="220" y="187" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">*</text><polygon points="190.0,386 199.0,396 190.0,406 181.0,396" fill="#334155" stroke="#334155" stroke-width="1.5"/><line x1="190.0" y1="406" x2="190.0" y2="434" stroke="#334155" stroke-width="1.8"/><text class="rl" x="220" y="401" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">*</text><polygon points="190.0,552 199.0,562 190.0,572 181.0,562" fill="#334155" stroke="#334155" stroke-width="1.5"/><line x1="190.0" y1="572" x2="190.0" y2="600" stroke="#334155" stroke-width="1.8"/><text class="rl" x="220" y="567" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">*</text><line x1="190.0" y1="698" x2="190.0" y2="746" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><polygon points="730.0,152 739.0,162 730.0,172 721.0,162" fill="#ffffff" stroke="#334155" stroke-width="1.5"/><line x1="730.0" y1="172" x2="730.0" y2="200" stroke="#334155" stroke-width="1.8"/><text class="rl" x="760" y="167" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">plays *</text><polygon points="730.0,342 739.0,352 730.0,362 721.0,352" fill="#334155" stroke="#334155" stroke-width="1.5"/><line x1="730.0" y1="362" x2="730.0" y2="390" stroke="#334155" stroke-width="1.8"/><text class="rl" x="760" y="357" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">owns *</text><line x1="730.0" y1="548" x2="730.0" y2="596" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><line x1="560" y1="469" x2="340" y2="649" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text class="rl" x="450" y="550" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">is a seat</text><line x1="560" y1="250" x2="340" y2="493" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text class="rl" x="450" y="362" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">on screen</text><line x1="1000" y1="341" x2="900" y2="257" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text class="rl" x="950" y="290" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">for</text><line x1="1000" y1="381" x2="900" y2="453" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text class="rl" x="950" y="408" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">includes 1+</text><polygon points="1150.0,220 1159.0,230 1150.0,240 1141.0,230" fill="#334155" stroke="#334155" stroke-width="1.5"/><line x1="1150.0" y1="240" x2="1150.0" y2="268" stroke="#334155" stroke-width="1.8"/><text class="rl" x="1180" y="235" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">books *</text><polygon points="1150.0,450 1159.0,460 1150.0,470 1141.0,460" fill="#334155" stroke="#334155" stroke-width="1.5"/><line x1="1150.0" y1="470" x2="1150.0" y2="498" stroke="#334155" stroke-width="1.8"/><text class="rl" x="1180" y="465" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">1:1</text>
+                    
+                    <rect x="40" y="54" width="300" height="118" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="190" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">City</text>
+                    <line x1="40" y1="92" x2="340" y2="92" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="116" font-size="12.5" fill="#0f172a">- name · cinemas[]</text>
+                    <line x1="40" y1="128" x2="340" y2="128" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="152" font-size="12.5" fill="#0f172a">+ add_cinema()</text>
+                    <rect x="40" y="220" width="300" height="166" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="190" y="246" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Cinema <tspan font-size="10" font-style="italic" fill="#475569">«Theatre»</tspan></text>
+                    <line x1="40" y1="258" x2="340" y2="258" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="282" font-size="12.5" fill="#0f172a">- name · address</text>
+                    <text x="56" y="306" font-size="12.5" fill="#0f172a">- screens[] · shows[]</text>
+                    <line x1="40" y1="318" x2="340" y2="318" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="342" font-size="12.5" fill="#0f172a">+ add_screen()</text>
+                    <text x="56" y="366" font-size="12.5" fill="#0f172a">+ add_show()</text>
+                    <rect x="40" y="434" width="300" height="118" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="190" y="460" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Screen</text>
+                    <line x1="40" y1="472" x2="340" y2="472" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="496" font-size="12.5" fill="#0f172a">- name · seats[]</text>
+                    <line x1="40" y1="508" x2="340" y2="508" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="532" font-size="12.5" fill="#0f172a">+ get_seats()</text>
+                    <rect x="40" y="600" width="300" height="98" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="190" y="626" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Seat</text>
+                    <text x="190" y="642" text-anchor="middle" font-size="10.5" font-style="italic" fill="#3730a3">«value»</text>
+                    <line x1="40" y1="654" x2="340" y2="654" stroke="#6366f1" stroke-width="1"/>
+                    <text x="56" y="678" font-size="12.5" fill="#0f172a">- seat_id · type</text>
+                    <rect x="40" y="746" width="300" height="130" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.0"/>
+                    <text x="190" y="772" text-anchor="middle" font-size="16" font-weight="700" fill="#92400e">«enum» SeatType</text>
+                    <line x1="40" y1="784" x2="340" y2="784" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="56" y="808" font-size="12.5" fill="#0f172a">GOLD</text>
+                    <text x="56" y="832" font-size="12.5" fill="#0f172a">DIAMOND</text>
+                    <text x="56" y="856" font-size="12.5" fill="#0f172a">PLATINUM</text>
+                    <rect x="560" y="54" width="340" height="98" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="730" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Movie</text>
+                    <text x="730" y="96" text-anchor="middle" font-size="10.5" font-style="italic" fill="#3730a3">«value»</text>
+                    <line x1="560" y1="108" x2="900" y2="108" stroke="#6366f1" stroke-width="1"/>
+                    <text x="576" y="132" font-size="12.5" fill="#0f172a">- title · language · rating</text>
+                    <rect x="560" y="200" width="340" height="142" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="730" y="226" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Show</text>
+                    <line x1="560" y1="238" x2="900" y2="238" stroke="#6366f1" stroke-width="1"/>
+                    <text x="576" y="262" font-size="12.5" fill="#0f172a">- movie · screen · start_time</text>
+                    <text x="576" y="286" font-size="12.5" fill="#0f172a">- show_seats:{id→ShowSeat} · lock</text>
+                    <line x1="560" y1="298" x2="900" y2="298" stroke="#6366f1" stroke-width="1"/>
+                    <text x="576" y="322" font-size="12.5" fill="#0f172a">+ show_seat(id)</text>
+                    <rect x="560" y="390" width="340" height="158" rx="10" fill="#ede9fe" stroke="#a855f7" stroke-width="2.8"/>
+                    <text x="730" y="416" text-anchor="middle" font-size="16" font-weight="700" fill="#7c3aed">ShowSeat</text>
+                    <text x="730" y="432" text-anchor="middle" font-size="10.5" font-style="italic" fill="#7c3aed">(seat × show) — the hold lives here</text>
+                    <line x1="560" y1="444" x2="900" y2="444" stroke="#a855f7" stroke-width="1"/>
+                    <text x="576" y="468" font-size="12.5" fill="#0f172a">- seat · price · status</text>
+                    <text x="576" y="492" font-size="12.5" fill="#0f172a">- locked_until · held_by</text>
+                    <line x1="560" y1="504" x2="900" y2="504" stroke="#a855f7" stroke-width="1"/>
+                    <text x="576" y="528" font-size="12.5" fill="#0f172a">+ is_lock_expired(now)</text>
+                    <rect x="560" y="596" width="340" height="106" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.0"/>
+                    <text x="730" y="622" text-anchor="middle" font-size="16" font-weight="700" fill="#92400e">«enum» SeatStatus</text>
+                    <line x1="560" y1="634" x2="900" y2="634" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="576" y="658" font-size="12.5" fill="#0f172a">AVAILABLE · LOCKED · BOOKED</text>
+                    <text x="576" y="682" font-size="12.5" fill="#0f172a">LOCKED = the soft-lock hold</text>
+                    <rect x="1000" y="54" width="300" height="166" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="1150" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">User</text>
+                    <line x1="1000" y1="92" x2="1300" y2="92" stroke="#6366f1" stroke-width="1"/>
+                    <text x="1016" y="116" font-size="12.5" fill="#0f172a">- name · email · phone</text>
+                    <text x="1016" y="140" font-size="12.5" fill="#0f172a">- tickets[]</text>
+                    <line x1="1000" y1="152" x2="1300" y2="152" stroke="#6366f1" stroke-width="1"/>
+                    <text x="1016" y="176" font-size="12.5" fill="#0f172a">+ book_ticket()</text>
+                    <text x="1016" y="200" font-size="12.5" fill="#0f172a">+ cancel_ticket()</text>
+                    <rect x="1000" y="268" width="300" height="182" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="1150" y="294" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Ticket</text>
+                    <text x="1150" y="310" text-anchor="middle" font-size="10.5" font-style="italic" fill="#3730a3">the durable record</text>
+                    <line x1="1000" y1="322" x2="1300" y2="322" stroke="#6366f1" stroke-width="1"/>
+                    <text x="1016" y="346" font-size="12.5" fill="#0f172a">- show_id · seat_ids · user</text>
+                    <text x="1016" y="370" font-size="12.5" fill="#0f172a">- amount · status</text>
+                    <line x1="1000" y1="382" x2="1300" y2="382" stroke="#6366f1" stroke-width="1"/>
+                    <text x="1016" y="406" font-size="12.5" fill="#0f172a">+ calculate_amount()</text>
+                    <text x="1016" y="430" font-size="12.5" fill="#0f172a">+ cancel()</text>
+                    <rect x="1000" y="498" width="300" height="122" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="1150" y="524" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Payment</text>
+                    <text x="1150" y="540" text-anchor="middle" font-size="10.5" font-style="italic" fill="#3730a3">«value»</text>
+                    <line x1="1000" y1="552" x2="1300" y2="552" stroke="#6366f1" stroke-width="1"/>
+                    <text x="1016" y="576" font-size="12.5" fill="#0f172a">- ticket_id · amount</text>
+                    <text x="1016" y="600" font-size="12.5" fill="#0f172a">- mode · paid_at</text>
+                    <rect x="1000" y="668" width="300" height="82" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.0"/>
+                    <text x="1150" y="694" text-anchor="middle" font-size="16" font-weight="700" fill="#92400e">«enum» TicketStatus</text>
+                    <line x1="1000" y1="706" x2="1300" y2="706" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="1016" y="730" font-size="12.5" fill="#0f172a">CONFIRMED · CANCELLED</text>
+                    <rect x="1000" y="798" width="300" height="106" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.0"/>
+                    <text x="1150" y="824" text-anchor="middle" font-size="16" font-weight="700" fill="#92400e">«enum» PaymentMode</text>
+                    <line x1="1000" y1="836" x2="1300" y2="836" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="1016" y="860" font-size="12.5" fill="#0f172a">UPI · CREDIT_CARD</text>
+                    <text x="1016" y="884" font-size="12.5" fill="#0f172a">NETBANKING</text>
+                    <line x1="40" y1="948" x2="1300" y2="948" stroke="#cbd5e1" stroke-width="1"/>
+                    <polygon points="56,969 65,960 74,969 65,978" fill="#334155"/><text x="84" y="973" font-size="11" font-family="Inter,sans-serif" fill="#475569">composition</text>
+                    <polygon points="240,969 249,960 258,969 249,978" fill="#fff" stroke="#334155" stroke-width="1.4"/><text x="268" y="973" font-size="11" font-family="Inter,sans-serif" fill="#475569">aggregation</text>
+                    <line x1="430" y1="969" x2="466" y2="969" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text x="474" y="973" font-size="11" font-family="Inter,sans-serif" fill="#475569">references / uses</text>
+                    <text x="720" y="973" font-size="10.5" font-style="italic" font-family="Inter,sans-serif" fill="#7c3aed">ShowSeat = the (seat × show) association class</text>
+                </svg>
+            </div>
+
+            <h3 style="margin-top: 28px; margin-bottom: 8px;" data-cf-change="ch-runtime-roomier">How it's wired at runtime</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 6px;">The orchestrator depends on <em>seams</em>: the <span style="color: var(--accent-primary); font-weight: 700;">SeatLocker</span> (the concurrency approach) and the <span style="color: var(--accent-warning); font-weight: 700;">PricingStrategy</span> are injected, so each is swappable.</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 1280 766" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <defs><marker id="cm" markerWidth="11" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3 L0,6" fill="none" stroke="#334155" stroke-width="1.3"/></marker></defs>
+                    <polygon points="830,94 841,88 852,94 841,100" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="830" y1="94" x2="950" y2="109" stroke="#334155" stroke-width="1.8"/><text class="rl" x="898" y="92" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">guards with</text><polygon points="830,234 841,228 852,234 841,240" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="830" y1="234" x2="950" y2="379" stroke="#334155" stroke-width="1.8"/><text class="rl" x="898" y="298" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">prices with</text><polygon points="450,94 439,88 428,94 439,100" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="450" y1="94" x2="330" y2="125" stroke="#334155" stroke-width="1.8"/><text class="rl" x="384" y="100" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">saves via</text><polygon points="640.0,268 649.0,278 640.0,288 631.0,278" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="640.0" y1="288" x2="640.0" y2="324" stroke="#334155" stroke-width="1.8"/><text class="rl" x="670" y="283" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">orchestrates</text><polygon points="640.0,466 649.0,476 640.0,486 631.0,476" fill="#334155"/><line x1="640.0" y1="486" x2="640.0" y2="522" stroke="#334155" stroke-width="1.8"/><text class="rl" x="670" y="481" text-anchor="start" font-size="11" font-family="Inter,sans-serif" fill="#475569">owns *</text><line x1="450" y1="601" x2="330" y2="499" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text class="rl" x="390" y="541" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="#475569">is a seat</text><line x1="1021.0" y1="214" x2="1021.0" y2="164" stroke="#334155" stroke-width="1.5"/><polygon points="1014.0,164 1028.0,164 1021.0,153" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="1179.0" y1="214" x2="1179.0" y2="164" stroke="#334155" stroke-width="1.5"/><polygon points="1172.0,164 1186.0,164 1179.0,153" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="1021.0" y1="484" x2="1021.0" y2="434" stroke="#334155" stroke-width="1.5"/><polygon points="1014.0,434 1028.0,434 1021.0,423" fill="#fff" stroke="#334155" stroke-width="1.4"/><line x1="1179.0" y1="484" x2="1179.0" y2="434" stroke="#334155" stroke-width="1.5"/><polygon points="1172.0,434 1186.0,434 1179.0,423" fill="#fff" stroke="#334155" stroke-width="1.4"/>
+                    <rect x="450" y="54" width="380" height="214" rx="10" fill="#dcfce7" stroke="#10b981" stroke-width="2.0"/>
+                    <text x="640" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#047857">BookingService</text>
+                    <line x1="450" y1="92" x2="830" y2="92" stroke="#10b981" stroke-width="1"/>
+                    <text x="466" y="116" font-size="12.5" fill="#0f172a">- locker · pricing  (injected)</text>
+                    <text x="466" y="140" font-size="12.5" fill="#0f172a">- tickets · payments  (repos)</text>
+                    <line x1="450" y1="152" x2="830" y2="152" stroke="#10b981" stroke-width="1"/>
+                    <text x="466" y="176" font-size="12.5" fill="#0f172a">+ create_show()</text>
+                    <text x="466" y="200" font-size="12.5" fill="#0f172a">+ hold() / amount_due()</text>
+                    <text x="466" y="224" font-size="12.5" fill="#0f172a">+ confirm() / cancel()</text>
+                    <text x="466" y="248" font-size="12.5" fill="#0f172a">+ available_seats()</text>
+                    <rect x="450" y="324" width="380" height="142" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="640" y="350" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Show</text>
+                    <line x1="450" y1="362" x2="830" y2="362" stroke="#6366f1" stroke-width="1"/>
+                    <text x="466" y="386" font-size="12.5" fill="#0f172a">- movie · screen · start_time</text>
+                    <text x="466" y="410" font-size="12.5" fill="#0f172a">- show_seats · lock</text>
+                    <line x1="450" y1="422" x2="830" y2="422" stroke="#6366f1" stroke-width="1"/>
+                    <text x="466" y="446" font-size="12.5" fill="#0f172a">+ show_seat(id)</text>
+                    <rect x="450" y="522" width="380" height="158" rx="10" fill="#ede9fe" stroke="#a855f7" stroke-width="2.8"/>
+                    <text x="640" y="548" text-anchor="middle" font-size="16" font-weight="700" fill="#7c3aed">ShowSeat</text>
+                    <text x="640" y="564" text-anchor="middle" font-size="10.5" font-style="italic" fill="#7c3aed">(seat × show) — the hold</text>
+                    <line x1="450" y1="576" x2="830" y2="576" stroke="#a855f7" stroke-width="1"/>
+                    <text x="466" y="600" font-size="12.5" fill="#0f172a">- seat · price · status</text>
+                    <text x="466" y="624" font-size="12.5" fill="#0f172a">- locked_until · held_by</text>
+                    <line x1="450" y1="636" x2="830" y2="636" stroke="#a855f7" stroke-width="1"/>
+                    <text x="466" y="660" font-size="12.5" fill="#0f172a">+ is_lock_expired(now)</text>
+                    <rect x="30" y="54" width="300" height="142" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="180" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">TicketRepository</text>
+                    <line x1="30" y1="92" x2="330" y2="92" stroke="#6366f1" stroke-width="1"/>
+                    <text x="46" y="116" font-size="12.5" fill="#0f172a">«storage seam»</text>
+                    <line x1="30" y1="128" x2="330" y2="128" stroke="#6366f1" stroke-width="1"/>
+                    <text x="46" y="152" font-size="12.5" fill="#0f172a">+ save() / find()</text>
+                    <text x="46" y="176" font-size="12.5" fill="#0f172a">+ exists() / next_id()</text>
+                    <rect x="30" y="252" width="300" height="142" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="180" y="278" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">PaymentRepository</text>
+                    <line x1="30" y1="290" x2="330" y2="290" stroke="#6366f1" stroke-width="1"/>
+                    <text x="46" y="314" font-size="12.5" fill="#0f172a">«storage seam»</text>
+                    <line x1="30" y1="326" x2="330" y2="326" stroke="#6366f1" stroke-width="1"/>
+                    <text x="46" y="350" font-size="12.5" fill="#0f172a">+ save()</text>
+                    <text x="46" y="374" font-size="12.5" fill="#0f172a">+ find_by_ticket()</text>
+                    <rect x="30" y="450" width="300" height="98" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.0"/>
+                    <text x="180" y="476" text-anchor="middle" font-size="16" font-weight="700" fill="#3730a3">Seat</text>
+                    <text x="180" y="492" text-anchor="middle" font-size="10.5" font-style="italic" fill="#3730a3">«value»</text>
+                    <line x1="30" y1="504" x2="330" y2="504" stroke="#6366f1" stroke-width="1"/>
+                    <text x="46" y="528" font-size="12.5" fill="#0f172a">- seat_id · type</text>
+                    <rect x="950" y="54" width="300" height="110" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.0"/>
+                    <text x="1100" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#92400e">SeatLocker</text>
+                    <text x="1100" y="96" text-anchor="middle" font-size="10.5" font-style="italic" fill="#92400e">«abstract» — the concurrency approach</text>
+                    <line x1="950" y1="108" x2="1250" y2="108" stroke="#f59e0b" stroke-width="1"/>
+                    <line x1="950" y1="120" x2="1250" y2="120" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="966" y="144" font-size="12.5" fill="#0f172a">+ guard(show)</text>
+                    <rect x="950" y="214" width="142" height="46" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/><text x="1021" y="243" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">PerShowLock</text>
+                    <rect x="1108" y="214" width="142" height="46" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/><text x="1179" y="243" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">NaiveLocker</text>
+                    <rect x="950" y="324" width="300" height="110" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.0"/>
+                    <text x="1100" y="350" text-anchor="middle" font-size="16" font-weight="700" fill="#92400e">PricingStrategy</text>
+                    <text x="1100" y="366" text-anchor="middle" font-size="10.5" font-style="italic" fill="#92400e">«abstract» — the open variable</text>
+                    <line x1="950" y1="378" x2="1250" y2="378" stroke="#f59e0b" stroke-width="1"/>
+                    <line x1="950" y1="390" x2="1250" y2="390" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="966" y="414" font-size="12.5" fill="#0f172a">+ price(seat)</text>
+                    <rect x="950" y="484" width="142" height="46" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/><text x="1021" y="513" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">TierPricing</text>
+                    <rect x="1108" y="484" width="142" height="46" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.8"/><text x="1179" y="513" text-anchor="middle" font-size="12.5" font-weight="700" fill="#3730a3">WeekendSurge</text>
+                    <line x1="30" y1="724" x2="1250" y2="724" stroke="#cbd5e1" stroke-width="1"/>
+                    <polygon points="46,745 55,736 64,745 55,754" fill="#fff" stroke="#334155" stroke-width="1.4"/><text x="74" y="749" font-size="11" font-family="Inter,sans-serif" fill="#475569">aggregation (injected seam)</text>
+                    <polygon points="320,745 329,736 338,745 329,754" fill="#334155"/><text x="348" y="749" font-size="11" font-family="Inter,sans-serif" fill="#475569">composition</text>
+                    <polygon points="520,737 513,751 527,751" fill="#fff" stroke="#334155" stroke-width="1.4"/><text x="536" y="749" font-size="11" font-family="Inter,sans-serif" fill="#475569">implements</text>
+                    <line x1="720" y1="745" x2="756" y2="745" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#cm)"/><text x="764" y="749" font-size="11" font-family="Inter,sans-serif" fill="#475569">uses / references</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== APIs ===== -->
+    <section id="apis">
+        <div class="section-container">
+            <span class="section-label warning">Step 5 &mdash; the flow &amp; APIs</span>
+            <h2 class="section-title">HOLD &rarr; pay &rarr; CONFIRM</h2>
+            <p class="section-subtitle">The clock (<code>now</code>) is injected on the state-changing calls, so the TTL, the cutoff, and the race are all testable without sleeping. <code>hold()</code> returns a transient <code>Hold</code> receipt &mdash; not stored; the truth is each ShowSeat's status.</p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Call</th><th>Returns / raises</th><th>Why</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>available_seats(show, now)</code></td><td><code>list[seat_id]</code></td><td>a read; expired holds count as available</td></tr>
+                        <tr><td><code>hold(show, seats, user, now)</code></td><td><code>Hold</code> · <code>SeatUnavailableError</code></td><td>FR-4/9 — atomically claim, or lose the race</td></tr>
+                        <tr><td><code>amount_due(hold)</code></td><td><code>float</code></td><td>the total — prices already sit on each ShowSeat</td></tr>
+                        <tr><td><code>confirm(hold, mode, now)</code></td><td><code>Ticket</code> · <code>HoldExpiredError</code></td><td>FR-8 — pay while LOCKED-by-you → BOOKED + Ticket</td></tr>
+                        <tr><td><code>cancel(show, ticket, now)</code></td><td><code>None</code> · <code>CutoffPassedError</code></td><td>FR-10 — free seats; not inside the 1-hr cutoff</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="highlight-box info"><strong>Why a hold at all?</strong> Without it, a user picks seats, opens their wallet&hellip; and someone else books them mid-payment. The hold is a short, exclusive promise: the seats go <code>LOCKED</code> for a few minutes. No new entity &mdash; just a status.</div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 6px;">The REST API &mdash; the LLD-26 homework, answered</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 8px;">Turn each use-case oval into an endpoint. Conventions: resources are <strong>nouns</strong>, the method is the verb, <code>GET</code> never mutates, the <strong>server owns the clock</strong>, and every contract violation maps to one status code. A <strong>hold</strong> is its own resource (it has an id + <code>expires_at</code>).</p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Method &amp; path</th><th>Does</th><th>Success</th><th>Errors</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>GET /cities/{id}/movies</code></td><td>search / filter movies</td><td><code>200</code> list</td><td><code>404</code> city</td></tr>
+                        <tr><td><code>GET /shows/{id}/seats</code></td><td>the seat map (availability)</td><td><code>200</code> statuses</td><td><code>404</code></td></tr>
+                        <tr><td><code>POST /shows/{id}/holds</code></td><td>hold seats</td><td><code>201</code> hold + <code>expires_at</code></td><td><code>409</code> taken · <code>404</code></td></tr>
+                        <tr><td><code>GET /holds/{id}/amount</code></td><td>amount due</td><td><code>200 {amount}</code></td><td><code>410</code> expired</td></tr>
+                        <tr><td><code>POST /holds/{id}/payment</code></td><td>pay &rarr; confirm</td><td><code>201</code> the ticket</td><td><code>410</code> expired · <code>409</code> used</td></tr>
+                        <tr><td><code>GET /tickets/{id}</code></td><td>a confirmed ticket</td><td><code>200</code> the ticket</td><td><code>404</code></td></tr>
+                        <tr><td><code>POST /tickets/{id}/cancel</code></td><td>cancel a booking</td><td><code>200</code> cancelled</td><td><code>409</code> past cutoff · <code>404</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="color: var(--text-secondary); margin: 18px 0 4px; font-weight: 600;">A quiz on each tricky call &mdash; pick the status code:</p>
+
+            <div class="quiz-box" id="rest-q1">
+                <h4><code>POST /shows/{id}/holds</code> &mdash; two users hold the same seat at once. The loser gets?</h4>
+                <button class="quiz-option" onclick="checkQuiz('rest-q1', this, false)">A) <code>404 Not Found</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q1', this, true)">B) <code>409 Conflict</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q1', this, false)">C) <code>500 Internal Server Error</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q1', this, false)">D) <code>200 OK</code> (give both the seat)</button>
+                <div class="quiz-explanation"><strong>B &mdash; 409 Conflict.</strong> The request was valid but clashes with the current state (the seat just went LOCKED/BOOKED). Maps to <code>SeatUnavailableError</code>. ✗ 404 implies the seat doesn't exist; ✗ 500 is our bug, not the user's; ✗ 200-both is the double-book we're preventing.</div>
+            </div>
+
+            <div class="quiz-box" id="rest-q2">
+                <h4><code>POST /holds/{id}/payment</code> &mdash; the user pays, but the hold's 5 minutes already lapsed. Status?</h4>
+                <button class="quiz-option" onclick="checkQuiz('rest-q2', this, false)">A) <code>404 Not Found</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q2', this, false)">B) <code>409 Conflict</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q2', this, true)">C) <code>410 Gone</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q2', this, false)">D) <code>200 OK</code> (book it anyway)</button>
+                <div class="quiz-explanation"><strong>C &mdash; 410 Gone.</strong> The hold existed but its seats were released; the resource is intentionally no longer available. Maps to <code>HoldExpiredError</code>. ✗ 404 implies it never existed; ✗ 200-anyway risks a double-book on seats someone else may now hold.</div>
+            </div>
+
+            <div class="quiz-box" id="rest-q3">
+                <h4><code>POST /tickets/{id}/cancel</code> &mdash; the user cancels 30 minutes before showtime (cutoff is 1 hour). Status?</h4>
+                <button class="quiz-option" onclick="checkQuiz('rest-q3', this, true)">A) <code>409 Conflict</code> (or <code>422</code>) &mdash; past the cutoff</button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q3', this, false)">B) <code>200 OK</code> &mdash; cancel + refund anyway</button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q3', this, false)">C) <code>404 Not Found</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q3', this, false)">D) <code>403 Forbidden</code></button>
+                <div class="quiz-explanation"><strong>A &mdash; 409 (or 422 Unprocessable).</strong> The cancel conflicts with a business rule on the booking's lifecycle (the cutoff). Maps to <code>CutoffPassedError</code>. ✗ 403 is about <em>permission</em>, not timing; ✗ 200 breaks the rule; ✗ 404 implies no such ticket.</div>
+            </div>
+
+            <div class="quiz-box" id="rest-q4">
+                <h4>Why is holding seats a <code>POST /shows/{id}/holds</code> and not a <code>PATCH /seats/{id}</code>?</h4>
+                <button class="quiz-option" onclick="checkQuiz('rest-q4', this, false)">A) PATCH is slower than POST</button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q4', this, true)">B) A hold is its own resource &mdash; it has an id, an owner, and an <code>expires_at</code></button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q4', this, false)">C) Seats can't be PATCHed</button>
+                <button class="quiz-option" onclick="checkQuiz('rest-q4', this, false)">D) POST is more secure</button>
+                <div class="quiz-explanation"><strong>B.</strong> The hold is a thing with its own lifecycle (created, has a TTL, becomes a booking or expires) &mdash; so you <code>POST</code> to <em>create</em> it and get back a <code>/holds/{id}</code> you can then pay or read. PATCHing the seat would hide that lifecycle and give you nowhere to attach the <code>expires_at</code> or the owner.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONCURRENCY ===== -->
+    <section id="concurrency">
+        <div class="section-container">
+            <span class="section-label danger">Step 6 &mdash; the headline (the LLD-26 promise)</span>
+            <h2 class="section-title">Compare the approaches, build the winner</h2>
+            <p class="section-subtitle" data-cf-change="ch-approach-list">The invariant: a show-seat is <code>BOOKED</code> by <strong>at most one</strong> user. There are several ways to guarantee it &mdash; we make each a pluggable <code>SeatLocker</code> and run the <strong>same race</strong> under all of them:</p>
+            <p style="color: var(--text-secondary); margin-bottom: 6px;">Each approach <strong>end to end</strong> &mdash; what happens in your <em>code</em>, in the <em>database</em>, and (the part that's easy to forget) on the <em>screen the user is staring at</em>. Click each to expand.</p>
+            <div style="margin-bottom: 26px;">
+                <div class="collapsible" style="border-left: 4px solid var(--accent-danger);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>1 &middot; No lock <span style="color: var(--accent-danger);">(the bug)</span></h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <pre class="code"><span class="kw">if</span> seat.status == AVAILABLE:   <span class="cm"># check</span>
+    seat.status = LOCKED       <span class="cm"># ...act — a gap sits between the two steps</span></pre>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> two <code>INSERT</code>s for the same seat both succeed (no constraint, no lock).</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> both users see &ldquo;Booking confirmed!&rdquo; &mdash; then one later gets an apologetic refund email. The UI lied.</div>
+                            <div>&#9989; <strong>Best for:</strong> never &mdash; this is the bug we're fixing.</div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="collapsible" style="border-left: 4px solid var(--accent-success);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>2 &middot; In-process lock (<code>threading.Lock</code>)</h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <pre class="code"><span class="kw">with</span> show.lock:                 <span class="cm"># one mutex per show</span>
+    <span class="kw">if</span> seat.status == AVAILABLE:
+        seat.status = LOCKED</pre>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> n/a &mdash; the lock lives in the app process, not the DB.</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> a brief spinner (&ldquo;Reserving&hellip;&rdquo;) while it waits for the lock, then &ldquo;Booked!&rdquo; or an honest &ldquo;Seats just taken.&rdquo;</div>
+                            <div>&#9989; <strong>Best for:</strong> a single process / one server, in-memory.</div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="collapsible" style="border-left: 4px solid var(--accent-success);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>3 &middot; Pessimistic row lock (<code>SELECT … FOR UPDATE</code>)</h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <pre class="code">BEGIN;
+SELECT status FROM show_seat
+  WHERE id = :id FOR UPDATE;   <span class="cm">-- locks the row; others WAIT here</span>
+UPDATE show_seat SET status = 'BOOKED' WHERE id = :id;
+COMMIT;                         <span class="cm">-- released; next in queue proceeds</span></pre>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> the row is locked until <code>COMMIT</code>; others <strong>queue</strong> and proceed one at a time.</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> same spinner-then-result; under load on a hot seat it lasts longer (requests queue).</div>
+                            <div>&#9989; <strong>Best for:</strong> one DB, many app servers; correctness over raw speed.</div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="collapsible" style="border-left: 4px solid var(--accent-success);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>4 &middot; Optimistic concurrency (version / CAS)</h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <pre class="code"><span class="cm">-- (1) read the seat AND its current version</span>
+SELECT status, version FROM show_seat WHERE id = 42;
+<span class="cm">--      both T1 and T2 see:  AVAILABLE, version = 7</span>
+
+<span class="cm">-- (2) book ONLY if the version is still what you read (compare-and-set):</span>
+UPDATE show_seat
+   SET status = 'BOOKED', version = 8
+ WHERE id = 42 AND version = 7;</pre>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 10px 0 4px;"><strong>Worked example &mdash; the same seat, two users:</strong></p>
+                        <pre class="code">T1 runs (2) first  &rarr;  <span class="st">1 row updated</span>  &rarr; BOOKED ✓   <span class="cm">(version is now 8)</span>
+T2 runs (2) next   &rarr;  <span class="kw">0 rows updated</span>  &rarr; the row's version is 8, not 7
+                                       &rarr; T2 <span class="kw">LOST</span> the race &rarr; show &ldquo;seat just taken&rdquo; / retry</pre>
+                        <p style="color: var(--text-secondary); font-size: 0.92rem; margin-top: 6px;">No lock was ever held &mdash; the <code>WHERE version = 7</code> is the whole trick: only one <code>UPDATE</code> can match, so only one user wins. The loser sees <code>0 rows</code> and knows to back off.</p>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> no lock held; the conditional <code>UPDATE</code> is the only atomic moment.</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> feels <strong>instant</strong> &mdash; optimistically marks the seat selected, then <strong>rolls back</strong> if the CAS fails (&ldquo;just taken, try another&rdquo;).</div>
+                            <div>&#9989; <strong>Best for:</strong> low contention &mdash; speed and no waiting.</div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="collapsible" style="border-left: 4px solid var(--accent-success);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>5 &middot; DB <code>UNIQUE</code> constraint</h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <pre class="code"><span class="cm">-- once:  ALTER TABLE booking ADD UNIQUE(show_id, seat_id);</span>
+INSERT INTO booking(show_id, seat_id, user_id)
+  VALUES (:s, :n, :u);          <span class="cm">-- the 2nd insert -> IntegrityError</span></pre>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> the constraint makes a 2nd booking of the same seat <strong>physically impossible</strong>.</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> whatever the UI optimistically showed, the failed insert surfaces as &ldquo;Seat taken.&rdquo; The safety net.</div>
+                            <div>&#9989; <strong>Best for:</strong> <strong>always on</strong> &mdash; the correctness floor (pair it with one of the above for UX).</div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="collapsible" style="border-left: 4px solid var(--accent-success);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>6 &middot; Distributed (Redis) lock</h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <pre class="code">SET lock:{show}:{seat} {token} NX EX 30   <span class="cm"># atomic set-if-absent + TTL</span>
+  <span class="cm"># OK  -> book it</span>
+  <span class="cm"># nil -> someone else holds it, bail</span></pre>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> the lock lives in <strong>Redis</strong>, shared across all servers; the TTL frees a crashed holder.</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> same spinner-then-result &mdash; but works even with <em>no shared database</em> (microservices).</div>
+                            <div>&#9989; <strong>Best for:</strong> many services with no shared DB row to lock.</div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="collapsible" style="border-left: 4px solid var(--accent-primary);">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>7 &middot; &#128274; Soft lock / hold &mdash; reserve-then-pay <span style="color: var(--accent-primary); font-weight: 500;">(what BookMyShow ships)</span></h4><span class="collapsible-arrow">&#9660;</span></div>
+                    <div class="collapsible-content"><div class="collapsible-inner">
+                        <div class="highlight-box" style="margin: 0 0 12px; padding: 12px 16px; font-size: 0.95rem;"><strong>Different kind of thing.</strong> 1&ndash;6 settle the <em>instant</em> clash; this is the <strong>5-minute reservation</strong> that holds your seats <em>while you pay</em> &mdash; layered <strong>on top of</strong> one of the locks above.</div>
+                        <pre class="code"><span class="cm"># acquire the hold UNDER a lock from 2-6:</span>
+seat.status       = LOCKED
+seat.locked_until = now + 300       <span class="cm"># a 5-minute TTL</span>
+seat.held_by      = user
+<span class="cm"># on pay     -> seat.status = BOOKED</span>
+<span class="cm"># on timeout -> seat.status = AVAILABLE  (lazy / sweep)</span></pre>
+                        <div style="display: grid; gap: 10px; color: var(--text-secondary); font-size: 1rem; margin-top: 12px;">
+                            <div>&#128451;&#65039; <strong>In the DB / store:</strong> a <code>locked_until</code> column, or &mdash; more often &mdash; a <strong>Redis key with a TTL</strong> (<code>SET … EX 300</code>) so an abandoned cart frees itself.</div>
+                            <div>&#128421;&#65039; <strong>On the UI (what the user sees):</strong> the iconic <strong>BookMyShow countdown</strong> &mdash; &ldquo;reserved for you &middot; 4:59 left&rdquo;, and others watch the seats <strong>grey out in real time</strong>. <em>(Try the visualizer's &ldquo;Soft lock &amp; expiry&rdquo; panel.)</em></div>
+                            <div>&#9989; <strong>Best for:</strong> the real product &mdash; time to pay without overselling. <strong>Not</strong> a race-fixer; pair it with a lock (2&ndash;6) + the <code>UNIQUE</code> floor.</div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <strong style="color: var(--accent-danger);">&#10006; NaiveLocker &mdash; check-then-act</strong>
+                    <pre># both threads, seat A3
+if seat is AVAILABLE:   # both read AVAILABLE
+    seat = LOCKED       # both write LOCKED
+# -> 2 tickets for one seat (double-book)</pre>
+                </div>
+                <div class="comparison-card after">
+                    <strong style="color: var(--accent-success);">&#10004; PerShowLock &mdash; check-and-set</strong>
+                    <pre>with self.locker.guard(show):   # per-show mutex
+    if any seat != AVAILABLE:
+        raise SeatUnavailableError
+    set them LOCKED
+# -> exactly 1 ticket</pre>
+                </div>
+            </div>
+            <div class="highlight-box success"><strong>The demo proves it.</strong> The <em>same</em> race (two threads, one seat, a forced interleave) runs under both lockers: <code>NaiveLocker &rarr; 2 tickets</code> (the bug), <code>PerShowLock &rarr; 1 ticket</code>. It's a <code>SeatLocker</code> strategy, so swapping the approach is one argument.</div>
+
+            <div class="collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128065;&#65039; The atomic step &mdash; the actual <code>hold()</code></h4><span class="collapsible-arrow">&#9660;</span></div>
+                <div class="collapsible-content"><div class="collapsible-inner">
+                    <pre class="code"><span class="kw">def</span> <span class="fn">hold</span>(self, show, seat_ids, user, now):
+    <span class="kw">with</span> self.locker.guard(show):              <span class="cm"># the atomic boundary (swappable)</span>
+        self._free_expired(show, now)         <span class="cm"># lazy TTL sweep, under the guard</span>
+        taken = [s <span class="kw">for</span> s <span class="kw">in</span> seat_ids
+                 <span class="kw">if</span> show.show_seat(s).status <span class="kw">is not</span> AVAILABLE]
+        <span class="kw">if</span> taken:
+            <span class="kw">raise</span> SeatUnavailableError(taken)   <span class="cm"># the lost race</span>
+        <span class="kw">for</span> s <span class="kw">in</span> seat_ids:                     <span class="cm"># set LOCKED + locked_until = now + TTL</span>
+            ss = show.show_seat(s); ss.status = LOCKED; ss.held_by = user.user_id
+        <span class="kw">return</span> Hold(show, tuple(seat_ids), user.user_id, now + HOLD_TTL)</pre>
+                </div></div>
+            </div>
+
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>&#127908; Demo it live &mdash; the tournament.</strong> Each approach is real code over the <em>same</em> stampede (N users, one seat). A forced interleave makes it deterministic &mdash; naive double-books, the rest don't.
+                <pre class="code" style="margin-top: 10px;">python3 code/02_concurrency_demo.py              <span class="cm"># scoreboard: ALL approaches + recommendation</span>
+python3 code/02_concurrency_demo.py optimistic   <span class="cm"># run ONE, watch it interleave live</span>
+python3 code/02_concurrency_demo.py --racers 50  <span class="cm"># crank the contention</span></pre>
+                <p style="font-size: 0.85rem; margin-top: 8px;">Run one with a trace and the <strong>mechanism shows itself</strong> &mdash; optimistic: everyone works unlocked, then all-but-one hit <code>version moved under me &rarr; conflict</code>; pessimistic: each waits for the row lock, then finds it already BOOKED &rarr; rollback.</p>
+                <p style="font-size: 0.85rem; margin-top: 8px;">&#128421;&#65039; Prefer it <strong>visual</strong>? Open <code><a href="concurrency-visualizer.html" style="color: var(--accent-primary);">concurrency-visualizer.html</a></code> &mdash; animated users racing for one seat under each approach (watch them read / wait for the lock / commit / win / conflict), a one-click tournament scoreboard, and an interactive <strong>soft-lock + TTL-expiry</strong> countdown.</p>
+            </div>
+
+            <div class="quiz-box" id="approach-q">
+                <h4>You're on many app servers sharing one Postgres. Cheapest <em>correct</em> way to stop a double-book?</h4>
+                <button class="quiz-option" onclick="checkQuiz('approach-q', this, false)">A) A Python <code>threading.Lock</code> in each server</button>
+                <button class="quiz-option" onclick="checkQuiz('approach-q', this, true)">B) A <code>UNIQUE(show_id, seat_id)</code> constraint on the booked rows</button>
+                <button class="quiz-option" onclick="checkQuiz('approach-q', this, false)">C) Hope the race is rare</button>
+                <button class="quiz-option" onclick="checkQuiz('approach-q', this, false)">D) One global lock for the whole site</button>
+                <div class="quiz-explanation">
+                    <strong>B.</strong> A per-process <code>threading.Lock</code> guards only <em>one</em> server — two servers still race (✗ A). The DB is the one thing they share, and a <code>UNIQUE</code> constraint makes a second booking <em>physically impossible</em> with zero extra moving parts. Add <code>SELECT … FOR UPDATE</code> or an optimistic update for a friendlier error. ✗ D serialises the planet; ✗ C isn't a strategy.
+                </div>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>The verdict.</strong> In-memory &rarr; the <strong>per-show lock</strong> (simple; different shows never contend). Distributed &rarr; a <strong><code>UNIQUE(show_id, seat_id)</code> constraint as the floor</strong> (can't be raced), an <strong>optimistic update</strong> for throughput, and a <strong>Redis lock + TTL</strong> when there's no shared DB. <strong>Granularity:</strong> per-show is the sweet spot &mdash; global serialises everything, per-seat risks deadlock on multi-seat holds. Design in-memory first; name the distributed mapping out loud.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== OPTIMISTIC VS PESSIMISTIC ===== -->
+    <section id="locks">
+        <div class="section-container">
+            <span class="section-label blue">Deep dive</span>
+            <h2 class="section-title">Optimistic vs Pessimistic &mdash; the intuition</h2>
+            <p class="section-subtitle">Two of the approaches sound technical but the idea is everyday. The whole difference is <strong>one question</strong>: do you lock <em>before</em> you start, or do you just <em>check at the end</em>?</p>
+
+            <div class="comparison-grid">
+                <div class="comparison-card" style="background: rgba(245,158,11,0.10); border: 1px solid var(--accent-warning);">
+                    <strong style="color: #b45309;">&#128274; Pessimistic &mdash; &ldquo;lock the door first&rdquo;</strong>
+                    <p style="font-size: 0.9rem; margin-top: 8px; color: var(--text-secondary);">You <em>assume</em> a clash will happen, so you grab an <strong>exclusive lock up front</strong> and hold it while you work. Everyone else <strong>waits in line</strong>.</p>
+                    <p style="font-size: 0.86rem; margin-top: 8px;"><strong>Like:</strong> the single bathroom key &mdash; you take it, lock the door, and nobody else can get in until you come out.</p>
+                    <p style="font-size: 0.82rem; margin-top: 8px; color: var(--text-muted);">In code: <code>SELECT … FOR UPDATE</code>, a mutex. You pay the cost as <em>waiting</em>.</p>
+                </div>
+                <div class="comparison-card" style="background: rgba(59,130,246,0.10); border: 1px solid var(--accent-blue);">
+                    <strong style="color: #1e40af;">&#127919; Optimistic &mdash; &ldquo;act first, check at checkout&rdquo;</strong>
+                    <p style="font-size: 0.9rem; margin-top: 8px; color: var(--text-secondary);">You <em>assume</em> clashes are <strong>rare</strong>, so you <strong>don't lock</strong> &mdash; you do your work on a snapshot and, only at the moment of saving, check &ldquo;did anything change since I started?&rdquo; If yes, you <strong>redo</strong>.</p>
+                    <p style="font-size: 0.86rem; margin-top: 8px;"><strong>Like:</strong> editing a Google Doc / a wiki &mdash; you type freely, and only on <em>Save</em> does it say &ldquo;someone else edited this, try again.&rdquo;</p>
+                    <p style="font-size: 0.82rem; margin-top: 8px; color: var(--text-muted);">In code: a <code>version</code> column + compare-and-set. You pay the cost as <em>occasional wasted work</em>.</p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead><tr><th></th><th>&#128274; Pessimistic</th><th>&#127919; Optimistic</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Assumes</strong></td><td>conflicts are likely</td><td>conflicts are rare</td></tr>
+                        <tr><td><strong>Holds a lock?</strong></td><td>yes &mdash; for the whole critical section</td><td>no &mdash; only a tiny check at the end</td></tr>
+                        <tr><td><strong>Others meanwhile</strong></td><td>wait their turn</td><td>run freely (in parallel)</td></tr>
+                        <tr><td><strong>On a conflict</strong></td><td>can't happen &mdash; you held the lock</td><td>detected at save &rarr; retry or abort</td></tr>
+                        <tr><td><strong>Cost you pay</strong></td><td>waiting / reduced parallelism</td><td>wasted work + retries when it <em>does</em> clash</td></tr>
+                        <tr><td><strong>Hurts most when</strong></td><td>locks are held long</td><td>contention is <em>high</em> (retry storms)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="knowledge-block">
+                <p><strong>When to use which &mdash; one rule.</strong> Ask: <em>how often do two people actually collide?</em><br>
+                &bull; <strong>Often</strong> (the one hot seat everyone wants on a blockbuster release) &rarr; <strong>pessimistic</strong>. Optimistic would have everyone do the work and then all-but-one throw it away &mdash; a retry storm.<br>
+                &bull; <strong>Rarely</strong> (updating your profile, a seldom-touched row) &rarr; <strong>optimistic</strong>. No lock overhead, no waiting, and the once-in-a-blue-moon retry is cheap.<br>
+                For BookMyShow's <em>hot seats</em>: a short pessimistic row lock (or a brief Redis lock) on top of the <code>UNIQUE</code> floor. For everything cold: optimistic.</p>
+            </div>
+
+            <div class="quiz-box" id="optpess-q">
+                <h4>You update a user's profile bio &mdash; collisions almost never happen. Which fits best?</h4>
+                <button class="quiz-option" onclick="checkQuiz('optpess-q', this, true)">A) Optimistic (a version check on save)</button>
+                <button class="quiz-option" onclick="checkQuiz('optpess-q', this, false)">B) Pessimistic (lock the row for the whole edit)</button>
+                <button class="quiz-option" onclick="checkQuiz('optpess-q', this, false)">C) A global lock on the users table</button>
+                <button class="quiz-option" onclick="checkQuiz('optpess-q', this, false)">D) No protection at all</button>
+                <div class="quiz-explanation"><strong>A.</strong> Conflicts are rare, so don't make everyone wait for a lock &mdash; let writes run free and just check a <code>version</code> at save; the rare clash retries cheaply. A row lock (B) adds waiting you almost never need; a table lock (C) serialises unrelated users; no protection (D) risks a lost update.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== STATE MACHINE ===== -->
+    <section id="state">
+        <div class="section-container">
+            <span class="section-label purple">The dynamic view</span>
+            <h2 class="section-title" data-cf-change="ch-state-roomier">The ShowSeat state machine</h2>
+            <p class="section-subtitle">The class diagram is a photo; the state machine is the film. The hold isn't an object &mdash; it's the <code>LOCKED</code> state. The exceptions are the illegal moves.</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 1020 470" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <defs>
+                        <marker id="sm" markerWidth="11" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3 L0,6 Z" fill="#334155"/></marker>
+                        <marker id="smb" markerWidth="11" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3 L0,6 Z" fill="#ef4444"/></marker>
+                    </defs>
+                    <circle cx="40" cy="210" r="9" fill="#334155"/>
+                    <line x1="49" y1="210" x2="96" y2="210" stroke="#334155" stroke-width="1.8" marker-end="url(#sm)"/>
+                    <rect x="100" y="172" width="200" height="76" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.4"/>
+                    <text x="200" y="206" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">AVAILABLE</text>
+                    <text x="200" y="228" text-anchor="middle" font-size="11" fill="#475569">free for this show</text>
+                    <rect x="430" y="172" width="200" height="76" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.4"/>
+                    <text x="530" y="206" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">LOCKED</text>
+                    <text x="530" y="228" text-anchor="middle" font-size="11" fill="#475569">held while paying · TTL ticking</text>
+                    <rect x="760" y="172" width="200" height="76" rx="12" fill="#dcfce7" stroke="#10b981" stroke-width="2.4"/>
+                    <text x="860" y="206" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">BOOKED</text>
+                    <text x="860" y="228" text-anchor="middle" font-size="11" fill="#475569">a Ticket exists</text>
+                    <!-- forward transitions -->
+                    <line x1="300" y1="210" x2="426" y2="210" stroke="#334155" stroke-width="1.8" marker-end="url(#sm)"/>
+                    <text class="rl" x="363" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">hold()</text>
+                    <line x1="630" y1="210" x2="756" y2="210" stroke="#334155" stroke-width="1.8" marker-end="url(#sm)"/>
+                    <text class="rl" x="693" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">confirm() in time</text>
+                    <!-- LOCKED -> AVAILABLE (TTL) -->
+                    <path d="M510 248 C 470 318 250 318 202 250" fill="none" stroke="#334155" stroke-width="1.8" marker-end="url(#sm)"/>
+                    <text class="rl" x="356" y="296" text-anchor="middle" font-size="13" fill="#334155">TTL lapses &rarr; frees itself (lazy expiry)</text>
+                    <!-- BOOKED -> AVAILABLE (cancel) -->
+                    <path d="M845 248 C 790 408 240 408 198 252" fill="none" stroke="#334155" stroke-width="1.8" marker-end="url(#sm)"/>
+                    <text class="rl" x="520" y="392" text-anchor="middle" font-size="13" fill="#334155">cancel() before cutoff</text>
+                    <!-- illegal: confirm after expiry -->
+                    <path d="M470 172 C 430 96 250 96 214 170" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="7,5" marker-end="url(#smb)"/>
+                    <text class="rl" x="342" y="104" text-anchor="middle" font-size="13" font-weight="600" fill="#ef4444">confirm() after expiry &rarr; HoldExpiredError &#10007;</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DDIA CH.7 ===== -->
+    <section id="ddia">
+        <div class="section-container">
+            <span class="section-label danger">Pre-read &mdash; check yourself</span>
+            <h2 class="section-title">Transactions &mdash; DDIA, Chapter 7</h2>
+            <p class="section-subtitle">You were asked to read <em>Designing Data-Intensive Applications</em>, Ch. 7 (&ldquo;Transactions&rdquo;). It's the theory under everything in this class &mdash; the seat race is literally its <strong>write-skew</strong> example. Start with the one almost everyone gets wrong &mdash; <strong>is &ldquo;atomicity&rdquo; the same as &ldquo;concurrency-safe&rdquo;?</strong> &mdash; then eleven in all to check it landed.</p>
+            <h3 style="margin-top: 6px; margin-bottom: 8px;" data-cf-change="ch-anomaly-diagram">The anomalies, visually &mdash; two transactions, one bad interleave</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 6px;">Every anomaly is the same shape: <strong>T1</strong> and <strong>T2</strong> run at once, and one slips into a gap in the other. Time flows down; <span style="color:#3b82f6;font-weight:600;">blue</span> = a read, <span style="color:#f59e0b;font-weight:600;">amber</span> = a write, <span style="color:#ef4444;font-weight:600;">red</span> = where it breaks.</p>
+            <div class="diagram-box">
+                <svg viewBox="0 0 1400 784" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; font-family: 'Fira Code', monospace;">
+                    <defs><marker id="tm" markerWidth="10" markerHeight="9" refX="4.5" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L4.5,7 L9,0" fill="none" stroke="#cbd5e1" stroke-width="1.4"/></marker></defs>
+                    <rect x="30" y="30" width="660" height="352" rx="14" fill="var(--bg-tertiary)" stroke="var(--border-color)" stroke-width="1.4"/>
+                    <text x="56" y="66" font-size="17.5" font-weight="700" fill="#7c3aed" font-family="Inter,sans-serif">Dirty read</text>
+                    <text x="666" y="66" text-anchor="end" font-size="12.5" font-weight="600" fill="#047857" font-family="Inter,sans-serif">fix &rarr; Read Committed</text>
+                    <text x="210" y="100" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T1</text>
+                    <line x1="210" y1="110" x2="210" y2="342" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <text x="520" y="100" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T2</text>
+                    <line x1="520" y1="110" x2="520" y2="342" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <line x1="66" y1="114" x2="66" y2="330" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#tm)"/><text x="74" y="124" font-size="12" fill="#94a3b8" font-family="Inter,sans-serif">time</text>
+                    <circle cx="520" cy="148" r="6" fill="#f59e0b"/>
+                    <text class="rl" x="505" y="153" text-anchor="end" font-size="14" fill="#0f172a">writes x = 999 (uncommitted)</text>
+                    <circle cx="210" cy="206" r="6" fill="#ef4444"/>
+                    <text class="rl" x="225" y="211" font-size="14" fill="#0f172a">reads x &rarr; 999</text>
+                    <circle cx="520" cy="264" r="6" fill="#94a3b8"/>
+                    <text class="rl" x="505" y="269" text-anchor="end" font-size="14" fill="#0f172a">ROLLS BACK</text>
+                    <text class="rl" x="56" y="368" font-size="13.5" font-style="italic" fill="#b91c1c" font-family="Inter,sans-serif">&#9888; T1 read a value that never existed</text>
+                    <rect x="710" y="30" width="660" height="352" rx="14" fill="var(--bg-tertiary)" stroke="var(--border-color)" stroke-width="1.4"/>
+                    <text x="736" y="66" font-size="17.5" font-weight="700" fill="#7c3aed" font-family="Inter,sans-serif">Read skew</text>
+                    <text x="1346" y="66" text-anchor="end" font-size="12.5" font-weight="600" fill="#047857" font-family="Inter,sans-serif">fix &rarr; Snapshot isolation</text>
+                    <text x="890" y="100" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T1</text>
+                    <line x1="890" y1="110" x2="890" y2="342" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <text x="1200" y="100" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T2</text>
+                    <line x1="1200" y1="110" x2="1200" y2="342" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <line x1="746" y1="114" x2="746" y2="330" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#tm)"/><text x="754" y="124" font-size="12" fill="#94a3b8" font-family="Inter,sans-serif">time</text>
+                    <circle cx="890" cy="148" r="6" fill="#3b82f6"/>
+                    <text class="rl" x="905" y="153" font-size="14" fill="#0f172a">reads x &rarr; 100</text>
+                    <circle cx="1200" cy="206" r="6" fill="#f59e0b"/>
+                    <text class="rl" x="1185" y="211" text-anchor="end" font-size="14" fill="#0f172a">writes x = 200, COMMIT</text>
+                    <circle cx="890" cy="264" r="6" fill="#ef4444"/>
+                    <text class="rl" x="905" y="269" font-size="14" fill="#0f172a">reads x &rarr; 200 (changed!)</text>
+                    <text class="rl" x="736" y="368" font-size="13.5" font-style="italic" fill="#b91c1c" font-family="Inter,sans-serif">&#9888; same row, two values in one transaction</text>
+                    <rect x="30" y="402" width="660" height="352" rx="14" fill="var(--bg-tertiary)" stroke="var(--border-color)" stroke-width="1.4"/>
+                    <text x="56" y="438" font-size="17.5" font-weight="700" fill="#7c3aed" font-family="Inter,sans-serif">Lost update</text>
+                    <text x="666" y="438" text-anchor="end" font-size="12.5" font-weight="600" fill="#047857" font-family="Inter,sans-serif">fix &rarr; atomic update / FOR UPDATE</text>
+                    <text x="210" y="472" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T1</text>
+                    <line x1="210" y1="482" x2="210" y2="714" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <text x="520" y="472" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T2</text>
+                    <line x1="520" y1="482" x2="520" y2="714" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <line x1="66" y1="486" x2="66" y2="702" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#tm)"/><text x="74" y="496" font-size="12" fill="#94a3b8" font-family="Inter,sans-serif">time</text>
+                    <circle cx="210" cy="514" r="6" fill="#3b82f6"/>
+                    <text class="rl" x="225" y="519" font-size="14" fill="#0f172a">reads n = 10</text>
+                    <circle cx="520" cy="552" r="6" fill="#3b82f6"/>
+                    <text class="rl" x="505" y="557" text-anchor="end" font-size="14" fill="#0f172a">reads n = 10</text>
+                    <circle cx="520" cy="600" r="6" fill="#f59e0b"/>
+                    <text class="rl" x="505" y="605" text-anchor="end" font-size="14" fill="#0f172a">writes n = 11, COMMIT</text>
+                    <circle cx="210" cy="652" r="6" fill="#ef4444"/>
+                    <text class="rl" x="225" y="657" font-size="14" fill="#0f172a">writes n = 11 &rarr; 11 not 12</text>
+                    <text class="rl" x="56" y="740" font-size="13.5" font-style="italic" fill="#b91c1c" font-family="Inter,sans-serif">&#9888; T2's +1 is silently lost</text>
+                    <rect x="710" y="402" width="660" height="352" rx="14" fill="var(--bg-tertiary)" stroke="var(--border-color)" stroke-width="1.4"/>
+                    <text x="736" y="438" font-size="17.5" font-weight="700" fill="#7c3aed" font-family="Inter,sans-serif">Write skew (the seat race)</text>
+                    <text x="1346" y="438" text-anchor="end" font-size="12.5" font-weight="600" fill="#047857" font-family="Inter,sans-serif">fix &rarr; Serializable</text>
+                    <text x="890" y="472" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T1</text>
+                    <line x1="890" y1="482" x2="890" y2="714" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <text x="1200" y="472" text-anchor="middle" font-size="15" font-weight="700" fill="#3730a3" font-family="Inter,sans-serif">T2</text>
+                    <line x1="1200" y1="482" x2="1200" y2="714" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="3,4"/>
+                    <line x1="746" y1="486" x2="746" y2="702" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#tm)"/><text x="754" y="496" font-size="12" fill="#94a3b8" font-family="Inter,sans-serif">time</text>
+                    <circle cx="890" cy="520" r="6" fill="#3b82f6"/>
+                    <text class="rl" x="905" y="525" font-size="14" fill="#0f172a">&ldquo;seat free?&rdquo; &rarr; yes</text>
+                    <circle cx="1200" cy="558" r="6" fill="#3b82f6"/>
+                    <text class="rl" x="1185" y="563" text-anchor="end" font-size="14" fill="#0f172a">&ldquo;seat free?&rdquo; &rarr; yes</text>
+                    <circle cx="890" cy="608" r="6" fill="#f59e0b"/>
+                    <text class="rl" x="905" y="613" font-size="14" fill="#0f172a">BOOK the seat</text>
+                    <circle cx="1200" cy="646" r="6" fill="#ef4444"/>
+                    <text class="rl" x="1185" y="651" text-anchor="end" font-size="14" fill="#0f172a">BOOK the seat &rarr; clash</text>
+                    <text class="rl" x="736" y="740" font-size="13.5" font-style="italic" fill="#b91c1c" font-family="Inter,sans-serif">&#9888; both passed the check &rarr; double-book</text>
+                </svg>
+            </div>
+            <p style="color: var(--text-secondary); margin: 14px 0 4px;">&hellip;and the <strong>isolation ladder</strong> &mdash; each higher level closes one more anomaly (the price is less concurrency):</p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Isolation level</th><th>Dirty read</th><th>Read skew</th><th>Lost update</th><th>Write skew / phantom</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Read Committed</strong></td><td>&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td></tr>
+                        <tr><td><strong>Snapshot Isolation</strong> <span style="color:var(--text-muted)">(Repeatable Read)</span></td><td>&#9989;</td><td>&#9989;</td><td>&#9888;&#65039; impl-dependent</td><td>&#10060;</td></tr>
+                        <tr><td><strong>Serializable</strong></td><td>&#9989;</td><td>&#9989;</td><td>&#9989;</td><td>&#9989;</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 6px 0 22px;">&#9989; prevented &middot; &#10060; still possible. The seat race lives in the last column &mdash; only <strong>Serializable</strong> (or an explicit lock / <code>UNIQUE</code> constraint) closes it.</p>
+
+            <div class="quiz-box" id="ddia-atom1" data-cf-change="ch-atomicity-q">
+                <h4>Atomicity and Isolation are both ACID letters &mdash; which statement is correct?</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom1', this, false)">A) Same idea — both stop concurrent transactions from clashing</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom1', this, true)">B) Atomicity = all-or-nothing (commit fully or roll back fully); Isolation = concurrent transactions don't interfere — different things</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom1', this, false)">C) Atomicity handles concurrency; Isolation handles durability on disk</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom1', this, false)">D) Atomicity means writes hit disk instantly; Isolation means reads are cached</button>
+                <div class="quiz-explanation"><strong>B.</strong> The classic mix-up. <strong>Atomicity has NOTHING to do with concurrency</strong> — DDIA says it's really about <em>abortability</em>: if a transaction fails partway, everything it did is undone. <strong>Isolation</strong> is the concurrency one (our seat race). A transaction can be perfectly atomic and still race another — see the next two questions.</div>
+            </div>
+            <div class="quiz-box" id="ddia-atom2">
+                <h4>A transaction inserts 3 rows, then the process <strong>crashes before commit</strong>. Atomicity guarantees&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom2', this, false)">A) The 3 rows are kept — partial progress is saved</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom2', this, true)">B) <strong>None</strong> of the 3 rows remain — the partial transaction is rolled back, as if it never ran</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom2', this, false)">C) Exactly one row survives (the last fully written)</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom2', this, false)">D) The rows are kept but flagged <code>pending</code> until restart</button>
+                <div class="quiz-explanation"><strong>B.</strong> All-or-nothing on failure — DDIA argues atomicity is better named <em>abortability</em>: a crash/abort discards every partial write. (Note: this says nothing about other concurrent transactions — that's isolation.)</div>
+            </div>
+            <div class="quiz-box" id="ddia-atom3">
+                <h4>Two money transfers each run <strong>atomically</strong>, at the same time, and the final balances come out <strong>wrong</strong>. Which ACID property was violated?</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom3', this, false)">A) Atomicity — one transfer must have been left half-done</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom3', this, false)">B) Durability — a committed write was lost from disk</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom3', this, true)">C) <strong>Isolation</strong> — each was all-or-nothing, but they <em>interleaved</em> and stepped on each other</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-atom3', this, false)">D) Consistency — a CHECK constraint was turned off</button>
+                <div class="quiz-explanation"><strong>C.</strong> Both transactions were fully atomic (neither was half-done) — yet the wrong answer came from them <em>racing</em>. That's an <strong>isolation</strong> failure (a lost update / write skew), not atomicity. The takeaway: <strong>atomic ≠ concurrency-safe</strong> — exactly the BookMyShow seat problem.</div>
+            </div>
+            <div class="quiz-box" id="ddia-1">
+                <h4>The <strong>I</strong> in ACID (&ldquo;Isolation&rdquo;) actually promises&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-1', this, false)">A) data is encrypted at rest</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-1', this, true)">B) concurrent transactions don't step on each other — as if run one-at-a-time</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-1', this, false)">C) each table lives in its own file</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-1', this, false)">D) writes are flushed to disk immediately</button>
+                <div class="quiz-explanation"><strong>B.</strong> Isolation = concurrency safety: the result is <em>as if</em> transactions ran serially. (Encryption is unrelated; durability is the D.) In practice databases offer <em>weaker</em> isolation than true serial, which is what Ch.7 is all about.</div>
+            </div>
+            <div class="quiz-box" id="ddia-2">
+                <h4>A <strong>dirty read</strong> is&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-2', this, false)">A) reading a row that was deleted</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-2', this, true)">B) reading another transaction's <em>uncommitted</em> write</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-2', this, false)">C) reading stale data from a cache</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-2', this, false)">D) reading without an index</button>
+                <div class="quiz-explanation"><strong>B.</strong> You see a value another transaction wrote but hasn't committed — and it may roll back. <strong>Read Committed</strong> prevents dirty reads (and dirty writes).</div>
+            </div>
+            <div class="quiz-box" id="ddia-3">
+                <h4><strong>Read Committed</strong> stops dirty reads/writes &mdash; but a transaction reading the same row twice can still see different values. That's&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-3', this, false)">A) a phantom</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-3', this, false)">B) a dirty write</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-3', this, true)">C) read skew (a non-repeatable read)</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-3', this, false)">D) a deadlock</button>
+                <div class="quiz-explanation"><strong>C.</strong> Between your two reads, another committed transaction changed the row &mdash; <em>read skew</em>. The fix is <strong>snapshot isolation</strong> (a.k.a. repeatable read): each transaction sees one consistent snapshot.</div>
+            </div>
+            <div class="quiz-box" id="ddia-4">
+                <h4>Two transactions both read a counter = 10, each add 1, each write 11. The final value is 11, not 12. This bug is&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-4', this, true)">A) a lost update</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-4', this, false)">B) a dirty read</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-4', this, false)">C) write skew</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-4', this, false)">D) a phantom</button>
+                <div class="quiz-explanation"><strong>A &mdash; a lost update.</strong> The classic read-modify-write race. Fixes: an <strong>atomic</strong> operation (<code>UPDATE … SET n = n + 1</code>), an explicit lock (<code>SELECT … FOR UPDATE</code> &mdash; pessimistic), or a compare-and-set on a version (optimistic).</div>
+            </div>
+            <div class="quiz-box" id="ddia-6">
+                <h4>Two users book the <em>same seat</em> at once; each checks &ldquo;is it free?&rdquo;, sees yes, and books. DDIA calls this&hellip;</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-6', this, false)">A) a dirty write</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-6', this, true)">B) write skew / a phantom</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-6', this, false)">C) a lost update</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-6', this, false)">D) a clock-skew error</button>
+                <div class="quiz-explanation"><strong>B &mdash; write skew (via a phantom).</strong> Each transaction's decision depends on rows the other is about to change; the &ldquo;is it free?&rdquo; check is a <em>phantom</em>. (Same shape as DDIA's two-doctors-on-call and meeting-room examples.) This is exactly our seat invariant.</div>
+            </div>
+            <div class="quiz-box" id="ddia-8">
+                <h4>DDIA lists three ways to implement serializability. Which trio?</h4>
+                <button class="quiz-option" onclick="checkQuiz('ddia-8', this, true)">A) Actual serial execution · Two-phase locking (2PL) · Serializable snapshot isolation (SSI)</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-8', this, false)">B) Sharding · Replication · Caching</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-8', this, false)">C) Indexes · Views · Triggers</button>
+                <button class="quiz-option" onclick="checkQuiz('ddia-8', this, false)">D) Read Committed · Snapshot · Read Uncommitted</button>
+                <div class="quiz-explanation"><strong>A.</strong> <em>Actual serial execution</em> (single-threaded, e.g. Redis/VoltDB), <em>2PL</em> (pessimistic &mdash; acquire locks, can be slow under contention), and <em>SSI</em> (optimistic &mdash; run freely, abort on a detected conflict). Note the mapping: <strong>2PL ≈ pessimistic, SSI ≈ optimistic</strong> &mdash; the very trade-off from the section above.</div>
+            </div>
+            <div class="highlight-box info"><strong>The through-line:</strong> weaker isolation is faster but leaks anomalies &mdash; dirty reads, read skew, lost updates, and finally <strong>write skew / phantoms</strong> (our seat race). Serializable closes them, implemented as serial execution, <strong>2PL (pessimistic)</strong>, or <strong>SSI (optimistic)</strong> &mdash; the same two strategies you just compared.</div>
+        </div>
+    </section>
+
+    <!-- ===== BUILD ===== -->
+    <section id="build">
+        <div class="section-container">
+            <span class="section-label blue">The live build</span>
+            <h2 class="section-title">Five stages, leaves first</h2>
+            <div class="card-grid">
+                <div class="card"><div class="card-title">1 &middot; Vocabulary</div><p class="card-desc">The four enums, <code>BASE_PRICE</code>, <code>HOLD_TTL</code> / <code>CANCEL_CUTOFF</code>, the three exceptions, frozen <code>Seat</code> / <code>Movie</code>.</p></div>
+                <div class="card"><div class="card-title">2 &middot; Per-show state</div><p class="card-desc"><code>ShowSeat</code> (status + price + <code>is_lock_expired</code>); <code>Show</code> owning its <code>{id&rarr;ShowSeat}</code> + a <code>threading.Lock</code>.</p></div>
+                <div class="card"><div class="card-title">3 &middot; The records</div><p class="card-desc"><code>User</code>, <code>Ticket</code>, frozen <code>Payment</code>, and the transient <code>Hold</code> receipt.</p></div>
+                <div class="card"><div class="card-title">4 &middot; Strategies + service</div><p class="card-desc"><code>PricingStrategy</code>; the <strong><code>SeatLocker</code></strong> (PerShowLock / NaiveLocker); <code>BookingService</code> &mdash; each command <em>guard &rarr; act &rarr; record</em>.</p></div>
+                <div class="card"><div class="card-title">5 &middot; Demos</div><p class="card-desc">Every FR driven, ending in the headline: the <strong>same race under both lockers</strong> &mdash; naive double-books, per-show books once.</p></div>
+            </div>
+            <div class="highlight-box success" style="margin-top: 22px;"><code>cd code/bookmyshow &amp;&amp; python3 main.py</code> &rarr; all asserts green &middot; <code>python3 main.py play</code> &rarr; the interactive booking shell with a live GOLD/DIAMOND/PLATINUM seat map.</div>
+        </div>
+    </section>
+
+    <!-- ===== BACKEND ===== -->
+    <section id="backend">
+        <div class="section-container">
+            <span class="section-label success">From engine to backend</span>
+            <h2 class="section-title">The schema falls out of the diagram</h2>
+            <p class="section-subtitle">Each class becomes a table; the <code>ShowSeat</code> association class becomes the associative table; each invariant becomes a constraint.</p>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>On the class diagram</th><th>In the schema</th></tr></thead>
+                    <tbody>
+                        <tr><td>Each class (Show, Seat, Ticket, Payment)</td><td>a table; attributes &rarr; columns</td></tr>
+                        <tr><td>Composition ◆ (Cinema ◆ Screen ◆ Seat)</td><td>FK + <code>ON DELETE CASCADE</code></td></tr>
+                        <tr><td><strong><code>ShowSeat</code></strong> (the association class)</td><td>the <code>show_seat(show_id, seat_id, status, price, ticket_id)</code> table</td></tr>
+                        <tr><td>enums (SeatType, SeatStatus…)</td><td><code>VARCHAR</code> + <code>CHECK (... IN (…))</code></td></tr>
+                        <tr><td><strong>no-double-book (FR-9)</strong></td><td><code>UNIQUE(show_id, seat_id)</code> on booked rows</td></tr>
+                        <tr><td>pay-once (FR-8)</td><td><code>UNIQUE(ticket_id)</code> on <code>payment</code></td></tr>
+                        <tr><td>the hold</td><td><code>ShowSeat.status = LOCKED</code> + <code>locked_until</code>, <strong>or</strong> a Redis key whose TTL is the hold window</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="highlight-box info">The in-memory <code>payments.exists_for(ticket_id)</code> guard <em>is</em> the <code>UNIQUE(ticket_id)</code> constraint; the per-show lock's no-double-book <em>is</em> the <code>UNIQUE(show_id, seat_id)</code> constraint. Same invariant, one layer down.</div>
+        </div>
+    </section>
+
+    <!-- ===== TRADE-OFFS ===== -->
+    <section id="tradeoffs">
+        <div class="section-container">
+            <span class="section-label warning">Step 7 &mdash; Trade-offs</span>
+            <h2 class="section-title">Say these out loud</h2>
+            <div class="card-grid">
+                <div class="card"><div class="card-icon">&#128274;</div><div class="card-title">Lock granularity</div><p class="card-desc">Per-show is the sweet spot. Per-seat is finer but multi-seat holds risk deadlock; global kills concurrency.</p></div>
+                <div class="card"><div class="card-icon">&#9203;</div><div class="card-title">Lazy expiry vs sweep</div><p class="card-desc">Lazy frees on access (simple). A background sweep frees seats even when no one's looking &mdash; better for the next buyer.</p></div>
+                <div class="card"><div class="card-icon">&#127759;</div><div class="card-title">In-memory vs distributed</div><p class="card-desc">The per-show lock is the teaching default; production leans on the <code>UNIQUE</code> floor + optimistic updates + a Redis lock.</p></div>
+                <div class="card"><div class="card-icon">&#129681;</div><div class="card-title">ShowSeat rows: when?</div><p class="card-desc">Pre-generate every <code>ShowSeat</code> at show creation (simple reads, more rows) vs on first touch (lean, more logic).</p></div>
+            </div>
+            <div class="highlight-box success" style="margin-top: 24px;"><strong>Next &mdash; Splitwise (design + code):</strong> from one show's seat map to a graph of who-owes-whom &mdash; balances, simplification, and split strategies (equal / exact / percentage) become the open variable.</div>
+        </div>
+    </section>
+
+    <footer><p>LLD-27: BookMyShow &mdash; Code &bull; Academy Feb 26 &mdash; Python Backend LLD Batch</p></footer>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) { btn.classList.add('correct'); }
+        else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+    window.addEventListener('scroll', () => {
+        const w = document.body.scrollTop || document.documentElement.scrollTop;
+        const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (w / h * 100) + '%';
+    });
+    </script>
+</body>
+</html>
