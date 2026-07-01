@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Calendar &mdash; Database Design (Minimal Modeling)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --bg-card: #1a1a2e; --accent-primary: #a855f7; --accent-secondary: #7c3aed; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --bg-card: #ffffff; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #c084fc, #a855f7); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #c084fc; }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.82rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 760px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(168, 85, 247, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #c084fc, #a855f7, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 740px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #c084fc; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px 22px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; margin-top: 26px; }
+        .card-icon { font-size: 1.8rem; margin-bottom: 10px; }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65; }
+        .card-desc strong { color: var(--text-primary); }
+        .highlight-box { background: rgba(168, 85, 247, 0.08); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger  { background: rgba(239, 68, 68, 0.1);  border-color: var(--accent-danger);  }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .highlight-box.info    { background: rgba(59, 130, 246, 0.08); border-color: var(--accent-blue);   }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 18px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after  { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .comparison-card pre, pre.code { font-family: 'Fira Code', monospace; font-size: 0.8rem; line-height: 1.55; overflow-x: auto; margin-top: 8px; background: #1e1e2e; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; }
+        pre.code .kw { color: #c084fc; } pre.code .st { color: #86efac; } pre.code .cm { color: #64748b; font-style: italic; } pre.code .fn { color: #60a5fa; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.86rem; }
+        tr:last-child td { border-bottom: none; }
+        code { font-family: 'Fira Code', monospace; background: rgba(168, 85, 247, 0.12); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 24px; margin: 24px 0; }
+        .quiz-box h4 { margin-bottom: 14px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(168, 85, 247, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(168, 85, 247, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; margin: 20px 0; overflow-x: auto; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+        .collapsible-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { font-size: 1rem; margin: 0; font-weight: 600; }
+        .collapsible-arrow { transition: transform 0.3s; color: var(--text-muted); flex-shrink: 0; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 5000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        ul, ol { margin-left: 22px; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        #diagram .section-container, #ddia .section-container { max-width: 1400px; }
+        #diagram, #ddia { padding-left: 26px; padding-right: 26px; }
+        .diagram-box svg text.rl { paint-order: stroke; stroke: var(--bg-secondary); stroke-width: 4px; stroke-linejoin: round; }
+            #diagram .section-container, #balances .section-container, #usecase .section-container { max-width: 1360px; }
+        #diagram, #balances { padding-left: 26px; padding-right: 26px; }
+            #recurrence .section-container, #freebusy .section-container, #clarify .section-container { max-width: 1180px; }
+        #recurrence, #freebusy { padding-left: 26px; padding-right: 26px; }
+    </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav">
+  <div class="nav-brand">Google Calendar &middot; DB Design</div>
+  <ul class="nav-links"><li><a href="#approach">Approach</a></li><li><a href="#problem">Requirements</a></li><li><a href="#allday">All-day</a></li><li><a href="#timed">Timed &amp; TZ</a></li><li><a href="#recurrence">Recurrence</a></li><li><a href="#slots">Slots</a></li><li><a href="#model">Logical model</a></li><li><a href="#sql">SQL</a></li><li><a href="#decisions">Trade-offs</a></li><li><a href="#principles">Principles</a></li><li><a href="#gaps">Gaps</a></li><li><a href="#examples">Examples</a></li><li><a href="index.html" style="color:var(--accent-primary);font-weight:700">LLD page &#8599;</a></li></ul>
+  <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+</nav>
+<section class="hero">
+<div class="hero-icon">&#128202;</div>
+<h1>Google Calendar &mdash; Database Design</h1>
+<p class="hero-meta">A <strong>Minimal Modeling</strong> walk-through &middot; logical model first, then SQL</p>
+<p class="hero-tagline" style="max-width:640px;margin:0 auto 22px"><strong>Design first, model in your head, then write the tables.</strong> Requirements &rarr; <em>anchors</em> (nouns you can count) &rarr; <em>attributes</em> (as questions) &rarr; <em>links</em> (with cardinality sentences) &rarr; physical <strong>SQL</strong>.</p>
+</section>
+<section style="min-height:0;padding:24px 60px 0;border:none"><div class="section-container"><div class="highlight-box info">&#128218; This page turns the excellent <a href="https://kb.databasedesignbook.com/posts/google-calendar/" style="color:var(--accent-primary);font-weight:700">databasedesignbook.com Google Calendar tutorial</a> into an interactive, bullet-by-bullet walk-through &mdash; every concept, in the same style as the <a href="index.html" style="color:var(--accent-primary);font-weight:700">LLD design page</a>. Where that page asks &ldquo;what <em>classes</em>?&rdquo;, this one asks &ldquo;what <em>tables</em>?&rdquo; &mdash; a complementary <strong>data-modelling</strong> lens.</div></div></section>
+<section id="approach">
+<div class="section-container">
+<span class="section-label">the method</span>
+<h2 class="section-title">Minimal Modeling &mdash; logical first, physical later</h2>
+<p class="section-subtitle">Map business requirements to a small <strong>logical model</strong> in plain sentences, <em>before</em> touching SQL. Only model what you actually need.</p>
+<div class="card-grid"><div class="card"><div class="card-icon">&#9875;</div><div class="card-title">1 &middot; Anchors</div><div class="card-desc">The <strong>nouns you can count</strong> &mdash; entities that get their own table. Validate with a sentence: &ldquo;there are several <em>X</em> in our database&rdquo;.</div></div><div class="card"><div class="card-icon">&#10067;</div><div class="card-title">2 &middot; Attributes</div><div class="card-desc">Data on an anchor, written as a <strong>question</strong>: &ldquo;What is the email of this User?&rdquo; &mdash; plus an example value to confirm your thinking.</div></div><div class="card"><div class="card-icon">&#128279;</div><div class="card-title">3 &middot; Links</div><div class="card-desc">Relationships as <strong>two cardinality sentences</strong>, one each way: &ldquo;User creates several DayEvents / a DayEvent is created by one User.&rdquo;</div></div><div class="card"><div class="card-icon">&#128190;</div><div class="card-title">4 &middot; Physical</div><div class="card-desc">Map the logical model to SQL: anchors&rarr;tables, attributes&rarr;columns, 1:N&rarr;foreign keys, M:N&rarr;junction tables.</div></div></div><div class="highlight-box success"><strong>Why questions &amp; sentences?</strong> Short column names (<code>end_date</code>, <code>is_skipped</code>) can&rsquo;t carry meaning by themselves. The logical layer keeps the <em>semantics</em> in human-readable form, and the two-way sentences catch modelling mistakes early: <em>if a sentence doesn&rsquo;t match reality, you just prevented a bug.</em></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128161; The core principle &mdash; model only what you know you need</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li><strong>Minimal Modeling</strong> deliberately resists adding abstractions for hypothetical futures.</li><li><strong>Trade-off:</strong> too little &rarr; you may overfit to today&rsquo;s known data; too much &rarr; friction from complexity that never pays off.</li><li>The cure for both is the same: <strong>write the requirement as a sentence</strong> and check it against reality.</li></ul></div></div></div>
+</div>
+</section>
+<section id="problem">
+<div class="section-container">
+<span class="section-label blue">the problem</span>
+<h2 class="section-title">What we&rsquo;re modelling</h2>
+<p class="section-subtitle">A Google-Calendar clone &mdash; &ldquo;every feature of calendaring, and just enough of the rest to discuss the interesting parts.&rdquo;</p>
+<h3 style="margin:6px 0 10px;font-size:1.2rem">&#128203; Four kinds of event</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>All-day events</strong>, non-repeating &mdash; e.g. a <em>Company Retreat</em> spanning Jan 14&ndash;15 (single or multi-day).</li><li><strong>Timed events</strong>, non-repeating &mdash; a <em>Catch-up meeting</em> 12:30&ndash;13:15, with a time zone (can even cross zones, like a flight).</li><li><strong>Repeating all-day events</strong> &mdash; daily / weekly / monthly / annually, with intervals and stop conditions.</li><li><strong>Repeating timed events</strong> &mdash; same recurrence machinery, with times.</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#127919; What each event must support</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>Attributes:</strong> title, description, location, begin/end date-time.</li><li><strong>Recurrence:</strong> daily/weekly/monthly/annually, every <em>N</em> of those; weekly picks weekdays; monthly picks <em>same date</em> vs <em>same weekday</em>; stop <em>forever</em> / <em>until a date</em> / <em>after N reps</em>.</li><li><strong>Instance overrides:</strong> move or skip a single occurrence; change its location, guests, attendance &mdash; without touching the series.</li><li><strong>Pattern changes:</strong> edit the series even after some occurrences happened (&ldquo;switch Tue+Thu weekly &rarr; every other Friday&rdquo;).</li><li><strong>Multi-user:</strong> events belong to a creating user (sharing is acknowledged but out of scope here).</li></ul><div class="highlight-box warning"><strong>Scope for this walk-through:</strong> we implement the calendaring core in full and keep users minimal. Sharing, attendees/RSVP, reminders, colours, locations, free/busy and full time-zone rules are left as extensions (see <a href="#gaps" style="color:var(--accent-primary)">Gaps</a>).</div>
+</div>
+</section>
+<section id="allday">
+<div class="section-container">
+<span class="section-label success">step 1</span>
+<h2 class="section-title">Basic all-day events</h2>
+<p class="section-subtitle">Start with the simplest slice: non-repeating, date-based events that can span multiple days.</p>
+<h3 style="margin:6px 0 10px;font-size:1.2rem">&#9875; Anchors &amp; attributes</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>User</strong> &mdash; &ldquo;What is the email of this User?&rdquo; &rarr; <code>email</code> (string, e.g. <code>cjdate@example.org</code>).</li><li><strong>DayEvent</strong> &mdash; &ldquo;What is the name?&rdquo; &rarr; <code>name</code>; &ldquo;When does it begin/end?&rdquo; &rarr; <code>begin_date</code>, <code>end_date</code> (dates).</li><li><strong>Multi-day is the general case:</strong> a single-day event just has <code>begin_date == end_date</code> &mdash; one uniform shape.</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#128279; Link</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>User : DayEvent = 1 : N</strong> &mdash; &ldquo;a User creates several DayEvents / a DayEvent is created by exactly one User.&rdquo; &rarr; FK <code>day_events.user_id</code>.</li></ul><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128190; Physical tables (preview)</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">CREATE TABLE users (
+  id    INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  email VARCHAR(64) NOT NULL
+);
+
+CREATE TABLE day_events (
+  id         INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  user_id    INTEGER NOT NULL,
+  name       VARCHAR(128) NOT NULL,
+  begin_date DATE NOT NULL,
+  end_date   DATE NOT NULL
+);</pre></div></div></div>
+</div>
+</section>
+<section id="timed">
+<div class="section-container">
+<span class="section-label warning">step 2</span>
+<h2 class="section-title">Timed events &amp; time zones</h2>
+<p class="section-subtitle">Add clock times &mdash; and the thorniest decision in the whole model: <em>how</em> to store a time.</p>
+<div class="quiz-box" id="q-tz"><h4>You schedule a billiard game for 09:30 on 6 Sep 2058, Cologne time. How do you store it?</h4><button class="quiz-option" onclick="checkQuiz('q-tz', this, false)">Convert to UTC now and store the instant.</button><button class="quiz-option" onclick="checkQuiz('q-tz', this, true)">Store the local wall-clock time <em>plus</em> the time-zone id; resolve the UTC offset at display time.</button><button class="quiz-option" onclick="checkQuiz('q-tz', this, false)">Store the local time only, no zone.</button><div class="quiz-explanation"><strong>Store local time + zone.</strong> Time zones change &mdash; we don&rsquo;t yet know 2058&rsquo;s UTC offset for Cologne. Storing UTC now would bake in an offset that legislation may move; storing local time without the zone loses the information needed to render it. So keep the data <em>exactly as the user entered it</em> and apply the (possibly future) offset later. <span style='opacity:.8'>(Note: this is the opposite of the LLD page&rsquo;s &ldquo;store UTC&rdquo; default &mdash; different lens, different trade-off; see the contrast at the end.)</span></div></div><h3 style="margin:22px 0 10px;font-size:1.2rem">&#9875; Anchors &amp; attributes</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>Timezone</strong> &mdash; <code>name</code> (e.g. <code>Europe/Kyiv</code>). <em>Minimal</em> on purpose: UTC offsets, DST rules, historical changes and retirement are acknowledged but not modelled here.</li><li><strong>TimeEvent</strong> &mdash; <code>name</code>, <code>begin_local_time</code>, <code>end_local_time</code> (DATETIME, local).</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#128279; Links &mdash; two time zones per event</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>User : TimeEvent = 1 : N</strong> &rarr; <code>time_events.user_id</code>.</li><li><strong>Timezone : TimeEvent for the <em>start</em> = 1 : N</strong> &rarr; <code>start_timezone_id</code>.</li><li><strong>Timezone : TimeEvent for the <em>end</em> = 1 : N</strong> &rarr; <code>end_timezone_id</code>.</li><li>Why two? A flight departs Amsterdam and lands in London &mdash; start and end can be in <em>different</em> zones. Most events share one; the two-zone design is the general case.</li></ul><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128190; Physical table</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">CREATE TABLE timezones (
+  id   INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(64) NOT NULL
+);
+
+CREATE TABLE time_events (
+  id                INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  user_id           INTEGER NOT NULL,
+  start_timezone_id INTEGER NOT NULL,
+  end_timezone_id   INTEGER NOT NULL,
+  name              VARCHAR(128) NOT NULL,
+  begin_local_time  DATETIME NOT NULL,
+  end_local_time    DATETIME NOT NULL
+);</pre></div></div></div>
+</div>
+</section>
+<section id="recurrence">
+<div class="section-container">
+<span class="section-label success">step 3</span>
+<h2 class="section-title">Repeated events &mdash; recurrence</h2>
+<p class="section-subtitle">The rich part: frequencies, intervals, weekday sets, monthly modes and stop conditions &mdash; all on the event row, using <em>tangled attributes</em>.</p>
+<h3 style="margin:6px 0 10px;font-size:1.2rem">&#129525; Tangled attributes</h3><ul style="line-height:1.9;margin:0 0 4px"><li>A <strong>tangled attribute</strong> is only meaningful when another is set &mdash; signalled by phrasing the question with a condition: &ldquo;<em>For monthly events:</em> which day of the month?&rdquo;</li><li>Physically, tangled attributes are <strong>nullable columns</strong>; the application validates the combination.</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#128197; DayEvent gains these attributes</h3><ul style="line-height:1.9;margin:0 0 4px"><li><code>repeated</code> &mdash; <em>daily / weekly / monthly / annually</em> (NULL = one-off).</li><li><code>repetition_step</code> &mdash; every <em>N</em> (e.g. 2 = every other).</li><li><code>repeated_monthly_on</code> &mdash; <em>same_day</em> vs <em>same_weekday</em> (only for monthly).</li><li><code>repeated_until</code> &mdash; <em>forever / until_date / N_repetitions</em>.</li><li><code>repeated_until_date</code> &mdash; the end date (only if until_date).</li><li><code>repeated_reps</code> &mdash; the count (only if N_repetitions).</li></ul><div class="quiz-box" id="q-days"><h4>A weekly event repeats on Mon, Wed &amp; Fri. How do you store the chosen weekdays?</h4><button class="quiz-option" onclick="checkQuiz('q-days', this, false)">A comma-separated string or JSON array column on the event.</button><button class="quiz-option" onclick="checkQuiz('q-days', this, false)">Seven boolean columns: mon, tue, wed, &hellip;</button><button class="quiz-option" onclick="checkQuiz('q-days', this, true)">An M:N link to a small <em>DayOfTheWeek</em> anchor via a junction table.</button><div class="quiz-explanation"><strong>M:N via a junction.</strong> <code>DayOfTheWeek</code> is a <em>well-known anchor</em> &mdash; a fixed 7-row set (&ldquo;Mon&rdquo;&hellip;&ldquo;Sun&rdquo;, string ids), like currencies or countries. Modelling it as a proper anchor keeps the logical model uniform and defers the storage choice; a JSON array hides a relationship at the logical level, and 7 booleans don&rsquo;t generalise.</div></div><h3 style="margin:22px 0 10px;font-size:1.2rem">&#127760; Well-known anchor: DayOfTheWeek</h3><ul style="line-height:1.9;margin:0 0 4px"><li>Fixed ids <code>&quot;Mon&quot;&hellip;&quot;Sun&quot;</code> &mdash; unusual <em>string</em> keys, no growth expected.</li><li><strong>M:N</strong>: &ldquo;a weekly DayEvent happens on several DaysOfTheWeek / a DayOfTheWeek holds several DayEvents.&rdquo; &rarr; junction <code>day_event_dows</code> (and <code>time_event_dows</code>).</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#128203; Ten patterns, one set of columns</h3><div class="table-container"><table><tr><th>Pattern</th><th>How it&rsquo;s stored</th></tr><tr><td>Non-repeating</td><td><code>repeated = NULL</code></td></tr><tr><td>Every day</td><td><code>repeated='daily', step=1</code></td></tr><tr><td>Every 2 days</td><td><code>repeated='daily', step=2</code></td></tr><tr><td>Weekly Mon/Wed/Fri</td><td><code>repeated='weekly', step=1</code> + M:N links to Mon, Wed, Fri</td></tr><tr><td>Every other week</td><td><code>repeated='weekly', step=2</code> + day links</td></tr><tr><td>Monthly, same date</td><td><code>repeated='monthly', step=1, monthly_on='same_day'</code></td></tr><tr><td>Monthly, 2nd Tuesday</td><td><code>repeated='monthly', monthly_on='same_weekday'</code></td></tr><tr><td>Annually</td><td><code>repeated='annually', step=1</code></td></tr><tr><td>Until a date</td><td><code>repeated_until='until_date', until_date=2024-01-17</code></td></tr><tr><td>For N reps</td><td><code>repeated_until='N_repetitions', reps=10</code></td></tr></table></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128190; Physical: extended day_events + junction</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">ALTER-equivalent -- day_events now also has:
+  repeated            VARCHAR(24) NULL,   -- daily|weekly|monthly|annually
+  repetition_step     INTEGER     NULL,
+  repeated_monthly_on VARCHAR(24) NULL,   -- same_day|same_weekday
+  repeated_until      VARCHAR(24) NULL,   -- forever|until_date|N_repetitions
+  repeated_until_date DATE        NULL,
+  repeated_reps       INTEGER     NULL;
+
+CREATE TABLE days_of_the_week ( id VARCHAR(3) NOT NULL PRIMARY KEY );  -- 7 rows
+
+CREATE TABLE day_event_dows (
+  day_event_id INTEGER NOT NULL,
+  day_of_week  VARCHAR(3) NOT NULL,
+  PRIMARY KEY (day_event_id, day_of_week),
+  KEY (day_of_week)
+);</pre></div></div></div>
+</div>
+</section>
+<section id="slots">
+<div class="section-container">
+<span class="section-label danger">step 4</span>
+<h2 class="section-title">Rendering the calendar &mdash; slots</h2>
+<p class="section-subtitle">Querying raw recurrence rules to paint a week is painful. So <em>materialise</em> each occurrence as a <strong>slot</strong>.</p>
+<h3 style="margin:6px 0 10px;font-size:1.2rem">&#128269; The problem</h3><ul style="line-height:1.9;margin:0 0 4px"><li>To show &ldquo;the week of Feb 26&rdquo; from rules alone you must expand every recurrence, honour exceptions, and clip to the window &mdash; expensive and fiddly on every read.</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#9875; DaySlot &mdash; one materialised occurrence</h3><ul style="line-height:1.9;margin:0 0 4px"><li><code>the_date</code> &mdash; which day this slot happens (can differ from the series if it was <strong>moved</strong>).</li><li><code>is_skipped</code> &mdash; yes/no; a <strong>cancelled</strong> single occurrence (TINYINT, default 0).</li><li><strong>DayEvent : DaySlot = 1 : N</strong> &rarr; <code>day_slots.day_event_id</code>.</li></ul><div class="quiz-box" id="q-slots"><h4>Why create a DaySlot even for a <em>non-repeating</em> event?</h4><button class="quiz-option" onclick="checkQuiz('q-slots', this, false)">To save storage versus storing the event twice.</button><button class="quiz-option" onclick="checkQuiz('q-slots', this, true)">So rendering always queries one uniform place &mdash; the slots table &mdash; with no &ldquo;repeating vs not&rdquo; branching.</button><button class="quiz-option" onclick="checkQuiz('q-slots', this, false)">To enforce a uniqueness constraint on dates.</button><div class="quiz-explanation"><strong>Uniform rendering.</strong> &ldquo;Always create a slot&rdquo; means the calendar view is a single query over <code>day_slots</code> &mdash; no conditional logic for repeating vs one-off. Per-instance moves/skips/locations/guests all hang off the slot too.</div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#9888;&#65039; Trade-off: infinite recurrences (the birthday problem)</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>An annual birthday &ldquo;forever&rdquo; can&rsquo;t materialise infinite slots.</li><li>Options: (a) a bounded window (e.g. 100 years), (b) <strong>generate on demand</strong> when a view is requested, (c) a hybrid &mdash; materialise a window, generate beyond. The tutorial leaves the choice open.</li><li><strong>Date edge cases:</strong> Feb 29 birthdays and &ldquo;the 31st&rdquo; monthly need a rule (reject, adjust, or special-case).</li></ul></div></div></div><h3 style="margin:22px 0 10px;font-size:1.2rem">&#10133; Per-instance extras (just add links)</h3><ul style="line-height:1.9;margin:0 0 4px"><li>Different location, guest list, or attendance for one occurrence &rarr; <strong>add more links from DaySlot</strong> to other anchors. The pattern scales without reshaping the core.</li></ul>
+</div>
+</section>
+<section id="timeslots">
+<div class="section-container">
+<span class="section-label danger">step 5</span>
+<h2 class="section-title">Time slots</h2>
+<p class="section-subtitle">The same slot pattern for timed events &mdash; carrying times and their zones.</p>
+<ul style="line-height:1.9;margin:0 0 4px"><li><strong>TimeSlot</strong> &mdash; <code>begin_local_time</code>, <code>end_local_time</code>, <code>is_skipped</code>; created even for non-repeating TimeEvents (same uniformity).</li><li><strong>TimeEvent : TimeSlot = 1 : N</strong> &rarr; <code>time_slots.time_event_id</code>.</li><li><strong>Timezone : TimeSlot</strong> (start &amp; end) = 1 : N each &rarr; <code>start_timezone_id</code>, <code>end_timezone_id</code> &mdash; a moved slot can even land on a different day, so it keeps its own times and zones.</li></ul><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128190; Physical: time_slots</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">CREATE TABLE time_slots (
+  id                INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  time_event_id     INTEGER NOT NULL,
+  begin_local_time  DATETIME NOT NULL,
+  end_local_time    DATETIME NOT NULL,
+  start_timezone_id INTEGER NOT NULL,
+  end_timezone_id   INTEGER NOT NULL,
+  is_skipped        TINYINT UNSIGNED NOT NULL DEFAULT 0
+);</pre></div></div></div>
+</div>
+</section>
+<section id="model">
+<div class="section-container">
+<span class="section-label blue">the whole picture</span>
+<h2 class="section-title">The complete logical model</h2>
+<p class="section-subtitle">Seven anchors, twenty-one attributes, ten links &mdash; the entire calendaring core.</p>
+<div class="diagram-box"><svg viewBox="0 0 1180 570" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;"><line x1="160" y1="95" x2="128" y2="250" stroke="#94a3b8" stroke-width="1.7"/><text x="146" y="111" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">1</text><text x="112" y="242" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><text x="120" y="160" text-anchor="middle" font-size="10.5" font-style="italic" fill="#cbd5e1" font-family="Inter,sans-serif">creates</text><line x1="250" y1="68" x2="735" y2="250" stroke="#94a3b8" stroke-width="1.7"/><text x="258" y="60" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">1</text><text x="717" y="242" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><line x1="1025" y1="95" x2="840" y2="250" stroke="#94a3b8" stroke-width="1.7"/><text x="1011" y="111" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">1</text><text x="820" y="242" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><text x="910" y="226" text-anchor="middle" font-size="10.5" font-style="italic" fill="#cbd5e1" font-family="Inter,sans-serif">start &amp; end (&times;2)</text><line x1="1100" y1="95" x2="870" y2="470" stroke="#94a3b8" stroke-width="1.7"/><text x="882" y="462" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><line x1="275" y1="286" x2="380" y2="282" stroke="#94a3b8" stroke-width="1.7"/><text x="281" y="278" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">M</text><text x="362" y="274" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><text x="328" y="272" text-anchor="middle" font-size="10.5" font-style="italic" fill="#cbd5e1" font-family="Inter,sans-serif">on days</text><line x1="570" y1="282" x2="650" y2="286" stroke="#94a3b8" stroke-width="1.7"/><text x="574" y="274" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><text x="632" y="278" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">M</text><line x1="168" y1="322" x2="168" y2="470" stroke="#94a3b8" stroke-width="1.7"/><text x="176" y="338" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">1</text><text x="176" y="462" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><text x="126" y="400" text-anchor="middle" font-size="10.5" font-style="italic" fill="#cbd5e1" font-family="Inter,sans-serif">generates</text><line x1="765" y1="322" x2="765" y2="470" stroke="#94a3b8" stroke-width="1.7"/><text x="773" y="338" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">1</text><text x="773" y="462" font-size="12" font-weight="800" fill="#e2e8f0" font-family="Inter,sans-serif">N</text><rect x="70" y="40" width="180" height="55" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><text x="160" y="60" text-anchor="middle" font-size="13.5" font-weight="800" fill="#4338ca" font-family="Inter,sans-serif">User</text><line x1="70" y1="70" x2="250" y2="70" stroke="#6366f1" stroke-width="1" opacity="0.5"/><text x="80" y="84" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">email</text><rect x="930" y="40" width="190" height="55" rx="8" fill="#fef9c3" stroke="#eab308" stroke-width="2"/><text x="1025" y="60" text-anchor="middle" font-size="13.5" font-weight="800" fill="#a16207" font-family="Inter,sans-serif">Timezone</text><line x1="930" y1="70" x2="1120" y2="70" stroke="#eab308" stroke-width="1" opacity="0.5"/><text x="940" y="84" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">name</text><rect x="60" y="250" width="215" height="72" rx="8" fill="#e0f2fe" stroke="#3b82f6" stroke-width="2"/><text x="168" y="270" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8" font-family="Inter,sans-serif">DayEvent</text><line x1="60" y1="280" x2="275" y2="280" stroke="#3b82f6" stroke-width="1" opacity="0.5"/><text x="70" y="294" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">name, begin/end_date</text><text x="70" y="311" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">repeated, step, until...</text><rect x="380" y="255" width="190" height="55" rx="8" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/><text x="475" y="275" text-anchor="middle" font-size="13.5" font-weight="800" fill="#7e22ce" font-family="Inter,sans-serif">DayOfTheWeek</text><line x1="380" y1="285" x2="570" y2="285" stroke="#a855f7" stroke-width="1" opacity="0.5"/><text x="390" y="299" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">id: "Mon".."Sun"</text><rect x="650" y="250" width="230" height="72" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><text x="765" y="270" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1e40af" font-family="Inter,sans-serif">TimeEvent</text><line x1="650" y1="280" x2="880" y2="280" stroke="#2563eb" stroke-width="1" opacity="0.5"/><text x="660" y="294" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">name</text><text x="660" y="311" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">begin/end_local_time</text><rect x="60" y="470" width="215" height="72" rx="8" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="168" y="490" text-anchor="middle" font-size="13.5" font-weight="800" fill="#047857" font-family="Inter,sans-serif">DaySlot</text><line x1="60" y1="500" x2="275" y2="500" stroke="#10b981" stroke-width="1" opacity="0.5"/><text x="70" y="514" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">the_date</text><text x="70" y="531" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">is_skipped</text><rect x="650" y="470" width="230" height="72" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/><text x="765" y="490" text-anchor="middle" font-size="13.5" font-weight="800" fill="#065f46" font-family="Inter,sans-serif">TimeSlot</text><line x1="650" y1="500" x2="880" y2="500" stroke="#059669" stroke-width="1" opacity="0.5"/><text x="660" y="514" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">begin/end_local_time</text><text x="660" y="531" font-size="10.5" fill="#334155" font-family="ui-monospace,monospace">is_skipped</text></svg></div><h3 style="margin:22px 0 10px;font-size:1.2rem">&#9875; Seven anchors</h3><div class="table-container"><table><tr><th>Anchor</th><th>Table</th><th>Id</th><th>Role</th></tr><tr><td>User</td><td>users</td><td>int</td><td>calendar owner</td></tr><tr><td>Timezone</td><td>timezones</td><td>int</td><td>zone definitions (minimal)</td></tr><tr><td>DayEvent</td><td>day_events</td><td>int</td><td>all-day <em>series</em> definition</td></tr><tr><td>TimeEvent</td><td>time_events</td><td>int</td><td>timed <em>series</em> definition</td></tr><tr><td>DayOfTheWeek</td><td>days_of_the_week</td><td>&quot;Mon&quot;&hellip;&quot;Sun&quot;</td><td>well-known anchor for weekly patterns</td></tr><tr><td>DaySlot</td><td>day_slots</td><td>int</td><td>one all-day <em>occurrence</em></td></tr><tr><td>TimeSlot</td><td>time_slots</td><td>int</td><td>one timed <em>occurrence</em></td></tr></table></div><h3 style="margin:22px 0 10px;font-size:1.2rem">&#128279; Ten links</h3><div class="table-container"><table><tr><th>From</th><th>To</th><th>Card.</th><th>Physical</th></tr><tr><td>User</td><td>DayEvent</td><td>1:N</td><td>day_events.user_id</td></tr><tr><td>User</td><td>TimeEvent</td><td>1:N</td><td>time_events.user_id</td></tr><tr><td>Timezone</td><td>TimeEvent (start)</td><td>1:N</td><td>start_timezone_id</td></tr><tr><td>Timezone</td><td>TimeEvent (end)</td><td>1:N</td><td>end_timezone_id</td></tr><tr><td>DayEvent</td><td>DayOfTheWeek</td><td>M:N</td><td>day_event_dows</td></tr><tr><td>TimeEvent</td><td>DayOfTheWeek</td><td>M:N</td><td>time_event_dows</td></tr><tr><td>DayEvent</td><td>DaySlot</td><td>1:N</td><td>day_slots.day_event_id</td></tr><tr><td>TimeEvent</td><td>TimeSlot</td><td>1:N</td><td>time_slots.time_event_id</td></tr><tr><td>Timezone</td><td>TimeSlot (start)</td><td>1:N</td><td>start_timezone_id</td></tr><tr><td>Timezone</td><td>TimeSlot (end)</td><td>1:N</td><td>end_timezone_id</td></tr></table></div>
+</div>
+</section>
+<section id="sql">
+<div class="section-container">
+<span class="section-label">step 7</span>
+<h2 class="section-title">Physical design &mdash; the SQL</h2>
+<p class="section-subtitle">One clean strategy: <strong>one table per anchor</strong> (7 tables) + one table per M:N link (2 junctions) = 8&ndash;9 tables.</p>
+<h3 style="margin:6px 0 10px;font-size:1.2rem">&#128260; Conversion rules</h3><ul style="line-height:1.9;margin:0 0 4px"><li><strong>Anchor &rarr; table</strong> (plural): User&rarr;users, DayEvent&rarr;day_events.</li><li><strong>Attribute &rarr; column</strong>; logical type &rarr; physical type; tangled &rarr; <code>NULL</code>, required &rarr; <code>NOT NULL</code>.</li><li><strong>1:N &rarr; foreign-key column</strong> on the N-side (<code>user_id</code>, <code>start_timezone_id</code>).</li><li><strong>M:N &rarr; junction table</strong> with a composite primary key on both ids.</li></ul><h3 style="margin:22px 0 10px;font-size:1.2rem">&#127919; Logical &rarr; physical types</h3><div class="table-container"><table><tr><th>Logical</th><th>Physical</th><th>Used for</th></tr><tr><td>string</td><td>VARCHAR(n)</td><td>emails, names</td></tr><tr><td>date</td><td>DATE</td><td>event dates</td></tr><tr><td>date/time (local)</td><td>DATETIME</td><td>event times</td></tr><tr><td>yes/no</td><td>TINYINT UNSIGNED</td><td>is_skipped (0/1)</td></tr><tr><td>integer</td><td>INTEGER</td><td>steps, counts</td></tr><tr><td>either/or/or</td><td>VARCHAR(24)</td><td>enumerated values</td></tr></table></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128190; The full schema</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">CREATE TABLE users (
+  id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  email VARCHAR(64) NOT NULL
+);
+CREATE TABLE timezones (
+  id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(64) NOT NULL
+);
+CREATE TABLE day_events (
+  id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  user_id INTEGER NOT NULL,
+  name VARCHAR(128) NOT NULL,
+  begin_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  repeated VARCHAR(24) NULL,
+  repetition_step INTEGER NULL,
+  repeated_monthly_on VARCHAR(24) NULL,
+  repeated_until VARCHAR(24) NULL,
+  repeated_until_date DATE NULL,
+  repeated_reps INTEGER NULL
+);
+CREATE TABLE time_events (
+  id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  user_id INTEGER NOT NULL,
+  start_timezone_id INTEGER NOT NULL,
+  end_timezone_id INTEGER NOT NULL,
+  name VARCHAR(128) NOT NULL,
+  begin_local_time DATETIME NOT NULL,
+  end_local_time DATETIME NOT NULL
+);
+CREATE TABLE day_slots (
+  id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  day_event_id INTEGER NOT NULL,
+  the_date DATE NOT NULL,
+  is_skipped TINYINT UNSIGNED NOT NULL DEFAULT 0
+);
+CREATE TABLE time_slots (
+  id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  time_event_id INTEGER NOT NULL,
+  begin_local_time DATETIME NOT NULL,
+  end_local_time DATETIME NOT NULL,
+  start_timezone_id INTEGER NOT NULL,
+  end_timezone_id INTEGER NOT NULL,
+  is_skipped TINYINT UNSIGNED NOT NULL DEFAULT 0
+);
+CREATE TABLE day_event_dows (
+  day_event_id INTEGER NOT NULL,
+  day_of_week VARCHAR(3) NOT NULL,
+  PRIMARY KEY (day_event_id, day_of_week),
+  KEY (day_of_week)
+);
+CREATE TABLE time_event_dows (
+  time_event_id INTEGER NOT NULL,
+  day_of_week VARCHAR(3) NOT NULL,
+  PRIMARY KEY (time_event_id, day_of_week),
+  KEY (day_of_week)
+);</pre></div></div></div><h3 style="margin:22px 0 10px;font-size:1.2rem">&#128204; Indexing</h3><ul style="line-height:1.9;margin:0 0 4px"><li>Junctions carry a <strong>composite PK</strong> (both ids) + a secondary <code>KEY (day_of_week)</code> for reverse lookups.</li><li>&ldquo;Obvious&rdquo; indexes like <code>day_events.user_id</code> are <strong>deliberately deferred</strong> &mdash; what to index depends on how the app actually queries. (Recommended read: <a href='https://use-the-index-luke.com/' style='color:var(--accent-primary)'>Use The Index, Luke</a>.)</li><li><strong>Skipped attributes</strong> (location, description, user name/password, attendees, RSVP, reminders, colour, free/busy) are left as exercises &mdash; add rows to the catalog and columns to the schema.</li></ul>
+</div>
+</section>
+<section id="decisions">
+<div class="section-container">
+<span class="section-label warning">the interesting parts</span>
+<h2 class="section-title">Six design decisions &amp; their trade-offs</h2>
+<p class="section-subtitle">Each is a fork with a clear reason &mdash; test yourself, then read the why.</p>
+<div class="quiz-box" id="q-eventtype"><h4>Should DayEvent and TimeEvent be one unified entity or two?</h4><button class="quiz-option" onclick="checkQuiz('q-eventtype', this, true)">Keep them separate for now &mdash; gather more evidence on their similarities/differences before merging.</button><button class="quiz-option" onclick="checkQuiz('q-eventtype', this, false)">Merge immediately into one Event with a nullable time.</button><button class="quiz-option" onclick="checkQuiz('q-eventtype', this, false)">Use inheritance with a shared base table right away.</button><div class="quiz-explanation"><strong>Stay separate (for now).</strong> Logical modelling lets you defer the unify-or-not call until you&rsquo;ve seen how alike the two really are. Premature unification bakes in assumptions; the model stays honest by waiting.</div></div><div class="quiz-box" id="q-slotgen"><h4>For a recurring series, when do you create the slot rows?</h4><button class="quiz-option" onclick="checkQuiz('q-slotgen', this, false)">Always generate them lazily, never store slots.</button><button class="quiz-option" onclick="checkQuiz('q-slotgen', this, true)">Materialise slots up front (with a bound / on-demand tail for infinite series) so reads are uniform.</button><button class="quiz-option" onclick="checkQuiz('q-slotgen', this, false)">Only store slots for events that were edited.</button><div class="quiz-explanation"><strong>Materialise slots.</strong> It simplifies rendering to a single query; the cost is handling unbounded recurrences via a window or on-demand generation &mdash; a deliberate, contained trade-off.</div></div><div class="quiz-box" id="q-tangled"><h4><code>repeated_until_date</code> only matters when <code>repeated_until='until_date'</code>. Model it as&hellip;</h4><button class="quiz-option" onclick="checkQuiz('q-tangled', this, false)">Its own table, always normalised out.</button><button class="quiz-option" onclick="checkQuiz('q-tangled', this, false)">A NOT NULL column with a sentinel default.</button><button class="quiz-option" onclick="checkQuiz('q-tangled', this, true)">A nullable column, with the app validating the combination (a tangled attribute).</button><div class="quiz-explanation"><strong>Nullable + app validation.</strong> Minimal Modeling keeps tangled attributes as nullable columns rather than over-normalising into extra tables &mdash; simpler, at the price of application-level checks.</div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128209; The other three, in one line each</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li><strong>Local time vs UTC</strong> &rarr; store <em>local + zone</em> (zones change; keep the user&rsquo;s intent).</li><li><strong>Weekdays: array vs junction</strong> &rarr; <em>junction + well-known anchor</em> (uniform logical model).</li><li><strong>Indexing</strong> &rarr; composite PKs on junctions now; everything else <em>deferred to real query patterns</em>.</li></ul></div></div></div>
+</div>
+</section>
+<section id="principles">
+<div class="section-container">
+<span class="section-label success">the method, distilled</span>
+<h2 class="section-title">Minimal Modeling principles</h2>
+<p class="section-subtitle">The reusable techniques behind the whole design.</p>
+<div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#9875; Anchor test &mdash; can you count them?</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>A real anchor passes a sentence: &ldquo;there are several <em>X</em>&rdquo; / &ldquo;a new <em>X</em> is added when&hellip;&rdquo;. If it fails, it&rsquo;s an attribute, not an anchor.</li></ul></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#10067; Attributes as questions</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>Define each attribute as &ldquo;What is the <em>X</em> of this <em>Anchor</em>?&rdquo; with an example value &mdash; the question carries the meaning a short column name can&rsquo;t.</li></ul></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#128279; Links as two cardinality sentences</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>Every link gets one sentence each way with a cardinality word (one / several).</li><li>If a sentence doesn&rsquo;t match reality, you&rsquo;ve caught a design mistake.</li><li>Three shapes: 1:1 (rare), 1:N, M:N.</li></ul></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#129525; Tangled attributes</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>Meaningful only under a condition; phrase the question with that condition; implement as a nullable column validated in code.</li></ul></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#127760; Well-known anchors</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>Small, stable, fixed-value sets (currencies, countries, days). May use non-integer ids; storage (table vs constant) is a physical-layer choice.</li></ul></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>&#9878;&#65039; Logical vs physical separation</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><ul style="line-height:1.9;margin:0 0 4px"><li>Finish the logical model before SQL &mdash; it keeps semantics readable and lets the schema evolve smoothly.</li></ul></div></div></div>
+</div>
+</section>
+<section id="gaps">
+<div class="section-container">
+<span class="section-label danger">honest scope</span>
+<h2 class="section-title">What&rsquo;s intentionally <em>not</em> modelled</h2>
+<p class="section-subtitle">Minimal Modeling names its gaps rather than hiding them &mdash; each is an add-a-link/anchor exercise.</p>
+<ul style="line-height:1.9;margin:0 0 4px"><li><strong>Sharing &amp; permissions</strong> &mdash; multi-user sharing is acknowledged; only the creating user is stored.</li><li><strong>Attendees / invitations / RSVP</strong> &mdash; would be an anchor + M:N link to events (with status).</li><li><strong>Reminders / notifications</strong> &mdash; an extra anchor per event.</li><li><strong>Event colour / calendar assignment, location, description</strong> &mdash; add columns / links.</li><li><strong>Free/busy &amp; conflict detection</strong> &mdash; not addressed.</li><li><strong>Full time-zone rules</strong> &mdash; UTC offsets, DST start/end/offset, historical changes, retirement &mdash; a separate technical exercise.</li><li><strong>Deeper per-instance exceptions</strong> &mdash; multiple attributes changing per occurrence.</li></ul><div class="highlight-box info">The point isn&rsquo;t that these don&rsquo;t matter &mdash; it&rsquo;s that you add them the <em>same way</em>: a new anchor, or a new link from an existing one, validated by a sentence.</div>
+</div>
+</section>
+<section id="examples">
+<div class="section-container">
+<span class="section-label">see it work</span>
+<h2 class="section-title">Example data walk-throughs</h2>
+<p class="section-subtitle">Three concrete inserts, from the simplest event to a recurring one with an override.</p>
+<div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>1&#65039;&#8419; Simple all-day event &mdash; &ldquo;Company Retreat&rdquo;, Jan 14&ndash;15</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">INSERT INTO users (id, email) VALUES (3, 'alice@example.com');
+
+INSERT INTO day_events (id, user_id, name, begin_date, end_date, repeated)
+VALUES (20, 3, 'Company retreat', '2024-01-14', '2024-01-15', NULL);
+
+INSERT INTO day_slots (id, day_event_id, the_date, is_skipped) VALUES
+  (1, 20, '2024-01-14', 0),
+  (2, 20, '2024-01-15', 0);
+
+-- render a week: just query the slots
+SELECT e.name, s.the_date
+FROM day_events e JOIN day_slots s ON s.day_event_id = e.id
+WHERE s.the_date BETWEEN '2024-01-14' AND '2024-01-20' AND e.user_id = 3;</pre></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>2&#65039;&#8419; Weekly meeting Mon/Wed/Fri &mdash; skip &amp; move one instance</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">INSERT INTO time_events (id, user_id, start_timezone_id, end_timezone_id,
+       name, begin_local_time, end_local_time)
+VALUES (1, 3, 1, 1, 'Project Status', '2024-02-12 14:00', '2024-02-12 15:00');
+
+INSERT INTO time_event_dows (time_event_id, day_of_week)
+VALUES (1,'Mon'), (1,'Wed'), (1,'Fri');
+
+-- materialised occurrences (dates computed by app logic)
+INSERT INTO time_slots (id, time_event_id, begin_local_time, end_local_time,
+       start_timezone_id, end_timezone_id, is_skipped) VALUES
+  (1, 1, '2024-02-12 14:00', '2024-02-12 15:00', 1,1, 0),
+  (2, 1, '2024-02-14 14:00', '2024-02-14 15:00', 1,1, 0),
+  (3, 1, '2024-02-16 14:00', '2024-02-16 15:00', 1,1, 0);
+
+-- cancel Feb 14
+UPDATE time_slots SET is_skipped = 1
+WHERE time_event_id = 1 AND begin_local_time = '2024-02-14 14:00';
+
+-- move Mar 1 to 16:00
+UPDATE time_slots SET begin_local_time='2024-03-01 16:00', end_local_time='2024-03-01 17:00'
+WHERE time_event_id = 1 AND begin_local_time = '2024-03-01 14:00';</pre></div></div></div><div class="collapsible"><div class="collapsible-header" onclick="toggleCollapsible(this)"><h4>3&#65039;&#8419; Monthly, third Monday until year-end</h4><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-content"><div class="collapsible-inner"><pre class="code">INSERT INTO day_events (id, user_id, name, begin_date, end_date,
+       repeated, repetition_step, repeated_monthly_on, repeated_until, repeated_until_date)
+VALUES (100, 3, 'Management Meeting', '2024-01-15', '2024-01-15',
+       'monthly', 1, 'same_weekday', 'until_date', '2024-12-31');
+-- app logic finds the 3rd Monday of each month and inserts day_slots until 2024-12-31</pre></div></div></div>
+</div>
+</section>
+<section id="contrast">
+<div class="section-container">
+<span class="section-label blue">two lenses</span>
+<h2 class="section-title">DB-design vs the LLD class-design page</h2>
+<p class="section-subtitle">Same problem, two complementary modelling lenses &mdash; worth holding both.</p>
+<div class="table-container"><table><tr><th></th><th>This page (DB / Minimal Modeling)</th><th>The <a href='index.html' style='color:var(--accent-primary)'>LLD page</a> (OO class design)</th></tr><tr><td>Unit</td><td><strong>Anchor / table</strong> (nouns you can count)</td><td><strong>Class</strong> (nouns + behaviour)</td></tr><tr><td>Recurrence</td><td>tangled columns on the event + <em>materialised slots</em></td><td>an <em>optional RecurrenceRule</em> object, expanded on read</td></tr><tr><td>Time</td><td>store <strong>local + zone</strong> (future-proof against law changes)</td><td>store <strong>UTC</strong>, render local (one instant)</td></tr><tr><td>Occurrences</td><td><strong>DaySlot / TimeSlot</strong> rows</td><td><em>computed</em> from the rule (+ EXDATE/override)</td></tr><tr><td>Weekdays</td><td>M:N to a <em>DayOfTheWeek</em> anchor</td><td><code>byday</code> field in the rule</td></tr><tr><td>Attendees</td><td>an exercise / extra link</td><td>an <strong>Attendee</strong> association class (RSVP on the join)</td></tr></table></div><div class="highlight-box success">Neither is &ldquo;more correct&rdquo;. The DB lens optimises for <strong>storage &amp; queries</strong> (materialise, index, normalise); the OO lens optimises for <strong>behaviour &amp; change</strong> (strategies, services, expand-on-read). Strong engineers move between them fluently.</div>
+</div>
+</section>
+
+<footer style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:0.9rem">
+  Interactive walk-through of the <a href="https://kb.databasedesignbook.com/posts/google-calendar/" style="color:var(--accent-primary)">databasedesignbook.com</a> Google Calendar tutorial &middot; built in the LLD-30 style.
+</footer>
+<script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+    function revealNextQ() {
+        const items = document.querySelectorAll('#ovq .ovq-item');
+        let shown = document.querySelectorAll('#ovq .ovq-item.show').length;
+        if (shown < items.length) { items[shown].classList.add('show'); shown++; }
+        const btn = document.getElementById('ovq-btn');
+        if (shown >= items.length) {
+            btn.style.display = 'none';
+            document.getElementById('ovq-tackle').style.display = 'block';
+        } else {
+            btn.innerHTML = 'Reveal the next question &rarr;  <span style="opacity:.7">(' + shown + ' / ' + items.length + ')</span>';
+        }
+    }
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) { btn.classList.add('correct'); }
+        else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+    window.addEventListener('scroll', () => {
+        const w = document.body.scrollTop || document.documentElement.scrollTop;
+        const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (w / h * 100) + '%';
+    });
+    </script>
+</body>
+</html>
