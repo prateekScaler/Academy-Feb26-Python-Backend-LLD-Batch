@@ -8,7 +8,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 |--------|---------|--------|
 | [Backend Project](Class-01-Module-Overview-Intro-Backend/) | 16 | Completed |
 | [Advanced Programming Concepts](LLD-01-Intro-to-LLD-Module-Overview/) | 12 | Completed |
-| [Low Level Design](LLD-13-SOLID-Principles/) | 18 | In Progress |
+| [Low Level Design](LLD-13-SOLID-Principles/) | 18 | Completed |
 | Advanced Software Engineering | 10 | Upcoming |
 
 ## Module 1: Backend Project (Completed)
@@ -49,7 +49,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 11 | [Python Advanced-3: Lambda Functions and FP](LLD-11-Python-Advanced-3-Lambda-FP/) | Functions as first-class objects, lambdas, map/filter/reduce, functools |
 | 12 | [Python Advanced-4: Exception Handling](LLD-12-Python-Advanced-4-Exception-Handling/) | try/except/else/finally, EAFP vs LBYL, custom exceptions, copy & deepcopy |
 
-## Module 3: Low Level Design (In Progress)
+## Module 3: Low Level Design (Completed)
 
 | # | Class | Topics |
 |---|-------|--------|
@@ -71,6 +71,21 @@ Interactive course materials for the Python Backend Low Level Design module.
 | 16 | [Design Splitwise](LLD-28-Splitwise-Design/) | The playbook on Splitwise, with the full class derivation handed forward to LLD-29. Opens with a **concurrency warm-up** (lost update, optimistic vs pessimistic, version-CAS, soft-lock vs DB-lock with the "a DB lock has no timer" insight, and the DDIA **anomaly zoo** — dirty read / read skew / write skew / phantom), then runs **overview &rarr; clarify &rarr; the FRs (generated through questions) &rarr; split strategies &rarr; the balance graph &rarr; trade-offs**. The open variable is **how an expense splits** (equal / exact / percent, with the **penny problem**); the headline is the **balance graph** and settling with the **fewest payments**. Drawing the class diagram and the debt-simplification algorithm are homework. Discussions: [#26 debt simplification](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/26) &middot; [#27 DB models &amp; indexes](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/27) &middot; [#28 class diagram](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/28). |
 | 17 | [Code Splitwise](LLD-29-Splitwise-Code/) | The LLD-28 design, **built** &mdash; a single-file engine and a layered package (`models / strategies / balance_sheet / debt_simplifier / service`), both assert green. Derives the classes FR-by-FR (the `Split` / **UserExpense** association, the **Membership** join + RBAC), then the engine: the **SplitStrategy** family with the **penny fix** (integer paise + `divmod` remainder), the self-netting **BalanceSheet** (opposite debts cancel), and **debt simplification** &mdash; the problem, three approaches (**greedy net-and-match** = LeetCode 465, cycle-cancelling, optimal subset-sum) with a **what-is-NP-hard** explainer, and a greedy iteration walkthrough. Plus **normalization** (1NF/2NF/3NF MCQs), **indexes** (composite + leftmost-prefix), and the object&harr;schema bridge. Discussions [#26](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/26)/[#27](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/27)/[#28](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/28). |
 | 18 | [Design Google Calendar](LLD-30-GoogleCalendar-Design/) | The playbook on a **time-shaped** problem: scenario intro &rarr; click-to-reveal FRs &rarr; the *From-FRs-to-classes* derivation &rarr; the hard parts &rarr; the full **class diagram**. The open variable is **recurrence** (store the *rule*, expand on read; a single occurrence changes via **EXDATE + override**); the recurring shape is the **Attendee** association class (event &times; user, RSVP on the join); the time twists are **time zones** (store UTC, render local, DST edge cases) and **free/busy** (interval overlap `s1 &lt; e2 AND s2 &lt; e1`, merge-the-gaps to find a slot). Ships three companions in the same style: a **database-design** page (the same problem via **Minimal Modeling** &rarr; SQL, with an ER diagram), a **&ldquo;Falsehoods about time&rdquo;** true/false quiz (gotchas + fixes + Python), and the interview-prep handbook (10 patterns with **generic UML**) + the 20-problem worksheet library. Discussion: [#29 class-design proposals](https://github.com/prateekScaler/Academy-Feb26-Python-Backend-LLD-Batch/discussions/29). |
+
+## Module 4: Advanced Software Engineering (Upcoming)
+
+| # | Class | Topics |
+|---|-------|--------|
+| 1 | Intro to Unit Testing, Best Practices | Why tests (regression, the refactoring safety net), the testing pyramid, pytest — AAA, naming, parametrize, fixtures, `raises`, testing time; plus a first look at **evals** (testing non-deterministic LLM outputs) |
+| 2 | Mocking and Web MVC Tests | Test doubles, `monkeypatch`, DRF `APIClient` API tests; **evals deep-dive** — mock the LLM in unit tests, grade the real one on a golden set |
+| 3 | Authentication-1: AuthN vs AuthZ, Tokens, BCrypt | Password storage done right; session vs token auth |
+| 4 | Authentication-2: JWT, OAuth 2 | Stateless tokens; the OAuth dance |
+| 5 | Authentication-3: Implementing User Service | Build a real auth service |
+| 6 | Authentication-4: Implementing OAuth 2 | Login-with-Google, end to end |
+| 7 | Email Service — Intro to Message Queues | Async work: producers, consumers, retries |
+| 8 | Cloud-native patterns *(adapted for Python)* | Config, service discovery, resilience |
+| 9 | Logging and Monitoring | Structured logs, metrics, alerts — observability |
+| 10 | Containerization | Docker: package once, run anywhere |
 
 ## Latest
 
