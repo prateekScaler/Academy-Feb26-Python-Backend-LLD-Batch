@@ -76,7 +76,7 @@ Interactive course materials for the Python Backend Low Level Design module.
 
 | # | Class | Topics |
 |---|-------|--------|
-| 1 | Intro to Unit Testing, Best Practices | Why tests (regression, the refactoring safety net), the testing pyramid, pytest — AAA, naming, parametrize, fixtures, `raises`, testing time; plus a first look at **evals** (testing non-deterministic LLM outputs) |
+| 1 | [Intro to Unit Testing, Best Practices](LLD-31-Testing-1-Unit-Testing-Best-Practices/) | Why tests (regression, the refactoring safety net), the testing pyramid, pytest — AAA, naming, parametrize, fixtures, `raises`, testing time; plus a first look at **evals** (testing non-deterministic LLM outputs) |
 | 2 | Mocking and Web MVC Tests | Test doubles, `monkeypatch`, DRF `APIClient` API tests; **evals deep-dive** — mock the LLM in unit tests, grade the real one on a golden set |
 | 3 | Authentication-1: AuthN vs AuthZ, Tokens, BCrypt | Password storage done right; session vs token auth |
 | 4 | Authentication-2: JWT, OAuth 2 | Stateless tokens; the OAuth dance |

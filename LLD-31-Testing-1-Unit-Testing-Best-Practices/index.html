@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLD-31: Unit Testing &mdash; Why, pytest &amp; Best Practices</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+        :root { --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-tertiary: #1a1a2e; --bg-section: #0f0f15; --bg-card: #1a1a2e; --accent-primary: #a855f7; --accent-secondary: #7c3aed; --accent-success: #10b981; --accent-warning: #f59e0b; --accent-danger: #ef4444; --accent-purple: #a855f7; --accent-blue: #3b82f6; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.2); }
+        [data-theme="light"] { --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9; --bg-section: #f8fafc; --bg-card: #ffffff; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --border-color: rgba(168, 85, 247, 0.15); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 18px; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; font-size: 1rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #c084fc, #a855f7); z-index: 1001; }
+        .nav { position: fixed; top: 3px; left: 0; right: 0; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: #c084fc; }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.82rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--accent-primary); }
+        .theme-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        section { min-height: 100vh; padding: 120px 60px 80px; border-bottom: 1px solid var(--border-color); }
+        section:nth-child(even) { background: var(--bg-section); }
+        .section-container { max-width: 1100px; margin: 0 auto; }
+        .section-label { display: inline-block; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .section-label.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .section-label.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .section-label.danger { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 760px; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 80px; background: radial-gradient(ellipse at top, rgba(168, 85, 247, 0.15) 0%, transparent 60%); }
+        .hero-icon { font-size: 4rem; margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #c084fc, #a855f7, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+        .hero-meta { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .hero-tagline { font-size: 1.2rem; color: var(--text-secondary); max-width: 740px; margin-bottom: 40px; }
+        .hero-tagline strong { color: #c084fc; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px 22px; transition: all 0.3s; }
+        .card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; margin-top: 26px; }
+        .card-icon { font-size: 1.8rem; margin-bottom: 10px; }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65; }
+        .card-desc strong { color: var(--text-primary); }
+        .highlight-box { background: rgba(168, 85, 247, 0.08); border: 1px solid var(--accent-primary); border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .highlight-box.warning { background: rgba(245, 158, 11, 0.1); border-color: var(--accent-warning); }
+        .highlight-box.danger  { background: rgba(239, 68, 68, 0.1);  border-color: var(--accent-danger);  }
+        .highlight-box.success { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-success); }
+        .highlight-box.info    { background: rgba(59, 130, 246, 0.08); border-color: var(--accent-blue);   }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .comparison-card { padding: 18px; border-radius: 10px; }
+        .comparison-card.before { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); }
+        .comparison-card.after  { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-success); }
+        .comparison-card pre, pre.code { font-family: 'Fira Code', monospace; font-size: 0.8rem; line-height: 1.55; overflow-x: auto; margin-top: 8px; background: #1e1e2e; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; }
+        pre.code .kw { color: #c084fc; } pre.code .st { color: #86efac; } pre.code .cm { color: #64748b; font-style: italic; } pre.code .fn { color: #60a5fa; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-tertiary); font-weight: 600; font-size: 0.85rem; }
+        td { color: var(--text-secondary); font-size: 0.86rem; }
+        tr:last-child td { border-bottom: none; }
+        code { font-family: 'Fira Code', monospace; background: rgba(168, 85, 247, 0.12); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+        .quiz-box { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 24px; margin: 24px 0; }
+        .quiz-box h4 { margin-bottom: 14px; font-size: 1rem; }
+        .quiz-option { display: block; width: 100%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin: 8px 0; color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .quiz-option:hover:not(.selected) { border-color: var(--accent-primary); background: rgba(168, 85, 247, 0.05); }
+        .quiz-option.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.15); border-color: var(--accent-danger); color: #ef4444; }
+        .quiz-option.selected { pointer-events: none; }
+        .quiz-explanation { display: none; margin-top: 12px; padding: 12px; background: rgba(168, 85, 247, 0.08); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; }
+        .quiz-box.answered .quiz-explanation { display: block; }
+        .quiz-box.answered .quiz-option:not(.correct):not(.wrong) { opacity: 0.5; }
+        .knowledge-block { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(168, 85, 247, 0.08)); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 20px; margin: 25px 0; position: relative; }
+        .knowledge-block::before { content: 'Interview Ready'; position: absolute; top: -12px; left: 20px; background: var(--accent-blue); color: white; padding: 2px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .knowledge-block p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; line-height: 1.8; }
+        .knowledge-block strong { color: var(--text-primary); }
+        .diagram-box { font-size: 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; margin: 20px 0; overflow-x: auto; }
+        .collapsible { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+        .collapsible-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .collapsible-header:hover { background: var(--bg-tertiary); }
+        .collapsible-header h4 { font-size: 1rem; margin: 0; font-weight: 600; }
+        .collapsible-arrow { transition: transform 0.3s; color: var(--text-muted); flex-shrink: 0; }
+        .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .collapsible.open .collapsible-content { max-height: 5000px; }
+        .collapsible-inner { padding: 0 20px 20px; }
+        footer { background: var(--bg-secondary); padding: 30px 60px; text-align: center; border-top: 1px solid var(--border-color); }
+        footer p { color: var(--text-muted); font-size: 0.9rem; }
+        [data-theme="light"] .quiz-option.correct { color: #047857; }
+        [data-theme="light"] .quiz-explanation { color: #334155; }
+        ul, ol { margin-left: 22px; }
+        @media (max-width: 768px) { section { padding: 100px 20px 60px; } .nav { padding: 15px 20px; } .nav-links { display: none; } .comparison-grid { grid-template-columns: 1fr; } }
+        #diagram .section-container, #ddia .section-container { max-width: 1400px; }
+        #diagram, #ddia { padding-left: 26px; padding-right: 26px; }
+        .diagram-box svg text.rl { paint-order: stroke; stroke: var(--bg-secondary); stroke-width: 4px; stroke-linejoin: round; }
+            #diagram .section-container, #balances .section-container, #usecase .section-container { max-width: 1360px; }
+        #diagram, #balances { padding-left: 26px; padding-right: 26px; }
+            #recurrence .section-container, #freebusy .section-container, #clarify .section-container { max-width: 1180px; }
+        #recurrence, #freebusy { padding-left: 26px; padding-right: 26px; }
+    </style>
+<style>
+  .quiz-box { padding: 24px 26px !important; margin-bottom: 24px !important; }
+  .quiz-box h4 { line-height: 1.6 !important; margin-bottom: 16px !important; }
+  .quiz-explanation { line-height: 1.9 !important; margin-top: 14px !important; }
+  .code { line-height: 1.8 !important; padding: 18px 20px !important; margin: 14px 0 6px !important; }
+  .code-note { margin: 10px 0 18px; padding: 12px 16px; background: rgba(148,163,184,0.10);
+               border-left: 3px solid var(--accent-primary); border-radius: 8px;
+               color: var(--text-secondary); font-size: 0.95rem; line-height: 1.85; }
+  .highlight-box { line-height: 1.85; }
+  section h3 { margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav">
+  <div class="nav-brand">LLD-31: Unit Testing</div>
+  <ul class="nav-links"><li><a href="#module">Module 4</a></li><li><a href="#why">Why</a></li><li><a href="#pyramid">Pyramid</a></li><li><a href="#pytest">pytest</a></li><li><a href="#anatomy">Anatomy</a></li><li><a href="#parametrize">Parametrize</a></li><li><a href="#fixtures">Fixtures</a></li><li><a href="#errors">Errors</a></li><li><a href="#time">Time</a></li><li><a href="#evals">Evals</a></li><li><a href="#next">Homework</a></li></ul>
+  <button class="theme-btn" onclick="toggleTheme()"><span id="themeIcon">&#127769;</span> <span id="themeText">Dark</span></button>
+</nav>
+<section class="hero">
+<div class="hero-icon">&#129514;</div>
+<h1>Unit Testing &mdash; Why, pytest &amp; Best Practices</h1>
+<p class="hero-meta">LLD-31 &bull; Module 4 kickoff: Advanced Software Engineering</p>
+<p class="hero-tagline" style="max-width:640px;margin:0 auto 22px"><strong>Tests are not about proving code works today &mdash; they keep it working tomorrow.</strong> Write your first real suite with <code>pytest</code>, on code you already built in this course.</p>
+</section>
+<section id="module">
+<div class="section-container">
+<span class="section-label">new module</span>
+<h2 class="section-title">Module 4 &mdash; where this goes</h2>
+<p class="section-subtitle">The last mile: engineering practices that turn “code that works on my machine” into software a team can ship.</p>
+<div class="table-container"><table><tr><th>#</th><th>Session</th><th>What you&rsquo;ll be able to do</th></tr><tr><td>1</td><td><strong>Unit Testing &amp; Best Practices</strong> &nbsp;<span style='background:linear-gradient(135deg,#10b981,#34d399);color:#fff;padding:1px 9px;border-radius:7px;font-size:0.72rem;font-weight:700'>TODAY</span></td><td>Write pytest suites: AAA, naming, parametrize, fixtures, raises &mdash; on the Splitwise / ParkingLot code you built</td></tr><tr><td>2</td><td>Mocking &amp; Web / API tests</td><td>Fake the slow &amp; flaky parts (payment gateways, <em>LLM calls</em>, email) &middot; test DRF endpoints with APIClient</td></tr><tr><td>&#9733;</td><td><em>Evals &mdash; testing non-deterministic (LLM) outputs</em></td><td>The new paradigm: when there&rsquo;s no single right answer, you <strong>grade</strong> instead of assert &mdash; rubrics, LLM-as-judge, pass rates. <strong>Teaser today (last section)</strong>, deep-dive alongside mocking</td></tr><tr><td>3</td><td>Authentication-1: AuthN vs AuthZ, tokens, bcrypt</td><td>Password storage done right; session vs token auth</td></tr><tr><td>4</td><td>Authentication-2: JWT, OAuth 2</td><td>Stateless tokens; the OAuth dance</td></tr><tr><td>5</td><td>Authentication-3: build the User Service</td><td>Apply it: a real auth service</td></tr><tr><td>6</td><td>Authentication-4: implement OAuth 2</td><td>Login-with-Google, end to end</td></tr><tr><td>7</td><td>Email Service &mdash; intro to Message Queues</td><td>Async work; producers, consumers, retries</td></tr><tr><td>8</td><td>Cloud-native patterns <span style='color:var(--text-muted)'>(adapted for Python)</span></td><td>Config, service discovery, resilience</td></tr><tr><td>9</td><td>Logging &amp; Monitoring</td><td>Structured logs, metrics, alerts &mdash; observability</td></tr><tr><td>10</td><td>Containerization</td><td>Docker: package once, run anywhere</td></tr></table></div><div class="highlight-box info">&#11088; <strong>The evals thread:</strong> tests assume a <em>deterministic</em> right answer. The moment your backend calls an LLM, that assumption dies &mdash; and the testing discipline you learn today <em>evolves</em> into evals (grade &rarr; threshold &rarr; pass-rate). We plant the seed in the last section today and go deep in the mocking session, where we&rsquo;ll mock LLM calls in unit tests and grade real ones in evals.</div>
+</div>
+</section>
+<section id="why">
+<div class="section-container">
+<span class="section-label blue">step 0 &middot; the why</span>
+<h2 class="section-title">Why tests exist &mdash; a story you already know</h2>
+<p class="section-subtitle">In LLD-29 you fixed the penny problem: split money in integer paise so &#8377;100 / 3 sums back to exactly &#8377;100. Now fast-forward three months&hellip;</p>
+<div class="highlight-box warning">A teammate is cleaning up the codebase. Your <code>divmod</code> paise logic looks &ldquo;overly clever&rdquo;, so they simplify it to <code>round(total / n, 2)</code>. <strong>Nothing crashes.</strong> Every screen renders. The PR looks tidy and gets merged.<br><br>&#8377;100.00 split three ways is now &#8377;33.33 + &#8377;33.33 + &#8377;33.33 = <strong>&#8377;99.99</strong>. One paisa evaporates from <em>every</em> odd split, thousands of times a day. Finance notices in week three.</div><h3 style="margin:28px 0 12px;font-size:1.2rem">&#128274; What a test changes</h3><ul style="line-height:2.0;margin:8px 0 10px"><li>One test &mdash; <code>assert sum(shares) == total</code> &mdash; and that PR goes <strong>red in seconds</strong>, on the teammate&rsquo;s laptop, before review.</li><li>That&rsquo;s the real job of a suite: <strong>regression protection</strong>. Not proving today&rsquo;s code works &mdash; keeping tomorrow&rsquo;s refactors honest.</li><li>The same bug gets more expensive the later it&rsquo;s caught: <strong>seconds</strong> in the editor &rarr; <strong>minutes</strong> in CI &rarr; <strong>hours</strong> in review &rarr; <strong>weeks + trust</strong> in production.</li><li>Tests are also your <strong>safety net for refactoring</strong> &mdash; the LLD skills you built (extract a Strategy, split a God class) are only safe to apply when a suite guards the behaviour.</li></ul><div class="highlight-box success">&ldquo;Legacy code is simply code without tests.&rdquo; &mdash; <strong>Michael Feathers</strong>, <em>Working Effectively with Legacy Code</em>. Untested code isn&rsquo;t &ldquo;code that happens to work&rdquo; &mdash; it&rsquo;s code nobody dares to change.</div><p style="color:var(--text-secondary);margin-top:16px">&#128193; Run the story yourself: <code>code/01_the_bug_a_test_catches.py</code> &mdash; watch the paisa vanish, then watch the test catch it.</p>
+</div>
+</section>
+<section id="pyramid">
+<div class="section-container">
+<span class="section-label">step 1 &middot; the map</span>
+<h2 class="section-title">The testing pyramid</h2>
+<p class="section-subtitle">Three kinds of tests, three altitudes. Know which one you&rsquo;re writing.</p>
+<div class="diagram-box"><svg viewBox="0 0 980 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+  <!-- base: unit -->
+  <polygon points="180,380 800,380 700,280 280,280" fill="rgba(16,185,129,0.18)" stroke="#10b981" stroke-width="2.2"/>
+  <text x="490" y="325" text-anchor="middle" font-size="19" font-weight="800" fill="#047857" font-family="Inter,sans-serif">UNIT</text>
+  <text x="490" y="352" text-anchor="middle" font-size="12.5" fill="var(--text-secondary)" font-family="Inter,sans-serif">one function / class, in memory &middot; today&rsquo;s class</text>
+  <!-- middle: integration -->
+  <polygon points="280,270 700,270 610,170 370,170" fill="rgba(59,130,246,0.16)" stroke="#3b82f6" stroke-width="2.2"/>
+  <text x="490" y="212" text-anchor="middle" font-size="17" font-weight="800" fill="#1d4ed8" font-family="Inter,sans-serif">INTEGRATION</text>
+  <text x="490" y="238" text-anchor="middle" font-size="12.5" fill="var(--text-secondary)" font-family="Inter,sans-serif">endpoint &rarr; service &rarr; DB together (DRF APIClient) &middot; next class</text>
+  <!-- top: e2e -->
+  <polygon points="370,160 610,160 545,70 435,70" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="2.2"/>
+  <text x="490" y="110" text-anchor="middle" font-size="15" font-weight="800" fill="#b91c1c" font-family="Inter,sans-serif">E2E</text>
+  <text x="490" y="136" text-anchor="middle" font-size="12" fill="var(--text-secondary)" font-family="Inter,sans-serif">whole system, real browser / client</text>
+  <!-- left annotation -->
+  <line x1="120" y1="100" x2="120" y2="380" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#pyr_d)"/>
+  <defs><marker id="pyr_d" markerWidth="10" markerHeight="8" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/></marker>
+  <marker id="pyr_u" markerWidth="10" markerHeight="8" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+  <text x="104" y="235" text-anchor="middle" font-size="12.5" fill="var(--text-secondary)" font-family="Inter,sans-serif" transform="rotate(-90 104 235)">more tests &middot; faster &middot; cheaper</text>
+  <!-- right annotation -->
+  <line x1="860" y1="380" x2="860" y2="100" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#pyr_u)"/>
+  <text x="880" y="235" text-anchor="middle" font-size="12.5" fill="var(--text-secondary)" font-family="Inter,sans-serif" transform="rotate(90 880 235)">fewer &middot; slower &middot; costlier to fix</text>
+  <text x="490" y="428" text-anchor="middle" font-size="13" fill="var(--text-muted)" font-family="Inter,sans-serif">the classic shape: lots of fast unit tests at the base, a few end-to-end checks on top</text>
+</svg></div><ul style="line-height:2.0;margin:8px 0 10px"><li><strong>Unit</strong> &mdash; one function or class, everything in memory, milliseconds each. <em>Most of your tests live here.</em> Today&rsquo;s class.</li><li><strong>Integration</strong> &mdash; several pieces wired together: the DRF endpoint &rarr; service &rarr; real (test) DB. Slower, fewer. Next class.</li><li><strong>E2E</strong> &mdash; the whole deployed system through a real client. Priceless and painful: keep only a handful.</li></ul><div class="quiz-box" id="q-pyramid"><h4>&ldquo;<code>POST /expenses</code> authenticates the caller, validates the body, splits the amount and persists rows.&rdquo; Which kind of test checks <em>that</em>?</h4><button class="quiz-option" onclick="checkQuiz('q-pyramid', this, false)">A unit test on <code>SplitStrategy.split()</code> &mdash; it&rsquo;s the logic that matters.</button><button class="quiz-option" onclick="checkQuiz('q-pyramid', this, true)">An integration test that hits the endpoint and checks the DB rows.</button><button class="quiz-option" onclick="checkQuiz('q-pyramid', this, false)">An E2E test through the deployed frontend &mdash; that&rsquo;s the only real proof.</button><div class="quiz-explanation">The sentence names <em>collaboration</em>: auth &rarr; validation &rarr; split &rarr; persistence. That&rsquo;s an <strong>integration</strong> test (endpoint through to DB). The unit test on <code>SplitStrategy</code> is <em>also</em> essential &mdash; but it can&rsquo;t see auth or persistence; and an E2E for every endpoint behaviour is too slow and flaky to run on each commit.</div></div>
+</div>
+</section>
+<section id="pytest">
+<div class="section-container">
+<span class="section-label success">step 2 &middot; the tool</span>
+<h2 class="section-title">pytest in ten minutes</h2>
+<p class="section-subtitle">Python&rsquo;s de-facto test runner. No classes, no boilerplate &mdash; files, functions and plain <code>assert</code>.</p>
+<h3 style="margin:6px 0 12px;font-size:1.2rem">&#128269; Discovery &mdash; how pytest finds your tests</h3><ul style="line-height:2.0;margin:8px 0 10px"><li>Files named <code>test_*.py</code> (or <code>*_test.py</code>) are collected automatically.</li><li>Inside them, every function named <code>test_*</code> becomes a test.</li><li>No registration, no base classes &mdash; naming <em>is</em> the wiring.</li></ul><pre class="code"># test_split.py
+from splitwise.strategies import split_equal_paise
+
+def test_split_conserves_total():
+    assert sum(split_equal_paise(10_000, 3)) == 10_000</pre><div class="code-note"><strong>&#128172; What it does:</strong> A complete test file. <code>pytest</code> finds the file by its <code>test_</code> prefix, runs every <code>test_*</code> function, and a bare <code>assert</code> is the whole checking API.</div><h3 style="margin:26px 0 12px;font-size:1.2rem">&#127939; Running it</h3><pre class="code">pytest                 # run everything discoverable from here
+pytest -v              # one line per test, with names
+pytest -k "split"      # only tests whose name contains "split"
+pytest -x              # stop at the first failure
+pytest --lf            # re-run only what failed last time</pre><div class="code-note"><strong>&#128172; What it does:</strong> The four flags you&rsquo;ll actually use daily: <code>-v</code> to read names, <code>-k</code> to focus, <code>-x</code> to stop early while debugging, <code>--lf</code> to iterate on failures.</div><h3 style="margin:26px 0 12px;font-size:1.2rem">&#128300; Failure output &mdash; assert introspection</h3><pre class="code">    def test_split_conserves_total():
+&gt;       assert sum(split_equal_paise(10_000, 3)) == 10_000
+E       assert 9999 == 10000</pre><div class="code-note"><strong>&#128172; What it does:</strong> When a plain <code>assert</code> fails, pytest rewrites it to show <em>the actual values</em> on both sides &mdash; here you instantly see a paisa went missing. No <code>assertEqual</code> boilerplate needed.</div><div class="highlight-box info">&#128161; <strong>unittest vs pytest:</strong> Python ships <code>unittest</code> (classes, <code>self.assertEqual</code>, JUnit heritage). It works &mdash; but pytest runs unittest suites too, and the industry default for new Python code is pytest: less ceremony, better failure output, fixtures and parametrize.</div>
+</div>
+</section>
+<section id="anatomy">
+<div class="section-container">
+<span class="section-label warning">step 3 &middot; the craft</span>
+<h2 class="section-title">Anatomy of a good test</h2>
+<p class="section-subtitle">Any test can pass. A <em>good</em> test tells you exactly what broke, the moment it breaks.</p>
+<h3 style="margin:6px 0 12px;font-size:1.2rem">&#127959;&#65039; AAA &mdash; every test is three paragraphs</h3><pre class="code">def test_payer_is_owed_the_others_shares():
+    # Arrange — set the world up
+    group = ExpenseGroup(["asha", "bala", "chen"])
+
+    # Act — the ONE thing this test is about
+    group.add_expense("asha", 30_000)          # asha pays ₹300
+
+    # Assert — the ONE outcome you care about
+    assert group.balance["asha"] == 20_000     # owed the other two shares</pre><div class="code-note"><strong>&#128172; What it does:</strong> <strong>Arrange</strong> builds the scenario, <strong>Act</strong> performs exactly one behaviour, <strong>Assert</strong> checks exactly one outcome. Anyone can read this top-to-bottom like a sentence: <em>given three friends, when asha pays &#8377;300, she is owed &#8377;200</em>.</div><h3 style="margin:26px 0 12px;font-size:1.2rem">&#128278; Three rules that keep suites livable</h3><ul style="line-height:2.0;margin:8px 0 10px"><li><strong>The name states the behaviour.</strong> <code>test_full_lot_returns_none_not_an_exception</code> failing in CI tells you what broke <em>without opening the file</em>. <code>test_park_2</code> tells you nothing.</li><li><strong>One behaviour per test.</strong> Three asserts about one outcome &mdash; fine. Three <em>behaviours</em> stacked in one test &mdash; the first failure hides the other two.</li><li><strong>Test behaviour, not implementation.</strong> Assert <em>what</em> the code promises (balances sum to zero), not <em>how</em> it does it (which private method got called) &mdash; or every refactor breaks green tests.</li></ul><h3 style="margin:26px 0 12px;font-size:1.2rem">&#9889; FIRST &mdash; the checklist</h3><div class="card-grid"><div class="card"><div class="card-icon">&#9889;</div><div class="card-title">Fast</div><div class="card-desc">Milliseconds each. A slow suite stops being run &mdash; and an unrun suite protects nothing.</div></div><div class="card"><div class="card-icon">&#129704;</div><div class="card-title">Independent</div><div class="card-desc">No test depends on another&rsquo;s leftovers. Any order, any subset, same result.</div></div><div class="card"><div class="card-icon">&#128257;</div><div class="card-title">Repeatable</div><div class="card-desc">Same result on your laptop, CI, and a plane. No real network, no real clock, no luck.</div></div><div class="card"><div class="card-icon">&#9989;</div><div class="card-title">Self-validating</div><div class="card-desc">Pass or fail, by itself. If a human must eyeball printed output, it&rsquo;s not a test.</div></div><div class="card"><div class="card-icon">&#8986;&#65039;</div><div class="card-title">Timely</div><div class="card-desc">Written <em>with</em> the code (or before it &mdash; TDD), not as a someday chore.</div></div></div><div class="quiz-box" id="q-first"><h4>A suite passes when run in file order but <code>test_refund</code> fails when run alone. Which FIRST property is broken &mdash; and by what?</h4><button class="quiz-option" onclick="checkQuiz('q-first', this, false)">Fast &mdash; the suite is too slow, so tests time out when isolated.</button><button class="quiz-option" onclick="checkQuiz('q-first', this, false)">Repeatable &mdash; the test depends on the real clock, which moved.</button><button class="quiz-option" onclick="checkQuiz('q-first', this, true)">Independent &mdash; an earlier test left state behind (a shared object or DB row) that <code>test_refund</code> silently relies on.</button><div class="quiz-explanation">Order-dependence is the classic <strong>Independence</strong> failure: some earlier test Arranged the world (a module-level object, a row, a global) and <code>test_refund</code> free-rides on it. Fix: every test builds its own world &mdash; which is exactly what fixtures are for (next section).</div></div>
+</div>
+</section>
+<section id="parametrize">
+<div class="section-container">
+<span class="section-label">step 4 &middot; edge cases</span>
+<h2 class="section-title">parametrize &mdash; one test, a table of cases</h2>
+<p class="section-subtitle">Copy-pasting a test six times with different numbers is a smell. Turn the test into a table.</p>
+<pre class="code">@pytest.mark.parametrize("total, n", [
+    (10_000, 3),      # the classic ₹100 / 3
+    (10_000, 1),      # n = 1 — one person pays everything
+    (0,      4),      # zero rupees — all shares zero
+    (1,      3),      # 1 paisa among 3 — someone pays it
+    (9_999,  2),      # odd remainder
+    (7,      7),      # total == n — everyone pays exactly 1
+    (6,      7),      # total &lt; n — some pay 1, some pay 0
+])
+def test_split_conserves_total_for_every_boundary(total, n):
+    assert sum(split_equal_paise(total, n)) == total</pre><div class="code-note"><strong>&#128172; What it does:</strong> One test function, seven <strong>independent</strong> runs &mdash; pytest reports each row separately (<code>test_split[...10000-3]</code> etc.), so a failure names its exact case. Adding a regression case later = adding one line to the table.</div><h3 style="margin:26px 0 12px;font-size:1.2rem">&#129517; Where do the rows come from? Boundaries.</h3><ul style="line-height:2.0;margin:8px 0 10px"><li>For every numeric input ask: <strong>0 &middot; 1 &middot; typical &middot; the value where behaviour changes &middot; the extreme</strong>.</li><li>For a split: remainder <code>0</code>, remainder <code>1</code>, remainder <code>n&minus;1</code>, <code>n = 1</code>, <code>total = 0</code>, <code>total &lt; n</code>.</li><li>For the LLD-23 winner check: all <strong>8 lines</strong> (3 rows, 3 columns, 2 diagonals) <em>plus</em> the no-winner cases &mdash; a draw and an empty board (false positives are bugs too).</li></ul><div class="quiz-box" id="q-boundary"><h4>You&rsquo;re testing <code>cancel_ticket(hours_before_show)</code>: full refund &gt; 24h, half refund 2&ndash;24h, none &lt; 2h. Which set of test values earns its keep?</h4><button class="quiz-option" onclick="checkQuiz('q-boundary', this, true)">25, 24, 23, 3, 2, 1 &mdash; both edges of every band, one value inside each.</button><button class="quiz-option" onclick="checkQuiz('q-boundary', this, false)">100, 50, 10 &mdash; one comfortable value per band keeps the table small.</button><button class="quiz-option" onclick="checkQuiz('q-boundary', this, false)">Every integer 0&ndash;48, to be exhaustive.</button><div class="quiz-explanation">Bugs live at the <strong>boundaries</strong> &mdash; the <code>&ge;</code> vs <code>&gt;</code> at exactly 24 and exactly 2. Values deep inside a band (100, 50, 10) all pass even when the boundary operator is wrong; testing all 49 integers is 43 redundant rows that blur the table&rsquo;s intent. Edges + one representative per band is the craft.</div></div>
+</div>
+</section>
+<section id="fixtures">
+<div class="section-container">
+<span class="section-label success">step 5 &middot; reuse the arrange</span>
+<h2 class="section-title">Fixtures &mdash; Arrange once, reuse everywhere</h2>
+<p class="section-subtitle">Every test in the last section began by building the same group. Extract the shared Arrange.</p>
+<pre class="code">@pytest.fixture
+def empty_lot():
+    return ParkingLot(spots=2)          # a FRESH lot per test
+
+@pytest.fixture
+def audit_log():
+    log = []
+    yield log                           # ← the test runs here
+    log.clear()                         # teardown — even if the test failed
+
+def test_parking_assigns_the_first_free_spot(empty_lot):
+    ticket = empty_lot.park("KA-01-AA-1111")
+    assert ticket.spot == 0</pre><div class="code-note"><strong>&#128172; What it does:</strong> Declare setup once with <code>@pytest.fixture</code>; a test <strong>asks for it by parameter name</strong> and pytest injects a fresh copy. <code>yield</code>-style fixtures run their cleanup after the test &mdash; pass or fail &mdash; so no leftovers leak into the next test (that&rsquo;s Independence, mechanised). Shared fixtures move to a <code>conftest.py</code> file, visible to the whole folder.</div><ul style="line-height:2.0;margin:8px 0 10px"><li><strong>Fresh per test</strong> by default &mdash; two tests asking for <code>empty_lot</code> get two different lots.</li><li><strong>Fixtures compose</strong> &mdash; <code>full_lot</code> can build on the same lot class, pre-filled; tests pick the world they need.</li><li><strong>Dependency injection again!</strong> The same idea as injecting a Strategy or a Clock &mdash; the test <em>declares</em> what it needs, the framework provides it.</li></ul><div class="quiz-box" id="q-fixture"><h4>Two tests both ask for the <code>empty_lot</code> fixture. Test A parks a car. What does test B see?</h4><button class="quiz-option" onclick="checkQuiz('q-fixture', this, false)">A lot with one car &mdash; fixtures are shared per file to stay fast.</button><button class="quiz-option" onclick="checkQuiz('q-fixture', this, false)">Whichever ran first wins; the other is skipped as a duplicate world.</button><button class="quiz-option" onclick="checkQuiz('q-fixture', this, true)">A brand-new empty lot &mdash; the fixture function runs again for B.</button><div class="quiz-explanation">By default a fixture runs <strong>once per test that requests it</strong> &mdash; A and B each get their own lot, so A&rsquo;s parking can&rsquo;t leak into B (Independence). Sharing <em>is</em> possible when you opt in (<code>scope=&quot;module&quot;</code> for an expensive resource like a DB connection) &mdash; a deliberate trade-off, next class.</div></div>
+</div>
+</section>
+<section id="errors">
+<div class="section-container">
+<span class="section-label danger">step 6 &middot; sad paths</span>
+<h2 class="section-title">Testing errors &mdash; and the float trap</h2>
+<p class="section-subtitle">Happy paths are half the job. The sad paths are where production incidents live.</p>
+<h3 style="margin:6px 0 12px;font-size:1.2rem">&#128165; When code <em>should</em> raise</h3><pre class="code">def test_overdraw_raises_insufficient_funds():
+    wallet = Wallet(balance_paise=500_00)
+
+    with pytest.raises(InsufficientFunds) as excinfo:
+        wallet.withdraw(600_00)
+
+    assert excinfo.value.needed == 600_00      # the error carries info
+    assert wallet.balance == 500_00            # and nothing half-applied</pre><div class="code-note"><strong>&#128172; What it does:</strong> <code>pytest.raises</code> asserts the block raises exactly that exception &mdash; the test <em>fails</em> if no error (or the wrong error) comes out. Then assert on <code>excinfo.value</code>: a good error object carries data, and a failed operation must leave state untouched.</div><div class="highlight-box info">&#9878;&#65039; <strong>The LLD-24 line, now in tests:</strong> a <em>rule violation</em> (overdraw) raises &mdash; test it with <code>pytest.raises</code>. An <em>expected outcome</em> (the lot is full) returns a value &mdash; test it with a plain assert: <code>assert full_lot.park(&quot;KA-01&hellip;&quot;) is None</code>. If you find yourself raising for answers the caller asked about, the design is wrong &mdash; not the test.</div><h3 style="margin:28px 0 12px;font-size:1.2rem">&#127922; Floats lie</h3><pre class="code">assert 0.1 + 0.2 != 0.3                    # True. really.
+assert 0.1 + 0.2 == 0.30000000000000004    # what IEEE-754 actually stores
+
+# floats you can't avoid (rates, averages) → compare with a tolerance
+assert average_rating == pytest.approx(4.2)
+
+# money → don't approximate. don't float. INTEGER PAISE.
+assert sum([3334, 3333, 3333]) == 10_000   # exact, always</pre><div class="code-note"><strong>&#128172; What it does:</strong> Binary floating point cannot represent 0.1 exactly &mdash; so equality on computed floats is a coin toss. <code>pytest.approx</code> compares within a tolerance for genuinely-continuous values. But money is not continuous: keep it in integer paise (the LLD-29 rule) and equality becomes exact again &mdash; no epsilon needed.</div><div class="quiz-box" id="q-float"><h4>Your test does <code>assert total_price == 129.99</code> and fails with <code>129.99000000000001 != 129.99</code>. The <em>best</em> fix is&hellip;</h4><button class="quiz-option" onclick="checkQuiz('q-float', this, true)">Store and compute prices in integer paise; assert <code>total_paise == 12_999</code>.</button><button class="quiz-option" onclick="checkQuiz('q-float', this, false)">Wrap it: <code>assert total_price == pytest.approx(129.99)</code>.</button><button class="quiz-option" onclick="checkQuiz('q-float', this, false)">Round in the assert: <code>assert round(total_price, 2) == 129.99</code>.</button><div class="quiz-explanation"><code>approx</code> and <code>round</code> both make the <em>test</em> pass while the <em>code</em> keeps accumulating float error &mdash; the next penny loss ships anyway. The root fix is the LLD-29 one: money lives in integer paise, arithmetic is exact, and the assert needs no tolerance at all. (<code>approx</code> is right for genuinely continuous values &mdash; averages, rates &mdash; not for money.)</div></div>
+</div>
+</section>
+<section id="time">
+<div class="section-container">
+<span class="section-label warning">step 7 &middot; the flaky enemy</span>
+<h2 class="section-title">Testing time &mdash; inject the clock</h2>
+<p class="section-subtitle">A test that calls <code>datetime.now()</code> gives a different answer every run. Sound familiar? It&rsquo;s the LLD-30 lesson wearing a testing hat.</p>
+<pre class="code">class Clock:                                  # production
+    def now(self): return datetime.now(timezone.utc)
+
+class FakeClock:                              # tests
+    def __init__(self, t): self.t = t
+    def now(self): return self.t
+    def advance(self, **kw): self.t += timedelta(**kw)
+
+def test_reminder_fires_at_the_boundary():
+    reminder = Reminder(MEETING_10AM, minutes_before=15)
+    clock = FakeClock(utc(2026, 7, 6, 9, 45))      # freeze 9:45
+
+    assert reminder.is_due(clock)                  # ≥ boundary fires
+
+def test_advancing_the_clock_is_time_travel():
+    clock = FakeClock(utc(2026, 7, 6, 9, 0))
+    assert not reminder_at_945.is_due(clock)
+    clock.advance(minutes=45)                      # no sleep(2700)!
+    assert reminder_at_945.is_due(clock)</pre><div class="code-note"><strong>&#128172; What it does:</strong> Code depends on a <code>clock</code> object, never on <code>datetime.now()</code> directly. Production passes the real <code>Clock</code>; tests pass a <code>FakeClock</code> frozen at any instant &mdash; so you can test &ldquo;9:45 on a Monday&rdquo; at 2am on a Saturday, and <code>advance()</code> replaces sleeping. This is the same dependency-injection move as Strategy and fixtures.</div><ul style="line-height:2.0;margin:8px 0 10px"><li><strong>Boundaries again:</strong> freeze the clock <em>exactly at</em> the fire time &mdash; is <code>&ge;</code> vs <code>&gt;</code> right?</li><li><strong>Same trick for randomness:</strong> inject <code>random.Random(seed)</code> &mdash; seeded &ldquo;random&rdquo; is deterministic, so the test is Repeatable.</li><li><strong>Never</strong> <code>time.sleep()</code> in a test &mdash; it&rsquo;s slow <em>and</em> still flaky on a busy CI machine.</li></ul><div class="quiz-box" id="q-time"><h4>A token-expiry test passes locally but fails in CI at midnight UTC. The root cause is almost certainly&hellip;</h4><button class="quiz-option" onclick="checkQuiz('q-time', this, false)">CI machines are slower, so the assert runs late &mdash; add a bigger leeway.</button><button class="quiz-option" onclick="checkQuiz('q-time', this, true)">The code under test reads the real clock, so the test&rsquo;s hand-built &ldquo;expected&rdquo; time crosses a day boundary the code doesn&rsquo;t.</button><button class="quiz-option" onclick="checkQuiz('q-time', this, false)">pytest caches results between runs &mdash; clear <code>.pytest_cache</code>.</button><div class="quiz-explanation">Midnight-flaky = real-clock dependency: the test computed &ldquo;today&rdquo; at 23:59:59 and the code computed it at 00:00:00. Bigger leeways just hide it (and the cache stores <em>which</em> tests failed, not their results). The fix is structural: inject a <code>FakeClock</code>, freeze the boundary, and the test passes at any hour on any machine.</div></div>
+</div>
+</section>
+<section id="evals">
+<div class="section-container">
+<span class="section-label blue">step 8 &middot; the new paradigm</span>
+<h2 class="section-title">Beyond asserts &mdash; when there is no right answer</h2>
+<p class="section-subtitle">Everything today assumed one deterministic answer. Now let your backend call an LLM: &ldquo;summarize this support ticket.&rdquo; Run it twice &mdash; two different, both perfectly fine, summaries. What exactly do you <code>assert</code>?</p>
+<ul style="line-height:2.0;margin:8px 0 10px"><li><strong>Equality is dead here.</strong> There is no single <code>expected</code> string to <code>==</code> against &mdash; and there never will be.</li><li><strong>So the assert evolves into a grade:</strong> score the output against a <strong>rubric</strong> (did it keep the order id? the amount? under 25 words?), require <code>score &ge; threshold</code>.</li><li><strong>And one run proves nothing:</strong> the model is stochastic &mdash; run it N times and assert the <strong>pass rate</strong>: <code>pass_rate &ge; 0.8</code>. One sloppy output doesn&rsquo;t fail the build; a <em>degraded model</em> does.</li><li>This discipline is called <strong>evals</strong> &mdash; and it is to LLM-powered backends exactly what this class&rsquo;s tests are to deterministic ones.</li></ul><pre class="code">def grade(summary: str) -&gt; float:            # the rubric — not an equality
+    facts = sum(f in summary.lower() for f in ["4521", "1499", "refund"]) / 3
+    return facts * (1.0 if len(summary.split()) &lt;= 25 else 0.5)
+
+def test_summarizer_pass_rate_is_at_least_80_percent():
+    scores = [grade(summarize(TICKET, seed)) for seed in range(20)]
+    pass_rate = sum(s &gt;= 0.7 for s in scores) / len(scores)
+
+    assert pass_rate &gt;= 0.80                 # a STATISTICAL assert</pre><div class="code-note"><strong>&#128172; What it does:</strong> Same AAA skeleton you learned today &mdash; but the Assert is statistical: grade 20 sampled outputs against the rubric, then threshold the <em>rate</em>. Notice the grader itself gets ordinary unit tests (pin it on a known-good and a known-bad output) &mdash; your deterministic testing skills don&rsquo;t retire, they supervise the new layer.</div><div class="table-container"><table><tr><th></th><th>Classic test (today)</th><th>Eval (the new paradigm)</th></tr><tr><td>Output</td><td>deterministic &mdash; one right answer</td><td>stochastic &mdash; a distribution of acceptable answers</td></tr><tr><td>Check</td><td><code>assert actual == expected</code></td><td><code>grade(actual) &ge; threshold</code> &mdash; rubric / checklist / LLM-as-judge</td></tr><tr><td>Verdict</td><td>one run decides</td><td><strong>pass rate</strong> over N runs decides</td></tr><tr><td>Regression</td><td>golden values</td><td>a <strong>golden set</strong> of inputs + minimum scores, tracked over time</td></tr></table></div><div class="quiz-box" id="q-eval"><h4>Your team adds &ldquo;AI reply suggestions&rdquo; to the support app. How should CI check the feature?</h4><button class="quiz-option" onclick="checkQuiz('q-eval', this, false)">Assert the exact suggestion string for three fixed tickets &mdash; deterministic and fast.</button><button class="quiz-option" onclick="checkQuiz('q-eval', this, true)">Unit-test the surrounding code with the LLM <em>mocked</em>, and separately run an eval: rubric-grade sampled real outputs and threshold the pass rate.</button><button class="quiz-option" onclick="checkQuiz('q-eval', this, false)">Manual QA reads a sample of suggestions before each release &mdash; humans judge language best.</button><div class="quiz-explanation">Two layers, two tools. The deterministic plumbing (prompt building, parsing, fallbacks) gets ordinary unit tests with the LLM <em>mocked</em> &mdash; fast and stable, next class&rsquo;s topic. The model&rsquo;s <em>quality</em> gets an eval: graded samples, thresholded pass rate, tracked on a golden set. Exact-string asserts break on every model update even when quality is fine; humans-only doesn&rsquo;t scale and drifts.</div></div><div class="highlight-box success">&#11088; <strong>Coming up:</strong> a full evals session rides with the <strong>mocking</strong> class &mdash; mock the LLM in unit tests (deterministic, free, fast), eval the real one on a golden set (graded, thresholded, tracked). Two layers, cleanly separated. Run the taster now: <code>code/07_beyond_asserts_evals_teaser.py</code>.</div>
+</div>
+</section>
+<section id="next">
+<div class="section-container">
+<span class="section-label success">wrap up</span>
+<h2 class="section-title">Homework &amp; what&rsquo;s next</h2>
+
+<h3 style="margin:6px 0 12px;font-size:1.2rem">&#128221; Homework &mdash; test the code you already own</h3><ul style="line-height:2.0;margin:8px 0 10px"><li>Take <strong>your LLD-29 Splitwise engine</strong> and convert its <code>assert</code> demo blocks into a real pytest suite &mdash; start with conservation: every split sums back exactly.</li><li><strong>Parametrize</strong> the split strategies over the boundary table from Step 4 (remainders 0 / 1 / n&minus;1, n = 1, total = 0, total &lt; n).</li><li>Write one <code>pytest.raises</code> test for a rule violation (non-member added to a group? settling more than owed?) &mdash; and one <em>value</em> test for an expected outcome.</li><li>Extract your repeated Arrange into <strong>fixtures</strong> (<code>fresh_group</code>, <code>group_with_debts</code>).</li><li><em>Stretch:</em> your ParkingLot from LLD-25 &mdash; test the full-lot path and the freed-spot-reuse path.</li></ul><h3 style="margin:26px 0 12px;font-size:1.2rem">&#128230; The <code>code/</code> folder</h3><ul style="line-height:2.0;margin:8px 0 10px"><li><code>01</code> the bug a test catches &middot; <code>02</code> AAA &amp; naming &middot; <code>03</code> parametrize &middot; <code>04</code> fixtures &middot; <code>05</code> raises &amp; floats &middot; <code>06</code> testing time &middot; <code>07</code> the evals teaser.</li><li>Every file runs with plain <code>python3 file.py</code> (no installs) <em>and</em> with <code>pytest -v file.py</code> &mdash; 43 tests, all green.</li></ul><div class="highlight-box info"><strong>Next class &mdash; Mocking &amp; Web/API tests:</strong> what to do when the code under test calls something slow, paid, or flaky (payment gateways, email, <em>LLM APIs</em>) &mdash; test doubles, <code>monkeypatch</code>, DRF&rsquo;s <code>APIClient</code>, and the promised <strong>evals deep-dive</strong>.</div>
+</div>
+</section>
+
+<footer style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:0.9rem">
+  LLD-31 &middot; Module 4: Advanced Software Engineering &middot; session 1 of 10
+</footer>
+<script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeText').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleCollapsible(header) { header.parentElement.classList.toggle('open'); }
+    function revealNextQ() {
+        const items = document.querySelectorAll('#ovq .ovq-item');
+        let shown = document.querySelectorAll('#ovq .ovq-item.show').length;
+        if (shown < items.length) { items[shown].classList.add('show'); shown++; }
+        const btn = document.getElementById('ovq-btn');
+        if (shown >= items.length) {
+            btn.style.display = 'none';
+            document.getElementById('ovq-tackle').style.display = 'block';
+        } else {
+            btn.innerHTML = 'Reveal the next question &rarr;  <span style="opacity:.7">(' + shown + ' / ' + items.length + ')</span>';
+        }
+    }
+    function checkQuiz(boxId, btn, isCorrect) {
+        const box = document.getElementById(boxId);
+        if (box.classList.contains('answered')) return;
+        box.classList.add('answered');
+        btn.classList.add('selected');
+        if (isCorrect) { btn.classList.add('correct'); }
+        else {
+            btn.classList.add('wrong');
+            box.querySelectorAll('.quiz-option').forEach(opt => {
+                if (opt.getAttribute('onclick').includes('true')) opt.classList.add('correct');
+            });
+        }
+    }
+    window.addEventListener('scroll', () => {
+        const w = document.body.scrollTop || document.documentElement.scrollTop;
+        const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.getElementById('progressBar').style.width = (w / h * 100) + '%';
+    });
+    </script>
+</body>
+</html>
