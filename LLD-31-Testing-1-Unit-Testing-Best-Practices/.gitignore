@@ -1,0 +1,7 @@
+# Local dev tooling & artifacts — not part of the published notes
+feedback/
+*.pdf
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store

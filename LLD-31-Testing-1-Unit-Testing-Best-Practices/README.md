@@ -2,7 +2,7 @@
 
 > **Module 4 kickoff — Advanced Software Engineering.** Tests are not about proving code works today; they **keep it working tomorrow**. We write a first real pytest suite — on the Splitwise / ParkingLot / TicTacToe code you already built — and end with a look over the fence: what testing becomes when the output is **non-deterministic** (the **evals** paradigm, previewed today, deep-dived alongside mocking).
 
-**How to use this class:** open `index.html` for the interactive page (module map, the bug story, the testing pyramid, pytest fundamentals, AAA/FIRST, parametrize, fixtures, error & float testing, testing time, the evals teaser, decision quizzes). This README is the same content in prose. Every example lives in [`code/`](code/README.md) — runnable with plain `python3` (no installs) *or* `pytest`, 43 tests, all green.
+**How to use this class:** open `index.html` for the interactive page (module map, the bug story, the testing pyramid, pytest fundamentals, AAA/FIRST, parametrize, fixtures, error & float testing, testing time, the evals teaser, decision quizzes). This README is the same content in prose. Every example lives in [`code/`](code/README.md) — pure pytest suites (`pip install pytest`, then `pytest -v <file>` or `python3 <file>`), 44 tests, all green.
 
 ---
 
@@ -24,13 +24,14 @@
 
 ---
 
-## Step 0 — Why tests exist (a story you already know)
+## Step 0 — Why tests exist (the bug nobody notices)
 
-In LLD-29 we fixed the **penny problem**: money in integer paise + `divmod`, so ₹100 / 3 sums back to exactly ₹100. Three months later a teammate "simplifies" it to `round(total / n, 2)`. **Nothing crashes** — but ₹100 split three ways is now 3 × ₹33.33 = **₹99.99**. A paisa evaporates from every odd split until finance notices in week three.
+The worst bugs don't crash — they return a *slightly wrong answer*, quietly, thousands of times a day.
 
-- One test — `assert sum(shares) == total` — turns that PR **red in seconds**, before review.
-- That's the real job of a suite: **regression protection**, and a **safety net for refactoring** (your LLD moves — extract a Strategy, split a God class — are only safe under a guarding suite).
-- The later a bug is caught, the more it costs: seconds (editor) → minutes (CI) → hours (review) → weeks + trust (production).
+- **Knight Capital, 2012.** A deploy reaches 7 of 8 servers; on the 8th an old flag re-activates dead code. No crash, no alert — in **45 minutes** the firm loses **$440M**. No test guarded the behaviour that flag switched on.
+- **Closer to home — the coupon bug.** Checkout applies a 10% offer and a ₹50 coupon; the rule is *percentage first, then coupon*: ₹500 → `500 × 0.9 − 50 = ₹400`. A refactor reorders the two lines: `(500 − 50) × 0.9 = ₹405`. **Nothing crashes** — and every discounted order overcharges ₹5 until support tickets pile up in week three.
+- One test — `assert checkout_total(500_00, pct=10, coupon=50_00) == 400_00` — turns that refactor **red in seconds**, before review.
+- That's the real job of a suite: **regression protection**, and a **safety net for refactoring**. The later a bug is caught, the more it costs: seconds (editor) → minutes (CI) → hours (review) → weeks + trust (production).
 - *"Legacy code is simply code without tests."* — Michael Feathers.
 
 ## Step 1 — The testing pyramid
@@ -59,7 +60,7 @@ One decorated test runs each row independently; failures name their exact case. 
 
 ## Step 5 — Fixtures: Arrange once, reuse everywhere
 
-`@pytest.fixture` + ask-by-parameter-name = dependency injection for tests. Fresh per test by default (Independence, mechanised); `yield`-style fixtures run teardown even on failure; shared ones live in `conftest.py`.
+`@pytest.fixture` + ask-by-parameter-name = dependency injection for tests. Fresh per test by default (Independence, mechanised); fixtures compose (`empty_lot` → `full_lot`); shared ones live in `conftest.py`.
 
 ## Step 6 — Testing errors, and the float trap
 
@@ -88,6 +89,7 @@ The grader itself gets ordinary unit tests — your deterministic skills supervi
 
 ## Homework
 
+0. **Warm-up: [`code/08_homework.py`](code/08_homework.py)** — a cinema backend is written for you; 12 test stubs (`pytest.skip`) cover every lesson from today (AAA & naming, parametrize/boundaries, fixtures, raises, value-vs-exception, FakeClock). Delete each skip, write the test, go from `12 skipped` to all green.
 1. Convert your **LLD-29 Splitwise engine**'s assert blocks into a real pytest suite — start with conservation.
 2. **Parametrize** the split strategies over the boundary table (remainders 0/1/n−1, n=1, total=0, total<n).
 3. One `pytest.raises` test for a rule violation + one *value* test for an expected outcome.
