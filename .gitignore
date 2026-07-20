@@ -86,3 +86,7 @@ LLD-23-TicTacToe-Code/**/*_files/
 LLD-23-TicTacToe-Code/README.html
 LLD-23-TicTacToe-Code/convert_html_to_pdf.sh
 LLD-23-TicTacToe-Code/LLD-23_*.html
+
+# Google OAuth client-secret downloads (real credentials — never commit)
+client_secret*.json
+**/client_secret*.json

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSRF · CORS · SameSite — Django demo</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 0.2rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-top: 12px;
+      background: #fafafa;
+    }
+    input[type="text"] {
+      font: inherit;
+      padding: 8px 10px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      width: 240px;
+    }
+    button {
+      font: inherit;
+      padding: 8px 16px;
+      border: 0;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+    pre {
+      background: #111;
+      color: #d6e2f0;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+    }
+    .hint { color: #555; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <h1>CSRF · CORS · SameSite</h1>
+  <p class="hint">A tiny Django app. Open DevTools (Network + Application tabs) while you click.</p>
+
+  <h2>1. CSRF-protected form</h2>
+  <div class="card">
+    <form method="POST" action="/submit/">
+      <!--
+        {% csrf_token %} renders a hidden input like:
+            <input type="hidden" name="csrfmiddlewaretoken" value="…">
+        Django also sets a `csrftoken` cookie. On POST, CsrfViewMiddleware
+        compares the two. Delete this hidden input in DevTools, then submit:
+        you get 403 Forbidden.
+      -->
+      {% csrf_token %}
+      <input type="text" name="name" placeholder="Your name" value="Ada">
+      <button type="submit">Submit form</button>
+    </form>
+    <p class="hint">Expected: “✅ CSRF token was valid — form accepted”.</p>
+  </div>
+
+  <h2>2. CORS / fetch a JSON endpoint</h2>
+  <div class="card">
+    <button id="ping-btn" type="button">fetch("/api/ping/")</button>
+    <pre id="ping-out">(nothing yet)</pre>
+    <p class="hint">
+      From this page the call is <strong>same-origin</strong>, so it always works.
+      Serve a copy of this button from another origin (e.g. Live Server on
+      http://localhost:5500) pointing at
+      <code>http://127.0.0.1:8001/api/ping/</code> to watch CORS decide whether
+      the JS may read the response.
+    </p>
+  </div>
+
+  <script>
+    const btn = document.getElementById("ping-btn");
+    const out = document.getElementById("ping-out");
+
+    btn.addEventListener("click", async () => {
+      out.textContent = "loading…";
+      try {
+        const res = await fetch("/api/ping/");
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        // A CORS failure lands here: the browser refuses to hand us the body.
+        out.textContent = "Request failed: " + err;
+      }
+    });
+  </script>
+
+</body>
+</html>

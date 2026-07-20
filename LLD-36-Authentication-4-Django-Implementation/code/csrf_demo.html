@@ -1,0 +1,152 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSRF / SameSite playground — change the values, watch the rules</title>
+<!--
+  A SAFE, self-contained CSRF + SameSite playground. Double-click to open. No server, no network.
+
+  HONEST NOTE: this SIMULATES the browser's cookie rules so you can flip values instantly.
+  (Truly demonstrating cross-site behaviour needs two real domains, which you can't do in one
+  file.) Every rule encoded here is the real one — the point is to let you vary
+  SameSite x request-type x defence and see the outcome immediately.
+
+  CSRF in one line:
+    your browser attaches your cookies to ANY request to a site — even one another site
+    triggered. So a hidden form on evil.com can make YOUR browser POST to yourbank.com AS you.
+-->
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 860px; margin: 28px auto; line-height: 1.6; color: #1e293b; padding: 0 16px; }
+  h1 { color: #6d28d9; margin-bottom: 4px; } h2 { font-size: 1.05rem; color: #6d28d9; margin-top: 26px; border-bottom: 2px solid #a855f7; padding-bottom: 4px; }
+  .controls { display: grid; grid-template-columns: 210px 1fr; gap: 11px 14px; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin: 14px 0; }
+  label { font-weight: 600; font-size: 0.92rem; }
+  select { padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
+  button { padding: 11px 20px; margin: 12px 8px 12px 0; cursor: pointer; border-radius: 9px; border: 1px solid #ef4444; background: #fee2e2; font-weight: 700; font-size: 1rem; }
+  button.reset { border-color: #94a3b8; background: #f1f5f9; }
+  .bank { border: 1px solid #3b82f6; background: #eff6ff; border-radius: 10px; padding: 16px; margin: 14px 0; }
+  .balance { font-size: 1.7rem; font-weight: 800; color: #1e3a8a; }
+  .out { border-radius: 10px; padding: 14px 16px; margin: 12px 0; min-height: 30px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.96rem; }
+  .ok { border-color: #10b981; background: #f0fdf4; } .bad { border-color: #ef4444; background: #fef2f2; }
+  .step { font-family: ui-monospace, Menlo, monospace; font-size: 0.88rem; color: #334155; margin: 3px 0; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.9rem; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #cbd5e1; padding: 9px 11px; text-align: left; }
+  th { background: #f1f5f9; }
+  li { margin-bottom: 10px; }
+  .muted { color: #64748b; font-size: 0.9rem; }
+</style>
+
+<h1>🏦 CSRF / SameSite playground</h1>
+<p class="muted">Flip the values on the left, press the attack button, and watch whether your cookie rides along. Every rule here is the real browser rule.</p>
+
+<div class="bank">
+  <div>Your bank balance: <span class="balance" id="balance">₹10,000</span></div>
+  <div class="muted" id="cookieLine"></div>
+</div>
+
+<h2>Vary the setup</h2>
+<div class="controls">
+  <label>Cookie <code>SameSite</code></label>
+  <select id="samesite">
+    <option value="None">None — sent on every cross-site request (needs Secure)</option>
+    <option value="Lax" selected>Lax — today's default</option>
+    <option value="Strict">Strict — never sent cross-site</option>
+  </select>
+
+  <label>What evil.com does</label>
+  <select id="reqtype">
+    <option value="post" selected>auto-submits a POST /transfer (the classic CSRF)</option>
+    <option value="img">loads &lt;img src="…/transfer"&gt; — a cross-site GET</option>
+    <option value="link">shows a link you click → top-level GET navigation</option>
+  </select>
+
+  <label>Server-side defence</label>
+  <select id="defence">
+    <option value="none" selected>none — trusts the cookie alone</option>
+    <option value="csrf">requires a CSRF token</option>
+    <option value="bearer">auth via Authorization: Bearer (no cookie)</option>
+  </select>
+</div>
+
+<button onclick="attack()">💀 Run evil.com's forged request</button>
+<button class="reset" onclick="reset()">↺ Reset balance</button>
+<div class="out" id="out">— choose values and press the button —</div>
+
+<h2>The matrix (try to predict, then verify above)</h2>
+<table>
+  <tr><th>SameSite</th><th>cross-site POST</th><th>cross-site GET (img)</th><th>you click a link</th></tr>
+  <tr><td><strong>None</strong></td><td>cookie sent 💥</td><td>cookie sent 💥</td><td>cookie sent</td></tr>
+  <tr><td><strong>Lax</strong></td><td>withheld ✅</td><td>withheld ✅</td><td>cookie sent ✅</td></tr>
+  <tr><td><strong>Strict</strong></td><td>withheld ✅</td><td>withheld ✅</td><td>withheld ⚠️ <span class="muted">(you land logged out)</span></td></tr>
+</table>
+<p class="muted"><strong>Why <code>Lax</code> is the default:</strong> it's the only row that blocks the attacks <em>and</em> keeps the "click a link from your email" case working. <code>Strict</code> is safer but users arrive logged out.</p>
+
+<h2>What evil.com's page contains</h2>
+<pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;overflow-x:auto;font-size:0.85rem">&lt;form action="https://yourbank.com/transfer" method="POST" id="f"&gt;
+  &lt;input name="to" value="attacker"&gt;&lt;input name="amount" value="5000"&gt;
+&lt;/form&gt;
+&lt;script&gt;document.getElementById('f').submit()&lt;/script&gt;</pre>
+<p class="muted">Notice evil.com never learns your cookie — it doesn't need to. It just points a request at the bank and the <strong>browser</strong> attaches your cookie for it. That's the whole trick.</p>
+
+<h2>Takeaways</h2>
+<ul>
+  <li><strong>SameSite</strong> is the modern fix — it decides whether the cookie is even <em>attached</em> to a cross-site request.</li>
+  <li><strong>CSRF tokens</strong> work at a different layer: the cookie <em>is</em> sent, but the request lacks a secret only your own pages know. Still needed when you must run <code>SameSite=None</code>.</li>
+  <li><strong>Bearer headers are immune by construction</strong> — the browser never auto-attaches an <code>Authorization</code> header, so there's nothing for evil.com to ride on.</li>
+</ul>
+
+<script>
+  let balance = 10000;
+  const fmt = n => "₹" + n.toLocaleString("en-IN");
+  function render() { document.getElementById("balance").textContent = fmt(balance); }
+  function reset() { balance = 10000; render(); document.getElementById("out").className = "out"; document.getElementById("out").textContent = "Balance reset."; }
+
+  // the real browser rule: is the cookie attached to this cross-site request?
+  function cookieSent(sameSite, reqType) {
+    if (sameSite === "None") return true;                 // sent everywhere
+    if (sameSite === "Strict") return false;              // never cross-site
+    return reqType === "link";                            // Lax: only top-level navigations
+  }
+
+  function attack() {
+    const ss = document.getElementById("samesite").value;
+    const rt = document.getElementById("reqtype").value;
+    const def = document.getElementById("defence").value;
+    const out = document.getElementById("out");
+
+    const sent = cookieSent(ss, rt);
+    const steps = [];
+    steps.push("evil.com triggers a " + (rt === "post" ? "cross-site POST" : rt === "img" ? "cross-site GET (subresource)" : "top-level GET navigation") + " to yourbank.com/transfer");
+    steps.push("browser checks the cookie's SameSite=" + ss + "  →  cookie " + (sent ? "ATTACHED" : "WITHHELD"));
+
+    let stolen = false, reason;
+    if (def === "bearer") {
+      reason = "the bank authenticates with an <code>Authorization: Bearer</code> header, which the browser never auto-attaches — the forged request arrives with no credentials at all.";
+      steps.push("server: no Bearer header  →  401");
+    } else if (!sent) {
+      reason = "<code>SameSite=" + ss + "</code> stopped the browser from attaching your session cookie, so the transfer arrived unauthenticated.";
+      steps.push("server: no session  →  rejected");
+    } else if (def === "csrf") {
+      reason = "the cookie <em>was</em> sent, but the bank also demands a CSRF token that only its own pages contain — and evil.com can't know it.";
+      steps.push("server: session OK, CSRF token missing  →  403");
+    } else {
+      stolen = true;
+      reason = "the browser attached your session cookie and the bank had no second check — it could not tell this apart from a real request you made.";
+      if (rt === "link" && ss === "Lax") {
+        reason += "<br><br>⚠️ <strong>The subtle one:</strong> <code>Lax</code> deliberately still sends the cookie on a top-level navigation — that's what keeps 'click the link in your email' working. So it does <em>not</em> save you here. The real bug is that this bank changes state on a <strong>GET</strong>. Rule: <em>GET must be safe</em> — money moves on POST only, and then <code>Lax</code> covers you.";
+      }
+      steps.push("server: valid session, no other check  →  TRANSFER EXECUTED");
+    }
+
+    if (stolen) { balance -= 5000; render(); }
+    out.className = "out " + (stolen ? "bad" : "ok");
+    out.innerHTML = (stolen ? "💥 <strong>₹5,000 STOLEN</strong>" : "✅ <strong>Attack blocked</strong>") +
+      "<div style='margin:10px 0'>" + steps.map(s => "<div class='step'>› " + s + "</div>").join("") + "</div>" + reason;
+  }
+
+  function tick() {
+    const ss = document.getElementById("samesite").value;
+    document.getElementById("cookieLine").innerHTML =
+      "Your cookie: <code>sessionid=abc123; SameSite=" + ss + "; HttpOnly</code>";
+  }
+  document.getElementById("samesite").addEventListener("change", tick);
+  tick(); render();
+</script>

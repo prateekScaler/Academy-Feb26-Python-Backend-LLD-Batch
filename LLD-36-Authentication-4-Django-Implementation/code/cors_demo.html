@@ -1,0 +1,128 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CORS playground — change one thing at a time</title>
+<!--
+  A REAL CORS playground (it makes actual fetch() calls — nothing is faked).
+
+  HOW TO USE (30 seconds):
+    1. Start the Django demo:   cd 01_cors_csrf_django && python manage.py runserver
+    2. Open this file. Try "Send" — look at YOUR ORIGIN at the top and what happens.
+    3. Now serve this same file from an ALLOWED origin and try again:
+           python3 -m http.server 5500      ->  http://127.0.0.1:5500/cors_demo.html   (allowed)
+           python3 -m http.server 5501      ->  http://127.0.0.1:5501/cors_demo.html   (blocked)
+       Same file, same button — only the ORIGIN changed. That's the whole lesson.
+-->
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 820px; margin: 28px auto; line-height: 1.6; color: #1e293b; padding: 0 16px; }
+  h1 { color: #6d28d9; margin-bottom: 4px; } h2 { font-size: 1.05rem; color: #6d28d9; margin-top: 26px; border-bottom: 2px solid #a855f7; padding-bottom: 4px; }
+  .origin { background: #f5f3ff; border: 1px solid #a855f7; border-radius: 10px; padding: 12px 16px; margin: 14px 0; font-size: 1rem; }
+  .origin code { font-size: 1.05rem; font-weight: 700; color: #6d28d9; }
+  .controls { display: grid; grid-template-columns: 170px 1fr; gap: 10px 14px; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin: 14px 0; }
+  label { font-weight: 600; font-size: 0.92rem; }
+  select, input { padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; width: 100%; box-sizing: border-box; font-family: ui-monospace, Menlo, monospace; }
+  button { padding: 11px 20px; margin: 12px 0; cursor: pointer; border-radius: 9px; border: 1px solid #a855f7; background: #f5f3ff; font-weight: 700; font-size: 1rem; }
+  .out { border-radius: 10px; padding: 14px 16px; margin: 12px 0; min-height: 30px; font-size: 0.95rem; border: 1px solid #cbd5e1; background: #f8fafc; }
+  .ok { border-color: #10b981; background: #f0fdf4; } .bad { border-color: #ef4444; background: #fef2f2; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 8px 0 0; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.9rem; }
+  li { margin-bottom: 10px; }
+  .muted { color: #64748b; font-size: 0.9rem; }
+</style>
+
+<h1>🌐 CORS playground</h1>
+<p class="muted">Real <code>fetch()</code> calls — nothing simulated. Change <strong>one</strong> control at a time and watch what the browser allows.</p>
+
+<div class="origin">
+  This page's origin is <code id="origin"></code><br>
+  <span class="muted" id="originNote"></span>
+</div>
+
+<h2>1. Start the API</h2>
+<pre>cd 01_cors_csrf_django
+python manage.py runserver          # -> http://127.0.0.1:8001</pre>
+<p class="muted">That project allows <code>http://localhost:5500</code> and <code>http://127.0.0.1:5500</code> — and nothing else.</p>
+
+<h2>2. Send a request</h2>
+<div class="controls">
+  <label>Target URL</label>
+  <input id="url" value="http://127.0.0.1:8001/api/ping/">
+
+  <label>Method</label>
+  <select id="method">
+    <option value="GET">GET — a "simple" request, no preflight</option>
+    <option value="POST">POST — still simple (form content-type)</option>
+    <option value="PUT">PUT — triggers a preflight (OPTIONS) first</option>
+  </select>
+
+  <label>Custom header</label>
+  <select id="header">
+    <option value="no">none — stays a "simple" request</option>
+    <option value="yes">X-Demo: 1 — forces a preflight (OPTIONS)</option>
+  </select>
+
+  <label>Credentials</label>
+  <select id="creds">
+    <option value="omit">omit — don't send cookies</option>
+    <option value="include">include — send cookies (needs an exact origin, not *)</option>
+  </select>
+</div>
+<button onclick="send()">▶ Send request</button>
+<div class="out" id="out">— press Send —</div>
+
+<h2>3. Now change the origin (the real experiment)</h2>
+<p>Serve this <em>same file</em> from two different ports and press Send on each:</p>
+<pre># allowed by the Django settings
+python3 -m http.server 5500     ->  http://127.0.0.1:5500/cors_demo.html    ✅ works
+
+# NOT in CORS_ALLOWED_ORIGINS
+python3 -m http.server 5501     ->  http://127.0.0.1:5501/cors_demo.html    ❌ blocked</pre>
+<p class="muted">Run those from this <code>code/</code> folder. Nothing about the request changed — only <em>who is asking</em>.</p>
+
+<h2>4. Then prove it's the browser, not the server</h2>
+<pre>curl -i http://127.0.0.1:8001/api/ping/        # works every time — curl ignores CORS</pre>
+<p class="muted">If the server were rejecting you, curl would fail too. It doesn't — because CORS is enforced by the <strong>browser</strong>, on the <em>response</em>.</p>
+
+<h2>What each control actually changes</h2>
+<ul>
+  <li><strong>Method / custom header</strong> — a plain <code>GET</code> or form-style <code>POST</code> is a <em>simple request</em>: the browser just sends it. A <code>PUT</code>, or any custom header, makes the browser send a <strong>preflight <code>OPTIONS</code></strong> first to ask permission. Watch the Network tab: you'll see two requests instead of one.</li>
+  <li><strong>Credentials</strong> — <code>include</code> sends cookies. The server must then reply with <code>Access-Control-Allow-Credentials: true</code> <em>and</em> name an exact origin. A wildcard <code>*</code> is rejected outright in this mode — that's deliberate, so "allow everyone" can never leak logged-in data.</li>
+  <li><strong>Origin</strong> — the one that matters. It isn't a control here because a page <em>cannot</em> choose its own origin; it's decided by the URL you loaded this file from. That's exactly why it can't be faked.</li>
+</ul>
+
+<script>
+  const o = window.location.origin;
+  document.getElementById("origin").textContent = (o === "null" || !o) ? "null (opened as a file://)" : o;
+  document.getElementById("originNote").textContent =
+    (o === "http://127.0.0.1:5500" || o === "http://localhost:5500")
+      ? "This origin IS in CORS_ALLOWED_ORIGINS — requests should succeed."
+      : "This origin is NOT in the Django project's CORS_ALLOWED_ORIGINS — expect the read to be blocked.";
+
+  async function send() {
+    const url = document.getElementById("url").value;
+    const method = document.getElementById("method").value;
+    const withHeader = document.getElementById("header").value === "yes";
+    const creds = document.getElementById("creds").value;
+    const out = document.getElementById("out");
+
+    const opts = { method, credentials: creds, headers: {} };
+    if (withHeader) opts.headers["X-Demo"] = "1";
+    if (method !== "GET") opts.body = "hello=world";
+
+    out.className = "out";
+    out.textContent = "sending…";
+    try {
+      const r = await fetch(url, opts);
+      const text = await r.text();
+      out.className = "out ok";
+      out.innerHTML = "✅ <strong>Allowed</strong> — the browser let this page read the response (HTTP " + r.status + ").<pre>" +
+        text.slice(0, 300).replace(/</g, "&lt;") + "</pre>";
+    } catch (e) {
+      out.className = "out bad";
+      let why = "Your origin isn't allowed by the server's <code>Access-Control-Allow-Origin</code>.";
+      if (creds === "include") why += " With <code>credentials: include</code> the server must also send <code>Allow-Credentials: true</code> and name an <em>exact</em> origin (never <code>*</code>).";
+      if (withHeader || method === "PUT") why += " This was a <strong>preflighted</strong> request — check the Network tab: the <code>OPTIONS</code> call is what failed.";
+      out.innerHTML = "❌ <strong>Blocked by CORS</strong> — <code>" + e.message + "</code><br><br>" + why +
+        "<br><br><span class='muted'>The request very likely still <em>reached and ran on</em> the server. The browser simply refused to hand you the response — open the Console for the exact CORS message.</span>";
+    }
+  }
+</script>
