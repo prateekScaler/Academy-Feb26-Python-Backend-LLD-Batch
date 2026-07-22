@@ -90,3 +90,7 @@ LLD-23-TicTacToe-Code/LLD-23_*.html
 # Google OAuth client-secret downloads (real credentials — never commit)
 client_secret*.json
 **/client_secret*.json
+
+# Redis dump snapshots (created by running redis-server locally)
+*.rdb
+**/*.rdb

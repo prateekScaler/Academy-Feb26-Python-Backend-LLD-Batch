@@ -1,0 +1,10 @@
+# Deliverable 2 -- the real email service (Django + Celery + Redis).
+#
+# Install with:   pip install -r requirements.txt
+#
+# Versions are pinned to the majors this demo was built + verified against.
+# Celery talks to Redis (the message broker) via the `redis` client library.
+
+Django>=5.0,<7.0        # the web framework (the PRODUCER side: enqueues jobs)
+celery>=5.3,<6.0        # the task queue (defines tasks, runs the WORKER)
+redis>=5.0              # Python client Celery uses to reach the Redis broker
