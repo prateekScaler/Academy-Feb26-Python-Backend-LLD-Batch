@@ -1,0 +1,15 @@
+# LLD-38 — Cloud-native patterns (Python)
+# Only the LIBRARY-based demos need these. circuit_breaker.py and
+# service_registry.py are STDLIB-ONLY and need nothing installed here.
+#
+# Install into a virtualenv (never system Python):
+#     python3 -m venv .venv && source .venv/bin/activate
+#     pip install -r requirements.txt
+#
+# Version bounds pin a tested lower bound and cap the next major to avoid
+# surprise breaking changes. Verified against the versions noted in [tested].
+
+pydantic-settings>=2.5,<3      # externalized config (config_demo.py)   [tested 2.14.2]
+tenacity>=8.3,<10              # retries + exponential backoff/jitter    [tested 9.1.4]
+httpx>=0.27,<1                 # HTTP client with real timeouts          [tested 0.28.1]
+pybreaker>=1.2,<2              # circuit breaker (resilient_client.py)   [tested 1.4.1]

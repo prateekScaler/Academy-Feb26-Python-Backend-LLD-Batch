@@ -1,0 +1,14 @@
+# Never commit real local config / secrets — only .env.example is tracked.
+.env
+.env.local
+
+# Virtualenvs (create these OUTSIDE the repo, or here where they'll be ignored)
+.venv/
+venv/
+env/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
