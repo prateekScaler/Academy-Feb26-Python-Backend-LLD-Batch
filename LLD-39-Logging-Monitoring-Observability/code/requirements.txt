@@ -1,0 +1,18 @@
+# LLD-39 — Logging & Monitoring / Observability (Python)
+# Only the LIBRARY-based demos need these. logging_basics.py and
+# alert_watcher.py are STDLIB-ONLY and need nothing installed here.
+#
+#   structured_logging.py      -> needs structlog
+#   django_request_logging.py  -> needs Django
+#
+# Install into a virtualenv (never system Python):
+#     python3 -m venv .venv && source .venv/bin/activate
+#     pip install -r requirements.txt
+#
+# Version bounds pin a tested lower bound and cap the next major to avoid
+# surprise breaking changes. Verified against the versions noted in [tested].
+
+structlog>=24,<27              # structured JSON logging                 [tested 26.1.0]
+Django>=5,<7                   # request-logging middleware demo         [tested 6.0.7]
+# Note: on Python 3.14 pip resolves Django 6.x (5.x targets Python <= 3.13);
+# both work for this demo unchanged.

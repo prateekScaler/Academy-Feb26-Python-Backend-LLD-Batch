@@ -1,0 +1,17 @@
+# Never commit real local config / secrets
+.env
+
+# Virtualenvs (create these OUTSIDE the repo, or here where they'll be ignored)
+.venv/
+venv/
+env/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+
+# Log files the demos write locally (logging_basics.py creates demo.log)
+*.log
+
+# Local database files (Django would create this if you ran migrate)
+db.sqlite3
