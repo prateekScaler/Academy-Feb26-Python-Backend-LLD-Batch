@@ -1,0 +1,4 @@
+# Pinned with bounds so the image build is reproducible.
+# Tested with Django 6.0.7 + redis-py 8.1.0 on Python 3.12 (image) / 3.14 (host).
+Django>=6.0,<6.1
+redis>=8.1,<9

@@ -1,0 +1,9 @@
+# ── STEP 2 of 7: WORKDIR — set the current directory ───────────────────────
+# Creates /app inside the image and cd's into it. Every later COPY/RUN/CMD
+# happens from here. (mkdir + cd, baked into the image.)
+#
+#   build:    docker build -f Dockerfile.2 -t step2 .
+#   observe:  docker run --rm step2 pwd               -> /app     (step1 said /)
+#             docker run --rm step2 ls -la            -> empty — nothing copied yet
+FROM python:3.12-slim
+WORKDIR /app

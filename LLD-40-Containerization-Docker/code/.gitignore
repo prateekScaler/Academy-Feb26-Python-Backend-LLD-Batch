@@ -1,0 +1,8 @@
+# LLD-40 code demos -- keep generated/local stuff out of git.
+venv/            # per-tier virtualenvs (recreate with python3 -m venv venv)
+__pycache__/     # Python bytecode caches
+*.py[cod]        # stray compiled files
+.env             # secrets stay local (same rule as .dockerignore)
+db.sqlite3       # local dev database
+*.rdb            # Redis dump files from native runs
+*.log            # server/redis logs from native runs

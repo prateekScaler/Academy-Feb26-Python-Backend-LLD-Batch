@@ -1,0 +1,16 @@
+# ── STEP 6 of 7: EXPOSE — document the port (it does NOT open it) ──────────
+# Pure documentation for humans and tools. The port only reaches your laptop
+# when you publish it at RUN time with -p.
+#
+#   build:    docker build -f Dockerfile.6 -t step6 .
+#   observe:  docker inspect --format '{{.Config.ExposedPorts}}' step6  -> map[8000/tcp:{}]
+#   prove it opens nothing:
+#             docker run --rm -d --name t6 step6 sleep 300
+#             curl -m 2 localhost:8000               -> FAILS (no -p, no door)
+#             docker rm -f t6
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000

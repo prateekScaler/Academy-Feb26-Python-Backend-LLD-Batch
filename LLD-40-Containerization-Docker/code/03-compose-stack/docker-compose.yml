@@ -1,0 +1,59 @@
+# ============================================================================
+# LLD-40, Tier 3: docker-compose.yml -- the whole stack in one file.
+#
+# Instead of hand-running `docker build`, `docker network create`,
+# `docker run` x2 with the right flags in the right order, you DECLARE the
+# desired stack here and `docker compose up` makes it so.
+# ============================================================================
+
+services:
+
+  # --------------------------------------------------------------------------
+  # web: our Django app, built from the Dockerfile in this folder.
+  # --------------------------------------------------------------------------
+  web:
+    build: .                     # build the image from ./Dockerfile
+    ports:
+      - "8040:8040"              # host:container -- this is the -p flag, declared
+    environment:
+      # THE service-discovery moment (LLD-38 callback): the hostname is the
+      # SERVICE NAME below. Compose puts all services on one private network
+      # with a DNS entry per service, so inside the web container,
+      # "redis" resolves to the redis container's IP. No IPs in config,
+      # ever -- if the redis container is recreated with a new IP, the DNS
+      # name just follows it.
+      REDIS_HOST: redis
+    depends_on:
+      # depends_on alone only means "start redis FIRST" -- i.e. the process
+      # was STARTED, not that it is READY to accept connections. A big app
+      # can beat its database to the punch and crash on connect. The fix:
+      # gate on redis's HEALTHCHECK (defined below) -- web is not started
+      # until redis actually answers PING.
+      redis:
+        condition: service_healthy
+
+  # --------------------------------------------------------------------------
+  # redis: no Dockerfile needed -- we run the official image as-is.
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine        # pinned tag, never `latest` (Tier 2 lesson)
+    healthcheck:
+      # `redis-cli ping` returns PONG (exit 0) only when redis is really
+      # serving -- THIS is what depends_on/service_healthy above waits for.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      # The ephemeral-writable-layer lesson: a container's own filesystem
+      # DIES with the container, so on `docker compose down` Redis's dump
+      # file would vanish and our counter would reset to 0.
+      # A NAMED VOLUME is storage managed by Docker OUTSIDE any container's
+      # lifecycle, mounted at /data (where Redis persists its dump.rdb).
+      # down + up -> same volume reattached -> the counter SURVIVES.
+      - redis-data:/data
+
+# Named volumes are declared at the top level so multiple services could
+# share them and so `docker compose down -v` knows what to delete.
+volumes:
+  redis-data:

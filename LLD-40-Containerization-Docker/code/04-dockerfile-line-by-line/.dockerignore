@@ -1,0 +1,8 @@
+# What "COPY . ." must NEVER pick up (build context hygiene):
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env            # secrets never enter an image — inject at run time
+.git/
+db.sqlite3

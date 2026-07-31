@@ -1,0 +1,16 @@
+# ── STEP 7 of 7: CMD — what runs when a container STARTS ───────────────────
+# RUN happened at build time; CMD happens at run time. Exec form (JSON array),
+# binding 0.0.0.0 — NOT 127.0.0.1, which would be loopback INSIDE the container.
+#
+#   build:    docker build -f Dockerfile.7 -t step7 .
+#   observe:  docker run --rm -p 8000:8000 step7      -> Django dev server starts
+#             curl localhost:8000                     -> {"message": ..., "hostname": "<container-id>", ...}
+#   CMD is only a DEFAULT — override it:
+#             docker run --rm -it step7 sh            -> a shell instead of the server (CMD replaced)
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

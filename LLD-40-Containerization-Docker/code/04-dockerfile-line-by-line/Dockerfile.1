@@ -1,0 +1,10 @@
+# ── STEP 1 of 7: FROM — start from a base image ────────────────────────────
+# The only mandatory instruction. Downloads a ready-made image that already
+# has Debian Linux + Python installed. "slim" = same thing, minus docs and
+# toolchains (~130 MB instead of ~1 GB). Pinned — never :latest.
+#
+#   build:    docker build -f Dockerfile.1 -t step1 .
+#   observe:  docker run --rm step1 python -V        -> Python 3.12.x (the IMAGE's python)
+#             docker run --rm step1 cat /etc/os-release | head -2   -> Debian!  (even on your Mac)
+#             docker history step1                   -> only the base image's layers so far
+FROM python:3.12-slim

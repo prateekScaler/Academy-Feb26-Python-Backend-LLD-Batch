@@ -1,0 +1,10 @@
+# Same story as Tier 2 (read the comments there): keep the build context
+# small and keep secrets/junk out of `COPY . .` -- forever means forever
+# in image layers.
+venv/
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+*.rdb          # a local Redis dump is data, not code
+.git

@@ -1,0 +1,13 @@
+# ── STEP 4 of 7: RUN pip install — execute at BUILD time ───────────────────
+# RUN executes DURING the build and bakes the result into a layer. Watch the
+# build output: Django downloads NOW, once — not every time a container starts.
+#
+#   build:    docker build -f Dockerfile.4 -t step4 .   (slow this once — watch pip work)
+#   observe:  docker run --rm step4 pip list           -> Django is IN the image
+#             docker history step4                     -> a big new layer (~60 MB)
+#   the cache moment — run the SAME build again:
+#             docker build -f Dockerfile.4 -t step4 .  -> every line says CACHED, ~1 second
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt

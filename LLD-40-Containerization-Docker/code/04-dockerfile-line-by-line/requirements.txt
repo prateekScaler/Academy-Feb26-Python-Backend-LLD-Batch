@@ -1,0 +1,4 @@
+# One dependency, on purpose: the demo is about the DOCKERFILE, not the app.
+# (The guide's page shows python:3.11 + Django 4.2; we pin the 3.12-slim base so
+#  current Django installs cleanly -- the LESSON, "pin a slim base", is identical.)
+Django>=5,<7

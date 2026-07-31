@@ -1,0 +1,3 @@
+# Pinned with bounds so the image build is reproducible.
+# Tested with Django 6.0.7 on Python 3.12 (image) and 3.14 (host venv).
+Django>=6.0,<6.1

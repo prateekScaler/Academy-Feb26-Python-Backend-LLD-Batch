@@ -1,0 +1,12 @@
+# ENTRYPOINT = the FIXED program. Anything you type after `docker run <image>`
+# is APPENDED to it as arguments (and CMD, if present, is just the default args).
+#
+#   docker build -f Dockerfile.entrypoint -t demoentry .
+#   docker run --rm demoentry                    -> python received argv: ['args.py']
+#   docker run --rm demoentry other.py --debug   -> python tries to run other.py --debug
+#                                                   (ENTRYPOINT kept; only the args changed)
+FROM python:3.12-slim
+WORKDIR /app
+COPY args.py .
+ENTRYPOINT ["python"]
+CMD ["args.py"]

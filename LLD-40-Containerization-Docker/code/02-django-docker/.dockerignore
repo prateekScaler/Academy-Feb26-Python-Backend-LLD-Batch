@@ -1,0 +1,19 @@
+# .dockerignore = .gitignore for `docker build`.
+# Everything listed here is INVISIBLE to COPY. Two reasons to care:
+#
+#   1. SPEED / CACHE: `COPY . .` hashes the whole build context. A stray
+#      200 MB venv/ makes every build slow, and any file change (even a
+#      .pyc) busts the COPY layer's cache for no reason.
+#
+#   2. SECRETS -- the horror story: someone runs `COPY . .` with a .env
+#      full of production keys sitting in the folder. The keys are now
+#      baked into an image layer FOREVER (deleting the file in a later
+#      layer does NOT remove it from image history), and that image gets
+#      pushed to a registry. Ignore .env here, always.
+
+venv/            # the host's virtualenv -- the image pip-installs its own
+__pycache__/     # host bytecode; wrong Python version anyway
+*.pyc
+.env             # secrets NEVER go into an image (see horror story above)
+db.sqlite3       # local dev database is not code
+.git             # whole repo history: big, and can contain old secrets

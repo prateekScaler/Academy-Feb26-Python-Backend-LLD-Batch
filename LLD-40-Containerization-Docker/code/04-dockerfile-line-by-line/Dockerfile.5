@@ -1,0 +1,14 @@
+# ── STEP 5 of 7: COPY . . — now the code, LAST ─────────────────────────────
+# Copies the whole project into /app. It goes after pip install because code
+# changes hourly and requirements change monthly — cache-friendly order.
+# (.dockerignore controls what "." includes — venv/.env/.git stay OUT.)
+#
+#   build:    docker build -f Dockerfile.5 -t step5 .
+#   observe:  docker run --rm step5 ls -la            -> manage.py, mysite/, requirements.txt
+#   the payoff — edit any code file (add a comment to urls.py), rebuild:
+#             docker build -f Dockerfile.5 -t step5 . -> steps 1-4 CACHED, only this layer rebuilds (~2s)
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .

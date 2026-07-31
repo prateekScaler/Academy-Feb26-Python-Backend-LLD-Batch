@@ -1,0 +1,11 @@
+# ── STEP 3 of 7: COPY requirements.txt — dependencies list FIRST ───────────
+# Copies ONE file, on purpose. The cache reads top-down: by copying only the
+# rarely-changing requirements list before the code, the expensive pip layer
+# (next step) stays cached when code changes. THE classic Dockerfile trick.
+#
+#   build:    docker build -f Dockerfile.3 -t step3 .
+#   observe:  docker run --rm step3 ls -la            -> requirements.txt (only!)
+#             docker history step3                    -> a new, tiny layer on top
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
