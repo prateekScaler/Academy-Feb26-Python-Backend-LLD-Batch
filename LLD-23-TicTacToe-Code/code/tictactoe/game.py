@@ -7,6 +7,7 @@ from __future__ import annotations
 from enums import GameStatus
 from exceptions import InvalidMoveError
 from models.board import Board
+from models.move import Move
 from models.player import Player
 from strategies.win_rule import WinRule
 
@@ -23,7 +24,7 @@ class Game:
         self._turn = starting_index
         self._status = GameStatus.IN_PROGRESS
         self._winner: Player | None = None
-        # No move history and no undo() — that's the open exercise (issue #15).
+        self.move_history: list[Move] = []
 
     # --- queries --------------------------------------------------------
     def status(self) -> GameStatus:
@@ -44,6 +45,7 @@ class Game:
             raise InvalidMoveError("game already over")
         player = self.current_player()
         self.board.place(row, col, player.symbol)      # validates; raises on bad move
+        self.move_history.append(Move(player, row, col))
         winning_symbol = self.rule.winner(self.board)  # win BEFORE full
         if winning_symbol is not None:
             self._status = GameStatus.WON
@@ -52,3 +54,11 @@ class Game:
             self._status = GameStatus.DRAW
         else:
             self._turn = (self._turn + 1) % len(self.players)
+
+    def undo(self) -> None:
+        if not self.move_history:
+            return
+
+        move = self.move_history.pop()
+        self.board.clear_cell(move.row, move.col)
+        self._turn = (self._turn - 1) % len(self.players)

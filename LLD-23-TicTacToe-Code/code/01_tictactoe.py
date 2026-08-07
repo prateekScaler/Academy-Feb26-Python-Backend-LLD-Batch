@@ -105,13 +105,18 @@ class KInARowRule(WinRule):
 
     def winner(self, board: Board) -> Symbol | None:
         n, k = board.n, self.k
-        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        WIN_DIRECTIONS = (
+          (0, 1),   # horizontal
+          (1, 0),   # vertical
+          (1, 1),   # diagonal
+          (1, -1),  # reverse diagonal
+        )
         for r in range(n):
             for c in range(n):
                 start = board.symbol_at(r, c)
                 if start is None:
                     continue
-                for dr, dc in directions:
+                for dr, dc in self.WIN_DIRECTIONS:
                     end_r, end_c = r + (k - 1) * dr, c + (k - 1) * dc
                     if not (0 <= end_r < n and 0 <= end_c < n):
                         continue
